@@ -1203,7 +1203,11 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * dlg = gtk_dialog_new_with_buttons(
         _("Keyboard Layout Handler"),
         NULL,
+#if GTK_CHECK_VERSION (3, 0, 0)
+        0,
+#else
         GTK_DIALOG_NO_SEPARATOR,
+#endif
         GTK_STOCK_CLOSE,
         GTK_RESPONSE_OK,
         NULL);

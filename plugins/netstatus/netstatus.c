@@ -89,10 +89,10 @@ static gboolean on_button_press( GtkWidget* widget, GdkEventButton* evt, LXPanel
         {
             iface = netstatus_icon_get_iface( NETSTATUS_ICON(widget) );
             ns->dlg = netstatus_dialog_new(iface);
-
+#if !GTK_CHECK_VERSION (3,0,0)
             /* fix background */
             gtk_widget_set_style(ns->dlg, panel_get_defstyle(p));
-
+#endif
             netstatus_dialog_set_configuration_tool( ns->dlg, ns->config_tool );
             g_signal_connect( ns->dlg, "response", G_CALLBACK(on_response), ns );
         }

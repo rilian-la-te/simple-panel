@@ -376,7 +376,11 @@ void gtk_run()
     {
         win = gtk_dialog_new_with_buttons( _("Run"),
                                            NULL,
+#if GTK_CHECK_VERSION(3,0,0)
+										   0,
+#else
                                            GTK_DIALOG_NO_SEPARATOR,
+#endif
                                            GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                            GTK_STOCK_OK, GTK_RESPONSE_OK,
                                            NULL );

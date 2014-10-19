@@ -83,7 +83,11 @@ static void lxpanel_finalize(GObject *object)
     G_OBJECT_CLASS(lxpanel_parent_class)->finalize(object);
 }
 
+#if GTK_CHECK_VERSION(3,0,0)
+static void lxpanel_destroy(GtkWidget *object)
+#else
 static void lxpanel_destroy(GtkObject *object)
+#endif
 {
     LXPanel *self = LXPANEL(object);
     Panel *p = self->priv;
@@ -122,8 +126,11 @@ static void lxpanel_destroy(GtkObject *object)
         g_source_remove(p->background_update_queued);
         p->background_update_queued = 0;
     }
-
+#if GTK_CHECK_VERSION(3,0,0)
+	GTK_WIDGET_CLASS(lxpanel_parent_class)->destroy(object);
+#else
     GTK_OBJECT_CLASS(lxpanel_parent_class)->destroy(object);
+#endif
 }
 
 static gboolean idle_update_background(gpointer p)
@@ -175,13 +182,22 @@ static void lxpanel_style_set(GtkWidget *widget, GtkStyle* prev)
 static void lxpanel_size_request(GtkWidget *widget, GtkRequisition *req)
 {
     Panel *p = LXPANEL(widget)->priv;
-
+#if GTK_CHECK_VERSION(3,0,0)
+		GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_height(widget, &req->height,&req->height);
+		GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_width(widget, &req->width,&req->width);
+		req->height=p->ah;
+		req->width=p->aw;
+#else
     GTK_WIDGET_CLASS(lxpanel_parent_class)->size_request(widget, req);
-
+#endif
     if (!p->visible)
         /* When the panel is in invisible state, the content box also got hidden, thus always
          * report 0 size.  Ask the content box instead for its size. */
+#if GTK_CHECK_VERSION (3, 0, 0)
+		gtk_widget_get_preferred_size(p->box, req, NULL);
+#else
         gtk_widget_size_request(p->box, req);
+#endif
 
     /* FIXME: is this ever required? */
     if (p->widthtype == WIDTH_REQUEST)
@@ -189,7 +205,6 @@ static void lxpanel_size_request(GtkWidget *widget, GtkRequisition *req)
     if (p->heighttype == HEIGHT_REQUEST)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? req->height : req->width;
     calculate_position(p);
-
     gtk_widget_set_size_request( widget, p->aw, p->ah );
 }
 
@@ -197,20 +212,22 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
 {
     Panel *p = LXPANEL(widget)->priv;
 
-    GTK_WIDGET_CLASS(lxpanel_parent_class)->size_allocate(widget, a);
-
+	GTK_WIDGET_CLASS(lxpanel_parent_class)->size_allocate(widget, a);
+#if GTK_CHECK_VERSION (3, 0, 0)
+	gtk_widget_set_allocation(widget,a);
+#endif
     if (p->widthtype == WIDTH_REQUEST)
         p->width = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->width : a->height;
     if (p->heighttype == HEIGHT_REQUEST)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->height : a->width;
     calculate_position(p);
-
-    if (a->width != p->aw || a->height != p->ah || a->x != p->ax || a->y != p->ay)
+	if (a->width != p->aw || a->height != p->ah || a->x != p->ax || a->y != p->ay)
     {
         gtk_window_move(GTK_WINDOW(widget), p->ax, p->ay);
         _panel_set_wm_strut(LXPANEL(widget));
     }
-    else if (p->background_update_queued)
+	else
+		if (p->background_update_queued)
     {
         g_source_remove(p->background_update_queued);
         p->background_update_queued = 0;
@@ -222,6 +239,30 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
             _panel_update_background(LXPANEL(widget));
     }
 }
+
+#if GTK_CHECK_VERSION (3,0,0)
+static void
+lxpanel_get_preferred_width (GtkWidget *widget,
+							   gint      *minimal_width,
+							   gint      *natural_width)
+{
+  GtkRequisition requisition;
+  lxpanel_size_request (widget, &requisition);
+
+  *minimal_width = *natural_width = requisition.width;
+}
+
+static void
+lxpanel_get_preferred_height (GtkWidget *widget,
+								gint      *minimal_height,
+								gint      *natural_height)
+{
+  GtkRequisition requisition;
+  lxpanel_size_request (widget, &requisition);
+
+  *minimal_height = *natural_height = requisition.height;
+}
+#endif
 
 static gboolean lxpanel_configure_event (GtkWidget *widget, GdkEventConfigure *e)
 {
@@ -264,13 +305,24 @@ static gboolean lxpanel_button_press(GtkWidget *widget, GdkEventButton *event)
 static void lxpanel_class_init(PanelToplevelClass *klass)
 {
     GObjectClass *gobject_class = (GObjectClass *)klass;
+#if !GTK_CHECK_VERSION(3,0,0)
     GtkObjectClass *gtk_object_class = (GtkObjectClass *)klass;
+#endif
     GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
 
     gobject_class->finalize = lxpanel_finalize;
+#if GTK_CHECK_VERSION (3,0,0)
+	widget_class->destroy = lxpanel_destroy;
+#else
     gtk_object_class->destroy = lxpanel_destroy;
+#endif
     widget_class->realize = lxpanel_realize;
+#if GTK_CHECK_VERSION (3,0,0)
+	widget_class->get_preferred_width = lxpanel_get_preferred_width;
+	widget_class->get_preferred_height = lxpanel_get_preferred_height;
+#else
     widget_class->size_request = lxpanel_size_request;
+#endif
     widget_class->size_allocate = lxpanel_size_allocate;
     widget_class->configure_event = lxpanel_configure_event;
     widget_class->style_set = lxpanel_style_set;
@@ -311,6 +363,11 @@ static void lxpanel_init(PanelToplevel *self)
     p->config = config_new();
     p->defstyle = gtk_widget_get_default_style();
     gtk_window_set_type_hint(GTK_WINDOW(self), GDK_WINDOW_TYPE_HINT_DOCK);
+#if GTK_CHECK_VERSION (3, 0, 0)
+	GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(self));
+	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
+	gtk_widget_set_visual(GTK_WIDGET(self), visual);
+#endif
 }
 
 /* Allocate and initialize new Panel structure. */
@@ -595,9 +652,46 @@ void panel_determine_background_pixmap(Panel * panel, GtkWidget * widget, GdkWin
     _panel_determine_background_pixmap(panel->topgwin, widget);
 }
 
+#if GTK_CHECK_VERSION (3,0,0)
+void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
+{
+	Panel * p = panel->priv;
+	gchar* css;
+	GdkRGBA color;
+	gboolean system;
+	if (( ! p->transparent) && (p->bg != NULL))
+	{
+		g_signal_handlers_disconnect_by_func(G_OBJECT(p->bg), on_root_bg_changed, panel);
+		g_object_unref(p->bg);
+		p->bg = NULL;
+	}
+	if (p->background)
+	{
+		/* User specified background pixmap. */
+		if (p->background_file != NULL)
+			css = fb_bg_generate_string(p->background_file,color,FALSE);
+	}
+	else if (p->transparent)
+	{
+		/* User specified background color. */
+		color.red=p->gtintcolor.red/255.0;
+		color.green=p->gtintcolor.green/255.0;
+		color.blue=p->gtintcolor.blue/255.0;
+		color.alpha=p->alpha/255.0;
+		css = fb_bg_generate_string(p->background_file,color,FALSE);
+	} else system=1;
+	g_print("CSS:%s",css);
+	fb_bg_apply_css(widget,css,system);
+	g_free(css);
+}
+#endif
 void _panel_determine_background_pixmap(LXPanel * panel, GtkWidget * widget)
 {
+#if GTK_CHECK_VERSION (3,0,0)
+	cairo_pattern_t* pixmap = NULL;
+#else
     GdkPixmap * pixmap = NULL;
+#endif
     GdkWindow * window = gtk_widget_get_window(widget);
     Panel * p = panel->priv;
 
@@ -623,22 +717,37 @@ void _panel_determine_background_pixmap(LXPanel * panel, GtkWidget * widget)
         {
             p->bg = fb_bg_get_for_display();
             g_signal_connect(G_OBJECT(p->bg), "changed", G_CALLBACK(on_root_bg_changed), panel);
-        }
+		}
+#if GTK_CHECK_VERSION (3,0,0)
+		GdkRGBA rgba;
+		rgba.red=p->gtintcolor.red/255.0;
+		rgba.green=p->gtintcolor.green/255.0;
+		rgba.blue=p->gtintcolor.blue/255.0;
+		rgba.alpha=p->alpha/255.0;
+		gtk_widget_set_app_paintable(widget, TRUE);
+		gdk_window_set_background_rgba(gtk_widget_get_window(widget),&rgba);
+		return;
+#else
         pixmap = fb_bg_get_xroot_pix_for_win(p->bg, widget);
         if ((pixmap != NULL) && (pixmap != GDK_NO_BG) && (p->alpha != 0))
             fb_bg_composite(pixmap, &p->gtintcolor, p->alpha);
+#endif
     }
 
     if (pixmap != NULL)
     {
         gtk_widget_set_app_paintable(widget, TRUE );
-        gdk_window_set_back_pixmap(window, pixmap, FALSE);
-        g_object_unref(pixmap);
+#if GTK_CHECK_VERSION (3,0,0)
+		gdk_window_set_background_pattern(window,pixmap);
+		cairo_pattern_destroy(pixmap);
+#else
+		gdk_window_set_back_pixmap(window, pixmap, FALSE);
+		g_object_unref(pixmap);
+#endif
     }
     else
         gtk_widget_set_app_paintable(widget, FALSE);
 }
-
 /* Update the background of the entire panel.
  * This function should only be called after the panel has been realized. */
 void panel_update_background(Panel * p)
@@ -652,8 +761,10 @@ static void _panel_update_background(LXPanel * p)
     GList *plugins, *l;
 
     /* Redraw the top level widget. */
-    _panel_determine_background_pixmap(p, w);
+	_panel_determine_background_pixmap(p, w);
+#if !GTK_CHECK_VERSION (3,0,0)
     gdk_window_clear(gtk_widget_get_window(w));
+#endif
     gtk_widget_queue_draw(w);
 
     /* Loop over all plugins redrawing each plugin. */
@@ -1286,8 +1397,11 @@ panel_start_gui(LXPanel *panel)
     gtk_widget_show(p->box);
     if (p->round_corners)
         make_round_corners(p);
-
+#if GTK_CHECK_VERSION (3,0,0)
+	p->topxwin = GDK_WINDOW_XID(gtk_widget_get_window(w));
+#else
     p->topxwin = GDK_WINDOW_XWINDOW(gtk_widget_get_window(w));
+#endif
     DBG("topxwin = %x\n", p->topxwin);
 
     /* the settings that should be done before window is mapped */

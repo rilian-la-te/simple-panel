@@ -178,7 +178,116 @@ fb_bg_get_xrootpmap(FbBg *bg)
 
 }
 
+//TODO:Background
+#if GTK_CHECK_VERSION(3,0,0)
+void fb_bg_apply_css (GtkWidget* widget, gchar* css,gboolean remove)
+{
+	GtkStyleContext* context;
+	GtkCssProvider  *provider;
 
+	context = gtk_widget_get_style_context (widget);
+	gtk_widget_reset_style(widget);
+	if (remove) {
+		gtk_style_context_remove_class (context, "-lxpanel-background");
+		gtk_style_context_add_class (context, "background");
+	}
+	else
+	{
+		provider = gtk_css_provider_new ();
+		gtk_css_provider_load_from_data (provider, css,
+						-1, NULL);
+		gtk_style_context_remove_class (context, "background");
+		gtk_style_context_add_class (context, "-lxpanel-background");
+		gtk_style_context_add_provider (context,
+						GTK_STYLE_PROVIDER (provider),
+						GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	}
+}
+
+gchar* fb_bg_generate_string(const char *filename, GdkRGBA color,gboolean no_image)
+{
+	gchar* returnie;
+	if (no_image) returnie = g_strdup_printf(".-lxpanel-background{\n"
+					" background-color: %s;\n"
+					" background-image: none;\n"
+					"}",gdk_rgba_to_string(&color));
+	else returnie = g_strdup_printf(".-lxpanel-background{\n"
+						 " background-color: %s;\n"
+						 " background-image: %s;\n"
+						 "}",gdk_rgba_to_string(&color),filename);
+	return returnie;
+}
+
+cairo_pattern_t *
+fb_bg_get_pix_from_file(GtkWidget *widget, const char *filename)
+{
+	ENTER;
+	GdkPixbuf *pixbuf;
+	cairo_t *cr;
+	cairo_surface_t *surface;
+	cairo_pattern_t *pattern;
+
+	pixbuf = gdk_pixbuf_new_from_file(filename, NULL);
+	if (!pixbuf) {
+		RET(NULL);
+	}
+	surface = gdk_window_create_similar_surface (gtk_widget_get_window(widget),
+							 CAIRO_CONTENT_COLOR_ALPHA,
+							 gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
+	cr = cairo_create(surface);
+	gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+	cairo_paint(cr);
+	check_cairo_status(cr);
+	cairo_destroy(cr);
+
+	g_object_unref( pixbuf );
+	pattern = cairo_pattern_create_for_surface(surface);
+	cairo_pattern_set_extend(pattern,CAIRO_EXTEND_REPEAT);
+	cairo_surface_destroy(surface);
+	RET(pattern);
+}
+
+cairo_pattern_t *
+fb_bg_get_xroot_pix_for_win(FbBg *bg, GtkWidget *widget)
+{
+	Window win;
+	Window dummy;
+	Pixmap bgpix;
+	cairo_t *cr;
+	cairo_surface_t *surface;
+	cairo_pattern_t *pattern;
+	GdkScreen *screen = gdk_window_get_screen(gtk_widget_get_window(widget));
+	guint  width, height, border, depth;
+	int  x, y;
+
+	ENTER;
+	win = GDK_WINDOW_XID(gtk_widget_get_window(widget));
+	if (!XGetGeometry(bg->dpy, win, &dummy, &x, &y, &width, &height, &border,
+			  &depth)) {
+		g_warning("XGetGeometry failed\n");
+		RET(NULL);
+	}
+	XTranslateCoordinates(bg->dpy, win, bg->xroot, 0, 0, &x, &y, &dummy);
+	DBG("win=%x %dx%d%+d%+d\n", win, width, height, x, y);
+	bgpix=gdk_x11_window_get_xid(gtk_widget_get_window(widget));
+	surface = cairo_xlib_surface_create (GDK_SCREEN_XDISPLAY (screen), bgpix,
+										GDK_VISUAL_XVISUAL (gdk_screen_get_system_visual (screen)),
+							 width, height);
+//	gbgpix = gdk_pixmap_new(NULL, width, height, depth);
+//	if (!gbgpix) {
+//		g_critical("gdk_pixmap_new failed");
+//		RET(NULL);
+//	}
+//	bgpix =  gdk_x11_drawable_get_xid(gbgpix);
+//	XSetTSOrigin(bg->dpy, bg->gc, -x, -y) ;
+//	XFillRectangle(bg->dpy, bgpix, bg->gc, 0, 0, width, height);
+//	RET(gbgpix);
+	pattern = cairo_pattern_create_for_surface(surface);
+	cairo_surface_destroy(surface);
+	RET(pattern);
+}
+
+#else
 GdkPixmap *
 fb_bg_get_xroot_pix_for_win(FbBg *bg, GtkWidget *widget)
 {
@@ -209,8 +318,40 @@ fb_bg_get_xroot_pix_for_win(FbBg *bg, GtkWidget *widget)
     RET(gbgpix);
 }
 
+GdkPixmap *
+fb_bg_get_pix_from_file(GtkWidget *widget, const char *filename)
+{
+	ENTER;
+	GdkPixbuf *pixbuf;
+	cairo_t *cr;
+	GdkPixmap *pixmap;
+
+	pixbuf = gdk_pixbuf_new_from_file(filename, NULL);
+	if (!pixbuf) {
+		GtkStyle *style = gtk_widget_get_style(widget);
+		if (style->bg_pixmap[0])
+			g_object_ref(style->bg_pixmap[0]);
+		RET(style->bg_pixmap[0]);
+	}
+	pixmap = gdk_pixmap_new(gtk_widget_get_window(widget), gdk_pixbuf_get_width(pixbuf),
+							gdk_pixbuf_get_height(pixbuf), -1);
+	cr = gdk_cairo_create(pixmap);
+	gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+	cairo_paint(cr);
+	check_cairo_status(cr);
+	cairo_destroy(cr);
+
+	g_object_unref( pixbuf );
+	RET(pixmap);
+}
+#endif
+#if GTK_CHECK_VERSION (3,0,0)
+void
+fb_bg_composite(GdkWindow *base, GdkColor *tintcolor, gint alpha)
+#else
 void
 fb_bg_composite(GdkDrawable *base, GdkColor *tintcolor, gint alpha)
+#endif
 {
     cairo_t *cr;
     FbBg *bg;
@@ -262,31 +403,4 @@ FbBg *fb_bg_get_for_display(void)
     else
         g_object_ref(default_bg);
     RET(default_bg);
-}
-
-GdkPixmap *
-fb_bg_get_pix_from_file(GtkWidget *widget, const char *filename)
-{
-    ENTER;
-    GdkPixbuf *pixbuf;
-    cairo_t *cr;
-    GdkPixmap *pixmap;
-
-    pixbuf = gdk_pixbuf_new_from_file(filename, NULL);
-    if (!pixbuf) {
-        GtkStyle *style = gtk_widget_get_style(widget);
-        if (style->bg_pixmap[0])
-            g_object_ref(style->bg_pixmap[0]);
-        RET(style->bg_pixmap[0]);
-    }
-    pixmap = gdk_pixmap_new(gtk_widget_get_window(widget), gdk_pixbuf_get_width(pixbuf),
-                            gdk_pixbuf_get_height(pixbuf), -1);
-    cr = gdk_cairo_create(pixmap);
-    gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
-    cairo_paint(cr);
-    check_cairo_status(cr);
-    cairo_destroy(cr);
-
-    g_object_unref( pixbuf );
-    RET(pixmap);
 }

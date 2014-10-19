@@ -35,6 +35,10 @@
 #include <glib/gi18n.h>
 #include <libfm/fm-gtk.h>
 
+#if GTK_CHECK_VERSION (3,0,0)
+#include <gtk/gtkx.h>
+#endif
+
 //#define DEBUG
 #include "dbg.h"
 
@@ -224,10 +228,29 @@ static void plugin_get_available_classes(void)
     }
 #endif
 }
-
+//TODO:Background
 /* Recursively set the background of all widgets on a panel background configuration change. */
 void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
 {
+#if GTK_CHECK_VERSION (3, 0, 0)
+    if (w != NULL)
+    {
+        Panel *p = panel->priv;
+        if (gtk_widget_get_has_window(w))
+        {
+
+             if (gtk_widget_get_realized(w))
+             {
+                    GdkWindow * window = gtk_widget_get_window(w);
+                    GdkRGBA color;
+                    gdk_rgba_parse(&color,"rgba(0,0,0,0)");
+                    gdk_window_set_background_rgba(window, &color);
+                    gdk_window_set_background_pattern(window, NULL);
+                    gdk_window_invalidate_rect(gtk_widget_get_window(w), NULL, TRUE);
+             }
+         }
+    }
+#else
     if (w != NULL)
     {
         Panel *p = panel->priv;
@@ -254,7 +277,7 @@ void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
 #else
                 if (GTK_WIDGET_REALIZED(w))
 #endif
-                {
+				{
                     gdk_window_set_back_pixmap(gtk_widget_get_window(w), NULL, TRUE);
                     gtk_style_set_background(gtk_widget_get_style(w),
                                              gtk_widget_get_window(w),
@@ -276,8 +299,8 @@ void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
         if (GTK_IS_CONTAINER(w))
             gtk_container_foreach(GTK_CONTAINER(w), (GtkCallback) plugin_widget_set_background, panel);
     }
+#endif
 }
-
 /* Handler for "button_press_event" signal with Plugin as parameter.
  * External so can be used from a plugin. */
 static gboolean lxpanel_plugin_button_press_event(GtkWidget *plugin, GdkEventButton *event, LXPanel *panel)
@@ -534,8 +557,8 @@ static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, LXPane
     if (alloc->x == allocation->x && alloc->y == allocation->y &&
         alloc->width == allocation->width && alloc->height == allocation->height)
         return; /* not changed */
-    *alloc = *allocation;
-    /* g_debug("size-allocate on %s", PLUGIN_CLASS(widget)->name); */
+	*alloc = *allocation;
+	 /* g_debug("size-allocate on %s, params: %d,%d\n", PLUGIN_CLASS(widget)->name,allocation->width,allocation->height); */
     _panel_queue_update_background(p);
 //    _queue_panel_calculate_size(p);
 }

@@ -86,7 +86,11 @@ struct pgui *passwd_gui_new(ap_setting *aps)
     /* create dialog */
     pwdgui->dlg = gtk_dialog_new_with_buttons(_("Setting Encryption Key"),
                                        NULL,
+#if GTK_CHECK_VERSION (3, 0, 0)
+                                       0,
+#else
                                        GTK_DIALOG_NO_SEPARATOR,
+#endif
                                        GTK_STOCK_OK, GTK_RESPONSE_OK,
                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                        NULL );

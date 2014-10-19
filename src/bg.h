@@ -56,9 +56,17 @@ typedef struct _FbBg      FbBg;
 
 GType fb_bg_get_type       (void);
 #define fb_bg_new() (FbBg *)g_object_new(FB_TYPE_BG, NULL)
+#if GTK_CHECK_VERSION (3,0,0)
+void fb_bg_apply_css (GtkWidget* widget, gchar* css,gboolean remove);
+gchar* fb_bg_generate_string(const char *filename, GdkRGBA color,gboolean no_image);
+void fb_bg_composite(GdkWindow *base, GdkColor *tintcolor, gint alpha);
+cairo_pattern_t *fb_bg_get_xroot_pix_for_win(FbBg *bg, GtkWidget *widget);
+cairo_pattern_t *fb_bg_get_pix_from_file(GtkWidget *widget, const char *filename);
+#else
 void fb_bg_composite(GdkDrawable *base, GdkColor *tintcolor, gint alpha);
 GdkPixmap *fb_bg_get_xroot_pix_for_win(FbBg *bg, GtkWidget *widget);
+GdkPixmap *fb_bg_get_pix_from_file(GtkWidget *widget, const char *filename);
+#endif
 void fb_bg_notify_changed_bg(FbBg *bg);
 FbBg *fb_bg_get_for_display(void);
-GdkPixmap *fb_bg_get_pix_from_file(GtkWidget *widget, const char *filename);
 #endif /* __FB_BG_H__ */

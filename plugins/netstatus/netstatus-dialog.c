@@ -228,14 +228,18 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       /* Address */
       if (addr)
 	{
+#if !GTK_CHECK_VERSION (3, 0, 0)
 	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 0, 6);
+#endif
 	  gtk_label_set_text (GTK_LABEL (data->inet4_addr), addr);
 	  gtk_widget_show (data->inet4_addr);
 	  gtk_widget_show (data->inet4_addr_title);
 	}
       else
 	{
+#if !GTK_CHECK_VERSION (3, 0, 0)
 	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 0, 0);
+#endif
 	  gtk_widget_hide (data->inet4_addr);
 	  gtk_widget_hide (data->inet4_addr_title);
 	}
@@ -243,14 +247,18 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       /* Destination */
       if (dest)
 	{
+#if !GTK_CHECK_VERSION (3, 0, 0)
 	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 1, 6);
+#endif
 	  gtk_label_set_text (GTK_LABEL (data->inet4_dest), dest);
 	  gtk_widget_show (data->inet4_dest);
 	  gtk_widget_show (data->inet4_dest_title);
 	}
       else
 	{
+#if !GTK_CHECK_VERSION (3, 0, 0)
 	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 1, 0);
+#endif
 	  gtk_widget_hide (data->inet4_dest);
 	  gtk_widget_hide (data->inet4_dest_title);
 	}
@@ -258,14 +266,18 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       /* Broadcast */
       if (bcast)
 	{
+#if !GTK_CHECK_VERSION (3, 0, 0)
 	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 2, 6);
+#endif
 	  gtk_label_set_text (GTK_LABEL (data->inet4_bcast), bcast);
 	  gtk_widget_show (data->inet4_bcast);
 	  gtk_widget_show (data->inet4_bcast_title);
 	}
       else
 	{
+#if !GTK_CHECK_VERSION (3, 0, 0)
 	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 2, 0);
+#endif
 	  gtk_widget_hide (data->inet4_bcast);
 	  gtk_widget_hide (data->inet4_bcast_title);
 	}
@@ -744,7 +756,15 @@ netstatus_dialog_new (NetstatusIface *iface)
   data = g_new0 (NetstatusDialogData, 1);
 
   data->builder = gtk_builder_new();
-  gtk_builder_add_from_file(data->builder, PACKAGE_UI_DIR "/netstatus.ui", NULL);
+#if GTK_CHECK_VERSION (3, 0, 0)
+  if ( !gtk_builder_add_from_file(data->builder, PACKAGE_UI_DIR "/netstatus3.ui", NULL) )
+#else
+  if ( !gtk_builder_add_from_file(data->builder, PACKAGE_UI_DIR "/netstatus.ui", NULL) )
+#endif
+  {
+      g_object_unref(data->builder);
+      return;
+  }
   data->dialog = (GtkWidget*)gtk_builder_get_object(data->builder, "network_status_dialog");
 
   g_object_set_data (G_OBJECT (data->dialog), "netstatus-dialog-data", data);

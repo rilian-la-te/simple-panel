@@ -1030,7 +1030,9 @@ void
 get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name)
 {
     GtkWidget *b;
-
+#if GTK_CHECK_VERSION (3,0,0)
+	GtkRequisition* minimal;
+#endif
     ENTER;
     b = gtk_button_new();
     gtk_widget_set_name(GTK_WIDGET(b), name);
@@ -1042,7 +1044,11 @@ get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name)
         gtk_container_add(parent, b);
 
     gtk_widget_show(b);
+#if GTK_CHECK_VERSION (3, 0, 0)
+	gtk_widget_get_preferred_size(b, req, minimal);
+#else
     gtk_widget_size_request(b, req);
+#endif
 
     gtk_widget_destroy(b);
     RET();

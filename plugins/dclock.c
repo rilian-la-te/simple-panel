@@ -76,8 +76,8 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
     GtkWidget * win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(GTK_WINDOW(win), 180, 180);
     gtk_window_set_decorated(GTK_WINDOW(win), FALSE);
-    gtk_window_set_resizable(GTK_WINDOW(win), FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(win), 5);
+	gtk_window_set_resizable(GTK_WINDOW(win), FALSE);
+	gtk_container_set_border_width(GTK_CONTAINER(win), 5);
     gtk_window_set_skip_taskbar_hint(GTK_WINDOW(win), TRUE);
     gtk_window_set_skip_pager_hint(GTK_WINDOW(win), TRUE);
     gtk_window_set_type_hint(GTK_WINDOW(win), GDK_WINDOW_TYPE_HINT_UTILITY);

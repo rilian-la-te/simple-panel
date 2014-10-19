@@ -63,6 +63,9 @@
 # include "menu-policy.h"
 #endif
 
+#if GTK_CHECK_VERSION (3,0,0)
+#include <gdk/gdkx.h>
+#endif
 
 #define PANEL_ICON_SIZE 24 /* see the private.h */
 
@@ -1907,6 +1910,76 @@ static void task_delete(LaunchTaskBarPlugin * tb, Task * tk, gboolean unlink, gb
     g_free(tk);
 }
 
+#if GTK_CHECK_VERSION(3,0,0)
+static cairo_surface_t *
+_wnck_cairo_surface_get_from_pixmap (Screen *screen,
+									 Pixmap  xpixmap)
+{
+  cairo_surface_t *surface;
+  Display *display;
+  Window root_return;
+  int x_ret, y_ret;
+  unsigned int w_ret, h_ret, bw_ret, depth_ret;
+  XWindowAttributes attrs;
+
+  surface = NULL;
+  display = DisplayOfScreen (screen);
+
+ // _wnck_error_trap_push (display);
+
+  if (!XGetGeometry (display, xpixmap, &root_return,
+					 &x_ret, &y_ret, &w_ret, &h_ret, &bw_ret, &depth_ret))
+	goto TRAP_POP;
+
+  if (depth_ret == 1)
+	{
+	  surface = cairo_xlib_surface_create_for_bitmap (display,
+													  xpixmap,
+													  screen,
+													  w_ret,
+													  h_ret);
+	}
+  else
+	{
+	  if (!XGetWindowAttributes (display, root_return, &attrs))
+		goto TRAP_POP;
+
+	  surface = cairo_xlib_surface_create (display,
+										   xpixmap,
+										   attrs.visual,
+										   w_ret, h_ret);
+	}
+
+TRAP_POP:
+//  _wnck_error_trap_pop (display);
+
+  return surface;
+}
+
+
+GdkPixbuf*
+_wnck_gdk_pixbuf_get_from_pixmap (Screen *screen,
+								  Pixmap  xpixmap)
+{
+  cairo_surface_t *surface;
+  GdkPixbuf *retval;
+
+  surface = _wnck_cairo_surface_get_from_pixmap (screen, xpixmap);
+
+  if (surface == NULL)
+	return NULL;
+
+  retval = gdk_pixbuf_get_from_surface (surface,
+										0,
+										0,
+										cairo_xlib_surface_get_width (surface),
+										cairo_xlib_surface_get_height (surface));
+  cairo_surface_destroy (surface);
+
+  return retval;
+}
+
+#else
 /* Get a pixbuf from a pixmap.
  * Originally from libwnck, Copyright (C) 2001 Havoc Pennington. */
 static GdkPixbuf * _wnck_gdk_pixbuf_get_from_pixmap(Pixmap xpixmap, int width, int height)
@@ -1966,6 +2039,7 @@ static GdkPixbuf * _wnck_gdk_pixbuf_get_from_pixmap(Pixmap xpixmap, int width, i
         g_object_unref(G_OBJECT(drawable));
     return retval;
 }
+#endif
 
 /* Apply a mask to a pixbuf.
  * Originally from libwnck, Copyright (C) 2001 Havoc Pennington. */
@@ -2205,7 +2279,11 @@ static GdkPixbuf * get_wm_icon(Window task_win, guint required_width, guint requ
         /* If we have an X pixmap and its geometry, convert it to a GDK pixmap. */
         if (result == Success)
         {
+#if GTK_CHECK_VERSION (3, 0, 0)
+			pixmap = _wnck_gdk_pixbuf_get_from_pixmap(gdk_x11_screen_get_xscreen(gdk_screen_get_default()),xpixmap);
+#else
             pixmap = _wnck_gdk_pixbuf_get_from_pixmap(xpixmap, w, h);
+#endif
             result = ((pixmap != NULL) ? Success : -1);
         }
 
@@ -2221,7 +2299,11 @@ static GdkPixbuf * get_wm_icon(Window task_win, guint required_width, guint requ
                 &unused_win, &unused, &unused, &w, &h, &unused_2, &unused_2))
             {
                 /* Convert the X mask to a GDK pixmap. */
+#if GTK_CHECK_VERSION (3, 0, 0)
+				GdkPixbuf * mask = _wnck_gdk_pixbuf_get_from_pixmap(gdk_x11_screen_get_xscreen(gdk_screen_get_default()),xmask);
+#else
                 GdkPixbuf * mask = _wnck_gdk_pixbuf_get_from_pixmap(xmask, w, h);
+#endif
                 if (mask != NULL)
                 {
                     /* Apply the mask. */

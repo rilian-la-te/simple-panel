@@ -19,7 +19,8 @@ uidir=$(datadir)/lxpanel/ui
 ui_in_files= \
 	ui/panel-pref.glade \
 	ui/launchtaskbar.glade \
-	ui/netstatus.glade
+	ui/netstatus.glade \
+	ui/netstatus3.glade
 
 ui_DATA = $(ui_in_files:.glade=.ui)
 

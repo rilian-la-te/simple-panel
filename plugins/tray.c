@@ -34,6 +34,10 @@
 #include "misc.h"
 #include "icon-grid.h"
 
+#if GTK_CHECK_VERSION (3,0,0)
+#include <gtk/gtkx.h>
+#endif
+
 /* Standards reference:  http://standards.freedesktop.org/systemtray-spec/ */
 
 /* Protocol constants. */
@@ -430,6 +434,9 @@ static void trayclient_request_dock(TrayPlugin * tr, XClientMessageEvent * xeven
     /* Add the socket to the icon grid. */
     gtk_container_add(GTK_CONTAINER(tr->plugin), tc->socket);
     gtk_widget_show(tc->socket);
+#if GTK_CHECK_VERSION (3, 0, 0)
+    gdk_window_set_composited (gtk_widget_get_window(tc->socket),TRUE);
+#endif
 
     /* Connect the socket to the plug.  This can only be done after the socket is realized. */
     gtk_socket_add_id(GTK_SOCKET(tc->socket), tc->window);
@@ -442,7 +449,6 @@ static void trayclient_request_dock(TrayPlugin * tr, XClientMessageEvent * xeven
         g_free(tc);
         return;
     }
-
     /* Link the client structure into the client list. */
     if (tc_pred == NULL)
     {
@@ -546,6 +552,88 @@ static void tray_unmanage_selection(TrayPlugin * tr)
     }
 }
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+static void
+tray_set_visual_property (GtkWidget *invisible, GdkScreen* screen)
+{
+  GdkWindow  *window;
+  GdkDisplay *display;
+  Visual     *xvisual;
+  Atom        visual_atom;
+  gulong      data[1];
+
+  if (!invisible)
+    return;
+  window = gtk_widget_get_window (invisible);
+  if (!window)
+    return;
+
+  /* The visual property is a hint to the tray icons as to what visual they
+   * should use for their windows. If the X server has RGBA colormaps, then
+   * we tell the tray icons to use a RGBA colormap and we'll composite the
+   * icon onto its parents with real transparency. Otherwise, we just tell
+   * the icon to use our colormap, and we'll do some hacks with parent
+   * relative backgrounds to simulate transparency.
+   */
+
+  display = gtk_widget_get_display (invisible);
+  visual_atom = gdk_x11_get_xatom_by_name_for_display (display,
+                               "_NET_SYSTEM_TRAY_VISUAL");
+
+  if (gdk_screen_get_rgba_visual (screen) != NULL &&
+      gdk_display_supports_composite (display))
+    {
+      xvisual = GDK_VISUAL_XVISUAL (gdk_screen_get_rgba_visual (screen));
+    }
+  else
+    {
+      /* We actually want the visual of the tray where the icons will
+       * be embedded. In almost all cases, this will be the same as the visual
+       * of the screen.
+       */
+      xvisual = GDK_VISUAL_XVISUAL (gdk_screen_get_system_visual (screen));
+    }
+
+  data[0] = XVisualIDFromVisual (xvisual);
+
+  XChangeProperty (GDK_DISPLAY_XDISPLAY (display),
+                   GDK_WINDOW_XID (window),
+                   visual_atom,
+                   XA_VISUALID, 32,
+                   PropModeReplace,
+                   (guchar *) &data, 1);
+}
+
+static void
+tray_draw_icon (GtkWidget *widget, gpointer   data)
+{
+      cairo_t *cr = data;
+      GtkAllocation allocation;
+      GtkAllocation parent_alloc;
+
+      gtk_widget_get_allocation (widget, &allocation);
+      gtk_widget_get_allocation (gtk_widget_get_parent(widget), &parent_alloc);
+      cairo_save (cr);
+      gdk_cairo_set_source_window (cr,
+                                   gtk_widget_get_window (widget),
+                                   allocation.x-parent_alloc.x,
+                                   allocation.y-parent_alloc.y);
+      cairo_rectangle (cr, allocation.x-parent_alloc.x, allocation.y-parent_alloc.y, allocation.width, allocation.height);
+      cairo_clip (cr);
+      cairo_paint (cr);
+      cairo_restore (cr);
+}
+
+
+static void
+tray_draw_box (GtkWidget *box,
+                  cairo_t   *cr)
+{
+    gtk_container_foreach (GTK_CONTAINER (box), tray_draw_icon, cr);
+}
+
+#endif
+
 /* Plugin constructor. */
 static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
 {
@@ -573,7 +661,9 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
     GtkWidget * invisible = gtk_invisible_new_for_screen(screen);
     gtk_widget_realize(invisible);
     gtk_widget_add_events(invisible, GDK_PROPERTY_CHANGE_MASK | GDK_STRUCTURE_MASK);
-
+#if GTK_CHECK_VERSION (3, 0, 0)
+    tray_set_visual_property (invisible, screen);
+#endif
     /* Try to claim the _NET_SYSTEM_TRAY_Sn selection. */
     guint32 timestamp = gdk_x11_get_server_time(gtk_widget_get_window(invisible));
     if (gdk_selection_owner_set_for_display(
@@ -591,7 +681,11 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
         xev.format = 32;
         xev.data.l[0] = timestamp;
         xev.data.l[1] = selection_atom;
+#if GTK_CHECK_VERSION (3,0,0)
+		xev.data.l[2] = GDK_WINDOW_XID(gtk_widget_get_window(invisible));
+#else
         xev.data.l[2] = GDK_WINDOW_XWINDOW(gtk_widget_get_window(invisible));
+#endif
         xev.data.l[3] = 0;    /* manager specific data */
         xev.data.l[4] = 0;    /* manager specific data */
         XSendEvent(GDK_DISPLAY_XDISPLAY(display), RootWindowOfScreen(xscreen), False, StructureNotifyMask, (XEvent *) &xev);
@@ -601,7 +695,11 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
         gulong data = SYSTEM_TRAY_ORIENTATION_HORZ;
         XChangeProperty(
             GDK_DISPLAY_XDISPLAY(display),
+#if GTK_CHECK_VERSION (3,0,0)
+			GDK_WINDOW_XID(gtk_widget_get_window(invisible)),
+#else
             GDK_WINDOW_XWINDOW(gtk_widget_get_window(invisible)),
+#endif
             a_NET_SYSTEM_TRAY_ORIENTATION,
             XA_CARDINAL, 32,
             PropModeReplace,
@@ -622,13 +720,21 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
     gdk_window_add_filter(NULL, (GdkFilterFunc) tray_event_filter, tr);
     /* Reference the window since it is never added to a container. */
     tr->invisible = g_object_ref_sink(G_OBJECT(invisible));
+#if GTK_CHECK_VERSION (3,0,0)
+	tr->invisible_window = GDK_WINDOW_XID(gtk_widget_get_window(invisible));
+#else
     tr->invisible_window = GDK_WINDOW_XWINDOW(gtk_widget_get_window(invisible));
+#endif
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     tr->plugin = p = panel_icon_grid_new(panel_get_orientation(panel),
                                          panel_get_icon_size(panel),
                                          panel_get_icon_size(panel),
                                          3, 0, panel_get_height(panel));
+#if GTK_CHECK_VERSION (3, 0, 0)
+    g_signal_connect (tr->plugin, "draw",
+                      G_CALLBACK (tray_draw_box), NULL);
+#endif
     lxpanel_plugin_set_data(p, tr, tray_destructor);
     gtk_widget_set_name(p, "tray");
     gtk_container_set_border_width(GTK_CONTAINER(p), 1);

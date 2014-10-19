@@ -17,6 +17,9 @@
  */
 
 #include <gtk/gtk.h>
+#if GTK_CHECK_VERSION (3,0,0)
+#include <gtk/gtkx.h>
+#endif
 #include <string.h>
 
 #include "icon-grid-old.h"
