@@ -51,10 +51,10 @@ static void passwd_gui_on_response(GtkDialog* dlg, gint response, struct passwd_
     gtk_widget_destroy((GtkWidget*)dlg);
 }
 
-void passwd_gui_set_style(struct pgui *pg, GtkStyle *style)
-{
-    gtk_widget_set_style(pg->dlg, style);
-}
+//void passwd_gui_set_style(struct pgui *pg, GtkStyle *style)
+//{
+//    gtk_widget_set_style(pg->dlg, style);
+//}
 
 static void passwd_gui_free(gpointer ptr, GObject *dummy)
 {
@@ -86,13 +86,9 @@ struct pgui *passwd_gui_new(ap_setting *aps)
     /* create dialog */
     pwdgui->dlg = gtk_dialog_new_with_buttons(_("Setting Encryption Key"),
                                        NULL,
-#if GTK_CHECK_VERSION (3, 0, 0)
                                        0,
-#else
-                                       GTK_DIALOG_NO_SEPARATOR,
-#endif
-                                       GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                       _("_OK"), GTK_RESPONSE_OK,
+                                       _("_Cancel"), GTK_RESPONSE_CANCEL,
                                        NULL );
     gtk_dialog_set_default_response(GTK_DIALOG(pwdgui->dlg), GTK_RESPONSE_OK);
     gtk_window_set_position(GTK_WINDOW(pwdgui->dlg), GTK_WIN_POS_CENTER);
@@ -103,7 +99,7 @@ struct pgui *passwd_gui_new(ap_setting *aps)
     gtk_box_pack_start(dialog_vbox, msg, FALSE, FALSE, 8);
 
     /* entry Box */
-    inputbox = gtk_hbox_new(FALSE, 0);
+    inputbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     inputlabel = gtk_label_new(_("Encryption Key:"));
     gtk_box_pack_start(GTK_BOX(inputbox), inputlabel, TRUE, TRUE, 4);
     pwdgui->pentry = gtk_entry_new();

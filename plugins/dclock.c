@@ -84,7 +84,7 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
     gtk_window_stick(GTK_WINDOW(win));
 
     /* Create a vertical box as a child of the window. */
-    GtkWidget * box = gtk_vbox_new(FALSE, 0);
+    GtkWidget * box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(win), GTK_WIDGET(box));
 
     /* Create a standard calendar widget as a child of the vertical box. */
@@ -306,7 +306,7 @@ static GtkWidget *dclock_constructor(LXPanel *panel, config_setting_t *settings)
     lxpanel_plugin_set_data(p, dc, dclock_destructor);
 
     /* Allocate a horizontal box as the child of the top level. */
-    GtkWidget * hbox = gtk_hbox_new(TRUE, 0);
+    GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_container_add(GTK_CONTAINER(p), hbox);
     gtk_widget_show(hbox);
 

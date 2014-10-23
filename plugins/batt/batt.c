@@ -60,7 +60,7 @@ typedef struct {
         *chargingColor2,
         *dischargingColor1,
         *dischargingColor2;
-    GdkColor background,
+    GdkRGBA background,
         charging1,
         charging2,
         discharging1,
@@ -224,7 +224,7 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
     cairo_set_line_width (cr, 1.0);
 
     /* draw background */
-    gdk_cairo_set_source_color(cr, &lx_b->background);
+//    gdk_cairo_set_source_color(cr, &lx_b->background);
     cairo_rectangle(cr, 0, 0, lx_b->width, lx_b->height);
     cairo_fill(cr);
 
@@ -277,13 +277,13 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
 
         /* Draw the battery bar vertically, using color 1 for the left half and
            color 2 for the right half */
-        gdk_cairo_set_source_color(cr,
+        gdk_cairo_set_source_rgba(cr,
                 isCharging ? &lx_b->charging1 : &lx_b->discharging1);
         cairo_rectangle(cr, lx_b->border,
                 lx_b->height - lx_b->border - chargeLevel, lx_b->width / 2
                 - lx_b->border, chargeLevel);
         cairo_fill(cr);
-        gdk_cairo_set_source_color(cr,
+        gdk_cairo_set_source_rgba(cr,
                 isCharging ? &lx_b->charging2 : &lx_b->discharging2);
         cairo_rectangle(cr, lx_b->width / 2,
                 lx_b->height - lx_b->border - chargeLevel, (lx_b->width + 1) / 2
@@ -295,12 +295,12 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
 
         /* Draw the battery bar horizontally, using color 1 for the top half and
            color 2 for the bottom half */
-        gdk_cairo_set_source_color(cr,
+        gdk_cairo_set_source_rgba(cr,
                 isCharging ? &lx_b->charging1 : &lx_b->discharging1);
         cairo_rectangle(cr, lx_b->border,
                 lx_b->border, chargeLevel, lx_b->height / 2 - lx_b->border);
         cairo_fill(cr);
-        gdk_cairo_set_source_color(cr,
+        gdk_cairo_set_source_rgba(cr,
                 isCharging ? &lx_b->charging2 : &lx_b->discharging2);
         cairo_rectangle(cr, lx_b->border, (lx_b->height + 1)
                 / 2, chargeLevel, lx_b->height / 2 - lx_b->border);
@@ -322,7 +322,6 @@ static int update_timout(lx_battery *lx_b) {
     battery *bat;
     if (g_source_is_destroyed(g_main_current_source()))
         return FALSE;
-    GDK_THREADS_ENTER();
     lx_b->state_elapsed_time++;
     lx_b->info_elapsed_time++;
 
@@ -337,7 +336,6 @@ static int update_timout(lx_battery *lx_b) {
 
     update_display( lx_b, TRUE );
 
-    GDK_THREADS_LEAVE();
     return TRUE;
 }
 
@@ -398,12 +396,12 @@ static gint exposeEvent(GtkWidget *widget, GdkEventExpose *event, lx_battery *lx
 
     ENTER;
     cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
-    GtkStyle *style = gtk_widget_get_style(lx_b->drawingArea);
+//    GtkStyle *style = gtk_widget_get_style(lx_b->drawingArea);
 
     gdk_cairo_region(cr, event->region);
     cairo_clip(cr);
 
-    gdk_cairo_set_source_color(cr, &style->black);
+//    gdk_cairo_set_source_color(cr, &style->black);
     cairo_set_source_surface(cr, lx_b->pixmap, 0, 0);
     cairo_paint(cr);
 
@@ -519,11 +517,11 @@ static GtkWidget * constructor(LXPanel *panel, config_setting_t *settings)
     if (! lx_b->dischargingColor2)
         lx_b->dischargingColor2 = g_strdup("#d9ca00");
 
-    gdk_color_parse(lx_b->backgroundColor, &lx_b->background);
-    gdk_color_parse(lx_b->chargingColor1, &lx_b->charging1);
-    gdk_color_parse(lx_b->chargingColor2, &lx_b->charging2);
-    gdk_color_parse(lx_b->dischargingColor1, &lx_b->discharging1);
-    gdk_color_parse(lx_b->dischargingColor2, &lx_b->discharging2);
+    gdk_rgba_parse(&lx_b->background,lx_b->backgroundColor);
+    gdk_rgba_parse(&lx_b->charging1,lx_b->chargingColor1);
+    gdk_rgba_parse(&lx_b->charging2,lx_b->chargingColor2);
+    gdk_rgba_parse(&lx_b->discharging1,lx_b->dischargingColor1);
+    gdk_rgba_parse(&lx_b->discharging2,lx_b->dischargingColor2);
 
     /* Start the update loop */
     lx_b->timer = g_timeout_add_seconds( 9, (GSourceFunc) update_timout, (gpointer) lx_b);
@@ -589,17 +587,17 @@ static gboolean applyConfig(gpointer user_data)
 
     /* Update colors */
     if (b->backgroundColor &&
-            gdk_color_parse(b->backgroundColor, &b->background))
+            gdk_rgba_parse(&b->background,b->backgroundColor))
         config_group_set_string(b->settings, "BackgroundColor", b->backgroundColor);
-    if (b->chargingColor1 && gdk_color_parse(b->chargingColor1, &b->charging1))
+    if (b->chargingColor1 && gdk_rgba_parse(&b->charging1,b->chargingColor1))
         config_group_set_string(b->settings, "ChargingColor1", b->chargingColor1);
-    if (b->chargingColor2 && gdk_color_parse(b->chargingColor2, &b->charging2))
+    if (b->chargingColor2 && gdk_rgba_parse(&b->charging2,b->chargingColor2))
         config_group_set_string(b->settings, "ChargingColor2", b->chargingColor2);
     if (b->dischargingColor1 &&
-            gdk_color_parse(b->dischargingColor1, &b->discharging1))
+            gdk_rgba_parse(&b->discharging1,b->dischargingColor1))
         config_group_set_string(b->settings, "DischargingColor1", b->dischargingColor1);
     if (b->dischargingColor2 &&
-            gdk_color_parse(b->dischargingColor2, &b->discharging2))
+            gdk_rgba_parse(&b->discharging2,b->dischargingColor2))
         config_group_set_string(b->settings, "DischargingColor2", b->dischargingColor2);
 
     /* Make sure the border value is acceptable */

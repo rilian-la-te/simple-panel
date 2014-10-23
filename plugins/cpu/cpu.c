@@ -59,25 +59,26 @@ typedef struct {
 static void redraw_pixmap(CPUPlugin * c);
 static gboolean cpu_update(CPUPlugin * c);
 static gboolean configure_event(GtkWidget * widget, GdkEventConfigure * event, CPUPlugin * c);
-static gboolean expose_event(GtkWidget * widget, GdkEventExpose * event, CPUPlugin * c);
+//static gboolean expose_event(GtkWidget * widget, GdkEventExpose * event, CPUPlugin * c);
 
 static void cpu_destructor(gpointer user_data);
 
+//TODO:Colors
 /* Redraw after timer callback or resize. */
 static void redraw_pixmap(CPUPlugin * c)
 {
     cairo_t * cr = cairo_create(c->pixmap);
-    GtkStyle * style = gtk_widget_get_style(c->da);
+//    GtkStyle * style = gtk_widget_get_style(c->da);
     cairo_set_line_width (cr, 1.0);
     /* Erase pixmap. */
     cairo_rectangle(cr, 0, 0, c->pixmap_width, c->pixmap_height);
-    gdk_cairo_set_source_color(cr, &style->black);
+//    gdk_cairo_set_source_color(cr, &style->black);
     cairo_fill(cr);
 
     /* Recompute pixmap. */
     unsigned int i;
     unsigned int drawing_cursor = c->ring_cursor;
-    gdk_cairo_set_source_color(cr, &c->foreground_color);
+//    gdk_cairo_set_source_color(cr, &c->foreground_color);
     for (i = 0; i < c->pixmap_width; i++)
     {
         /* Draw one bar of the CPU usage graph. */
@@ -206,26 +207,26 @@ static gboolean configure_event(GtkWidget * widget, GdkEventConfigure * event, C
     return TRUE;
 }
 
-/* Handler for expose_event on drawing area. */
-static gboolean expose_event(GtkWidget * widget, GdkEventExpose * event, CPUPlugin * c)
-{
-    /* Draw the requested part of the pixmap onto the drawing area.
-     * Translate it in both x and y by the border size. */
-    if (c->pixmap != NULL)
-    {
-        cairo_t * cr = gdk_cairo_create(gtk_widget_get_window(widget));
-        GtkStyle * style = gtk_widget_get_style(c->da);
-        gdk_cairo_region(cr, event->region);
-        cairo_clip(cr);
-        gdk_cairo_set_source_color(cr, &style->black);
-        cairo_set_source_surface(cr, c->pixmap,
-              BORDER_SIZE, BORDER_SIZE);
-        cairo_paint(cr);
-        /* check_cairo_status(cr); */
-        cairo_destroy(cr);
-    }
-    return FALSE;
-}
+///* Handler for expose_event on drawing area. */
+//static gboolean expose_event(GtkWidget * widget, GdkEventExpose * event, CPUPlugin * c)
+//{
+//    /* Draw the requested part of the pixmap onto the drawing area.
+//     * Translate it in both x and y by the border size. */
+//    if (c->pixmap != NULL)
+//    {
+//        cairo_t * cr = gdk_cairo_create(gtk_widget_get_window(widget));
+//        GtkStyle * style = gtk_widget_get_style(c->da);
+//        gdk_cairo_region(cr, event->region);
+//        cairo_clip(cr);
+////        gdk_cairo_set_source_color(cr, &style->black);
+//        cairo_set_source_surface(cr, c->pixmap,
+//              BORDER_SIZE, BORDER_SIZE);
+//        cairo_paint(cr);
+//        /* check_cairo_status(cr); */
+//        cairo_destroy(cr);
+//    }
+//    return FALSE;
+//}
 
 /* Plugin constructor. */
 static GtkWidget *cpu_constructor(LXPanel *panel, config_setting_t *settings)
@@ -248,11 +249,11 @@ static GtkWidget *cpu_constructor(LXPanel *panel, config_setting_t *settings)
 
     /* Clone a graphics context and set "green" as its foreground color.
      * We will use this to draw the graph. */
-    gdk_color_parse("green",  &c->foreground_color);
+//    gdk_color_parse("green",  &c->foreground_color);
 
     /* Connect signals. */
     g_signal_connect(G_OBJECT(c->da), "configure-event", G_CALLBACK(configure_event), (gpointer) c);
-    g_signal_connect(G_OBJECT(c->da), "expose-event", G_CALLBACK(expose_event), (gpointer) c);
+//    g_signal_connect(G_OBJECT(c->da), "expose-event", G_CALLBACK(expose_event), (gpointer) c);
 
     /* Show the widget.  Connect a timer to refresh the statistics. */
     gtk_widget_show(c->da);

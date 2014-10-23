@@ -351,7 +351,7 @@ static void lxpanel_init(PanelToplevel *self)
     p->height_when_hidden = 2;
     p->transparent = 0;
     p->alpha = 255;
-    gdk_color_parse("white", &p->gtintcolor);
+    gdk_rgba_parse(&p->gtintcolor,"white");
     p->tintcolor = gcolor2rgb24(&p->gtintcolor);
     p->usefontcolor = 0;
     p->fontcolor = 0x00000000;
@@ -361,7 +361,6 @@ static void lxpanel_init(PanelToplevel *self)
     p->icon_size = PANEL_ICON_SIZE;
     p->icon_theme = gtk_icon_theme_get_default();
     p->config = config_new();
-    p->defstyle = gtk_widget_get_default_style();
     gtk_window_set_type_hint(GTK_WINDOW(self), GDK_WINDOW_TYPE_HINT_DOCK);
 #if GTK_CHECK_VERSION (3, 0, 0)
 	GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(self));
@@ -1192,7 +1191,7 @@ GtkMenu* lxpanel_get_plugin_menu( LXPanel* panel, GtkWidget* plugin, gboolean us
     {
         init = PLUGIN_CLASS(plugin);
         /* create single item - plugin instance settings */
-        img = gtk_image_new_from_stock( GTK_STOCK_PREFERENCES, GTK_ICON_SIZE_MENU );
+        img = gtk_image_new_from_icon_name("preferences-other", GTK_ICON_SIZE_MENU );
         tmp = g_strdup_printf( _("\"%s\" Settings"), _(init->name) );
         menu_item = gtk_image_menu_item_new_with_label( tmp );
         g_free( tmp );
@@ -1212,7 +1211,7 @@ GtkMenu* lxpanel_get_plugin_menu( LXPanel* panel, GtkWidget* plugin, gboolean us
     if (use_sub_menu)
         menu = GTK_MENU(gtk_menu_new());
 
-    img = gtk_image_new_from_stock( GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU );
+    img = gtk_image_new_from_icon_name( "accessories-text-editor", GTK_ICON_SIZE_MENU );
     menu_item = gtk_image_menu_item_new_with_label(_("Add / Remove Panel Items"));
     gtk_image_menu_item_set_image( (GtkImageMenuItem*)menu_item, img );
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
@@ -1220,7 +1219,7 @@ GtkMenu* lxpanel_get_plugin_menu( LXPanel* panel, GtkWidget* plugin, gboolean us
 
     if( plugin )
     {
-        img = gtk_image_new_from_stock( GTK_STOCK_REMOVE, GTK_ICON_SIZE_MENU );
+        img = gtk_image_new_from_icon_name( GTK_STOCK_REMOVE, GTK_ICON_SIZE_MENU );
         tmp = g_strdup_printf( _("Remove \"%s\" From Panel"), _(init->name) );
         menu_item = gtk_image_menu_item_new_with_label( tmp );
         g_free( tmp );
@@ -1567,15 +1566,6 @@ void _panel_set_panel_configuration_changed(LXPanel *panel)
         }
     }
 
-    /* FIXME: it's deprecated, kept for binary compatibility */
-    if (p->orientation == GTK_ORIENTATION_HORIZONTAL) {
-        p->my_box_new = gtk_hbox_new;
-        p->my_separator_new = gtk_vseparator_new;
-    } else {
-        p->my_box_new = gtk_vbox_new;
-        p->my_separator_new = gtk_hseparator_new;
-    }
-
     /* recreate the main layout box */
     if (p->box != NULL)
     {
@@ -1644,8 +1634,8 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         p->height_when_hidden = MAX(0, i);
     if (config_setting_lookup_string(cfg, "tintcolor", &str))
     {
-        if (!gdk_color_parse (str, &p->gtintcolor))
-            gdk_color_parse ("white", &p->gtintcolor);
+        if (!gdk_rgba_parse (&p->gtintcolor,str))
+            gdk_rgba_parse (&p->gtintcolor,"white");
         p->tintcolor = gcolor2rgb24(&p->gtintcolor);
             DBG("tintcolor=%x\n", p->tintcolor);
     }
@@ -1653,8 +1643,8 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         p->usefontcolor = i != 0;
     if (config_setting_lookup_string(cfg, "fontcolor", &str))
     {
-        if (!gdk_color_parse (str, &p->gfontcolor))
-            gdk_color_parse ("black", &p->gfontcolor);
+        if (!gdk_rgba_parse (&p->gfontcolor,str))
+            gdk_rgba_parse (&p->gfontcolor,"black");
         p->fontcolor = gcolor2rgb24(&p->gfontcolor);
             DBG("fontcolor=%x\n", p->fontcolor);
     }
@@ -1897,7 +1887,7 @@ int main(int argc, char *argv[], char *env[])
 
     setlocale(LC_CTYPE, "");
 
-    g_thread_init(NULL);
+    //g_thread_init(NULL);
 /*    gdk_threads_init();
     gdk_threads_enter(); */
 
@@ -1951,10 +1941,11 @@ int main(int argc, char *argv[], char *env[])
         }
     }
 
+//TODO: CSS File.
     /* Add a gtkrc file to be parsed too. */
-    file = _user_config_file_name("gtkrc", NULL);
-    gtk_rc_parse(file);
-    g_free(file);
+//    file = _user_config_file_name("gtkrc", NULL);
+//    gtk_rc_parse(file);
+//    g_free(file);
 
     /* Check for duplicated lxpanel instances */
     if (!check_main_lock() && !config) {
@@ -2049,11 +2040,6 @@ gint panel_get_monitor(LXPanel *panel)
     return panel->priv->monitor;
 }
 
-GtkStyle *panel_get_defstyle(LXPanel *panel)
-{
-    return panel->priv->defstyle;
-}
-
 GtkIconTheme *panel_get_icon_theme(LXPanel *panel)
 {
     return panel->priv->icon_theme;
@@ -2071,16 +2057,12 @@ gboolean panel_is_dynamic(LXPanel *panel)
 
 GtkWidget *panel_box_new(LXPanel *panel, gboolean homogeneous, gint spacing)
 {
-    if (panel->priv->orientation == GTK_ORIENTATION_HORIZONTAL)
-        return gtk_hbox_new(homogeneous, spacing);
-    return gtk_vbox_new(homogeneous, spacing);
+    return gtk_box_new(panel->priv->orientation, spacing);
 }
 
 GtkWidget *panel_separator_new(LXPanel *panel)
 {
-    if (panel->priv->orientation == GTK_ORIENTATION_HORIZONTAL)
-        return gtk_vseparator_new();
-    return gtk_hseparator_new();
+    return gtk_separator_new(panel->priv->orientation);
 }
 
 gboolean _class_is_present(const LXPanelPluginInit *init)

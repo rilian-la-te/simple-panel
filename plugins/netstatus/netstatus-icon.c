@@ -582,26 +582,26 @@ netstatus_icon_scale_icons (NetstatusIcon  *icon,
   netstatus_icon_update_image (icon);
 }
 
-static inline GObjectClass *
-get_box_class (GtkOrientation orientation)
-{
-  return g_type_class_peek(orientation == GTK_ORIENTATION_HORIZONTAL ? GTK_TYPE_HBOX : GTK_TYPE_VBOX);
-}
+//static inline GObjectClass *
+//get_box_class (GtkOrientation orientation)
+//{
+//  return g_type_class_peek(orientation == GTK_ORIENTATION_HORIZONTAL ? GTK_TYPE_HBOX : GTK_TYPE_VBOX);
+//}
 
-#if !GTK_CHECK_VERSION (3, 0, 0)
-static void
-netstatus_icon_size_request (GtkWidget      *widget,
-			     GtkRequisition *requisition)
-{
-  NetstatusIcon *icon = NETSTATUS_ICON (widget);
-  GObjectClass  *klass;
+//#if !GTK_CHECK_VERSION (3, 0, 0)
+//static void
+//netstatus_icon_size_request (GtkWidget      *widget,
+//			     GtkRequisition *requisition)
+//{
+//  NetstatusIcon *icon = NETSTATUS_ICON (widget);
+//  GObjectClass  *klass;
 
-  klass = get_box_class (icon->priv->orientation);
+//  klass = get_box_class (icon->priv->orientation);
 
-  if (GTK_WIDGET_CLASS (klass)->size_request)
-    GTK_WIDGET_CLASS (klass)->size_request (widget, requisition);
-}
-#endif
+//  if (GTK_WIDGET_CLASS (klass)->size_request)
+//    GTK_WIDGET_CLASS (klass)->size_request (widget, requisition);
+//}
+//#endif
 
 static void
 netstatus_icon_size_allocate (GtkWidget     *widget,
@@ -698,9 +698,9 @@ netstatus_icon_realize (GtkWidget *widget)
   gtk_widget_set_window (widget, window);
   gdk_window_set_user_data (window, widget);
 
-  gtk_widget_ensure_style (widget);
-  style = gtk_widget_get_style (widget);
-  gtk_style_set_background (style, window, GTK_STATE_NORMAL);
+//  gtk_widget_ensure_style (widget);
+//  style = gtk_widget_get_style (widget);
+//  gtk_style_set_background (style, window, GTK_STATE_NORMAL);
 }
 
 static gboolean

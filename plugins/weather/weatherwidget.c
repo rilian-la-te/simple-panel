@@ -317,9 +317,9 @@ gtk_weather_init(GtkWeather * weather)
   GtkWeatherPrivate * priv = GTK_WEATHER_GET_PRIVATE(weather);
 
   /* Box layout internals */
-  priv->hbox = gtk_hbox_new(FALSE, 1);
+  priv->hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 
-  priv->image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_ERROR, GTK_ICON_SIZE_BUTTON);
+  priv->image = gtk_image_new_from_icon_name("dialog-error", GTK_ICON_SIZE_BUTTON);
 
   priv->label = gtk_label_new(GTK_WEATHER_NOT_AVAILABLE_LABEL);
 
@@ -484,7 +484,7 @@ gtk_weather_render(GtkWeather * weather)
 
       GtkRequisition req;
 
-      gtk_widget_size_request(GTK_WIDGET(priv->hbox), &req);
+      gtk_widget_get_preferred_size(GTK_WIDGET(priv->hbox), &req, NULL);
 
       /* req will hold valid data for painted widget, so disregard if we're
        * running in a single app 
@@ -522,14 +522,14 @@ gtk_weather_render(GtkWeather * weather)
       /* N/A */
       if (priv->location)
         {
-          gtk_image_set_from_stock(GTK_IMAGE(priv->image), 
-                                   GTK_STOCK_DIALOG_WARNING, 
+          gtk_image_set_from_icon_name(GTK_IMAGE(priv->image),
+                                   "dialog-warning",
                                    GTK_ICON_SIZE_BUTTON);
         }
       else
         {
-          gtk_image_set_from_stock(GTK_IMAGE(priv->image), 
-                                   GTK_STOCK_DIALOG_ERROR, 
+          gtk_image_set_from_icon_name(GTK_IMAGE(priv->image),
+                                   "dialog-warning",
                                    GTK_ICON_SIZE_BUTTON);
         }
       
@@ -796,8 +796,8 @@ gtk_weather_change_location(GtkWidget * widget, GdkEventButton * event)
   GtkWidget * dialog = gtk_dialog_new_with_buttons(_("Enter New Location"),
                                                    GTK_WINDOW(priv->preferences_data.dialog),
                                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                   GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                                   GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                                   _("_OK"), GTK_RESPONSE_ACCEPT,
+                                                   _("_Cancel"), GTK_RESPONSE_REJECT,
                                                    NULL);
 
   /* Set dialog window icon */
@@ -816,23 +816,23 @@ gtk_weather_change_location(GtkWidget * widget, GdkEventButton * event)
                    G_CALLBACK(gtk_weather_key_pressed),
                    (gpointer)dialog);
 
-  GtkWidget * image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_INFO, GTK_ICON_SIZE_DIALOG);
+  GtkWidget * image = gtk_image_new_from_icon_name("dialog-info", GTK_ICON_SIZE_DIALOG);
 
   GtkWidget * description_label = gtk_label_new(_("Enter the:\n- city, or\n- city and state/country, or\n- postal code\nfor which to retrieve the weather forecast."));
 
   gtk_label_set_justify(GTK_LABEL(description_label), GTK_JUSTIFY_LEFT);
 
-  GtkWidget * entry_hbox = gtk_hbox_new(FALSE, 10);
+  GtkWidget * entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
 
   gtk_box_pack_start(GTK_BOX(entry_hbox), location_label, FALSE, FALSE, 5);
   gtk_box_pack_end(GTK_BOX(entry_hbox), location_entry, FALSE, FALSE, 5);
 
-  GtkWidget * entry_vbox = gtk_vbox_new(FALSE, 10);
+  GtkWidget * entry_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
 
   gtk_box_pack_start(GTK_BOX(entry_vbox), description_label, FALSE, FALSE, 5);
   gtk_box_pack_start(GTK_BOX(entry_vbox), entry_hbox, FALSE, FALSE, 5);
 
-  GtkWidget * label_hbox = gtk_hbox_new(FALSE, 10);
+  GtkWidget * label_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
 
   gtk_box_pack_start(GTK_BOX(label_hbox), image, FALSE, FALSE, 5);
   gtk_box_pack_start(GTK_BOX(label_hbox), entry_vbox, FALSE, FALSE, 5);
@@ -1063,19 +1063,19 @@ gtk_weather_create_popup_menu(GtkWeather * weather)
   priv->menu_data.preferences_item = gtk_image_menu_item_new_with_label(_("Preferences"));
   
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(priv->menu_data.preferences_item), 
-                                gtk_image_new_from_stock(GTK_STOCK_PREFERENCES,
+                                gtk_image_new_from_icon_name("preferences-other",
                                                          GTK_ICON_SIZE_MENU));
   
   priv->menu_data.refresh_item = gtk_image_menu_item_new_with_label(_("Refresh"));
 
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(priv->menu_data.refresh_item), 
-                                gtk_image_new_from_stock(GTK_STOCK_REFRESH,
+                                gtk_image_new_from_icon_name("view-refresh",
                                                          GTK_ICON_SIZE_MENU));
 
   priv->menu_data.quit_item = gtk_image_menu_item_new_with_label(_("Quit"));
 
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(priv->menu_data.quit_item), 
-                                gtk_image_new_from_stock(GTK_STOCK_QUIT,
+                                gtk_image_new_from_icon_name("application-exit",
                                                          GTK_ICON_SIZE_MENU));
 
   gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu_data.menu), priv->menu_data.preferences_item);
@@ -1249,7 +1249,7 @@ gtk_weather_create_preferences_dialog(GtkWidget * widget)
 
   GtkWidget * location_frame = gtk_frame_new(_("Current Location"));
 
-  GtkWidget * location_hbox = gtk_hbox_new(FALSE, 1);
+  GtkWidget * location_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 
   priv->preferences_data.location_label = gtk_label_new(_("None configured"));
 
@@ -1284,7 +1284,8 @@ gtk_weather_create_preferences_dialog(GtkWidget * widget)
 
   GtkWidget * button_label = gtk_label_new(_("Units:"));
 
-  GtkWidget * button_hbox = gtk_hbox_new(TRUE, 10);
+  GtkWidget * button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+  gtk_box_set_homogeneous(GTK_BOX(button_hbox),TRUE);
 
   priv->preferences_data.c_button = gtk_radio_button_new_with_mnemonic(NULL, _("_Metric (\302\260C)"));
 
@@ -1329,7 +1330,8 @@ gtk_weather_create_preferences_dialog(GtkWidget * widget)
 
   GtkWidget * update_label = gtk_label_new(_("Updates:"));
 
-  GtkWidget * update_vbox = gtk_vbox_new(TRUE, 10);
+  GtkWidget * update_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+  gtk_box_set_homogeneous(GTK_BOX(update_vbox),TRUE);
 
   priv->preferences_data.manual_button = gtk_radio_button_new_with_mnemonic(NULL, _("Ma_nual"));
 
@@ -1352,7 +1354,7 @@ gtk_weather_create_preferences_dialog(GtkWidget * widget)
                            G_CALLBACK(gtk_weather_auto_update_toggled),
                            widget);*/
 
-  GtkWidget * auto_hbox = gtk_hbox_new(FALSE, 2);
+  GtkWidget * auto_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
   priv->preferences_data.auto_spin_button = gtk_spin_button_new_with_range(1, 60, 1);
   
@@ -1573,14 +1575,14 @@ gtk_weather_run_conditions_dialog(GtkWidget * widget)
       GtkWidget * dialog = gtk_dialog_new_with_buttons(dialog_title,
                                                        NULL,
                                                        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                       GTK_STOCK_REFRESH, GTK_RESPONSE_APPLY,
-                                                       GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                                       _("_Refresh"), GTK_RESPONSE_APPLY,
+                                                       _("_OK"), GTK_RESPONSE_ACCEPT,
                                                        NULL);
 
-      GtkWidget * everything_hbox = gtk_hbox_new(FALSE, 5);
+      GtkWidget * everything_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 
       /* This vbox gets filled-in when the table is populated */
-      GtkWidget * icon_vbox = gtk_vbox_new(FALSE, 1);
+      GtkWidget * icon_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 
       GtkWidget * forecast_table = gtk_table_new(9, 2, FALSE);
 
@@ -1820,7 +1822,7 @@ gtk_weather_run_conditions_dialog(GtkWidget * widget)
       /* Image and conditions label. Image is filled after dialog is shown 
        * to nicely scale the image pixbuf.
        */
-      GtkWidget * icon_image = gtk_image_new_from_stock(GTK_STOCK_MISSING_IMAGE,
+      GtkWidget * icon_image = gtk_image_new_from_icon_name("image-loading",
                                                         GTK_ICON_SIZE_MENU);
 
       gchar * conditions_label_text = g_strdup_printf("<b>%d \302\260%s %s</b>", 
@@ -1931,7 +1933,7 @@ gtk_weather_show_location_progress_bar(GtkWeather * weather)
   GtkWidget * dialog = gtk_dialog_new_with_buttons(progress_str,
                                                    GTK_WINDOW(priv->preferences_data.dialog),
                                                    GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                   GTK_STOCK_CANCEL,
+                                                   _("_Cancel"),
                                                    GTK_RESPONSE_CANCEL,
                                                    NULL);
 
@@ -2058,8 +2060,8 @@ gtk_weather_show_location_list(GtkWeather * weather, GList * list)
   GtkWidget * dialog = gtk_dialog_new_with_buttons(dialog_str,
                                                    GTK_WINDOW(priv->preferences_data.dialog),
                                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                   GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                                   GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                                   _("_OK"), GTK_RESPONSE_ACCEPT,
+                                                   _("_Cancel"), GTK_RESPONSE_REJECT,
                                                    NULL);
 
   gtk_widget_set_size_request(dialog, 300, 250);

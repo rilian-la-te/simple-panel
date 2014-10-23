@@ -24,21 +24,8 @@ LT_PREREQ([2.2])
 LT_INIT
 
 # Checks for libraries.
-AC_ARG_ENABLE(gtk3,
-AC_HELP_STRING([--enable-gtk3],[enable to use gtk-3.0 instead of gtk-2.0]),
-[case "${enableval}" in
-  yes)  enable_gtk3=yes ;;
-  no)   enable_gtk3=no ;;
-  *) AC_MSG_ERROR([bad value "${enableval}" for --enable-gtk3, use "yes" (default) or "no".]) ;;
-esac],[])
-
-if test "x$enable_gtk3" = "xyes" ; then
   CFLAGS="$CFLAGS -DENABLE_GTK3"
   pkg_modules="$pkg_modules gtk+-3.0 libfm-gtk3 >= 1.2.0 libwnck-3.0"
-else
-  pkg_modules="$pkg_modules gtk+-2.0 >= 2.18.0 libfm-gtk >= 1.2.0 libwnck-1.0"
-fi
-
 pkg_modules="$pkg_modules \
              gio-unix-2.0 \
              gthread-2.0 \
@@ -103,7 +90,7 @@ fi
 AC_SUBST(ADDITIONAL_FLAGS)
 
 PACKAGE_CFLAGS="$PACKAGE_CFLAGS $MENU_CACHE_CFLAGS $ADDITIONAL_FLAGS"
-PACKAGE_LIBS="$PACKAGE_LIBS $MENU_CACHE_LIBS"
+PACKAGE_LIBS="$PACKAGE_LIBS $MENU_CACHE_LIBS -lm"
 
 dnl linker tweaking
 # The function of the link flag --as-needed is to prevent unnecesary linking.

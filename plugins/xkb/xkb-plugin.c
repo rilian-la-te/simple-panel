@@ -264,7 +264,7 @@ static GtkWidget *xkb_constructor(LXPanel *panel, config_setting_t *settings)
     gtk_widget_add_events(p, GDK_BUTTON_PRESS_MASK);
 
     /* Create a horizontal box as the child of the button. */
-    GtkWidget * hbox = gtk_hbox_new(FALSE, 0);
+    GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 3);
     gtk_container_add(GTK_CONTAINER(p), hbox);
     gtk_widget_show(hbox);
@@ -388,7 +388,7 @@ static void on_xkb_checkbutton_keep_system_layouts_toggled(GtkToggleButton *tb, 
 
         if(!p_xkb->keep_system_layouts)
         {
-            gtk_entry_set_icon_from_stock(GTK_ENTRY(p_xkb->p_entry_advanced_opt), GTK_ENTRY_ICON_SECONDARY, "gtk-save");
+            gtk_entry_set_icon_from_icon_name(GTK_ENTRY(p_xkb->p_entry_advanced_opt), GTK_ENTRY_ICON_SECONDARY, "gtk-save");
             xkb_update_layouts_n_variants(p_xkb);
         }
         else
@@ -582,8 +582,8 @@ static void on_button_kbd_model_clicked(GtkButton *p_button, gpointer *p_data)
     GtkWidget *p_dialog = gtk_dialog_new_with_buttons(_("Select Keyboard Model"),
                             p_xkb->p_dialog_config,
                             GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                            GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                            GTK_STOCK_OK, GTK_RESPONSE_OK,
+                            _("_Cancel"), GTK_RESPONSE_CANCEL,
+                            _("_OK"), GTK_RESPONSE_OK,
                             NULL);
 
     // scrolledwindow
@@ -597,7 +597,6 @@ static void on_button_kbd_model_clicked(GtkButton *p_button, gpointer *p_data)
     GtkListStore *p_liststore_kbd_model = gtk_list_store_new(NUM_MODEL_COLUMNS, G_TYPE_STRING, G_TYPE_STRING);
     GtkWidget *p_treeview_kbd_model = gtk_tree_view_new_with_model(GTK_TREE_MODEL(p_liststore_kbd_model));
     g_object_unref(G_OBJECT(p_liststore_kbd_model));
-    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(p_treeview_kbd_model), TRUE);
     gtk_container_add(GTK_CONTAINER(p_scrolledwindow_kbd_model), p_treeview_kbd_model);
     GtkCellRenderer *p_renderer;
     GtkTreeViewColumn *p_column;
@@ -706,8 +705,8 @@ static void on_button_kbd_change_layout_clicked(GtkButton *p_button, gpointer *p
     GtkWidget *p_dialog = gtk_dialog_new_with_buttons(_("Select Layout Change Type"),
                             p_xkb->p_dialog_config,
                             GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                            GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                            GTK_STOCK_OK, GTK_RESPONSE_OK,
+                            _("_Cancel"), GTK_RESPONSE_CANCEL,
+                            _("_OK"), GTK_RESPONSE_OK,
                             NULL);
 
     // scrolledwindow
@@ -721,7 +720,6 @@ static void on_button_kbd_change_layout_clicked(GtkButton *p_button, gpointer *p
     GtkListStore *p_liststore_kbd_change = gtk_list_store_new(NUM_CHANGE_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_INT);
     GtkWidget *p_treeview_kbd_change = gtk_tree_view_new_with_model(GTK_TREE_MODEL(p_liststore_kbd_change));
     g_object_unref(G_OBJECT(p_liststore_kbd_change));
-    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(p_treeview_kbd_change), TRUE);
     gtk_container_add(GTK_CONTAINER(p_scrolledwindow_kbd_change), p_treeview_kbd_change);
     GtkCellRenderer *p_renderer;
     GtkTreeViewColumn *p_column;
@@ -879,8 +877,8 @@ static void on_button_add_layout_clicked(GtkButton *p_button, gpointer *p_data)
     GtkWidget *p_dialog = gtk_dialog_new_with_buttons(_("Add Keyboard Layout"),
                             p_xkb->p_dialog_config,
                             GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                            GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                            GTK_STOCK_OK, GTK_RESPONSE_OK,
+                            _("_Cancel"), GTK_RESPONSE_CANCEL,
+                            _("_OK"), GTK_RESPONSE_OK,
                             NULL);
 
     // scrolledwindow
@@ -1208,16 +1206,16 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
 #else
         GTK_DIALOG_NO_SEPARATOR,
 #endif
-        GTK_STOCK_CLOSE,
+        _("_Close"),
         GTK_RESPONSE_OK,
         NULL);
     p_xkb->p_dialog_config = GTK_WINDOW(dlg);
     panel_apply_icon(p_xkb->p_dialog_config);
 
     // main vbox of the config dialog
-    GtkWidget * p_hbox_main = gtk_hbox_new(TRUE, 0);
-    GtkWidget * p_vbox_left = gtk_vbox_new(FALSE, 0);
-    GtkWidget * p_vbox_right = gtk_vbox_new(FALSE, 0);
+    GtkWidget * p_hbox_main = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    GtkWidget * p_vbox_left = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    GtkWidget * p_vbox_right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(dlg))),
                       p_hbox_main);
     gtk_box_pack_start(GTK_BOX(p_hbox_main), p_vbox_left, FALSE, TRUE, 0);
@@ -1262,7 +1260,7 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_alignment_kbd_layouts = gtk_alignment_new(0.5, 0.5, 1, 1);
     gtk_container_add(GTK_CONTAINER(p_xkb->p_frame_kbd_layouts), p_alignment_kbd_layouts);
     gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_kbd_layouts), 4, 4, 10, 10);
-    GtkWidget * p_hbox_kbd_layouts = gtk_hbox_new(FALSE, 0);
+    GtkWidget * p_hbox_kbd_layouts = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_container_add(GTK_CONTAINER(p_alignment_kbd_layouts), p_hbox_kbd_layouts);
 
     // scrolledwindow and buttons
@@ -1270,12 +1268,12 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(p_scrolledwindow_kbd_layouts),
                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(p_hbox_kbd_layouts), p_scrolledwindow_kbd_layouts, TRUE, TRUE, 2);
-    GtkWidget * p_vbox_kbd_layouts = gtk_vbox_new(FALSE, 2);
+    GtkWidget * p_vbox_kbd_layouts = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     gtk_box_pack_start(GTK_BOX(p_hbox_kbd_layouts), p_vbox_kbd_layouts, FALSE, TRUE, 4);
-    GtkWidget * p_button_add_layout = gtk_button_new_from_stock(GTK_STOCK_ADD);
-    GtkWidget * p_button_up_layout = gtk_button_new_from_stock(GTK_STOCK_GO_UP);
-    GtkWidget * p_button_down_layout = gtk_button_new_from_stock(GTK_STOCK_GO_DOWN);
-    p_xkb->p_button_rm_layout = gtk_button_new_from_stock(GTK_STOCK_REMOVE);
+    GtkWidget * p_button_add_layout = gtk_button_new_from_icon_name("list-add",GTK_ICON_SIZE_SMALL_TOOLBAR);
+    GtkWidget * p_button_up_layout = gtk_button_new_from_icon_name("go-up",GTK_ICON_SIZE_SMALL_TOOLBAR);
+    GtkWidget * p_button_down_layout = gtk_button_new_from_icon_name("go-down",GTK_ICON_SIZE_SMALL_TOOLBAR);
+    p_xkb->p_button_rm_layout = gtk_button_new_from_icon_name("list-remove",GTK_ICON_SIZE_SMALL_TOOLBAR);
     g_signal_connect(p_button_add_layout, "clicked", G_CALLBACK(on_button_add_layout_clicked), p_xkb);
     g_signal_connect(p_xkb->p_button_rm_layout, "clicked", G_CALLBACK(on_button_rm_layout_clicked), p_xkb);
     g_signal_connect(p_button_up_layout, "clicked", G_CALLBACK(on_button_up_layout_clicked), p_xkb);
@@ -1344,13 +1342,13 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_alignment_advanced_opt = gtk_alignment_new(0.5, 0.5, 1, 1);
     gtk_container_add(GTK_CONTAINER(p_frame_advanced_opt), p_alignment_advanced_opt);
     gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_advanced_opt), 4, 4, 10, 10);
-    GtkWidget * p_vbox_advanced_opt = gtk_vbox_new(FALSE, 0);
+    GtkWidget * p_vbox_advanced_opt = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(p_alignment_advanced_opt), p_vbox_advanced_opt);
     p_xkb->p_entry_advanced_opt = gtk_entry_new();
     gtk_widget_set_sensitive(p_xkb->p_entry_advanced_opt, !p_xkb->keep_system_layouts);
     if (p_xkb->kbd_advanced_options)
         gtk_entry_set_text(GTK_ENTRY(p_xkb->p_entry_advanced_opt), p_xkb->kbd_advanced_options);
-    gtk_entry_set_icon_from_stock(GTK_ENTRY(p_xkb->p_entry_advanced_opt), GTK_ENTRY_ICON_SECONDARY, "gtk-save");
+    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(p_xkb->p_entry_advanced_opt), GTK_ENTRY_ICON_SECONDARY, "document-save");
     g_signal_connect(p_xkb->p_entry_advanced_opt, "icon-press", G_CALLBACK(on_xkb_entry_advanced_opt_icon_press), p_xkb);
     gtk_box_pack_start(GTK_BOX(p_vbox_advanced_opt), p_xkb->p_entry_advanced_opt, FALSE, TRUE, 0);
     p_xkb->p_checkbutton_no_reset_opt = gtk_check_button_new_with_mnemonic(_("Do _not reset existing options"));
@@ -1488,7 +1486,7 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_alignment_flag_size = gtk_alignment_new(0.5, 0.5, 1, 1);
     gtk_container_add(GTK_CONTAINER(p_frame_flag_size), p_alignment_flag_size);
     gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_flag_size), 4, 4, 10, 10);
-    GtkWidget *p_hbox_flag_size = gtk_hbox_new(FALSE, 2);
+    GtkWidget *p_hbox_flag_size = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
     gtk_container_add(GTK_CONTAINER(p_alignment_flag_size), p_hbox_flag_size);
 
     GtkWidget *p_radiobutton_flag_size_1 = gtk_radio_button_new_with_label(NULL, "1");

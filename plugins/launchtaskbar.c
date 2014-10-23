@@ -389,7 +389,7 @@ static void launchbutton_build_bootstrap(LaunchTaskBarPlugin *lb)
         g_signal_connect(event_box, "button-press-event", G_CALLBACK(launchbutton_press_event), lb->bootstrap_button);
 
         /* Create an image containing the stock "Add" icon as a child of the event box. */
-        lb->add_icon = fm_icon_from_name(GTK_STOCK_ADD);
+        lb->add_icon = fm_icon_from_name("gtk-add");
         icon = fm_pixbuf_from_icon(lb->add_icon, lb->icon_size);
         lb->bootstrap_button->image_widget = gtk_image_new_from_pixbuf(icon);
         g_object_unref(icon);
@@ -772,8 +772,8 @@ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *s
 {
     GtkWidget *p;
     LaunchTaskBarPlugin *ltbp;
-
-    gtk_rc_parse_string(launchtaskbar_rc);
+//TODO: CSS Replacement
+//    gtk_rc_parse_string(launchtaskbar_rc);
 
     /* Allocate plugin context and set into Plugin private data pointer. */
     ltbp = g_new0(LaunchTaskBarPlugin, 1);
@@ -1933,9 +1933,9 @@ _wnck_cairo_surface_get_from_pixmap (Screen *screen,
 
   if (depth_ret == 1)
 	{
-	  surface = cairo_xlib_surface_create_for_bitmap (display,
+      surface = cairo_xlib_surface_create_for_bitmap (display,
 													  xpixmap,
-													  screen,
+                                                      &screen,
 													  w_ret,
 													  h_ret);
 	}
@@ -1944,7 +1944,7 @@ _wnck_cairo_surface_get_from_pixmap (Screen *screen,
 	  if (!XGetWindowAttributes (display, root_return, &attrs))
 		goto TRAP_POP;
 
-	  surface = cairo_xlib_surface_create (display,
+      surface = cairo_xlib_surface_create (display,
 										   xpixmap,
 										   attrs.visual,
 										   w_ret, h_ret);
@@ -2356,7 +2356,7 @@ static void flash_window_update(Task * tk)
 {
     /* Set state on the button and redraw. */
     if ( ! tk->tb->flat_button)
-        gtk_widget_set_state(tk->button, tk->flash_state ? GTK_STATE_SELECTED : GTK_STATE_NORMAL);
+        gtk_widget_set_state_flags(tk->button,tk->flash_state ? GTK_STATE_SELECTED : GTK_STATE_NORMAL,TRUE);
     task_draw_label(tk);
 
     /* Complement the flashing context. */
@@ -2640,7 +2640,7 @@ static gboolean taskbar_task_control_event(GtkWidget * widget, GdkEventButton * 
 
     /* As a matter of policy, avoid showing selected or prelight states on flat buttons. */
     if (tb->flat_button)
-        gtk_widget_set_state(widget, GTK_STATE_NORMAL);
+        gtk_widget_set_state_flags(widget, GTK_STATE_NORMAL,TRUE);
     return TRUE;
 }
 
@@ -2735,7 +2735,7 @@ static void taskbar_button_enter(GtkWidget * widget, Task * tk)
     tk->tb->dnd_task_moving = FALSE;
     tk->entered_state = TRUE;
     if (tk->tb->flat_button)
-        gtk_widget_set_state(widget, GTK_STATE_NORMAL);
+        gtk_widget_set_state_flags(widget, GTK_STATE_NORMAL,TRUE);
     task_draw_label(tk);
 }
 
@@ -2858,7 +2858,7 @@ static void task_build_gui(LaunchTaskBarPlugin * tb, Task * tk)
     tk->button = gtk_toggle_button_new();
     gtk_container_set_border_width(GTK_CONTAINER(tk->button), 0);
     if (!tb->flat_button)
-        gtk_widget_set_state(tk->button, GTK_STATE_NORMAL);
+        gtk_widget_set_state_flags(tk->button, GTK_STATE_NORMAL,TRUE);
     gtk_drag_dest_set(tk->button, 0, NULL, 0, 0);
     gtk_drag_source_set(tk->button, GDK_BUTTON1_MASK, task_button_target_list, task_button_n_targets, GDK_ACTION_MOVE);
 
@@ -2874,7 +2874,7 @@ static void task_build_gui(LaunchTaskBarPlugin * tb, Task * tk)
     g_signal_connect(tk->button, "size-allocate", G_CALLBACK(taskbar_button_size_allocate), (gpointer) tk);
 
     /* Create a box to contain the application icon and window title. */
-    GtkWidget * container = gtk_hbox_new(FALSE, 1);
+    GtkWidget * container = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_container_set_border_width(GTK_CONTAINER(container), 0);
 
     /* Create an image to contain the application icon and add it to the box. */

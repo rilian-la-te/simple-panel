@@ -82,7 +82,7 @@ extern int config;
 
 /* GtkColotButton expects a number between 0 and 65535, but p->alpha has range
  * 0 to 255, and (2^(2n) - 1) / (2^n - 1) = 2^n + 1 = 257, with n = 8. */
-static guint16 const alpha_scale_factor = 257;
+static guint16 const alpha_scale_factor = 255;
 
 void panel_config_save(Panel *p);
 
@@ -368,20 +368,21 @@ background_disable_toggle( GtkWidget *b, Panel* p )
 }
 
 static void
-on_font_color_set( GtkColorButton* clr,  Panel* p )
+on_font_color_set( GtkColorChooser* clr,  Panel* p )
 {
-    gtk_color_button_get_color( clr, &p->gfontcolor );
+    gtk_color_chooser_get_rgba( clr, &p->gfontcolor );
     panel_set_panel_configuration_changed(p);
     p->fontcolor = gcolor2rgb24(&p->gfontcolor);
     UPDATE_GLOBAL_COLOR(p, "fontcolor", p->fontcolor);
 }
 
 static void
-on_tint_color_set( GtkColorButton* clr,  Panel* p )
+on_tint_color_set( GtkColorChooser* clr,  Panel* p )
 {
-    gtk_color_button_get_color( clr, &p->gtintcolor );
+    gtk_color_chooser_set_use_alpha(clr,TRUE);
+    gtk_color_chooser_get_rgba( clr, &p->gtintcolor );
     p->tintcolor = gcolor2rgb24(&p->gtintcolor);
-    p->alpha = gtk_color_button_get_alpha( clr ) / alpha_scale_factor;
+    p->alpha = p->gtintcolor.alpha * alpha_scale_factor;
     panel_update_background( p );
     UPDATE_GLOBAL_COLOR(p, "tintcolor", p->tintcolor);
     UPDATE_GLOBAL_INT(p, "alpha", p->alpha);
@@ -688,15 +689,12 @@ static void on_add_plugin( GtkButton* btn, GtkTreeView* _view )
     parent_win = gtk_widget_get_toplevel( GTK_WIDGET(_view) );
     dlg = gtk_dialog_new_with_buttons( _("Add plugin to panel"),
                                        GTK_WINDOW(parent_win), 0,
-                                       GTK_STOCK_CANCEL,
+                                       _("_Cancel"),
                                        GTK_RESPONSE_CANCEL,
-                                       GTK_STOCK_ADD,
+                                       _("_Add"),
                                        GTK_RESPONSE_OK, NULL );
     panel_apply_icon(GTK_WINDOW(dlg));
 
-    /* fix background */
-    if (p->priv->background)
-        gtk_widget_set_style(dlg, p->priv->defstyle);
 
     /* gtk_widget_set_sensitive( parent_win, FALSE ); */
     scroll = gtk_scrolled_window_new( NULL, NULL );
@@ -1097,8 +1095,8 @@ void panel_configure( LXPanel* panel, int sel_page )
 
     /* transparancy */
     tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
-    gtk_color_button_set_color(GTK_COLOR_BUTTON(w), &p->gtintcolor);
-    gtk_color_button_set_alpha(GTK_COLOR_BUTTON(w), alpha_scale_factor * p->alpha);
+    p->gtintcolor.alpha=p->alpha/255.0;
+    gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
     if ( ! p->transparent )
         gtk_widget_set_sensitive( w, FALSE );
     g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
@@ -1131,7 +1129,7 @@ void panel_configure( LXPanel* panel, int sel_page )
         else if ((info = gtk_icon_theme_lookup_icon(p->icon_theme, "lxpanel-background", 0, 0)))
         {
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), gtk_icon_info_get_filename(info));
-            gtk_icon_info_free(info);
+            g_object_unref(info);
         }
 
         if (!p->background)
@@ -1142,7 +1140,7 @@ void panel_configure( LXPanel* panel, int sel_page )
 
     /* font color */
     w = (GtkWidget*)gtk_builder_get_object( builder, "font_clr" );
-    gtk_color_button_set_color( GTK_COLOR_BUTTON(w), &p->gfontcolor );
+    gtk_color_chooser_set_rgba( GTK_COLOR_CHOOSER(w), &p->gfontcolor );
     g_signal_connect( w, "color-set", G_CALLBACK( on_font_color_set ), p );
 
     w2 = (GtkWidget*)gtk_builder_get_object( builder, "use_font_clr" );
@@ -1340,10 +1338,9 @@ static void on_browse_btn_clicked(GtkButton* btn, GtkEntry* entry)
                                         (action == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER) ? _("Select a directory") : _("Select a file"),
                                         GTK_WINDOW(dlg),
                                         action,
-                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                        GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                        _("_Cancel"), GTK_RESPONSE_CANCEL,
+                                        _("_OK"), GTK_RESPONSE_OK,
                                         NULL);
-    gtk_dialog_set_alternative_button_order(GTK_DIALOG(fc), GTK_RESPONSE_OK, GTK_RESPONSE_CANCEL, -1);
     file = (char*)gtk_entry_get_text(entry);
     if( file && *file )
         gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(fc), file );
@@ -1407,7 +1404,7 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
                                               const char *name, va_list args)
 {
     GtkWidget* dlg = gtk_dialog_new_with_buttons( title, NULL, 0,
-                                                  GTK_STOCK_CLOSE,
+                                                  _("_Close"),
                                                   GTK_RESPONSE_CLOSE,
                                                   NULL );
     GtkBox *dlg_vbox = GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dlg)));
@@ -1476,7 +1473,7 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
                 gtk_box_pack_start( dlg_vbox, entry, FALSE, FALSE, 2 );
             else
             {
-                GtkWidget* hbox = gtk_hbox_new( FALSE, 2 );
+                GtkWidget* hbox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 2 );
                 gtk_box_pack_start( GTK_BOX(hbox), label, FALSE, FALSE, 2 );
                 gtk_box_pack_start( GTK_BOX(hbox), entry, TRUE, TRUE, 2 );
                 gtk_box_pack_start( dlg_vbox, hbox, FALSE, FALSE, 2 );

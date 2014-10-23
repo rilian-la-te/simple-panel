@@ -502,11 +502,11 @@ static void volumealsa_build_popup_window(GtkWidget *p)
     gtk_container_add(GTK_CONTAINER(viewport), frame);
 
     /* Create a vertical box as the child of the frame. */
-    GtkWidget * box = gtk_vbox_new(FALSE, 0);
+    GtkWidget * box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(frame), box);
 
     /* Create a vertical scale as the child of the vertical box. */
-    vol->volume_scale = gtk_vscale_new(GTK_ADJUSTMENT(gtk_adjustment_new(100, 0, 100, 0, 0, 0)));
+    vol->volume_scale = gtk_scale_new(GTK_ORIENTATION_VERTICAL,GTK_ADJUSTMENT(gtk_adjustment_new(100, 0, 100, 0, 0, 0)));
     gtk_scale_set_draw_value(GTK_SCALE(vol->volume_scale), FALSE);
     gtk_range_set_inverted(GTK_RANGE(vol->volume_scale), TRUE);
     gtk_box_pack_start(GTK_BOX(box), vol->volume_scale, TRUE, TRUE, 0);
@@ -521,7 +521,7 @@ static void volumealsa_build_popup_window(GtkWidget *p)
     vol->mute_check_handler = g_signal_connect(vol->mute_check, "toggled", G_CALLBACK(volumealsa_popup_mute_toggled), vol);
 
     /* Set background to default. */
-    gtk_widget_set_style(viewport, panel_get_defstyle(vol->panel));
+//    gtk_widget_set_style(viewport, panel_get_defstyle(vol->panel));
 }
 
 /* Plugin constructor. */

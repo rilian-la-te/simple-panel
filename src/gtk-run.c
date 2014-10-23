@@ -245,7 +245,7 @@ static void setup_auto_complete( GtkEntry* entry )
         /* load in another working thread */
         thread_data = g_slice_new0(ThreadData); /* the data will be freed in idle handler later. */
         thread_data->entry = entry;
-        g_thread_create((GThreadFunc)thread_func, thread_data, FALSE, NULL);
+        g_thread_new("Autocompletion",(GThreadFunc)thread_func, thread_data);
     }
 }
 
@@ -319,7 +319,7 @@ static void on_entry_changed( GtkEntry* entry, GtkImage* img )
     }
     else
     {
-        gtk_image_set_from_stock(img, GTK_STOCK_EXECUTE, GTK_ICON_SIZE_DIALOG);
+        gtk_image_set_from_icon_name(img, "application-x-executable", GTK_ICON_SIZE_DIALOG);
     }
 }
 #endif
@@ -376,16 +376,10 @@ void gtk_run()
     {
         win = gtk_dialog_new_with_buttons( _("Run"),
                                            NULL,
-#if GTK_CHECK_VERSION(3,0,0)
 										   0,
-#else
-                                           GTK_DIALOG_NO_SEPARATOR,
-#endif
-                                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                           GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                           _("_Cancel"), GTK_RESPONSE_CANCEL,
+                                           _("_OK"), GTK_RESPONSE_OK,
                                            NULL );
-        gtk_dialog_set_alternative_button_order((GtkDialog*)win,
-                                GTK_RESPONSE_OK, GTK_RESPONSE_CANCEL, -1);
         gtk_dialog_set_default_response( (GtkDialog*)win, GTK_RESPONSE_OK );
         entry = gtk_entry_new();
 
@@ -394,8 +388,8 @@ void gtk_run()
         gtk_box_pack_start( (GtkBox*)dlg_vbox,
                              gtk_label_new(_("Enter the command you want to execute:")),
                              FALSE, FALSE, 8 );
-        hbox = gtk_hbox_new( FALSE, 2 );
-        img = gtk_image_new_from_stock( GTK_STOCK_EXECUTE, GTK_ICON_SIZE_DIALOG );
+        hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2 );
+        img = gtk_image_new_from_icon_name("application-x-executable", GTK_ICON_SIZE_DIALOG );
         gtk_box_pack_start( (GtkBox*)hbox, img,
                              FALSE, FALSE, 4 );
         gtk_box_pack_start( (GtkBox*)hbox, entry, TRUE, TRUE, 4 );

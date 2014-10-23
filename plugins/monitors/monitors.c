@@ -473,10 +473,9 @@ expose_event(GtkWidget * widget, GdkEventExpose * event, Monitor *m)
     if (m->pixmap != NULL)
     {
         cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
-        GtkStyle *style = gtk_widget_get_style(m->da);
         gdk_cairo_region(cr, event->region);
         cairo_clip(cr);
-        gdk_cairo_set_source_color(cr, &style->black);
+//        gdk_cairo_set_source_color(cr, &style->black);
         cairo_set_source_surface(cr, m->pixmap, BORDER_SIZE, BORDER_SIZE);
         cairo_paint(cr);
         check_cairo_status(cr);
@@ -507,13 +506,12 @@ redraw_pixmap (Monitor *m)
 {
     int i;
     cairo_t *cr = cairo_create(m->pixmap);
-    GtkStyle *style = gtk_widget_get_style(m->da);
 
     cairo_set_line_width (cr, 1.0);
 
     /* Erase pixmap */
-    gdk_cairo_set_source_color(cr, &style->black);
-    cairo_paint(cr);
+//    gdk_cairo_set_source_color(cr, &style->black);
+//    cairo_paint(cr);
 
     gdk_cairo_set_source_color(cr, &m->foreground_color);
     for (i = 0; i < m->pixmap_width; i++)
@@ -617,7 +615,8 @@ monitors_constructor(LXPanel *panel, config_setting_t *settings)
     mp->panel = panel;
     mp->settings = settings;
 
-    p = gtk_hbox_new(TRUE, 2);
+    p = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+    gtk_box_set_homogeneous(GTK_BOX(p),TRUE);
     lxpanel_plugin_set_data(p, mp, monitors_destructor);
     gtk_container_set_border_width(GTK_CONTAINER(p), 1);
 

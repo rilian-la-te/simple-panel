@@ -247,46 +247,6 @@ fb_bg_get_pix_from_file(GtkWidget *widget, const char *filename)
 	RET(pattern);
 }
 
-cairo_pattern_t *
-fb_bg_get_xroot_pix_for_win(FbBg *bg, GtkWidget *widget)
-{
-	Window win;
-	Window dummy;
-	Pixmap bgpix;
-	cairo_t *cr;
-	cairo_surface_t *surface;
-	cairo_pattern_t *pattern;
-	GdkScreen *screen = gdk_window_get_screen(gtk_widget_get_window(widget));
-	guint  width, height, border, depth;
-	int  x, y;
-
-	ENTER;
-	win = GDK_WINDOW_XID(gtk_widget_get_window(widget));
-	if (!XGetGeometry(bg->dpy, win, &dummy, &x, &y, &width, &height, &border,
-			  &depth)) {
-		g_warning("XGetGeometry failed\n");
-		RET(NULL);
-	}
-	XTranslateCoordinates(bg->dpy, win, bg->xroot, 0, 0, &x, &y, &dummy);
-	DBG("win=%x %dx%d%+d%+d\n", win, width, height, x, y);
-	bgpix=gdk_x11_window_get_xid(gtk_widget_get_window(widget));
-	surface = cairo_xlib_surface_create (GDK_SCREEN_XDISPLAY (screen), bgpix,
-										GDK_VISUAL_XVISUAL (gdk_screen_get_system_visual (screen)),
-							 width, height);
-//	gbgpix = gdk_pixmap_new(NULL, width, height, depth);
-//	if (!gbgpix) {
-//		g_critical("gdk_pixmap_new failed");
-//		RET(NULL);
-//	}
-//	bgpix =  gdk_x11_drawable_get_xid(gbgpix);
-//	XSetTSOrigin(bg->dpy, bg->gc, -x, -y) ;
-//	XFillRectangle(bg->dpy, bgpix, bg->gc, 0, 0, width, height);
-//	RET(gbgpix);
-	pattern = cairo_pattern_create_for_surface(surface);
-	cairo_surface_destroy(surface);
-	RET(pattern);
-}
-
 #else
 GdkPixmap *
 fb_bg_get_xroot_pix_for_win(FbBg *bg, GtkWidget *widget)
@@ -345,28 +305,28 @@ fb_bg_get_pix_from_file(GtkWidget *widget, const char *filename)
 	RET(pixmap);
 }
 #endif
-#if GTK_CHECK_VERSION (3,0,0)
-void
-fb_bg_composite(GdkWindow *base, GdkColor *tintcolor, gint alpha)
-#else
-void
-fb_bg_composite(GdkDrawable *base, GdkColor *tintcolor, gint alpha)
-#endif
-{
-    cairo_t *cr;
-    FbBg *bg;
+//#if GTK_CHECK_VERSION (3,0,0)
+//void
+//fb_bg_composite(GdkWindow *base, GdkColor *tintcolor, gint alpha)
+//#else
+//void
+//fb_bg_composite(GdkDrawable *base, GdkColor *tintcolor, gint alpha)
+//#endif
+//{
+//    cairo_t *cr;
+//    FbBg *bg;
 
-    ENTER;
-    cr = gdk_cairo_create(base);
-    gdk_cairo_set_source_color(cr, tintcolor);
-    cairo_paint_with_alpha(cr, (double) alpha/255);
-    check_cairo_status(cr);
-    cairo_destroy(cr);
-    bg = fb_bg_get_for_display();
-    fb_bg_changed(bg);
-    g_object_unref(bg);
-    RET();
-}
+//    ENTER;
+//    cr = gdk_cairo_create(base);
+//    gdk_cairo_set_source_color(cr, tintcolor);
+//    cairo_paint_with_alpha(cr, (double) alpha/255);
+//    check_cairo_status(cr);
+//    cairo_destroy(cr);
+//    bg = fb_bg_get_for_display();
+//    fb_bg_changed(bg);
+//    g_object_unref(bg);
+//    RET();
+//}
 
 
 static void

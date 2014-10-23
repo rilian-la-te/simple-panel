@@ -165,7 +165,7 @@ wireless_menu(netdev_info *ni)
 
             /* create a new item */
             menu_item = gtk_menu_item_new();
-            item_box = gtk_hbox_new(FALSE, 0);
+            item_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
             /* Encryption */
             if (aps->apinfo->haskey) {

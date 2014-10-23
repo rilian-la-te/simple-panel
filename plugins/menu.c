@@ -158,16 +158,16 @@ menu_pos(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, GtkWidget *widget)
     ENTER;
     m = g_object_get_data(G_OBJECT(widget), "plugin");
     gdk_window_get_origin(gtk_widget_get_window(widget), &ox, &oy);
-#if GTK_CHECK_VERSION(2,20,0)
-    GtkRequisition requisition;
-    gtk_widget_get_requisition(GTK_WIDGET(menu), &requisition);
-    w = requisition.width;
-    h = requisition.height;
+//#if GTK_CHECK_VERSION(2,20,0)
+//    GtkRequisition requisition;
+//    gtk_widget_get_requisition(GTK_WIDGET(menu), &requisition);
+//    w = requisition.width;
+//    h = requisition.height;
 
-#else
-    w = GTK_WIDGET(menu)->requisition.width;
-    h = GTK_WIDGET(menu)->requisition.height;
-#endif
+//#else
+//    w = GTK_WIDGET(menu)->requisition.width;
+//    h = GTK_WIDGET(menu)->requisition.height;
+//#endif
     if (panel_get_orientation(m->panel) == GTK_ORIENTATION_HORIZONTAL) {
         *x = ox;
         if (*x + w > gdk_screen_width())
@@ -705,7 +705,7 @@ static void show_system_menu(GtkWidget *p)
 }
 
 static GtkWidget *
-make_button(menup *m, const gchar *fname, const gchar *name, GdkColor* tint, GtkWidget *menu)
+make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkWidget *menu)
 {
     char* title = NULL;
 
@@ -897,7 +897,7 @@ read_submenu(menup *m, config_setting_t *s, gboolean as_item)
     GtkWidget *mi, *menu;
     const gchar *name, *fname, *str;
     config_setting_t *list = config_setting_add(s, "", PANEL_CONF_TYPE_LIST);
-    GdkColor color={0, 0, 36 * 0xffff / 0xff, 96 * 0xffff / 0xff};
+    GdkRGBA color={0, 0, 0, 1};
     guint i;
 
     ENTER;
@@ -910,7 +910,7 @@ read_submenu(menup *m, config_setting_t *s, gboolean as_item)
     config_setting_lookup_string(s, "name", &name);
     config_setting_lookup_string(s, "image", &fname);
     if (config_setting_lookup_string(s, "tintcolor", &str))
-        gdk_color_parse(str, &color);
+        gdk_rgba_parse(&color,str);
 
     for (i = 0; (s = config_setting_get_elem(list, i)) != NULL; i++)
     {
@@ -979,7 +979,7 @@ menu_constructor(LXPanel *panel, config_setting_t *settings)
     gtk_icon_size_lookup( GTK_ICON_SIZE_MENU, &iw, &ih );
     m->iconsize = MAX(iw, ih);
 
-    m->box = gtk_vbox_new(TRUE, 0);
+    m->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     lxpanel_plugin_set_data(m->box, m, menu_destructor);
     gtk_container_set_border_width(GTK_CONTAINER(m->box), 0);
 

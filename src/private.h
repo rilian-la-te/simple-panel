@@ -65,7 +65,6 @@ struct _Panel {
     LXPanel * topgwin;			/* Main panel window */
     Window topxwin;			/* Main panel's X window   */
     GdkDisplay * display;		/* Main panel's GdkDisplay */
-    GtkStyle * defstyle;
     GtkIconTheme* icon_theme; /*Default icon theme*/
 
     GtkWidget * box;			/* Top level widget */
@@ -78,8 +77,8 @@ struct _Panel {
     int alpha;
     guint32 tintcolor;
     guint32 fontcolor;
-    GdkColor gtintcolor;
-    GdkColor gfontcolor;
+    GdkRGBA gtintcolor;
+    GdkRGBA gfontcolor;
 
     int ax, ay, aw, ah;  /* prefferd allocation of a panel */
     int cx, cy, cw, ch;  /* current allocation (as reported by configure event) allocation */

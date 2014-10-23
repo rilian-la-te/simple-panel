@@ -117,12 +117,10 @@ static GtkWidget * dirmenu_create_menu(DirMenuPlugin * dm, const char * path, gb
     {
         int w;
         int h;
-        gtk_icon_size_lookup_for_settings(gtk_widget_get_settings(menu), GTK_ICON_SIZE_MENU, &w, &h);
+        gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &w, &h);
         dm->folder_icon = gtk_icon_theme_load_icon(
             panel_get_icon_theme(dm->panel),
             "gnome-fs-directory", MAX(w, h), 0, NULL);
-        if (dm->folder_icon == NULL)
-            dm->folder_icon = gtk_widget_render_icon(menu, GTK_STOCK_DIRECTORY, GTK_ICON_SIZE_MENU, NULL);
     }
 
     g_object_set_data_full(G_OBJECT(menu), "path", g_strdup(path), g_free);
@@ -183,7 +181,7 @@ static GtkWidget * dirmenu_create_menu(DirMenuPlugin * dm, const char * path, gb
         GtkWidget * item = gtk_image_menu_item_new_with_label(dir_cursor->directory_name);
         gtk_image_menu_item_set_image(
             GTK_IMAGE_MENU_ITEM(item),
-            gtk_image_new_from_stock(GTK_STOCK_DIRECTORY, GTK_ICON_SIZE_MENU));
+            gtk_image_new_from_icon_name("folder", GTK_ICON_SIZE_MENU));
         GtkWidget * dummy = gtk_menu_new();
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), dummy);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);

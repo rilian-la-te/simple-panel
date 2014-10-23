@@ -64,7 +64,7 @@ typedef struct thermal {
          *str_cl_warning1,
          *str_cl_warning2;
     unsigned int timer;
-    GdkColor cl_normal,
+    GdkRGBA cl_normal,
              cl_warning1,
              cl_warning2;
     int numsensors;
@@ -260,7 +260,7 @@ update_display(thermal *th)
     char buffer [60];
     int i;
     int temp;
-    GdkColor color;
+    GdkRGBA color;
     gchar *separator;
 
     temp = get_temperature(th, &i);
@@ -438,9 +438,9 @@ static gboolean applyConfig(gpointer p)
     int critical;
     ENTER;
 
-    if (th->str_cl_normal) gdk_color_parse(th->str_cl_normal, &th->cl_normal);
-    if (th->str_cl_warning1) gdk_color_parse(th->str_cl_warning1, &th->cl_warning1);
-    if (th->str_cl_warning2) gdk_color_parse(th->str_cl_warning2, &th->cl_warning2);
+    if (th->str_cl_normal) gdk_rgba_parse(&th->cl_normal,th->str_cl_normal);
+    if (th->str_cl_warning1) gdk_rgba_parse(&th->cl_warning1,th->str_cl_warning1);
+    if (th->str_cl_warning2) gdk_rgba_parse(&th->cl_warning2,th->str_cl_warning2);
 
     remove_all_sensors(th);
     if(th->sensor == NULL) th->auto_sensor = TRUE;

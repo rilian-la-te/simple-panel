@@ -15,6 +15,7 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+#include <math.h>
 
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
@@ -996,7 +997,7 @@ static void _gtk_image_set_from_file_scaled(GtkWidget * img, ImgData * data)
     else
     {
         /* No pixbuf available.  Set the "missing image" icon. */
-        gtk_image_set_from_stock(GTK_IMAGE(img), GTK_STOCK_MISSING_IMAGE, GTK_ICON_SIZE_BUTTON);
+        gtk_image_set_from_icon_name(GTK_IMAGE(img), "image-missing", GTK_ICON_SIZE_BUTTON);
     }
 }
 
@@ -1055,17 +1056,17 @@ get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name)
 }
 
 
-guint32 gcolor2rgb24(GdkColor *color)
+guint32 gcolor2rgb24(GdkRGBA *color)
 {
     guint32 i;
 
     ENTER;
 
-    i = (color->red * 0xFF / 0xFFFF) & 0xFF;
+    i = ((gint)round(color->red * 0xFFFF) / 0xFFFF) & 0xFF;
     i <<= 8;
-    i |= (color->green * 0xFF / 0xFFFF) & 0xFF;
+    i |= ((gint)round(color->green * 0xFFFF) / 0xFFFF) & 0xFF;
     i <<= 8;
-    i |= (color->blue * 0xFF / 0xFFFF) & 0xFF;
+    i |= ((gint)round(color->blue * 0xFFFF) / 0xFFFF) & 0xFF;
     DBG("i=%x\n", i);
     RET(i);
 }
@@ -1157,7 +1158,7 @@ static GtkWidget *_lxpanel_button_new_for_icon(LXPanel *panel, FmIcon *icon,
         gtk_container_add(GTK_CONTAINER(event_box), image);
     else
     {
-        GtkWidget * inner = gtk_hbox_new(FALSE, 0);
+        GtkWidget * inner = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
         gtk_container_set_border_width(GTK_CONTAINER(inner), 0);
         gtk_widget_set_can_focus(inner, FALSE);
         gtk_container_add(GTK_CONTAINER(event_box), inner);
@@ -1174,14 +1175,14 @@ static GtkWidget *_lxpanel_button_new_for_icon(LXPanel *panel, FmIcon *icon,
     return event_box;
 }
 
-GtkWidget *lxpanel_button_new_for_icon(LXPanel *panel, const gchar *name, GdkColor *color, const gchar *label)
+GtkWidget *lxpanel_button_new_for_icon(LXPanel *panel, const gchar *name, GdkRGBA *color, const gchar *label)
 {
     gulong highlight_color = color ? gcolor2rgb24(color) : PANEL_ICON_HIGHLIGHT;
     return _lxpanel_button_new_for_icon(panel, fm_icon_from_name(name),
                                         panel->priv->icon_size, highlight_color, label);
 }
 
-GtkWidget *lxpanel_button_new_for_fm_icon(LXPanel *panel, FmIcon *icon, GdkColor *color, const gchar *label)
+GtkWidget *lxpanel_button_new_for_fm_icon(LXPanel *panel, FmIcon *icon, GdkRGBA *color, const gchar *label)
 {
     gulong highlight_color = color ? gcolor2rgb24(color) : PANEL_ICON_HIGHLIGHT;
     return _lxpanel_button_new_for_icon(panel, g_object_ref(icon),

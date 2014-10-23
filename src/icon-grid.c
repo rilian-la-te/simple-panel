@@ -585,12 +585,6 @@ static void panel_icon_grid_realize(GtkWidget *widget)
         ig->event_window = gdk_window_new(window, &attributes, attributes_mask);
         gdk_window_set_user_data(ig->event_window, widget);
     }
-
-    style = gtk_style_attach(gtk_widget_get_style(widget), window);
-    gtk_widget_set_style(widget, style);
-
-    if (visible_window)
-        gtk_style_set_background(style, window, GTK_STATE_NORMAL);
 }
 
 static void panel_icon_grid_unrealize(GtkWidget *widget)

@@ -45,22 +45,7 @@ static void separator_reconfigure(LXPanel *panel, GtkWidget *instance)
 {
     /* Determine if the orientation changed in a way that requires action. */
     GtkWidget * sep = gtk_bin_get_child(GTK_BIN(instance));
-    if (GTK_IS_VSEPARATOR(sep))
-    {
-        if (panel_get_orientation(panel) == GTK_ORIENTATION_HORIZONTAL)
-            return;
-    }
-    else
-    {
-        if (panel_get_orientation(panel) == GTK_ORIENTATION_VERTICAL)
-            return;
-    }
-
-    /* If the orientation changed, recreate the separator. */
-    gtk_widget_destroy(sep);
-    sep = panel_separator_new(panel);
-    gtk_widget_show(sep);
-    gtk_container_add(GTK_CONTAINER(instance), sep);
+    gtk_orientable_set_orientation((GtkOrientable*)sep,panel_get_orientation(panel));
 }
 
 /* Plugin descriptor. */
