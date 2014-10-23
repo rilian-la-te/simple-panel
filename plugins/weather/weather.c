@@ -23,7 +23,6 @@
 #include "yahooutil.h"
 #include "logutil.h"
 
-#include "plugin.h"
 
 #include <glib.h>
 #include <glib/gi18n.h>
@@ -96,7 +95,7 @@ weather_constructor(LXPanel *pPanel, config_setting_t *pConfig)
 
   LXW_LOG(LXW_DEBUG, "weather_constructor()");
   
-  GtkWidget * pWidg = gtk_weather_new(FALSE);
+  GtkWidget * pWidg = gtk_weather_new(pPanel);
 
   pPriv->pWeather_ = pWidg;
 

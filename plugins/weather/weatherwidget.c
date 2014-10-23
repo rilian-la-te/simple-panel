@@ -23,6 +23,7 @@
 #include "yahooutil.h"
 #include "weatherwidget.h"
 #include "logutil.h"
+#include "plugin.h"
 
 /* Using pthreads instead of glib's due to cancellability and API stability */
 #include <pthread.h> 
@@ -117,6 +118,7 @@ struct _GtkWeatherPrivate
   gpointer    previous_location;
   gpointer    location;
   gpointer    forecast;
+  LXPanel* panel;
 
   /* Data for location and forecast retrieval threads */
   LocationThreadData location_data;
@@ -235,13 +237,13 @@ gtk_weather_get_type(void)
  * @return A new instance of this widget type.
  */
 GtkWidget *
-gtk_weather_new(gboolean standalone)
+gtk_weather_new(LXPanel* panel)
 {
   GObject * object = g_object_new(gtk_weather_get_type(), NULL);
 
   GtkWeatherPrivate * priv = GTK_WEATHER_GET_PRIVATE(GTK_WEATHER(object));
 
-  priv->standalone = standalone;
+  priv->panel=panel;
 
   return GTK_WIDGET(object);
 }
@@ -511,7 +513,7 @@ gtk_weather_render(GtkWeather * weather)
                                             forecast->iTemperature_,
                                             forecast->units_.pcTemperature_);
 
-      gtk_label_set_text(GTK_LABEL(priv->label), temperature);
+      lxpanel_draw_label_text(priv->panel, priv->label, temperature, TRUE, 1, TRUE);
 
       //gtk_widget_show_all(priv->hbox);
 
@@ -532,9 +534,8 @@ gtk_weather_render(GtkWeather * weather)
                                    "dialog-warning",
                                    GTK_ICON_SIZE_BUTTON);
         }
-      
-      gtk_label_set_text(GTK_LABEL(priv->label), 
-                         GTK_WEATHER_NOT_AVAILABLE_LABEL);
+      lxpanel_draw_label_text(priv->panel, priv->label, GTK_WEATHER_NOT_AVAILABLE_LABEL, TRUE, 1, TRUE);
+
     }
 
   /* update tooltip with proper data... */
