@@ -719,10 +719,10 @@ void _panel_determine_background_pixmap(LXPanel * panel, GtkWidget * widget)
 		}
 #if GTK_CHECK_VERSION (3,0,0)
 		GdkRGBA rgba;
-		rgba.red=p->gtintcolor.red/255.0;
-		rgba.green=p->gtintcolor.green/255.0;
-		rgba.blue=p->gtintcolor.blue/255.0;
-		rgba.alpha=p->alpha/255.0;
+        rgba.red=p->gtintcolor.red;
+        rgba.green=p->gtintcolor.green;
+        rgba.blue=p->gtintcolor.blue;
+        rgba.alpha=p->gtintcolor.alpha;
 		gtk_widget_set_app_paintable(widget, TRUE);
 		gdk_window_set_background_rgba(gtk_widget_get_window(widget),&rgba);
 		return;
@@ -817,7 +817,9 @@ mouse_watch(LXPanel *panel)
         return FALSE;
 
     ENTER;
-    gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
+    GdkDeviceManager *device_manager = gdk_display_get_device_manager (gtk_widget_get_display (GTK_WIDGET(p)));
+    GdkDevice *device = gdk_device_manager_get_client_pointer (device_manager);
+    gdk_device_get_position (device,NULL, &x, &y);
 
 /*  Reduce sensitivity area
     p->ah_far = ((x < p->cx - GAP) || (x > p->cx + p->cw + GAP)
@@ -1396,11 +1398,7 @@ panel_start_gui(LXPanel *panel)
     gtk_widget_show(p->box);
     if (p->round_corners)
         make_round_corners(p);
-#if GTK_CHECK_VERSION (3,0,0)
 	p->topxwin = GDK_WINDOW_XID(gtk_widget_get_window(w));
-#else
-    p->topxwin = GDK_WINDOW_XWINDOW(gtk_widget_get_window(w));
-#endif
     DBG("topxwin = %x\n", p->topxwin);
 
     /* the settings that should be done before window is mapped */
@@ -1483,8 +1481,11 @@ void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,
         font_desc = p->fontsize;
     else
     {
-        GtkStyle *style = gtk_widget_get_style(label);
-        font_desc = pango_font_description_get_size(style->font_desc) / PANGO_SCALE;
+//        GtkStyleContext *style = gtk_widget_get_style_context(label);
+//        GtkStateFlags state = gtk_widget_get_state_flags(label);
+//        PangoFontDescription* font;
+//        gtk_style_context_get(style,state,GTK_STYLE_PROPERTY_FONT,font,NULL);
+//        font_desc = pango_font_description_get_size(font) / PANGO_SCALE;
     }
     font_desc *= custom_size_factor;
 
@@ -1637,6 +1638,7 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         if (!gdk_rgba_parse (&p->gtintcolor,str))
             gdk_rgba_parse (&p->gtintcolor,"white");
         p->tintcolor = gcolor2rgb24(&p->gtintcolor);
+        p->gtintcolor.alpha=p->alpha/255.0;
             DBG("tintcolor=%x\n", p->tintcolor);
     }
     if (config_setting_lookup_int(cfg, "usefontcolor", &i))

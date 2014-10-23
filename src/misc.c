@@ -1062,11 +1062,11 @@ guint32 gcolor2rgb24(GdkRGBA *color)
 
     ENTER;
 
-    i = ((gint)round(color->red * 0xFFFF) / 0xFFFF) & 0xFF;
+    i = (gint)round(color->red * 0xFF) & 0xFF;
     i <<= 8;
-    i |= ((gint)round(color->green * 0xFFFF) / 0xFFFF) & 0xFF;
+    i |= (gint)round(color->green * 0xFF) & 0xFF;
     i <<= 8;
-    i |= ((gint)round(color->blue * 0xFFFF) / 0xFFFF) & 0xFF;
+    i |= (gint)round(color->blue * 0xFF) & 0xFF;
     DBG("i=%x\n", i);
     RET(i);
 }
