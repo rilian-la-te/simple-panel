@@ -229,7 +229,7 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       if (addr)
 	{
 #if !GTK_CHECK_VERSION (3, 0, 0)
-	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 0, 6);
+	  gtk_table_set_row_spacing (GTK_GRID (data->inet4_table), 0, 6);
 #endif
 	  gtk_label_set_text (GTK_LABEL (data->inet4_addr), addr);
 	  gtk_widget_show (data->inet4_addr);
@@ -238,7 +238,7 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       else
 	{
 #if !GTK_CHECK_VERSION (3, 0, 0)
-	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 0, 0);
+	  gtk_table_set_row_spacing (GTK_GRID (data->inet4_table), 0, 0);
 #endif
 	  gtk_widget_hide (data->inet4_addr);
 	  gtk_widget_hide (data->inet4_addr_title);
@@ -248,7 +248,7 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       if (dest)
 	{
 #if !GTK_CHECK_VERSION (3, 0, 0)
-	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 1, 6);
+	  gtk_table_set_row_spacing (GTK_GRID (data->inet4_table), 1, 6);
 #endif
 	  gtk_label_set_text (GTK_LABEL (data->inet4_dest), dest);
 	  gtk_widget_show (data->inet4_dest);
@@ -257,7 +257,7 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       else
 	{
 #if !GTK_CHECK_VERSION (3, 0, 0)
-	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 1, 0);
+	  gtk_table_set_row_spacing (GTK_GRID (data->inet4_table), 1, 0);
 #endif
 	  gtk_widget_hide (data->inet4_dest);
 	  gtk_widget_hide (data->inet4_dest_title);
@@ -267,7 +267,7 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       if (bcast)
 	{
 #if !GTK_CHECK_VERSION (3, 0, 0)
-	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 2, 6);
+	  gtk_table_set_row_spacing (GTK_GRID (data->inet4_table), 2, 6);
 #endif
 	  gtk_label_set_text (GTK_LABEL (data->inet4_bcast), bcast);
 	  gtk_widget_show (data->inet4_bcast);
@@ -276,7 +276,7 @@ netstatus_dialog_update_inet4_support (NetstatusDialogData *data)
       else
 	{
 #if !GTK_CHECK_VERSION (3, 0, 0)
-	  gtk_table_set_row_spacing (GTK_TABLE (data->inet4_table), 2, 0);
+	  gtk_table_set_row_spacing (GTK_GRID (data->inet4_table), 2, 0);
 #endif
 	  gtk_widget_hide (data->inet4_bcast);
 	  gtk_widget_hide (data->inet4_bcast_title);
@@ -696,7 +696,7 @@ netstatus_dialog_set_icon (GtkWidget *dialog)
       gtk_window_set_icon_from_file (GTK_WINDOW (dialog),
 				     gtk_icon_info_get_filename (icon_info),
 				     NULL);
-      gtk_icon_info_free (icon_info);
+      g_object_unref (icon_info);
     }
 }
 

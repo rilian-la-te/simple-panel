@@ -393,8 +393,6 @@ static void launchbutton_build_bootstrap(LaunchTaskBarPlugin *lb)
         icon = fm_pixbuf_from_icon(lb->add_icon, lb->icon_size);
         lb->bootstrap_button->image_widget = gtk_image_new_from_pixbuf(icon);
         g_object_unref(icon);
-        gtk_misc_set_padding(GTK_MISC(lb->bootstrap_button->image_widget), 0, 0);
-        gtk_misc_set_alignment(GTK_MISC(lb->bootstrap_button->image_widget), 0, 0);
         gtk_container_add(GTK_CONTAINER(event_box), lb->bootstrap_button->image_widget);
 
         /* Add the bootstrap button to the icon grid.  By policy it is empty at this point. */
@@ -2523,11 +2521,11 @@ static gboolean taskbar_task_control_event(GtkWidget * widget, GdkEventButton * 
                 {
                     /* The menu item has the name, or the iconified name, and
                      * the icon of the application window. */
-                    GtkWidget * mi = gtk_image_menu_item_new_with_label(((tk_cursor->iconified) ?
+                    GtkWidget * mi = gtk_menu_item_new_with_label(((tk_cursor->iconified) ?
                                 tk_cursor->name_iconified : tk_cursor->name));
                     GtkWidget * im = gtk_image_new_from_pixbuf(gtk_image_get_pixbuf(
                                 GTK_IMAGE(tk_cursor->image)));
-                    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(mi), im);
+//                    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(mi), im);
                     g_signal_connect(mi, "button-press-event",
                             G_CALLBACK(taskbar_popup_activate_event), (gpointer) tk_cursor);
                     gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
@@ -2880,14 +2878,12 @@ static void task_build_gui(LaunchTaskBarPlugin * tb, Task * tk)
     /* Create an image to contain the application icon and add it to the box. */
     GdkPixbuf* pixbuf = task_update_icon(tb, tk, None);
     tk->image = gtk_image_new_from_pixbuf(pixbuf);
-    gtk_misc_set_padding(GTK_MISC(tk->image), 0, 0);
     g_object_unref(pixbuf);
     gtk_widget_show(tk->image);
     gtk_box_pack_start(GTK_BOX(container), tk->image, FALSE, FALSE, 0);
 
     /* Create a label to contain the window title and add it to the box. */
     tk->label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(tk->label), 0.0, 0.5);
     gtk_label_set_ellipsize(GTK_LABEL(tk->label), PANGO_ELLIPSIZE_END);
     gtk_box_pack_start(GTK_BOX(container), tk->label, TRUE, TRUE, 0);
 

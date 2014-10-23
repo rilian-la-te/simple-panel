@@ -178,10 +178,10 @@ static GtkWidget * dirmenu_create_menu(DirMenuPlugin * dm, const char * path, gb
     while ((dir_cursor = dir_list) != NULL)
     {
         /* Create and initialize menu item. */
-        GtkWidget * item = gtk_image_menu_item_new_with_label(dir_cursor->directory_name);
-        gtk_image_menu_item_set_image(
-            GTK_IMAGE_MENU_ITEM(item),
-            gtk_image_new_from_icon_name("folder", GTK_ICON_SIZE_MENU));
+        GtkWidget * item = gtk_menu_item_new_with_label(dir_cursor->directory_name);
+//        gtk_image_menu_item_set_image(
+//            GTK_IMAGE_MENU_ITEM(item),
+//            gtk_image_new_from_icon_name("folder", GTK_ICON_SIZE_MENU));
         GtkWidget * dummy = gtk_menu_new();
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), dummy);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
@@ -198,7 +198,8 @@ static GtkWidget * dirmenu_create_menu(DirMenuPlugin * dm, const char * path, gb
     }
 
     /* Create "Open" and "Open in Terminal" items. */
-    GtkWidget * item = gtk_image_menu_item_new_from_stock( GTK_STOCK_OPEN, NULL );
+//    GtkWidget * item = gtk_image_menu_item_new_from_stock( GTK_STOCK_OPEN, NULL );
+    GtkWidget * item = gtk_menu_item_new_with_mnemonic(  _("_Open") );
     g_signal_connect(item, "activate", G_CALLBACK(dirmenu_menuitem_open_directory), dm);
     GtkWidget * term = gtk_menu_item_new_with_mnemonic( _("Open in _Terminal") );
     g_signal_connect(term, "activate", G_CALLBACK(dirmenu_menuitem_open_in_terminal), dm);

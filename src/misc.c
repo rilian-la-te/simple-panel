@@ -1142,8 +1142,6 @@ static GtkWidget *_lxpanel_button_new_for_icon(LXPanel *panel, FmIcon *icon,
     gtk_widget_set_can_focus(event_box, FALSE);
 
     GtkWidget * image = _gtk_image_new_for_icon(icon, size);
-    gtk_misc_set_padding(GTK_MISC(image), 0, 0);
-    gtk_misc_set_alignment(GTK_MISC(image), 0.5, 0.5);
     if (highlight_color != 0)
     {
         ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(image), img_data_id);
@@ -1167,7 +1165,6 @@ static GtkWidget *_lxpanel_button_new_for_icon(LXPanel *panel, FmIcon *icon,
 
         GtkWidget * lbl = gtk_label_new("");
         lxpanel_draw_label_text(panel, lbl, label, FALSE, 1, TRUE);
-        gtk_misc_set_padding(GTK_MISC(lbl), 2, 0);
         gtk_box_pack_end(GTK_BOX(inner), lbl, FALSE, FALSE, 0);
     }
 

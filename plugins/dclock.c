@@ -313,8 +313,6 @@ static GtkWidget *dclock_constructor(LXPanel *panel, config_setting_t *settings)
     /* Create a label and an image as children of the horizontal box.
      * Only one of these is visible at a time, controlled by user preference. */
     dc->clock_label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(dc->clock_label), 0.5, 0.5);
-    gtk_misc_set_padding(GTK_MISC(dc->clock_label), 4, 0);
     gtk_container_add(GTK_CONTAINER(hbox), dc->clock_label);
     dc->clock_icon = gtk_image_new();
     gtk_container_add(GTK_CONTAINER(hbox), dc->clock_icon);

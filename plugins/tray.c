@@ -213,7 +213,6 @@ static void balloon_message_display(TrayPlugin * tr, BalloonMessage * msg)
     tr->balloon_message_popup = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget * balloon_text = gtk_label_new(msg->string);
     gtk_label_set_line_wrap(GTK_LABEL(balloon_text), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(balloon_text), 0.5, 0.5);
     gtk_container_add(GTK_CONTAINER(tr->balloon_message_popup), balloon_text);
     gtk_widget_show(balloon_text);
     gtk_container_set_border_width(GTK_CONTAINER(tr->balloon_message_popup), 4);

@@ -1228,19 +1228,15 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_label_kbd_model = gtk_label_new(NULL);
     snprintf(markup_str, MAX_MARKUP_LEN, "<b>%s</b>", _("Keyboard Model"));
     gtk_label_set_markup(GTK_LABEL(p_label_kbd_model), markup_str);
-    gtk_misc_set_padding(GTK_MISC(p_label_kbd_model), 1, 0);
     gtk_frame_set_label_widget(GTK_FRAME(p_xkb->p_frame_kbd_model), p_label_kbd_model);
     gtk_frame_set_shadow_type(GTK_FRAME(p_xkb->p_frame_kbd_model), GTK_SHADOW_NONE);
     gtk_box_pack_start(GTK_BOX(p_vbox_left), p_xkb->p_frame_kbd_model, TRUE, TRUE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(p_xkb->p_frame_kbd_model), 3);
 
     // frame alignment
-    GtkWidget * p_alignment_kbd_model = gtk_alignment_new(0.5, 0.5, 1, 1);
-    gtk_container_add(GTK_CONTAINER(p_xkb->p_frame_kbd_model), p_alignment_kbd_model);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_kbd_model), 4, 4, 10, 10);
     p_xkb->p_button_kbd_model = gtk_button_new_with_label(p_xkb->kbd_model);
     g_signal_connect(p_xkb->p_button_kbd_model, "clicked", G_CALLBACK(on_button_kbd_model_clicked), p_xkb);
-    gtk_container_add(GTK_CONTAINER(p_alignment_kbd_model), p_xkb->p_button_kbd_model);
+    gtk_container_add(GTK_CONTAINER(p_xkb->p_frame_kbd_model), p_xkb->p_button_kbd_model);
 
 
     // 'KEYBOARD LAYOUTS' frame
@@ -1249,7 +1245,6 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_label_kbd_layouts = gtk_label_new(NULL);
     snprintf(markup_str, MAX_MARKUP_LEN, "<b>%s</b>", _("Keyboard Layouts"));
     gtk_label_set_markup(GTK_LABEL(p_label_kbd_layouts), markup_str);
-    gtk_misc_set_padding(GTK_MISC(p_label_kbd_layouts), 1, 0);
     gtk_frame_set_label_widget(GTK_FRAME(p_xkb->p_frame_kbd_layouts), p_label_kbd_layouts);
     gtk_frame_set_shadow_type(GTK_FRAME(p_xkb->p_frame_kbd_layouts), GTK_SHADOW_NONE);
     gtk_box_pack_start(GTK_BOX(p_vbox_left), p_xkb->p_frame_kbd_layouts, TRUE, TRUE, 2);
@@ -1257,11 +1252,8 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     gtk_widget_set_size_request(GTK_WIDGET(p_xkb->p_frame_kbd_layouts), 300, 180);
 
     // frame alignment
-    GtkWidget * p_alignment_kbd_layouts = gtk_alignment_new(0.5, 0.5, 1, 1);
-    gtk_container_add(GTK_CONTAINER(p_xkb->p_frame_kbd_layouts), p_alignment_kbd_layouts);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_kbd_layouts), 4, 4, 10, 10);
     GtkWidget * p_hbox_kbd_layouts = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_container_add(GTK_CONTAINER(p_alignment_kbd_layouts), p_hbox_kbd_layouts);
+    gtk_container_add(GTK_CONTAINER(p_xkb->p_frame_kbd_layouts), p_hbox_kbd_layouts);
 
     // scrolledwindow and buttons
     GtkWidget * p_scrolledwindow_kbd_layouts = gtk_scrolled_window_new(NULL, NULL);
@@ -1312,19 +1304,15 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_label_change_layout = gtk_label_new(NULL);
     snprintf(markup_str, MAX_MARKUP_LEN, "<b>%s</b>", _("Change Layout Option"));
     gtk_label_set_markup(GTK_LABEL(p_label_change_layout), markup_str);
-    gtk_misc_set_padding(GTK_MISC(p_label_change_layout), 1, 0);
     gtk_frame_set_label_widget(GTK_FRAME(p_xkb->p_frame_change_layout), p_label_change_layout);
     gtk_frame_set_shadow_type(GTK_FRAME(p_xkb->p_frame_change_layout), GTK_SHADOW_NONE);
     gtk_box_pack_start(GTK_BOX(p_vbox_left), p_xkb->p_frame_change_layout, TRUE, TRUE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(p_xkb->p_frame_change_layout), 3);
 
     // frame alignment
-    GtkWidget * p_alignment_change_layout = gtk_alignment_new(0.5, 0.5, 1, 1);
-    gtk_container_add(GTK_CONTAINER(p_xkb->p_frame_change_layout), p_alignment_change_layout);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_change_layout), 4, 4, 10, 10);
     p_xkb->p_button_change_layout = gtk_button_new_with_label(p_xkb->kbd_change_option);
     g_signal_connect(p_xkb->p_button_change_layout, "clicked", G_CALLBACK(on_button_kbd_change_layout_clicked), p_xkb);
-    gtk_container_add(GTK_CONTAINER(p_alignment_change_layout), p_xkb->p_button_change_layout);
+    gtk_container_add(GTK_CONTAINER(p_xkb->p_frame_change_layout), p_xkb->p_button_change_layout);
 
 
     // 'ADVANCED setxkbmap OPTIONS' frame
@@ -1332,18 +1320,14 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_label_advanced_opt = gtk_label_new(NULL);
     snprintf(markup_str, MAX_MARKUP_LEN, "<b>%s</b>", _("Advanced setxkbmap Options"));
     gtk_label_set_markup(GTK_LABEL(p_label_advanced_opt), markup_str);
-    gtk_misc_set_padding(GTK_MISC(p_label_advanced_opt), 1, 0);
     gtk_frame_set_label_widget(GTK_FRAME(p_frame_advanced_opt), p_label_advanced_opt);
     gtk_frame_set_shadow_type(GTK_FRAME(p_frame_advanced_opt), GTK_SHADOW_NONE);
     gtk_box_pack_start(GTK_BOX(p_vbox_right), p_frame_advanced_opt, TRUE, TRUE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(p_frame_advanced_opt), 3);
 
     // frame alignment
-    GtkWidget * p_alignment_advanced_opt = gtk_alignment_new(0.5, 0.5, 1, 1);
-    gtk_container_add(GTK_CONTAINER(p_frame_advanced_opt), p_alignment_advanced_opt);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_advanced_opt), 4, 4, 10, 10);
     GtkWidget * p_vbox_advanced_opt = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(p_alignment_advanced_opt), p_vbox_advanced_opt);
+    gtk_container_add(GTK_CONTAINER(p_frame_advanced_opt), p_vbox_advanced_opt);
     p_xkb->p_entry_advanced_opt = gtk_entry_new();
     gtk_widget_set_sensitive(p_xkb->p_entry_advanced_opt, !p_xkb->keep_system_layouts);
     if (p_xkb->kbd_advanced_options)
@@ -1367,20 +1351,16 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_label_perapp_layout = gtk_label_new(NULL);
     snprintf(markup_str, MAX_MARKUP_LEN, "<b>%s</b>", _("Per Window Settings"));
     gtk_label_set_markup(GTK_LABEL(p_label_perapp_layout), markup_str);
-    gtk_misc_set_padding(GTK_MISC(p_label_perapp_layout), 1, 0);
     gtk_frame_set_label_widget(GTK_FRAME(p_frame_perapp_layout), p_label_perapp_layout);
     gtk_frame_set_shadow_type(GTK_FRAME(p_frame_perapp_layout), GTK_SHADOW_NONE);
     gtk_box_pack_start(GTK_BOX(p_vbox_right), p_frame_perapp_layout, TRUE, TRUE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(p_frame_perapp_layout), 3);
 
     // frame alignment
-    GtkWidget * p_alignment_perapp_layout = gtk_alignment_new(0.5, 0.5, 1, 1);
-    gtk_container_add(GTK_CONTAINER(p_frame_perapp_layout), p_alignment_perapp_layout);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_perapp_layout), 4, 4, 10, 10);
     GtkWidget *p_checkbutton_per_app = gtk_check_button_new_with_mnemonic(_("_Remember layout for each window"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(p_checkbutton_per_app), p_xkb->enable_perwin);
     g_signal_connect(p_checkbutton_per_app, "toggled", G_CALLBACK(on_xkb_checkbutton_per_app_toggled), p_xkb);
-    gtk_container_add(GTK_CONTAINER(p_alignment_perapp_layout), p_checkbutton_per_app);
+    gtk_container_add(GTK_CONTAINER(p_frame_perapp_layout), p_checkbutton_per_app);
 
 
     // 'SHOW LAYOUT AS' frame
@@ -1388,19 +1368,14 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_label_show_layout_as = gtk_label_new(NULL);
     snprintf(markup_str, MAX_MARKUP_LEN, "<b>%s</b>", _("Show Layout as"));
     gtk_label_set_markup(GTK_LABEL(p_label_show_layout_as), markup_str);
-    gtk_misc_set_padding(GTK_MISC(p_label_show_layout_as), 1, 0);
     gtk_frame_set_label_widget(GTK_FRAME(p_frame_display_type), p_label_show_layout_as);
     gtk_frame_set_shadow_type(GTK_FRAME(p_frame_display_type), GTK_SHADOW_NONE);
     gtk_box_pack_start(GTK_BOX(p_vbox_right), p_frame_display_type, TRUE, TRUE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(p_frame_display_type), 3);
 
     // frame alignment
-    GtkWidget * p_alignment_display_type = gtk_alignment_new(0.5, 0.5, 1, 1);
-    gtk_container_add(GTK_CONTAINER(p_frame_display_type), p_alignment_display_type);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_display_type), 4, 4, 10, 10);
-    GtkWidget *p_table = gtk_table_new(3, 2, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(p_table), 10);
-    gtk_container_add(GTK_CONTAINER(p_alignment_display_type), p_table);
+    GtkWidget *p_table = gtk_grid_new();
+    gtk_container_add(GTK_CONTAINER(p_frame_display_type), p_table);
 
     // radiobuttons
     GtkWidget * p_image_disp_type_image = gtk_image_new();
@@ -1450,15 +1425,15 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_radiobutton_disp_type_image_cust = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(p_radiobutton_disp_type_image), (const gchar *)_("Custom Image"));
     GtkWidget * p_radiobutton_disp_type_text = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(p_radiobutton_disp_type_image), (const gchar *)_("Text"));
 
-    gtk_table_attach(GTK_TABLE(p_table), p_image_disp_type_image, 0, 1, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
-    gtk_table_attach(GTK_TABLE(p_table), p_radiobutton_disp_type_image, 1, 2, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+    gtk_grid_attach(GTK_GRID(p_table), p_image_disp_type_image, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(p_table), p_radiobutton_disp_type_image, 1, 0, 1, 1);
     if(p_xkb->cust_dir_exists)
     {
-        gtk_table_attach(GTK_TABLE(p_table), p_image_disp_type_image_cust, 0, 1, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
-        gtk_table_attach(GTK_TABLE(p_table), p_radiobutton_disp_type_image_cust, 1, 2, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
+        gtk_grid_attach(GTK_GRID(p_table), p_image_disp_type_image_cust, 0, 1, 1, 1);
+        gtk_grid_attach(GTK_GRID(p_table), p_radiobutton_disp_type_image_cust, 1, 1, 1, 1);
     }
-    gtk_table_attach(GTK_TABLE(p_table), p_label_disp_type_text, 0, 1, 2, 3, GTK_FILL, GTK_FILL, 0, 0);
-    gtk_table_attach(GTK_TABLE(p_table), p_radiobutton_disp_type_text, 1, 2, 2, 3, GTK_FILL, GTK_FILL, 0, 0);
+    gtk_grid_attach(GTK_GRID(p_table), p_label_disp_type_text, 0, 2, 1, 1);
+    gtk_grid_attach(GTK_GRID(p_table), p_radiobutton_disp_type_text, 1, 2, 1, 1);
 
     g_signal_connect(p_radiobutton_disp_type_image, "toggled", G_CALLBACK(on_radiobutton_disp_type_image_toggled), p_xkb);
     if(p_xkb->cust_dir_exists)
@@ -1476,18 +1451,14 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
     GtkWidget * p_label_flag_size = gtk_label_new(NULL);
     snprintf(markup_str, MAX_MARKUP_LEN, "<b>%s</b>", _("Panel Icon Size"));
     gtk_label_set_markup(GTK_LABEL(p_label_flag_size), markup_str);
-    gtk_misc_set_padding(GTK_MISC(p_label_flag_size), 1, 0);
     gtk_frame_set_label_widget(GTK_FRAME(p_frame_flag_size), p_label_flag_size);
     gtk_frame_set_shadow_type(GTK_FRAME(p_frame_flag_size), GTK_SHADOW_NONE);
     gtk_box_pack_start(GTK_BOX(p_vbox_right), p_frame_flag_size, TRUE, TRUE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(p_frame_flag_size), 3);
 
     // frame alignment
-    GtkWidget * p_alignment_flag_size = gtk_alignment_new(0.5, 0.5, 1, 1);
-    gtk_container_add(GTK_CONTAINER(p_frame_flag_size), p_alignment_flag_size);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(p_alignment_flag_size), 4, 4, 10, 10);
     GtkWidget *p_hbox_flag_size = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
-    gtk_container_add(GTK_CONTAINER(p_alignment_flag_size), p_hbox_flag_size);
+    gtk_container_add(GTK_CONTAINER(p_frame_flag_size), p_hbox_flag_size);
 
     GtkWidget *p_radiobutton_flag_size_1 = gtk_radio_button_new_with_label(NULL, "1");
     GtkWidget *p_radiobutton_flag_size_2 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(p_radiobutton_flag_size_1), "2");
