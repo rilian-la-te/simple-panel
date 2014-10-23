@@ -897,7 +897,7 @@ read_submenu(menup *m, config_setting_t *s, gboolean as_item)
     GtkWidget *mi, *menu;
     const gchar *name, *fname, *str;
     config_setting_t *list = config_setting_add(s, "", PANEL_CONF_TYPE_LIST);
-    GdkRGBA color={0, 0, 0, 1};
+    GdkRGBA color={0.1, 0.1, 0.1, 0.375};
     guint i;
 
     ENTER;

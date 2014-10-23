@@ -513,7 +513,8 @@ gtk_weather_render(GtkWeather * weather)
                                             forecast->iTemperature_,
                                             forecast->units_.pcTemperature_);
 
-      lxpanel_draw_label_text(priv->panel, priv->label, temperature, TRUE, 1, TRUE);
+     if (priv->panel)
+        lxpanel_draw_label_text(priv->panel, priv->label, temperature, TRUE, 1, TRUE);
 
       //gtk_widget_show_all(priv->hbox);
 
@@ -534,7 +535,8 @@ gtk_weather_render(GtkWeather * weather)
                                    "dialog-warning",
                                    GTK_ICON_SIZE_BUTTON);
         }
-      lxpanel_draw_label_text(priv->panel, priv->label, GTK_WEATHER_NOT_AVAILABLE_LABEL, TRUE, 1, TRUE);
+      if (priv->panel)
+        lxpanel_draw_label_text(priv->panel, priv->label, GTK_WEATHER_NOT_AVAILABLE_LABEL, TRUE, 1, TRUE);
 
     }
 
