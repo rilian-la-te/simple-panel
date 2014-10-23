@@ -723,8 +723,6 @@ gtk_weather_button_pressed(GtkWidget * widget, GdkEventButton * event)
     {
       if (priv->standalone)
         {
-          gtk_weather_run_popup_menu(widget);
-
           return TRUE;
         }
       else
@@ -1618,7 +1616,7 @@ gtk_weather_run_conditions_dialog(GtkWidget * widget)
       g_free(location_label_text);
       g_free(dialog_title);
       
-      gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), everything_hbox, FALSE, FALSE, 5);
+     gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), everything_hbox, FALSE, FALSE, 5);
 
   
       /* Set dialog window icon */
