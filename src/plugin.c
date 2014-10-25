@@ -228,78 +228,18 @@ static void plugin_get_available_classes(void)
     }
 #endif
 }
-//TODO:Background
+
 /* Recursively set the background of all widgets on a panel background configuration change. */
 void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
 {
-#if GTK_CHECK_VERSION (3, 0, 0)
+    GdkRGBA transparent;
+    gdk_rgba_parse(&transparent,"transparent");
     if (w != NULL)
     {
-        Panel *p = panel->priv;
-        if (gtk_widget_get_has_window(w))
-        {
-
-             if (gtk_widget_get_realized(w))
-             {
-                    GdkWindow * window = gtk_widget_get_window(w);
-                    GdkRGBA color;
-                    gdk_rgba_parse(&color,"rgba(0,0,0,0)");
-                    gdk_window_set_background_rgba(window, &color);
-                    gdk_window_set_background_pattern(window, NULL);
-                    gdk_window_invalidate_rect(gtk_widget_get_window(w), NULL, TRUE);
-             }
-         }
+        gchar* css = fb_bg_generate_string("",transparent,TRUE);
+        fb_bg_apply_css(w,css,"-plugin-transparent",FALSE);
+        g_free(css);
     }
-#else
-    if (w != NULL)
-    {
-        Panel *p = panel->priv;
-        if (gtk_widget_get_has_window(w))
-        {
-            if ((p->background) || (p->transparent))
-            {
-#if GTK_CHECK_VERSION(2, 20, 0)
-                if (gtk_widget_get_realized(w))
-#else
-                if (GTK_WIDGET_REALIZED(w))
-#endif
-                {
-                    _panel_determine_background_pixmap(panel, w);
-                    gdk_window_invalidate_rect(gtk_widget_get_window(w), NULL, TRUE);
-                }
-            }
-            else
-            {
-                /* Set background according to the current GTK style. */
-                gtk_widget_set_app_paintable(w, FALSE);
-#if GTK_CHECK_VERSION(2, 20, 0)
-                if (gtk_widget_get_realized(w))
-#else
-                if (GTK_WIDGET_REALIZED(w))
-#endif
-				{
-                    gdk_window_set_back_pixmap(gtk_widget_get_window(w), NULL, TRUE);
-                    gtk_style_set_background(gtk_widget_get_style(w),
-                                             gtk_widget_get_window(w),
-                                             GTK_STATE_NORMAL);
-                }
-            }
-        }
-
-        /* Special handling to get tray icons redrawn. */
-        if (GTK_IS_SOCKET(w))
-        {
-            gtk_widget_hide(w);
-            gdk_window_process_all_updates();
-            gtk_widget_show(w);
-            gdk_window_process_all_updates();
-        }
-
-        /* Recursively process all children of a container. */
-        if (GTK_IS_CONTAINER(w))
-            gtk_container_foreach(GTK_CONTAINER(w), (GtkCallback) plugin_widget_set_background, panel);
-    }
-#endif
 }
 /* Handler for "button_press_event" signal with Plugin as parameter.
  * External so can be used from a plugin. */

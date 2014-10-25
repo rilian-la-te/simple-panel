@@ -37,8 +37,8 @@ extern GType lxpanel_get_type          (void) G_GNUC_CONST;
 /* A little trick to be compatible with some themes which rely on the
    PanelToplevel class, so we use LXPanel as alias for PanelToplevel */
 typedef struct _LXPanel LXPanel;
-typedef struct _LXPanel PanelToplevel;
-typedef struct _LXPanelClass PanelToplevelClass;
+typedef struct _LXPanel PanelWindow;
+typedef struct _LXPanelClass PanelWindowClass;
 
 typedef struct _Panel Panel;
 

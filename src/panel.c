@@ -59,10 +59,9 @@ gboolean is_in_lxde = FALSE;
 static void panel_start_gui(LXPanel *p);
 static void ah_start(LXPanel *p);
 static void ah_stop(LXPanel *p);
-static void on_root_bg_changed(FbBg *bg, LXPanel* p);
 static void _panel_update_background(LXPanel * p);
 
-G_DEFINE_TYPE(PanelToplevel, lxpanel, GTK_TYPE_WINDOW);
+G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_WINDOW);
 
 static void lxpanel_finalize(GObject *object)
 {
@@ -103,13 +102,6 @@ static void lxpanel_destroy(GtkObject *object)
     if (p->plugin_pref_dialog != NULL)
         /* just close the dialog, it will do all required cleanup */
         gtk_dialog_response(GTK_DIALOG(p->plugin_pref_dialog), GTK_RESPONSE_CLOSE);
-
-    if (p->bg != NULL)
-    {
-        g_signal_handlers_disconnect_by_func(G_OBJECT(p->bg), on_root_bg_changed, self);
-        g_object_unref(p->bg);
-        p->bg = NULL;
-    }
 
     if (p->initialized)
     {
@@ -275,8 +267,6 @@ static gboolean lxpanel_configure_event (GtkWidget *widget, GdkEventConfigure *e
     p->cx = e->x;
     p->cy = e->y;
 
-    if (p->transparent)
-        fb_bg_notify_changed_bg(p->bg);
 ok:
     return GTK_WIDGET_CLASS(lxpanel_parent_class)->configure_event(widget, e);
 }
@@ -302,7 +292,7 @@ static gboolean lxpanel_button_press(GtkWidget *widget, GdkEventButton *event)
     return FALSE;
 }
 
-static void lxpanel_class_init(PanelToplevelClass *klass)
+static void lxpanel_class_init(PanelWindowClass *klass)
 {
     GObjectClass *gobject_class = (GObjectClass *)klass;
 #if !GTK_CHECK_VERSION(3,0,0)
@@ -330,7 +320,7 @@ static void lxpanel_class_init(PanelToplevelClass *klass)
     widget_class->button_press_event = lxpanel_button_press;
 }
 
-static void lxpanel_init(PanelToplevel *self)
+static void lxpanel_init(PanelWindow *self)
 {
     Panel *p = g_new0(Panel, 1);
 
@@ -351,7 +341,7 @@ static void lxpanel_init(PanelToplevel *self)
     p->height_when_hidden = 2;
     p->transparent = 0;
     p->alpha = 255;
-    gdk_rgba_parse(&p->gtintcolor,"white");
+    gdk_rgba_parse(&p->gtintcolor,"transparent");
     p->tintcolor = gcolor2rgb24(&p->gtintcolor);
     p->usefontcolor = 0;
     p->fontcolor = 0x00000000;
@@ -362,11 +352,9 @@ static void lxpanel_init(PanelToplevel *self)
     p->icon_theme = gtk_icon_theme_get_default();
     p->config = config_new();
     gtk_window_set_type_hint(GTK_WINDOW(self), GDK_WINDOW_TYPE_HINT_DOCK);
-#if GTK_CHECK_VERSION (3, 0, 0)
 	GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(self));
 	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
 	gtk_widget_set_visual(GTK_WIDGET(self), visual);
-#endif
 }
 
 /* Allocate and initialize new Panel structure. */
@@ -612,7 +600,7 @@ panel_event_filter(GdkXEvent *xevent, GdkEvent *event, gpointer not_used)
             {
                 LXPanel* p = (LXPanel*)l->data;
                 if (p->priv->transparent) {
-                    fb_bg_notify_changed_bg(p->priv->bg);
+//                    fb_bg_notify_changed_bg(p->priv->bg);
                 }
             }
         }
@@ -640,113 +628,44 @@ panel_event_filter(GdkXEvent *xevent, GdkEvent *event, gpointer not_used)
  ****************************************************/
 
 
-static void
-on_root_bg_changed(FbBg *bg, LXPanel* p)
-{
-    _panel_update_background( p );
-}
-
 void panel_determine_background_pixmap(Panel * panel, GtkWidget * widget, GdkWindow * window)
 {
-    _panel_determine_background_pixmap(panel->topgwin, widget);
+    _panel_determine_background_css(panel->topgwin, widget);
 }
 
-#if GTK_CHECK_VERSION (3,0,0)
 void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
 {
 	Panel * p = panel->priv;
 	gchar* css;
-	GdkRGBA color;
-	gboolean system;
-	if (( ! p->transparent) && (p->bg != NULL))
-	{
-		g_signal_handlers_disconnect_by_func(G_OBJECT(p->bg), on_root_bg_changed, panel);
-		g_object_unref(p->bg);
-		p->bg = NULL;
-	}
-	if (p->background)
+    GdkRGBA color;
+    gboolean system;
+    gdk_rgba_parse(&color,"transparent");
+    if (p->background)
 	{
 		/* User specified background pixmap. */
-		if (p->background_file != NULL)
-			css = fb_bg_generate_string(p->background_file,color,FALSE);
+        if (p->background_file != NULL)
+        {
+            system = FALSE;
+            css = fb_bg_generate_string(p->background_file,color,FALSE);
+        }
 	}
 	else if (p->transparent)
 	{
 		/* User specified background color. */
-		color.red=p->gtintcolor.red/255.0;
-		color.green=p->gtintcolor.green/255.0;
-		color.blue=p->gtintcolor.blue/255.0;
-		color.alpha=p->alpha/255.0;
-		css = fb_bg_generate_string(p->background_file,color,FALSE);
-	} else system=1;
-	g_print("CSS:%s",css);
-	fb_bg_apply_css(widget,css,system);
-	g_free(css);
-}
-#endif
-void _panel_determine_background_pixmap(LXPanel * panel, GtkWidget * widget)
-{
-#if GTK_CHECK_VERSION (3,0,0)
-	cairo_pattern_t* pixmap = NULL;
-#else
-    GdkPixmap * pixmap = NULL;
-#endif
-    GdkWindow * window = gtk_widget_get_window(widget);
-    Panel * p = panel->priv;
-
-    /* Free p->bg if it is not going to be used. */
-    if (( ! p->transparent) && (p->bg != NULL))
-    {
-        g_signal_handlers_disconnect_by_func(G_OBJECT(p->bg), on_root_bg_changed, panel);
-        g_object_unref(p->bg);
-        p->bg = NULL;
-    }
-
-    if (p->background)
-    {
-        /* User specified background pixmap. */
-        if (p->background_file != NULL)
-            pixmap = fb_bg_get_pix_from_file(widget, p->background_file);
-    }
-
-    else if (p->transparent)
-    {
-        /* Transparent.  Determine the appropriate value from the root pixmap. */
-        if (p->bg == NULL)
-        {
-            p->bg = fb_bg_get_for_display();
-            g_signal_connect(G_OBJECT(p->bg), "changed", G_CALLBACK(on_root_bg_changed), panel);
-		}
-#if GTK_CHECK_VERSION (3,0,0)
-		GdkRGBA rgba;
-        rgba.red=p->gtintcolor.red;
-        rgba.green=p->gtintcolor.green;
-        rgba.blue=p->gtintcolor.blue;
-        rgba.alpha=p->gtintcolor.alpha;
-		gtk_widget_set_app_paintable(widget, TRUE);
-		gdk_window_set_background_rgba(gtk_widget_get_window(widget),&rgba);
-		return;
-#else
-        pixmap = fb_bg_get_xroot_pix_for_win(p->bg, widget);
-        if ((pixmap != NULL) && (pixmap != GDK_NO_BG) && (p->alpha != 0))
-            fb_bg_composite(pixmap, &p->gtintcolor, p->alpha);
-#endif
-    }
-
-    if (pixmap != NULL)
-    {
-        gtk_widget_set_app_paintable(widget, TRUE );
-#if GTK_CHECK_VERSION (3,0,0)
-		gdk_window_set_background_pattern(window,pixmap);
-		cairo_pattern_destroy(pixmap);
-#else
-		gdk_window_set_back_pixmap(window, pixmap, FALSE);
-		g_object_unref(pixmap);
-#endif
+        system = FALSE;
+        css = fb_bg_generate_string("none",p->gtintcolor,TRUE);
     }
     else
-        gtk_widget_set_app_paintable(widget, FALSE);
+    {
+        system = TRUE;
+        css=g_strdup_printf("No CSS");
+    }
+
+    fb_bg_apply_css(widget,css,"-lxpanel-background",system);
+    if (css)
+        g_free(css);
 }
+
 /* Update the background of the entire panel.
  * This function should only be called after the panel has been realized. */
 void panel_update_background(Panel * p)
@@ -757,20 +676,9 @@ void panel_update_background(Panel * p)
 static void _panel_update_background(LXPanel * p)
 {
     GtkWidget *w = GTK_WIDGET(p);
-    GList *plugins, *l;
 
     /* Redraw the top level widget. */
-	_panel_determine_background_pixmap(p, w);
-#if !GTK_CHECK_VERSION (3,0,0)
-    gdk_window_clear(gtk_widget_get_window(w));
-#endif
-    gtk_widget_queue_draw(w);
-
-    /* Loop over all plugins redrawing each plugin. */
-    plugins = gtk_container_get_children(GTK_CONTAINER(p->priv->box));
-    for (l = plugins; l != NULL; l = l->next)
-        plugin_widget_set_background(l->data, p);
-    g_list_free(plugins);
+    _panel_determine_background_css(p, w);
 }
 
 /****************************************************
@@ -1361,7 +1269,6 @@ panel_start_gui(LXPanel *panel)
 
     /* main toplevel window */
     /* p->topgwin =  gtk_window_new(GTK_WINDOW_TOPLEVEL); */
-    gtk_widget_set_name(w, "PanelToplevel");
     p->display = gdk_display_get_default();
     gtk_container_set_border_width(GTK_CONTAINER(panel), 0);
     gtk_window_set_resizable(GTK_WINDOW(panel), FALSE);
@@ -1460,7 +1367,6 @@ void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,
         gtk_label_set_text(GTK_LABEL(label), NULL);
         return;
     }
-
     /* Compute an appropriate size so the font will scale with the panel's icon size. */
     int font_desc;
     if (p->usefontsize)
@@ -1472,6 +1378,7 @@ void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,
 //        PangoFontDescription* font;
 //        gtk_style_context_get(style,state,GTK_STYLE_PROPERTY_FONT,font,NULL);
 //        font_desc = pango_font_description_get_size(font) / PANGO_SCALE;
+        if (font_desc<=0) font_desc=10;
     }
     font_desc *= custom_size_factor;
 

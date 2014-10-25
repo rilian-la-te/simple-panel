@@ -31,7 +31,6 @@
 
 #include <gdk/gdk.h>
 
-#include "bg.h"
 #include "ev.h"
 
 #if !GLIB_CHECK_VERSION(2, 40, 0)
@@ -73,7 +72,6 @@ struct _Panel {
     GtkWidget *(*my_box_new) (gboolean, gint);
     GtkWidget *(*my_separator_new) ();
 
-    FbBg *bg;
     int alpha;
     guint32 tintcolor;
     guint32 fontcolor;
