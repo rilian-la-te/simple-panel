@@ -116,28 +116,12 @@ static void init_plugin_class_list(void)
     REGISTER_STATIC_MODULE(separator);
 #endif
 
-#ifdef STATIC_LAUNCHTASKBAR
-    REGISTER_STATIC_MODULE(launchtaskbar);
-#endif
-
 #ifdef STATIC_DCLOCK
     REGISTER_STATIC_MODULE(dclock);
 #endif
 
-#ifdef STATIC_WINCMD
-    REGISTER_STATIC_MODULE(wincmd);
-#endif
-
 #ifdef STATIC_DIRMENU
     REGISTER_STATIC_MODULE(dirmenu);
-#endif
-
-#ifdef STATIC_PAGER
-    REGISTER_STATIC_MODULE(pager);
-#endif
-
-#ifdef STATIC_TRAY
-    REGISTER_STATIC_MODULE(tray);
 #endif
 
 #ifndef DISABLE_MENU
@@ -440,11 +424,7 @@ gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPluginInit 
     /* validate it */
     if (init->new_instance == NULL || name == NULL || name[0] == '\0')
         return FALSE;
-#if GLIB_CHECK_VERSION(2, 32, 0)
     g_rec_mutex_lock(&_mutex);
-#else
-    g_static_rec_mutex_lock(&_mutex);
-#endif
     /* test if it's registered already */
     data = _find_plugin(name);
     if (data == NULL)
@@ -453,11 +433,7 @@ gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPluginInit 
             init->init();
         g_hash_table_insert(_all_types, g_strdup(name), (gpointer)init);
     }
-#if GLIB_CHECK_VERSION(2, 32, 0)
     g_rec_mutex_unlock(&_mutex);
-#else
-    g_static_rec_mutex_unlock(&_mutex);
-#endif
     return (data == NULL);
 }
 

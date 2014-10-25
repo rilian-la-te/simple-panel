@@ -51,6 +51,7 @@
 #include <gdk-pixbuf-xlib/gdk-pixbuf-xlib.h>
 #include <gdk/gdk.h>
 #include <glib/gi18n.h>
+#include <glib-object.h>
 
 #include <libfm/fm-gtk.h>
 
@@ -3572,8 +3573,10 @@ static void launchtaskbar_init(void)
     lxpanel_register_plugin_type("taskbar", &_taskbar_init);
 }
 
+FM_DEFINE_MODULE(lxpanel_gtk, launchtaskbar);
+
 /* Plugin descriptor. */
-LXPanelPluginInit lxpanel_static_plugin_launchtaskbar = {
+LXPanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Application Launch and Task Bar"),
     .description = N_("Bar with buttons to launch application and/or show all opened windows"),
 

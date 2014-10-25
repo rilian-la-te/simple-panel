@@ -27,12 +27,8 @@ endif
 PLUGINS_SOURCES = \
 	dclock.c \
 	dirmenu.c \
-	launchtaskbar.c \
-	pager.c \
 	separator.c \
 	space.c \
-	tray.c \
-	wincmd.c \
 	$(MENU_SOURCES)
 
 libbuiltin_plugins_a_SOURCES = \
@@ -44,7 +40,8 @@ libbuiltin_plugins_a_LIBADD =
 ## loadable plugins
 if BUILD_PLUGIN_LOADER
 DYNAMIC_PLUGINS = \
-	$(PLUGINS_LIST)
+        $(PLUGINS_LIST) \
+        $(X_PLUGINS_LIST)
 endif
 
 pkglib_LTLIBRARIES = $(DYNAMIC_PLUGINS)
@@ -63,6 +60,10 @@ EXTRA_LTLIBRARIES = \
 	volume.la \
 	volumealsa.la \
 	weather.la \
+        pager.la \
+        wincmd.la \
+        launchtaskbar.la \
+        tray.la \
 	xkb.la
 
 pkglibdir = $(libdir)/lxpanel/plugins
@@ -161,6 +162,35 @@ weather_la_CFLAGS = \
 	-I$(srcdir)/weather \
 	$(LIBXML2_CFLAGS)
 weather_la_LDFLAGS = -module @LXPANEL_MODULE@ $(LIBXML2_LIBS)
+
+# launchtaskbar
+launchtaskbar_la_SOURCES = X/launchtaskbar.c
+launchtaskbar_la_CFLAGS = \
+       -I$(srcdir)/X \
+       -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
+       -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
+launchtaskbar_la_LDFLAGS = -module @LXPANEL_MODULE@
+
+# pager
+pager_la_SOURCES = X/pager.c
+pager_la_CFLAGS = $(WNCK_CFLAGS)
+pager_la_LDFLAGS = $(WNCK_LIBS) -module @LXPANEL_MODULE@
+
+# tray
+tray_la_SOURCES = X/tray.c
+tray_la_CFLAGS = \
+       -I$(srcdir)/X \
+       -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
+       -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
+tray_la_LDFLAGS = -module @LXPANEL_MODULE@
+
+# wincmd
+wincmd_la_SOURCES = X/wincmd.c
+wincmd_la_CFLAGS = \
+       -I$(srcdir)/X \
+       -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
+       -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
+wincmd_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # xkb
 xkb_la_CFLAGS = \

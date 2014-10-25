@@ -781,8 +781,10 @@ static void tray_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
                                  3, 0, panel_get_height(panel));
 }
 
+FM_DEFINE_MODULE(lxpanel_gtk, tray)
+
 /* Plugin descriptor. */
-LXPanelPluginInit lxpanel_static_plugin_tray = {
+LXPanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("System Tray"),
     .description = N_("System tray"),
 

@@ -236,8 +236,10 @@ static void wincmd_panel_reconfigure(LXPanel *panel, GtkWidget *p)
     lxpanel_button_set_icon(p, wc->image, panel_get_icon_size(panel));
 }
 
+FM_DEFINE_MODULE(lxpanel_gtk, wincmd)
+
 /* Plugin descriptor. */
-LXPanelPluginInit lxpanel_static_plugin_wincmd = {
+LXPanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Minimize All Windows"),
     .description = N_("Sends commands to all desktop windows.\nSupported commands are 1) iconify and 2) shade"),
 

@@ -32,7 +32,6 @@
 #include <libfm/fm-gtk.h>
 
 #include <string.h>
-/* #include <gconf/gconf-client.h> */
 
 #include "netstatus-icon.h"
 #include "netstatus-util.h"
@@ -756,11 +755,7 @@ netstatus_dialog_new (NetstatusIface *iface)
   data = g_new0 (NetstatusDialogData, 1);
 
   data->builder = gtk_builder_new();
-#if GTK_CHECK_VERSION (3, 0, 0)
-  if ( !gtk_builder_add_from_file(data->builder, PACKAGE_UI_DIR "/netstatus3.ui", NULL) )
-#else
   if ( !gtk_builder_add_from_file(data->builder, PACKAGE_UI_DIR "/netstatus.ui", NULL) )
-#endif
   {
       g_object_unref(data->builder);
       return;

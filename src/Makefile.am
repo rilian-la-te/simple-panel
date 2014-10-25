@@ -25,7 +25,6 @@ lxpanel_SOURCES = \
 	configurator.c \
 	dbg.c \
 	ev.c \
-	icon-grid-old.c \
 	icon-grid.c \
 	panel.c \
 	plugin.c \
@@ -60,7 +59,6 @@ EXTRA_DIST = \
 	dbg.h \
 	ev.h \
 	menu-policy.h \
-	icon-grid-old.h \
 	private.h
 
 $(top_builddir)/plugins/libbuiltin_plugins.a: $(lxpanel_include_HEADERS)

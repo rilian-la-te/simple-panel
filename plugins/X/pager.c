@@ -22,6 +22,7 @@
  */
 
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <libfm/fm-gtk.h>
 
@@ -63,11 +64,8 @@ static GtkWidget *pager_constructor(LXPanel *panel, config_setting_t *settings)
     GtkWidget *p, *w;
 
     /* FIXME: use some global setting for border */
-#if GTK_CHECK_VERSION (3,0,0)
-	w = wnck_pager_new();
-#else
-    w = wnck_pager_new(NULL);
-#endif
+    w = wnck_pager_new();
+
     g_return_val_if_fail(w != NULL, 0);
     p = gtk_event_box_new();
 
@@ -142,27 +140,12 @@ static void pager_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
     on_realize(p, panel);
 }
 
-static LXPanelPluginInit wnck_pager = {
+FM_DEFINE_MODULE(lxpanel_gtk, pager)
+
+LXPanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Desktop Pager"),
     .description = N_("Simple pager plugin"),
 
-    .superseded = TRUE,
-    .new_instance = pager_constructor,
-    .config = pager_configure,
-    .update_context_menu = pager_update_context_menu,
-    .reconfigure = pager_panel_configuration_changed
-};
-
-static void pager_wnck_init(void)
-{
-    lxpanel_register_plugin_type("wnckpager", &wnck_pager);
-}
-
-LXPanelPluginInit lxpanel_static_plugin_pager = {
-    .name = N_("Desktop Pager"),
-    .description = N_("Simple pager plugin"),
-
-    .init = pager_wnck_init,
     .new_instance = pager_constructor,
     .config = pager_configure,
     .update_context_menu = pager_update_context_menu,

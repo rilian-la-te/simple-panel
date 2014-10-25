@@ -24,8 +24,8 @@ LT_PREREQ([2.2])
 LT_INIT
 
 # Checks for libraries.
-  CFLAGS="$CFLAGS -DENABLE_GTK3"
-  pkg_modules="$pkg_modules gtk+-3.0 libfm-gtk3 >= 1.2.0 libwnck-3.0"
+CFLAGS="$CFLAGS -DENABLE_GTK3"
+pkg_modules="$pkg_modules gtk+-3.0 libfm-gtk3 >= 1.2.0"
 pkg_modules="$pkg_modules \
              gio-unix-2.0 \
              gthread-2.0 \
@@ -33,6 +33,11 @@ pkg_modules="$pkg_modules \
 PKG_CHECK_MODULES(PACKAGE, [$pkg_modules])
 AC_SUBST(PACKAGE_CFLAGS)
 AC_SUBST(PACKAGE_LIBS)
+
+wnck=libwnck-3.0
+PKG_CHECK_MODULES(WNCK, [$wnck])
+AC_SUBST(WNCK_CFLAGS)
+AC_SUBST(WNCK_LIBS)
 
 ###########################
 # Indicator Info
@@ -181,6 +186,19 @@ AM_CONDITIONAL(BUILD_PLUGIN_LOADER, test x$plugins_loading = xyes)
 if test x"$plugins_loading" = "xno"; then
     AC_DEFINE(DISABLE_PLUGINS_LOADING, [1], [Disable plugin loading])
 fi
+
+AC_ARG_ENABLE([xorg-plugins],
+    AS_HELP_STRING([--disable-xorg-plugins],
+                    [compile X.Org plugins (default: enable)]),
+            X_plugins_support=$enableval, X_plugins_support="yes")
+
+X_PLUGINS_LIST=""
+if test x"$X_plugins_support" = "xyes"; then
+    X_PLUGINS_LIST="pager.la wincmd.la launchtaskbar.la tray.la"
+    AC_SUBST(X_PLUGINS_LIST)
+fi
+
+AC_MSG_RESULT($x_plugins)
 
 dnl Here are plugin listing.
 plugin_netstatus=
@@ -397,6 +415,9 @@ echo
 
 if test x$plugins_loading = xyes; then
 echo Building dynamic plugins:
+    if test x"$X_plugins_support" == "xyes"; then
+        AC_MSG_RESULT([    X - Xorg plugins support (pager, taskbar, tray, wincmd)])
+    fi
     if test x"$plugin_netstatus" != x; then
         AC_MSG_RESULT([    netstatus - Monitor networking status])
     fi
