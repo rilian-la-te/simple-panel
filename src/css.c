@@ -28,7 +28,7 @@
 #include <glib-object.h>
 #include <gdk/gdk.h>
 
-#include "bg.h"
+#include "css.h"
 
 //#define DEBUG
 #include "dbg.h"

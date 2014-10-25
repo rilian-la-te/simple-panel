@@ -36,7 +36,7 @@
 
 #include "private.h"
 #include "misc.h"
-#include "bg.h"
+#include "css.h"
 
 #include "lxpanelctl.h"
 #include "dbg.h"
@@ -357,6 +357,7 @@ static void lxpanel_init(PanelWindow *self)
 	gtk_widget_set_visual(GTK_WIDGET(self), visual);
 }
 
+
 /* Allocate and initialize new Panel structure. */
 static LXPanel* panel_allocate(void)
 {
@@ -598,10 +599,7 @@ panel_event_filter(GdkXEvent *xevent, GdkEvent *event, gpointer not_used)
             GSList* l;
             for( l = all_panels; l; l = l->next )
             {
-                LXPanel* p = (LXPanel*)l->data;
-                if (p->priv->transparent) {
-//                    fb_bg_notify_changed_bg(p->priv->bg);
-                }
+
             }
         }
         else if (at == a_NET_WORKAREA)
@@ -626,7 +624,7 @@ panel_event_filter(GdkXEvent *xevent, GdkEvent *event, gpointer not_used)
 /****************************************************
  *         panel's handlers for GTK events          *
  ****************************************************/
-
+void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget);
 
 void panel_determine_background_pixmap(Panel * panel, GtkWidget * widget, GdkWindow * window)
 {

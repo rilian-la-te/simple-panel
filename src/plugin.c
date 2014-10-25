@@ -29,7 +29,7 @@
 #include <stdlib.h>
 
 #include "misc.h"
-#include "bg.h"
+#include "css.h"
 
 #include <glib-object.h>
 #include <glib/gi18n.h>

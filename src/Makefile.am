@@ -21,7 +21,7 @@ endif
 lxpanel_SOURCES = \
 	misc.c \
 	gtk-run.c \
-	bg.c \
+        css.c \
 	configurator.c \
 	dbg.c \
 	ev.c \
@@ -56,7 +56,7 @@ lxpanelctl_SOURCES = lxpanelctl.c lxpanelctl.h
 lxpanelctl_LDADD = $(X11_LIBS) $(INTLLIBS)
 
 EXTRA_DIST = \
-	bg.h \
+        css.h \
 	dbg.h \
 	ev.h \
 	menu-policy.h \

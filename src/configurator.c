@@ -25,7 +25,7 @@
 
 #include "private.h"
 #include "misc.h"
-#include "bg.h"
+#include "css.h"
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
