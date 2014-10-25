@@ -371,6 +371,7 @@ static void
 on_font_color_set( GtkColorChooser* clr,  Panel* p )
 {
     gtk_color_chooser_get_rgba( clr, &p->gfontcolor );
+    panel_update_fonts (p);
     panel_set_panel_configuration_changed(p);
     p->fontcolor = gcolor2rgb24(&p->gfontcolor);
     UPDATE_GLOBAL_COLOR(p, "fontcolor", p->fontcolor);
@@ -397,6 +398,7 @@ on_use_font_color_toggled( GtkToggleButton* btn,   Panel* p )
     else
         gtk_widget_set_sensitive( clr, FALSE );
     p->usefontcolor = gtk_toggle_button_get_active( btn );
+    panel_update_fonts (p);
     panel_set_panel_configuration_changed(p);
     UPDATE_GLOBAL_INT(p, "usefontcolor", p->usefontcolor);
 }
@@ -405,6 +407,7 @@ static void
 on_font_size_set( GtkSpinButton* spin, Panel* p )
 {
     p->fontsize = (int)gtk_spin_button_get_value(spin);
+    panel_update_fonts (p);
     panel_set_panel_configuration_changed(p);
     UPDATE_GLOBAL_INT(p, "fontsize", p->fontsize);
 }
@@ -418,6 +421,7 @@ on_use_font_size_toggled( GtkToggleButton* btn,   Panel* p )
     else
         gtk_widget_set_sensitive( clr, FALSE );
     p->usefontsize = gtk_toggle_button_get_active( btn );
+    panel_update_fonts (p);
     panel_set_panel_configuration_changed(p);
     UPDATE_GLOBAL_INT(p, "usefontsize", p->usefontsize);
 }

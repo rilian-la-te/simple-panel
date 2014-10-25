@@ -60,6 +60,8 @@ static void panel_start_gui(LXPanel *p);
 static void ah_start(LXPanel *p);
 static void ah_stop(LXPanel *p);
 static void _panel_update_background(LXPanel * p);
+static void _panel_update_fonts(LXPanel * p);
+
 
 G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_WINDOW);
 
@@ -106,10 +108,10 @@ static void lxpanel_destroy(GtkObject *object)
     if (p->initialized)
     {
         gtk_window_group_remove_window(win_grp, GTK_WINDOW(self));
-        xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+//        xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
         gdk_flush();
-        XFlush(xdisplay);
-        XSync(xdisplay, True);
+//        XFlush(xdisplay);
+//        XSync(xdisplay, True);
         p->initialized = FALSE;
     }
 
@@ -301,18 +303,10 @@ static void lxpanel_class_init(PanelWindowClass *klass)
     GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
 
     gobject_class->finalize = lxpanel_finalize;
-#if GTK_CHECK_VERSION (3,0,0)
 	widget_class->destroy = lxpanel_destroy;
-#else
-    gtk_object_class->destroy = lxpanel_destroy;
-#endif
     widget_class->realize = lxpanel_realize;
-#if GTK_CHECK_VERSION (3,0,0)
 	widget_class->get_preferred_width = lxpanel_get_preferred_width;
 	widget_class->get_preferred_height = lxpanel_get_preferred_height;
-#else
-    widget_class->size_request = lxpanel_size_request;
-#endif
     widget_class->size_allocate = lxpanel_size_allocate;
     widget_class->configure_event = lxpanel_configure_event;
     widget_class->style_set = lxpanel_style_set;
@@ -644,14 +638,14 @@ void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
         if (p->background_file != NULL)
         {
             system = FALSE;
-            css = fb_bg_generate_string(p->background_file,color,FALSE);
+            css = css_generate_background(p->background_file,color,FALSE);
         }
 	}
 	else if (p->transparent)
 	{
 		/* User specified background color. */
         system = FALSE;
-        css = fb_bg_generate_string("none",p->gtintcolor,TRUE);
+        css = css_generate_background("none",p->gtintcolor,TRUE);
     }
     else
     {
@@ -659,7 +653,7 @@ void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
         css=g_strdup_printf("No CSS");
     }
 
-    fb_bg_apply_css(widget,css,"-lxpanel-background",system);
+    css_apply_with_class(widget,css,"-lxpanel-background",system);
     if (css)
         g_free(css);
 }
@@ -677,6 +671,30 @@ static void _panel_update_background(LXPanel * p)
 
     /* Redraw the top level widget. */
     _panel_determine_background_css(p, w);
+}
+
+void panel_update_fonts(Panel * p)
+{
+    _panel_update_fonts(p->topgwin);
+}
+
+void _panel_update_fonts(LXPanel * p)
+{
+    gchar* css;
+    if (p->priv->usefontcolor){
+        css = css_generate_font_color(p->priv->gfontcolor);
+        css_apply_with_class(GTK_WIDGET(p),css,"-lxpanel-font-color",FALSE);
+        g_free(css);
+    } else {
+        css_apply_with_class(GTK_WIDGET(p),css,"-lxpanel-font-color",TRUE);
+    }
+    if (p->priv->usefontsize){
+        css = css_generate_font_size(p->priv->fontsize);
+        css_apply_with_class(GTK_WIDGET(p),css,"-lxpanel-font-size",FALSE);
+        g_free(css);
+    } else {
+        css_apply_with_class(GTK_WIDGET(p),css,"-lxpanel-font-size",TRUE);
+    }
 }
 
 /****************************************************
@@ -1283,7 +1301,7 @@ panel_start_gui(LXPanel *panel)
     //gdk_window_set_decorations(gtk_widget_get_window(p->topgwin), 0);
 
     // main layout manager as a single child of panel
-    p->box = panel_box_new(panel, FALSE, 0);
+    p->box = panel_box_new(panel, 0);
     gtk_container_set_border_width(GTK_CONTAINER(p->box), 0);
     gtk_container_add(GTK_CONTAINER(panel), p->box);
     gtk_widget_show(p->box);
@@ -1359,67 +1377,12 @@ void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,
                            gboolean bold, float custom_size_factor,
                            gboolean custom_color)
 {
-    if (text == NULL)
-    {
-        /* Null string. */
-        gtk_label_set_text(GTK_LABEL(label), NULL);
-        return;
-    }
-    /* Compute an appropriate size so the font will scale with the panel's icon size. */
-    int font_desc;
-    if (p->usefontsize)
-        font_desc = p->fontsize;
-    else
-    {
-//        GtkStyleContext *style = gtk_widget_get_style_context(label);
-//        GtkStateFlags state = gtk_widget_get_state_flags(label);
-//        PangoFontDescription* font;
-//        gtk_style_context_get(style,state,GTK_STYLE_PROPERTY_FONT,font,NULL);
-//        font_desc = pango_font_description_get_size(font) / PANGO_SCALE;
-        if (font_desc<=0) font_desc=10;
-    }
-    font_desc *= custom_size_factor;
-
-    /* Check the string for characters that need to be escaped.
-     * If any are found, create the properly escaped string and use it instead. */
-    const char * valid_markup = text;
-    char * escaped_text = NULL;
-    const char * q;
-    for (q = text; *q != '\0'; q += 1)
-    {
-        if ((*q == '<') || (*q == '>') || (*q == '&'))
-        {
-            escaped_text = g_markup_escape_text(text, -1);
-            valid_markup = escaped_text;
-            break;
-        }
-    }
-
-    gchar * formatted_text;
-    if ((custom_color) && (p->usefontcolor))
-    {
-        /* Color, optionally bold. */
-        formatted_text = g_strdup_printf("<span font_desc=\"%d\" color=\"#%06x\">%s%s%s</span>",
-                font_desc,
-                gcolor2rgb24(&p->gfontcolor),
-                ((bold) ? "<b>" : ""),
-                valid_markup,
-                ((bold) ? "</b>" : ""));
-    }
-    else
-    {
-        /* No color, optionally bold. */
-        formatted_text = g_strdup_printf("<span font_desc=\"%d\">%s%s%s</span>",
-                font_desc,
-                ((bold) ? "<b>" : ""),
-                valid_markup,
-                ((bold) ? "</b>" : ""));
-    }
-
-    gtk_label_set_markup(GTK_LABEL(label), formatted_text);
-    g_free(formatted_text);
-    g_free(escaped_text);
+    gtk_label_set_text(GTK_LABEL(label),text);
+    gchar* css = css_generate_font_weight(bold);
+    css_apply_with_class(label,css,"-lxpanel-font-weight",FALSE);
+    g_free(css);
 }
+
 
 void lxpanel_draw_label_text(LXPanel * p, GtkWidget * label, const char * text,
                            gboolean bold, float custom_size_factor,
@@ -1598,6 +1561,7 @@ static int panel_start( LXPanel *p )
 
     /* update backgrond of panel and all plugins */
     _panel_update_background(p);
+    _panel_update_fonts(p);
     return 1;
 }
 
@@ -1948,7 +1912,7 @@ gboolean panel_is_dynamic(LXPanel *panel)
     return panel->priv->widthtype == WIDTH_REQUEST;
 }
 
-GtkWidget *panel_box_new(LXPanel *panel, gboolean homogeneous, gint spacing)
+GtkWidget *panel_box_new(LXPanel *panel, gint spacing)
 {
     return gtk_box_new(panel->priv->orientation, spacing);
 }

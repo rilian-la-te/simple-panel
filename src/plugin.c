@@ -220,8 +220,8 @@ void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
     gdk_rgba_parse(&transparent,"transparent");
     if (w != NULL)
     {
-        gchar* css = fb_bg_generate_string("",transparent,TRUE);
-        fb_bg_apply_css(w,css,"-plugin-transparent",FALSE);
+        gchar* css = css_generate_background("",transparent,TRUE);
+        css_apply_with_class(w,css,"-lxpanel-background",FALSE);
         g_free(css);
     }
 }

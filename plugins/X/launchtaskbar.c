@@ -811,7 +811,7 @@ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *s
     g_free(special_cases_filepath);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
-    ltbp->plugin = p = panel_box_new(panel, FALSE, 5);
+    ltbp->plugin = p = panel_box_new(panel, 5);
     lxpanel_plugin_set_data(p, ltbp, launchtaskbar_destructor);
     /* Allocate an icon grid manager to manage the container. */
     ltbp->lb_icon_grid = panel_icon_grid_new(panel_get_orientation(panel),

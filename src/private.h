@@ -245,6 +245,7 @@ extern void panel_set_wm_strut(Panel *p);
 extern void panel_set_dock_type(Panel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
 extern void panel_update_background( Panel* p );
+extern void panel_update_fonts( Panel * p);
 
 /* if current window manager is EWMH conforming. */
 extern gboolean is_ewmh_supported;

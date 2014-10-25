@@ -1163,8 +1163,7 @@ static GtkWidget *_lxpanel_button_new_for_icon(LXPanel *panel, FmIcon *icon,
 
         gtk_box_pack_start(GTK_BOX(inner), image, FALSE, FALSE, 0);
 
-        GtkWidget * lbl = gtk_label_new("");
-        lxpanel_draw_label_text(panel, lbl, label, FALSE, 1, TRUE);
+        GtkWidget * lbl = gtk_label_new(label);
         gtk_box_pack_end(GTK_BOX(inner), lbl, FALSE, FALSE, 0);
     }
 

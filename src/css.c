@@ -33,7 +33,7 @@
 //#define DEBUG
 #include "dbg.h"
 
-void fb_bg_apply_css (GtkWidget* widget, gchar* css, gchar* klass ,gboolean remove)
+void css_apply_with_class (GtkWidget* widget, gchar* css, gchar* klass ,gboolean remove)
 {
     GtkStyleContext* context;
     GtkCssProvider  *provider;
@@ -56,7 +56,7 @@ void fb_bg_apply_css (GtkWidget* widget, gchar* css, gchar* klass ,gboolean remo
     }
 }
 
-gchar* fb_bg_generate_string(const char *filename, GdkRGBA color,gboolean no_image)
+inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboolean no_image)
 {
 	gchar* returnie;
 	if (no_image) returnie = g_strdup_printf(".-lxpanel-background{\n"
@@ -68,4 +68,20 @@ gchar* fb_bg_generate_string(const char *filename, GdkRGBA color,gboolean no_ima
                          " background-image: url('%s');\n"
 						 "}",gdk_rgba_to_string(&color),filename);
 	return returnie;
+}
+
+inline gchar* css_generate_font_color(GdkRGBA color){
+    return g_strdup_printf(".-lxpanel-font-color{\n"
+                    " color: %s;\n"
+                    "}",gdk_rgba_to_string(&color));
+}
+inline gchar* css_generate_font_size(gint size){
+    return g_strdup_printf(".-lxpanel-font-size{\n"
+                    " font-size: %dpx;\n"
+                    "}",size);
+}
+inline gchar* css_generate_font_weight(gboolean is_bold){
+    return g_strdup_printf(".-lxpanel-font-weight{\n"
+                    " font-weight: %s;\n"
+                    "}",is_bold ? "bold" : "normal");
 }

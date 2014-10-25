@@ -448,7 +448,7 @@ static GtkWidget *netstat_constructor(LXPanel *panel, config_setting_t *settings
     ns->fnetd->lxnmchannel = lxnm_socket();
 
     /* main */
-    ns->mainw = panel_box_new(panel, FALSE, 1);
+    ns->mainw = panel_box_new(panel, 1);
     gtk_widget_show_all(ns->mainw);
 
     /* Initializing network device list*/
