@@ -29,7 +29,6 @@
 #include <errno.h>
 #include <locale.h>
 #include <string.h>
-#include <gdk/gdkx.h>
 #include <libfm/fm-gtk.h>
 
 #define __LXPANEL_INTERNALS__
@@ -92,7 +91,6 @@ static void lxpanel_destroy(GtkObject *object)
 {
     LXPanel *self = LXPANEL(object);
     Panel *p = self->priv;
-    Display *xdisplay;
 
     if (p->autohide)
         ah_stop(self);
@@ -108,10 +106,7 @@ static void lxpanel_destroy(GtkObject *object)
     if (p->initialized)
     {
         gtk_window_group_remove_window(win_grp, GTK_WINDOW(self));
-//        xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
         gdk_flush();
-//        XFlush(xdisplay);
-//        XSync(xdisplay, True);
         p->initialized = FALSE;
     }
 
@@ -334,11 +329,8 @@ static void lxpanel_init(PanelWindow *self)
     p->visible = TRUE;
     p->height_when_hidden = 2;
     p->transparent = 0;
-    p->alpha = 255;
     gdk_rgba_parse(&p->gtintcolor,"transparent");
-    p->tintcolor = gcolor2rgb24(&p->gtintcolor);
     p->usefontcolor = 0;
-    p->fontcolor = 0x00000000;
     p->usefontsize = 0;
     p->fontsize = 10;
     p->spacing = 0;
@@ -1478,11 +1470,6 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         p->round_corners = i != 0;
     if (config_setting_lookup_int(cfg, "transparent", &i))
         p->transparent = i != 0;
-    if (config_setting_lookup_int(cfg, "alpha", &p->alpha))
-    {
-        if (p->alpha > 255)
-            p->alpha = 255;
-    }
     if (config_setting_lookup_int(cfg, "autohide", &i))
         p->autohide = i != 0;
     if (config_setting_lookup_int(cfg, "heightwhenhidden", &i))
@@ -1491,9 +1478,6 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
     {
         if (!gdk_rgba_parse (&p->gtintcolor,str))
             gdk_rgba_parse (&p->gtintcolor,"white");
-        p->tintcolor = gcolor2rgb24(&p->gtintcolor);
-        p->gtintcolor.alpha=p->alpha/255.0;
-            DBG("tintcolor=%x\n", p->tintcolor);
     }
     if (config_setting_lookup_int(cfg, "usefontcolor", &i))
         p->usefontcolor = i != 0;
@@ -1501,8 +1485,6 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
     {
         if (!gdk_rgba_parse (&p->gfontcolor,str))
             gdk_rgba_parse (&p->gfontcolor,"black");
-        p->fontcolor = gcolor2rgb24(&p->gfontcolor);
-            DBG("fontcolor=%x\n", p->fontcolor);
     }
     if (config_setting_lookup_int(cfg, "usefontsize", &i))
         p->usefontsize = i != 0;
@@ -1885,11 +1867,6 @@ gint panel_get_icon_size(LXPanel *panel)
 gint panel_get_height(LXPanel *panel)
 {
     return panel->priv->height;
-}
-
-Window panel_get_xwindow(LXPanel *panel)
-{
-    return panel->priv->topxwin;
 }
 
 gint panel_get_monitor(LXPanel *panel)

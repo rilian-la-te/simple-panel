@@ -3075,7 +3075,7 @@ static void taskbar_net_active_window(GtkWidget * widget, LaunchTaskBarPlugin * 
     }
     else
     {
-        if (*f == panel_get_xwindow(tb->panel))
+        if (*f == gdk_x11_window_get_xid(gtk_widget_get_window(GTK_WIDGET(tb->panel))))
         {
         /* Taskbar window gained focus (this isn't supposed to be able to happen).  Remember current focus. */
             if (ctk != NULL)

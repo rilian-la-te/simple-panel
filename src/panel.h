@@ -19,7 +19,6 @@
 #ifndef __PANEL_H__
 #define __PANEL_H__ 1
 
-#include <X11/Xlib.h>
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
@@ -111,7 +110,6 @@ void lxpanel_config_save(LXPanel *p); /* defined in configurator.c */
 extern GtkOrientation panel_get_orientation(LXPanel *panel);
 extern gint panel_get_icon_size(LXPanel *panel);
 extern gint panel_get_height(LXPanel *panel);
-extern Window panel_get_xwindow(LXPanel *panel);
 extern gint panel_get_monitor(LXPanel *panel);
 extern GtkStyle *panel_get_defstyle(LXPanel *panel);
 extern GtkIconTheme *panel_get_icon_theme(LXPanel *panel);
