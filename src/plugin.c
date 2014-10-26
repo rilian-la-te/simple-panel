@@ -23,7 +23,6 @@
 #include "private.h"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
-#include <gdk-pixbuf-xlib/gdk-pixbuf-xlib.h>
 #include <gdk/gdk.h>
 #include <string.h>
 #include <stdlib.h>
@@ -34,10 +33,6 @@
 #include <glib-object.h>
 #include <glib/gi18n.h>
 #include <libfm/fm-gtk.h>
-
-#if GTK_CHECK_VERSION (3,0,0)
-#include <gtk/gtkx.h>
-#endif
 
 //#define DEBUG
 #include "dbg.h"
