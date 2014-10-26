@@ -373,8 +373,7 @@ on_font_color_set( GtkColorChooser* clr,  Panel* p )
     gtk_color_chooser_get_rgba( clr, &p->gfontcolor );
     panel_update_fonts (p);
     panel_set_panel_configuration_changed(p);
-    p->fontcolor = gcolor2rgb24(&p->gfontcolor);
-    UPDATE_GLOBAL_COLOR(p, "fontcolor", p->fontcolor);
+    UPDATE_GLOBAL_STRING(p, "fontcolor", gdk_rgba_to_string(&p->gfontcolor));
 }
 
 static void
@@ -382,11 +381,8 @@ on_tint_color_set( GtkColorChooser* clr,  Panel* p )
 {
     gtk_color_chooser_set_use_alpha(clr,TRUE);
     gtk_color_chooser_get_rgba( clr, &p->gtintcolor );
-    p->tintcolor = gcolor2rgb24(&p->gtintcolor);
-    p->alpha = p->gtintcolor.alpha * alpha_scale_factor;
     panel_update_background( p );
-    UPDATE_GLOBAL_COLOR(p, "tintcolor", p->tintcolor);
-    UPDATE_GLOBAL_INT(p, "alpha", p->alpha);
+    UPDATE_GLOBAL_STRING(p, "tintcolor", gdk_rgba_to_string(&p->gtintcolor));
 }
 
 static void
@@ -1099,7 +1095,6 @@ void panel_configure( LXPanel* panel, int sel_page )
 
     /* transparancy */
     tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
-    p->gtintcolor.alpha=p->alpha/255.0;
     gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
     if ( ! p->transparent )
         gtk_widget_set_sensitive( w, FALSE );
