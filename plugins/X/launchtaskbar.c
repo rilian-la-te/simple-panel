@@ -52,6 +52,7 @@
 #include <gdk/gdk.h>
 #include <glib/gi18n.h>
 #include <glib-object.h>
+#include <cairo-xlib.h>
 
 #include <libfm/fm-gtk.h>
 
@@ -755,7 +756,6 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
         g_signal_connect(screen, "workspace-destroyed", G_CALLBACK(taskbar_workspace_numbers), (gpointer) ltbp);
         g_signal_connect(screen, "workspace-created", G_CALLBACK(taskbar_workspace_numbers), (gpointer) ltbp);
         g_signal_connect(screen, "window-stacking-changed", G_CALLBACK(taskbar_window_buttons), (gpointer) ltbp);
-        //g_signal_connect(screen, "window-closed", G_CALLBACK(taskbar_net_client_list), (gpointer) ltbp);
 
         /* Make right-click menu for task buttons.
          * It is retained for the life of the taskbar and will be shown as needed.
@@ -766,7 +766,7 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
         g_signal_connect(ltbp->screen, "window-manager-changed", G_CALLBACK(taskbar_window_manager_changed), ltbp);
 
         /* Fetch the client list and redraw the taskbar.  Then determine what window has focus. */
-        taskbar_window_buttons(screen,(gpointer* ) ltbp);
+       // taskbar_window_buttons(screen,(gpointer* ) ltbp);
         taskbar_on_active_window_changed(screen,NULL,(gpointer* ) ltbp);
     }
     gtk_widget_set_visible(ltbp->tb_icon_grid, TRUE);
@@ -852,6 +852,7 @@ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *s
 
 static GtkWidget *launchtaskbar_constructor(LXPanel *panel, config_setting_t *settings)
 {
+    resolve_atoms();
     return _launchtaskbar_constructor(panel, settings, LAUNCHTASKBAR);
 }
 
@@ -1942,7 +1943,7 @@ _wnck_cairo_surface_get_from_pixmap (Screen *screen,
 	{
       surface = cairo_xlib_surface_create_for_bitmap (display,
 													  xpixmap,
-                                                      &screen,
+                                                      screen,
 													  w_ret,
 													  h_ret);
 	}
@@ -3304,13 +3305,8 @@ static void menu_raise_window(GtkWidget * widget, LaunchTaskBarPlugin * tb)
 /* Handler for "activate" event on Restore item of right-click menu for task buttons. */
 static void menu_restore_window(GtkWidget * widget, LaunchTaskBarPlugin * tb)
 {
-#if GTK_CHECK_VERSION(2, 24, 0)
     GdkWindow * win = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(),
                                                              tb->menutask->win);
-#else
-    GdkWindow * win = gdk_window_foreign_new(tb->menutask->win);
-#endif
-
     gdk_window_unmaximize(win);
     g_object_unref(win);
     task_group_menu_destroy(tb);
@@ -3319,12 +3315,8 @@ static void menu_restore_window(GtkWidget * widget, LaunchTaskBarPlugin * tb)
 /* Handler for "activate" event on Maximize item of right-click menu for task buttons. */
 static void menu_maximize_window(GtkWidget * widget, LaunchTaskBarPlugin * tb)
 {
-#if GTK_CHECK_VERSION(2, 24, 0)
     GdkWindow * win = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(),
                                                              tb->menutask->win);
-#else
-    GdkWindow * win = gdk_window_foreign_new(tb->menutask->win);
-#endif
 
     gdk_window_maximize(win);
     g_object_unref(win);
@@ -3551,6 +3543,7 @@ static GtkWidget *launchbar_constructor(LXPanel *panel, config_setting_t *settin
 
 static GtkWidget *taskbar_constructor(LXPanel *panel, config_setting_t *settings)
 {
+    resolve_atoms();
     return _launchtaskbar_constructor(panel, settings, TASKBAR);
 }
 

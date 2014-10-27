@@ -42,7 +42,7 @@ gchar *ccommand = NULL;
 static gchar cversion[] = VERSION;
 static gboolean is_started;
 
-static const gchar* panel_commands = "run menu config restart exit";
+static const gchar* panel_commands = "run menu config exit ";
 
 static const GOptionEntry entries[] =
 {
@@ -208,16 +208,23 @@ int panel_app_command_line(GApplication* application,GApplicationCommandLine* co
     }
     if (g_variant_dict_lookup (options, "command", "&s", &command))
     {
-        if (g_str_match_string(command,panel_commands,FALSE))
+        gchar* checker = g_strdup_printf("%s ",command);
+        if (g_strrstr(panel_commands,checker))
         {
             ccommand = g_strdup(command);
         }
         else
         {
             g_application_command_line_printerr (commandline,
-                                 _("%s: invalid command. Doing nothing."),
-                                 command);
+                                 _("%s: invalid command - %s. Doing nothing. Valid commands: %s\n"),
+                                 g_get_application_name(),command,panel_commands);
+            if (ccommand)
+            {
+                g_free(ccommand);
+                ccommand = NULL;
+            }
         }
+        g_free(checker);
     }
     g_application_activate (application);
 }
