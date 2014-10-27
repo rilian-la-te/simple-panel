@@ -194,6 +194,7 @@ wincmd_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # xkb
 xkb_la_CFLAGS = \
+         $(WNCK_CFLAGS) \
 	-I$(srcdir)/xkb \
 	-DFLAGSDIR=\"$(datadir)/lxpanel/images/xkb-flags\" \
 	-DFLAGSCUSTDIR=\"$(datadir)/lxpanel/images/xkb-flags-cust\" \
@@ -201,7 +202,7 @@ xkb_la_CFLAGS = \
 xkb_la_SOURCES = \
 	xkb/xkb-plugin.c \
 	xkb/xkb.c
-xkb_la_LDFLAGS = -module @LXPANEL_MODULE@
+xkb_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
 
 xkeyboardconfigdir=$(datadir)/lxpanel/xkeyboardconfig
 xkeyboardconfig_DATA = \

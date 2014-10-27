@@ -30,6 +30,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <gdk/gdkx.h>
+
+#ifndef WNCK_I_KNOW_THIS_IS_UNSTABLE
+#define WNCK_I_KNOW_THIS_IS_UNSTABLE
+#endif
+
+#include <libwnck/libwnck.h>
+
 
 #include "xkb.h"
 
@@ -168,15 +176,18 @@ void xkb_redraw(XkbPlugin *p_xkb)
 }
 
 /* Handler for "active_window" event on root window listener. */
-static void on_xkb_fbev_active_window_event(FbEv * ev, gpointer p_data)
+static void on_active_window_changed(WnckScreen *screen, WnckWindow *previously_active_window, gpointer p_data)
 {
     XkbPlugin * xkb = (XkbPlugin *)p_data;
     if (xkb->enable_perwin)
     {
-        Window * win = fb_ev_active_window(ev);
-        if (*win != None)
+        WnckWindow *active_window = wnck_screen_get_active_window (screen);
+        Window win = None;
+        if (active_window)
+             win = wnck_window_get_xid(active_window);
+        if (win != None)
         {
-            xkb_active_window_changed(xkb, *win);
+            xkb_active_window_changed(xkb, win);
             xkb_redraw(xkb);
         }
     }
@@ -309,7 +320,7 @@ static GtkWidget *xkb_constructor(LXPanel *panel, config_setting_t *settings)
 
     /* Connect signals. */
     g_signal_connect(p, "scroll-event", G_CALLBACK(on_xkb_button_scroll_event), p_xkb);
-    g_signal_connect(G_OBJECT(fbev), "active-window", G_CALLBACK(on_xkb_fbev_active_window_event), p_xkb);
+    g_signal_connect(wnck_screen_get_default(), "active-window-changed", G_CALLBACK (on_active_window_changed), p_xkb);
 
     /* Show the widget and return. */
     xkb_redraw(p_xkb);
@@ -322,7 +333,7 @@ static void xkb_destructor(gpointer user_data)
     XkbPlugin *p_xkb = (XkbPlugin *)user_data;
 
     /* Disconnect root window event handler. */
-    g_signal_handlers_disconnect_by_func(G_OBJECT(fbev), on_xkb_fbev_active_window_event, p_xkb);
+    g_signal_handlers_disconnect_by_func(wnck_screen_get_default(), on_active_window_changed, p_xkb);
 
     /* Disconnect from the XKB mechanism. */
     xkb_mechanism_destructor(p_xkb);

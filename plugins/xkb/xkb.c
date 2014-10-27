@@ -32,6 +32,7 @@
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <glib.h>
+#include <gdk/gdkx.h>
 
 /* The X Keyboard Extension: Library Specification
  * http://www.xfree86.org/current/XKBlib.pdf */
@@ -61,11 +62,12 @@ static gboolean xkb_new_kbd_notify_ignore_slot(gpointer p_data)
 /* Insert a process and its layout into the hash table. */
 static void xkb_enter_locale_by_process(XkbPlugin * xkb)
 {
-    if ((xkb->p_hash_table_group != NULL) && (fb_ev_active_window(fbev) != None))
+    GdkWindow* gwin = gdk_screen_get_active_window(gdk_screen_get_default());
+    if ((xkb->p_hash_table_group != NULL) && (gwin != NULL))
     {
-        Window * win = fb_ev_active_window(fbev);
-        if (*win != None)
-            g_hash_table_insert(xkb->p_hash_table_group, GINT_TO_POINTER(*win), GINT_TO_POINTER(xkb->current_group_xkb_no));
+        Window win = gdk_x11_window_get_xid(gwin);
+        if (win != None)
+            g_hash_table_insert(xkb->p_hash_table_group, GINT_TO_POINTER(win), GINT_TO_POINTER(xkb->current_group_xkb_no));
     }
 }
 
