@@ -197,31 +197,49 @@ static void panel_icon_grid_size_allocate(GtkWidget *widget,
     }
 }
 
-#if GTK_CHECK_VERSION (3,0,0)
 static void
 panel_icon_grid_get_preferred_width (GtkWidget *widget,
-							   gint      *minimal_width,
-							   gint      *natural_width)
+                               gint      *minimal_width,
+                               gint      *natural_width)
 {
-  GtkRequisition requisition;
+    GtkRequisition requisition;
+    gint parent_width;
+    GTK_WIDGET_GET_CLASS(gtk_widget_get_parent(widget))->get_preferred_width,(&parent_width,NULL);
 
-  panel_icon_grid_size_request (widget, &requisition);
+    panel_icon_grid_size_request (widget, &requisition);
 
-  *minimal_width = *natural_width = requisition.width;
+    if (parent_width<requisition.width)
+    {
+        *minimal_width = parent_width;
+        *natural_width = requisition.width;
+    }
+    else
+    {
+        *minimal_width = *natural_width = requisition.width;
+    }
 }
 
 static void
 panel_icon_grid_get_preferred_height (GtkWidget *widget,
-								gint      *minimal_height,
-								gint      *natural_height)
+                                gint      *minimal_height,
+                                gint      *natural_height)
 {
-  GtkRequisition requisition;
+    GtkRequisition requisition;
+    gint parent_height;
+    GTK_WIDGET_GET_CLASS(gtk_widget_get_parent(widget))->get_preferred_height,(&parent_height,NULL);
 
-  panel_icon_grid_size_request (widget, &requisition);
+    panel_icon_grid_size_request (widget, &requisition);
 
-  *minimal_height = *natural_height = requisition.height;
+    if (parent_height<requisition.height)
+    {
+        *minimal_height = parent_height;
+        *natural_height = requisition.height;
+    }
+    else
+    {
+        *minimal_height = *natural_height = requisition.height;
+    }
 }
-#endif
 
 /* Establish the geometry of an icon grid. */
 static void panel_icon_grid_size_request(GtkWidget *widget,

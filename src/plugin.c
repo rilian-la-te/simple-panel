@@ -70,8 +70,8 @@ static GtkWidget *_old_plugin_config(LXPanel *panel, GtkWidget *instance)
 
     g_return_val_if_fail(init != NULL && init->new_instance == NULL, NULL);
     plugin = lxpanel_plugin_get_data(instance);
-    if (plugin->class->config)
-        plugin->class->config(plugin, GTK_WINDOW(panel));
+    if (plugin->klass->config)
+        plugin->klass->config(plugin, GTK_WINDOW(panel));
     return NULL;
 }
 
@@ -82,8 +82,8 @@ static void _old_plugin_reconfigure(LXPanel *panel, GtkWidget *instance)
 
     g_return_if_fail(init != NULL && init->new_instance == NULL);
     plugin = lxpanel_plugin_get_data(instance);
-    if (plugin->class->panel_configuration_changed)
-        plugin->class->panel_configuration_changed(plugin);
+    if (plugin->klass->panel_configuration_changed)
+        plugin->klass->panel_configuration_changed(plugin);
 }
 
 /* Register a PluginClass. */
@@ -435,7 +435,7 @@ gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPluginInit 
 static void _old_plugin_save_hook(const config_setting_t * setting, FILE * f, gpointer user_data)
 {
     Plugin *pl = user_data;
-    PluginClass *pc = pl->class;
+    PluginClass *pc = pl->klass;
     if (pc->save)
         pc->save(pl, f);
 }
@@ -445,7 +445,7 @@ static void _old_plugin_destroy(gpointer data)
 {
     Plugin *pl = data;
 
-    plugin_class_unref(pl->class);
+    plugin_class_unref(pl->klass);
 
     /* Free the Plugin structure. */
     g_free(pl);
@@ -457,7 +457,7 @@ static void _on_old_widget_destroy(GtkWidget *widget, Plugin *pl)
     g_signal_handlers_disconnect_by_func(widget, _on_old_widget_destroy, pl);
     /* Run the destructor before destroying the top level widget.
      * This prevents problems with the plugin destroying child widgets. */
-    pl->class->destructor(pl);
+    pl->klass->destructor(pl);
 }
 
 static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, LXPanel *p)
@@ -528,7 +528,7 @@ GtkWidget *lxpanel_add_plugin(LXPanel *p, const char *name, config_setting_t *cf
         PluginClass *pc = init->_reserved1;
         char *conf = config_setting_to_string(pconf), *fp;
 
-        pl->class = pc;
+        pl->klass = pc;
         pl->panel = p->priv;
         widget = NULL;
         fp = &conf[9]; /* skip "Config {\n" */

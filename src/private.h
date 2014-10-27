@@ -55,7 +55,7 @@ extern gchar *cprofile;
 struct _Panel {
     char* name;
     LXPanel * topgwin;			/* Main panel window */
-    Window topxwin;			/* Main panel's X window   */
+//    Window topxwin;			/* Main panel's X window   */
     GdkDisplay * display;		/* Main panel's GdkDisplay */
     GtkIconTheme* icon_theme; /*Default icon theme*/
 
@@ -98,10 +98,10 @@ struct _Panel {
     guint hide_timeout;
     int icon_size;			/* Icon size */
 
-    int desknum;
-    int curdesk;
-    gulong *workarea;
-    int wa_len;
+//    int desknum;
+//    int curdesk;
+//    gulong *workarea;
+//    int wa_len;
 
     char* background_file;
 
@@ -349,7 +349,7 @@ typedef struct {
 
 /* Representative of a loaded and active plugin attached to a panel. */
 struct _Plugin {
-    PluginClass * class;			/* Back pointer to PluginClass */
+    PluginClass * klass;			/* Back pointer to PluginClass */
     Panel * panel;				/* Back pointer to Panel */
     GtkWidget * pwid;				/* Top level widget; plugin allocates, but plugin mechanism, not plugin itself, destroys this */
     int expand;					/* Expand ("stretch") setting for container */

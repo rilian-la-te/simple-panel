@@ -73,7 +73,7 @@ static void lxpanel_finalize(GObject *object)
         lxpanel_config_save( self );
     config_destroy(p->config);
 
-    XFree(p->workarea);
+//    XFree(p->workarea);
     g_free( p->background_file );
     g_slist_free( p->system_menus );
 
@@ -561,14 +561,14 @@ panel_event_filter(GdkXEvent *xevent, GdkEvent *event, gpointer not_used)
         {
             GSList* l;
             for( l = all_panels; l; l = l->next )
-                ((LXPanel*)l->data)->priv->curdesk = get_net_current_desktop();
+//                ((LXPanel*)l->data)->priv->curdesk = get_net_current_desktop();
             fb_ev_emit(fbev, EV_CURRENT_DESKTOP);
         }
         else if (at == a_NET_NUMBER_OF_DESKTOPS)
         {
             GSList* l;
             for( l = all_panels; l; l = l->next )
-                ((LXPanel*)l->data)->priv->desknum = get_net_number_of_desktops();
+//                ((LXPanel*)l->data)->priv->desknum = get_net_number_of_desktops();
             fb_ev_emit(fbev, EV_NUMBER_OF_DESKTOPS);
         }
         else if (at == a_NET_DESKTOP_NAMES)
@@ -597,8 +597,8 @@ panel_event_filter(GdkXEvent *xevent, GdkEvent *event, gpointer not_used)
             for( l = all_panels; l; l = l->next )
             {
                 LXPanel* p = (LXPanel*)l->data;
-                XFree( p->priv->workarea );
-                p->priv->workarea = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_WORKAREA, XA_CARDINAL, &p->priv->wa_len);
+//                XFree( p->priv->workarea );
+//                p->priv->workarea = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_WORKAREA, XA_CARDINAL, &p->priv->wa_len);
                 /* print_wmdata(p); */
             }
         }
@@ -1267,9 +1267,9 @@ panel_start_gui(LXPanel *panel)
 
     ENTER;
 
-    p->curdesk = get_net_current_desktop();
-    p->desknum = get_net_number_of_desktops();
-    p->workarea = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_WORKAREA, XA_CARDINAL, &p->wa_len);
+//    p->curdesk = get_net_current_desktop();
+//    p->desknum = get_net_number_of_desktops();
+//    p->workarea = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_WORKAREA, XA_CARDINAL, &p->wa_len);
 
     /* main toplevel window */
     /* p->topgwin =  gtk_window_new(GTK_WINDOW_TOPLEVEL); */
@@ -1299,8 +1299,8 @@ panel_start_gui(LXPanel *panel)
     gtk_widget_show(p->box);
     if (p->round_corners)
         make_round_corners(p);
-	p->topxwin = GDK_WINDOW_XID(gtk_widget_get_window(w));
-    DBG("topxwin = %x\n", p->topxwin);
+//	p->topxwin = GDK_WINDOW_XID(gtk_widget_get_window(w));
+//    DBG("topxwin = %x\n", p->topxwin);
 
     /* the settings that should be done before window is mapped */
 //    wmhints.flags = InputHint;

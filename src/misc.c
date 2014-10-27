@@ -838,10 +838,10 @@ void _calculate_position(LXPanel *panel)
        account multiple monitors */
     if (0)  {
 //        if (np->curdesk < np->wa_len/4) {
-        marea.x = np->workarea[np->curdesk*4 + 0];
-        marea.y = np->workarea[np->curdesk*4 + 1];
-        marea.width  = np->workarea[np->curdesk*4 + 2];
-        marea.height = np->workarea[np->curdesk*4 + 3];
+//        marea.x = np->workarea[np->curdesk*4 + 0];
+//        marea.y = np->workarea[np->curdesk*4 + 1];
+//        marea.width  = np->workarea[np->curdesk*4 + 2];
+//        marea.height = np->workarea[np->curdesk*4 + 3];
     } else {
         screen = gtk_widget_get_screen(GTK_WIDGET(panel));
         g_assert(np->monitor >= 0 && np->monitor < gdk_screen_get_n_monitors(screen));
