@@ -145,6 +145,7 @@ static gboolean wincmd_button_clicked(GtkWidget * widget, GdkEventButton * event
 static GtkWidget *wincmd_constructor(LXPanel *panel, config_setting_t *settings)
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
+    resolve_atoms();
     WinCmdPlugin * wc = g_new0(WinCmdPlugin, 1);
     GtkWidget * p;
     const char *str;

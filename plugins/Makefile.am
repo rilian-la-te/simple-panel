@@ -85,8 +85,7 @@ cpufreq_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\"
 cpufreq_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # deskno
-deskno_la_SOURCES = deskno/deskno.c  \
-            X/x-misc.c
+deskno_la_SOURCES = deskno/deskno.c
 deskno_la_CFLAGS = $(WNCK_CFLAGS)
 deskno_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
 

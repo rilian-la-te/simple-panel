@@ -637,7 +637,7 @@ tray_draw_box (GtkWidget *box,
 static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
 {
     GtkWidget *p;
-
+    resolve_atoms();
     /* Get the screen and display. */
     GdkScreen * screen = gtk_widget_get_screen(GTK_WIDGET(panel));
     Screen * xscreen = GDK_SCREEN_XSCREEN(screen);

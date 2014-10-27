@@ -1104,10 +1104,6 @@ panel_start_gui(LXPanel *panel)
 
     ENTER;
 
-//    p->curdesk = get_net_current_desktop();
-//    p->desknum = get_net_number_of_desktops();
-//    p->workarea = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_WORKAREA, XA_CARDINAL, &p->wa_len);
-
     /* main toplevel window */
     /* p->topgwin =  gtk_window_new(GTK_WINDOW_TOPLEVEL); */
     p->display = gdk_display_get_default();
@@ -1136,13 +1132,6 @@ panel_start_gui(LXPanel *panel)
     gtk_widget_show(p->box);
     if (p->round_corners)
         make_round_corners(p);
-//	p->topxwin = GDK_WINDOW_XID(gtk_widget_get_window(w));
-//    DBG("topxwin = %x\n", p->topxwin);
-
-    /* the settings that should be done before window is mapped */
-//    wmhints.flags = InputHint;
-//    wmhints.input = 0;
-//    XSetWMHints (xdisplay, p->topxwin, &wmhints);
 
     panel_set_dock_type(p);
 
@@ -1151,9 +1140,6 @@ panel_start_gui(LXPanel *panel)
     /* the settings that should be done after window is mapped */
     _panel_establish_autohide(panel);
 
-//    /* send it to running wm */
-//    Xclimsg(p->topxwin, a_NET_WM_DESKTOP, G_MAXULONG, 0, 0, 0, 0);
-//    /* and assign it ourself just for case when wm is not running */
     val = G_MAXULONG;
     gdk_property_change(gtk_widget_get_window(w),
                         gdk_atom_intern_static_string("_NET_WM_DESKTOP"),

@@ -34,7 +34,6 @@
 #include <libwnck/libwnck.h>
 
 #include "plugin.h"
-#include "X/x-misc.h"
 
 /* Private context for desktop number plugin. */
 typedef struct {
@@ -76,7 +75,7 @@ static gboolean deskno_button_press_event(GtkWidget * widget, GdkEventButton * e
         newdesk = 0;
 
     /* Ask the window manager to make the new desktop current. */
-    Xclimsg(GDK_ROOT_WINDOW(), a_NET_CURRENT_DESKTOP, newdesk, 0, 0, 0, 0);
+    wnck_workspace_activate(wnck_screen_get_workspace(wnck_screen_get_default(),newdesk),0);
     return TRUE;
 }
 

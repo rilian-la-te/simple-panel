@@ -464,8 +464,8 @@ static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, LXPane
     if (alloc->x == allocation->x && alloc->y == allocation->y &&
         alloc->width == allocation->width && alloc->height == allocation->height)
         return; /* not changed */
-	*alloc = *allocation;
-	 /* g_debug("size-allocate on %s, params: %d,%d\n", PLUGIN_CLASS(widget)->name,allocation->width,allocation->height); */
+    *alloc = *allocation;
+         /* g_debug("size-allocate on %s, params: %d,%d\n", PLUGIN_CLASS(widget)->name,allocation->width,allocation->height); */
     _panel_queue_update_background(p);
 //    _queue_panel_calculate_size(p);
 }
