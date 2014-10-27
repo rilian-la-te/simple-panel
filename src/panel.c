@@ -736,7 +736,7 @@ mouse_watch(LXPanel *panel)
         return FALSE;
 
     ENTER;
-    GdkDeviceManager *device_manager = gdk_display_get_device_manager (gtk_widget_get_display (GTK_WIDGET(p)));
+    GdkDeviceManager *device_manager = gdk_display_get_device_manager (gdk_display_get_default());
     GdkDevice *device = gdk_device_manager_get_client_pointer (device_manager);
     gdk_device_get_position (device,NULL, &x, &y);
 
