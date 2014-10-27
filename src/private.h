@@ -28,7 +28,6 @@
 #include <gdk/gdk.h>
 #include <stdio.h>
 #include "panel.h"
-#include "ev.h"
 
 /* -----------------------------------------------------------------------------
  *   Definitions used by lxpanel main code internally */

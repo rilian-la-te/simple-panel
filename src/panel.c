@@ -47,7 +47,6 @@ gchar *cprofile = "default";
 static GtkWindowGroup* win_grp; /* window group used to limit the scope of model dialog. */
 
 static int config = 0;
-FbEv *fbev = NULL;
 
 GSList* all_panels = NULL;  /* a single-linked list storing all panels */
 
@@ -544,68 +543,9 @@ panel_event_filter(GdkXEvent *xevent, GdkEvent *event, gpointer not_used)
         }
         else if( ev->type == DestroyNotify )
         {
-            fb_ev_emit_destroy( fbev, ((XDestroyWindowEvent*)ev)->window );
+//            fb_ev_emit_destroy( fbev, ((XDestroyWindowEvent*)ev)->window );
         }
         RET(GDK_FILTER_CONTINUE);
-    }
-
-    at = ev->xproperty.atom;
-    win = ev->xproperty.window;
-    if (win == GDK_ROOT_WINDOW())
-    {
-        if (at == a_NET_CLIENT_LIST)
-        {
-            fb_ev_emit(fbev, EV_CLIENT_LIST);
-        }
-        else if (at == a_NET_CURRENT_DESKTOP)
-        {
-            GSList* l;
-            for( l = all_panels; l; l = l->next )
-//                ((LXPanel*)l->data)->priv->curdesk = get_net_current_desktop();
-            fb_ev_emit(fbev, EV_CURRENT_DESKTOP);
-        }
-        else if (at == a_NET_NUMBER_OF_DESKTOPS)
-        {
-            GSList* l;
-            for( l = all_panels; l; l = l->next )
-//                ((LXPanel*)l->data)->priv->desknum = get_net_number_of_desktops();
-            fb_ev_emit(fbev, EV_NUMBER_OF_DESKTOPS);
-        }
-        else if (at == a_NET_DESKTOP_NAMES)
-        {
-            fb_ev_emit(fbev, EV_DESKTOP_NAMES);
-        }
-        else if (at == a_NET_ACTIVE_WINDOW)
-        {
-            fb_ev_emit(fbev, EV_ACTIVE_WINDOW );
-        }
-        else if (at == a_NET_CLIENT_LIST_STACKING)
-        {
-            fb_ev_emit(fbev, EV_CLIENT_LIST_STACKING);
-        }
-        else if (at == a_XROOTPMAP_ID)
-        {
-            GSList* l;
-            for( l = all_panels; l; l = l->next )
-            {
-
-            }
-        }
-        else if (at == a_NET_WORKAREA)
-        {
-            GSList* l;
-            for( l = all_panels; l; l = l->next )
-            {
-                LXPanel* p = (LXPanel*)l->data;
-//                XFree( p->priv->workarea );
-//                p->priv->workarea = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_WORKAREA, XA_CARDINAL, &p->priv->wa_len);
-                /* print_wmdata(p); */
-            }
-        }
-        else
-            return GDK_FILTER_CONTINUE;
-
-        return GDK_FILTER_REMOVE;
     }
     return GDK_FILTER_CONTINUE;
 }
@@ -1786,7 +1726,6 @@ int main(int argc, char *argv[], char *env[])
     /* Add our own icons to the search path of icon theme */
     gtk_icon_theme_append_search_path( gtk_icon_theme_get_default(), PACKAGE_DATA_DIR "/images" );
 
-    fbev = fb_ev_new();
     win_grp = gtk_window_group_new();
 
     is_restarting = FALSE;
@@ -1832,7 +1771,6 @@ int main(int argc, char *argv[], char *env[])
     /* gdk_threads_leave(); */
 
     g_object_unref(win_grp);
-    g_object_unref(fbev);
 
     if (!is_restarting)
         return 0;

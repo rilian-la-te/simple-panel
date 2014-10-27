@@ -24,7 +24,6 @@ lxpanel_SOURCES = \
         css.c \
 	configurator.c \
 	dbg.c \
-	ev.c \
 	icon-grid.c \
 	panel.c \
 	plugin.c \
@@ -57,7 +56,6 @@ lxpanelctl_LDADD = $(X11_LIBS) $(INTLLIBS)
 EXTRA_DIST = \
         css.h \
 	dbg.h \
-	ev.h \
 	menu-policy.h \
 	private.h
 
