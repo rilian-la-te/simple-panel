@@ -905,6 +905,7 @@ static void panel_popupmenu_create_panel( GtkMenuItem* item, LXPanel* panel )
     GdkScreen *screen;
     LXPanel *new_panel = panel_allocate();
     Panel *p = new_panel->priv;
+    config_setting_t *global;
 
     /* Allocate the edge. */
     screen = gdk_screen_get_default();
@@ -932,8 +933,9 @@ found_edge:
     p->name = gen_panel_name(p->edge, p->monitor);
 
     /* create new config with first group "Global" */
-    config_group_add_subgroup(config_root_setting(p->config), "Global");
-    panel_configure(new_panel, 0);
+    global = config_group_add_subgroup(config_root_setting(p->config), "Global");
+    config_group_set_string(global, "edge", num2str(edge_pair, p->edge, "none"));
+    config_group_set_int(global, "monitor", p->monitor);    panel_configure(new_panel, 0);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
     gtk_widget_show_all(GTK_WIDGET(new_panel));
