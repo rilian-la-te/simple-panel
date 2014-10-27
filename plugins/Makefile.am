@@ -86,7 +86,8 @@ cpufreq_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # deskno
 deskno_la_SOURCES = deskno/deskno.c
-deskno_la_LDFLAGS = -module @LXPANEL_MODULE@
+deskno_la_CFLAGS = $(WNCK_CFLAGS)
+deskno_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
 
 # indicator
 indicator_la_SOURCES = indicator/indicator.c
@@ -166,10 +167,11 @@ weather_la_LDFLAGS = -module @LXPANEL_MODULE@ $(LIBXML2_LIBS)
 # launchtaskbar
 launchtaskbar_la_SOURCES = X/launchtaskbar.c
 launchtaskbar_la_CFLAGS = \
+        $(WNCK_CFLAGS) \
        -I$(srcdir)/X \
        -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
        -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
-launchtaskbar_la_LDFLAGS = -module @LXPANEL_MODULE@
+launchtaskbar_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
 
 # pager
 pager_la_SOURCES = X/pager.c

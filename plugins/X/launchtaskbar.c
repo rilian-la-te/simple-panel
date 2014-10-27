@@ -55,8 +55,12 @@
 
 #include <libfm/fm-gtk.h>
 
+#ifndef WNCK_I_KNOW_THIS_IS_UNSTABLE
+#define WNCK_I_KNOW_THIS_IS_UNSTABLE
+#endif
+#include <libwnck/libwnck.h>
+
 #include "misc.h"
-#include "ev.h"
 #include "plugin.h"
 #include "icon.xpm"
 #include "icon-grid.h"
@@ -220,10 +224,10 @@ static gboolean flash_window_timeout(gpointer tk);
 static void task_group_menu_destroy(LaunchTaskBarPlugin * tb);
 static gboolean taskbar_popup_activate_event(GtkWidget * widget, GdkEventButton * event, Task * tk);
 static void taskbar_update_style(LaunchTaskBarPlugin * tb);
-static void taskbar_net_client_list(GtkWidget * widget, LaunchTaskBarPlugin * tb);
-static void taskbar_net_current_desktop(GtkWidget * widget, LaunchTaskBarPlugin * tb);
-static void taskbar_net_number_of_desktops(GtkWidget * widget, LaunchTaskBarPlugin * tb);
-static void taskbar_net_active_window(GtkWidget * widget, LaunchTaskBarPlugin * tb);
+static void taskbar_window_buttons(WnckScreen *screen, gpointer *data);
+static void taskbar_active_workspace_changed(WnckScreen *screen, WnckWorkspace *workspace, gpointer *data);
+static void taskbar_workspace_numbers(WnckScreen *screen, WnckWorkspace *workspace, gpointer *data);
+static void taskbar_on_active_window_changed(WnckScreen *screen, WnckWindow *window, gpointer *data);
 static gboolean task_has_urgency(Task * tk);
 static GdkFilterReturn taskbar_event_filter(XEvent * xev, GdkEvent * event, LaunchTaskBarPlugin * tb);
 static void taskbar_make_menu(LaunchTaskBarPlugin * tb);
@@ -743,12 +747,15 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
         gdk_window_add_filter(NULL, (GdkFilterFunc) taskbar_event_filter, ltbp);
 
         /* Connect signals to receive root window events and initialize root window properties. */
-        ltbp->number_of_desktops = get_net_number_of_desktops();
-        ltbp->current_desktop = get_net_current_desktop();
-        g_signal_connect(G_OBJECT(fbev), "current-desktop", G_CALLBACK(taskbar_net_current_desktop), (gpointer) ltbp);
-        g_signal_connect(G_OBJECT(fbev), "active-window", G_CALLBACK(taskbar_net_active_window), (gpointer) ltbp);
-        g_signal_connect(G_OBJECT(fbev), "number-of-desktops", G_CALLBACK(taskbar_net_number_of_desktops), (gpointer) ltbp);
-        g_signal_connect(G_OBJECT(fbev), "client-list", G_CALLBACK(taskbar_net_client_list), (gpointer) ltbp);
+        WnckScreen* screen = wnck_screen_get_default();
+        ltbp->number_of_desktops = gdk_x11_screen_get_number_of_desktops(gdk_screen_get_default());
+        ltbp->current_desktop = gdk_x11_screen_get_current_desktop(gdk_screen_get_default());
+        g_signal_connect(screen, "active-workspace-changed", G_CALLBACK(taskbar_active_workspace_changed), (gpointer) ltbp);
+        g_signal_connect(screen, "active-window-changed", G_CALLBACK(taskbar_on_active_window_changed), (gpointer) ltbp);
+        g_signal_connect(screen, "workspace-destroyed", G_CALLBACK(taskbar_workspace_numbers), (gpointer) ltbp);
+        g_signal_connect(screen, "workspace-created", G_CALLBACK(taskbar_workspace_numbers), (gpointer) ltbp);
+        g_signal_connect(screen, "window-stacking-changed", G_CALLBACK(taskbar_window_buttons), (gpointer) ltbp);
+        //g_signal_connect(screen, "window-closed", G_CALLBACK(taskbar_net_client_list), (gpointer) ltbp);
 
         /* Make right-click menu for task buttons.
          * It is retained for the life of the taskbar and will be shown as needed.
@@ -759,8 +766,8 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
         g_signal_connect(ltbp->screen, "window-manager-changed", G_CALLBACK(taskbar_window_manager_changed), ltbp);
 
         /* Fetch the client list and redraw the taskbar.  Then determine what window has focus. */
-        taskbar_net_client_list(NULL, ltbp);
-        taskbar_net_active_window(NULL, ltbp);
+        taskbar_window_buttons(screen,(gpointer* ) ltbp);
+        taskbar_on_active_window_changed(screen,NULL,(gpointer* ) ltbp);
     }
     gtk_widget_set_visible(ltbp->tb_icon_grid, TRUE);
 }
@@ -870,10 +877,11 @@ static void launchtaskbar_destructor_task(LaunchTaskBarPlugin *ltbp)
     gdk_window_remove_filter(NULL, (GdkFilterFunc) taskbar_event_filter, ltbp);
 
     /* Remove root window signal handlers. */
-    g_signal_handlers_disconnect_by_func(fbev, taskbar_net_current_desktop, ltbp);
-    g_signal_handlers_disconnect_by_func(fbev, taskbar_net_active_window, ltbp);
-    g_signal_handlers_disconnect_by_func(fbev, taskbar_net_number_of_desktops, ltbp);
-    g_signal_handlers_disconnect_by_func(fbev, taskbar_net_client_list, ltbp);
+    WnckScreen* screen = wnck_screen_get_default();
+    g_signal_handlers_disconnect_by_func(screen, taskbar_active_workspace_changed, ltbp);
+    g_signal_handlers_disconnect_by_func(screen, taskbar_on_active_window_changed, ltbp);
+    g_signal_handlers_disconnect_by_func(screen, taskbar_workspace_numbers, ltbp);
+    g_signal_handlers_disconnect_by_func(screen, taskbar_window_buttons, ltbp);
 
     /* Remove "window-manager-changed" handler. */
     g_signal_handlers_disconnect_by_func(ltbp->screen, taskbar_window_manager_changed, ltbp);
@@ -2927,10 +2935,10 @@ static gint get_window_monitor(Window win)
  *****************************************************/
 
 /* Handler for "client-list" event from root window listener. */
-static void taskbar_net_client_list(GtkWidget * widget, LaunchTaskBarPlugin * tb)
+static void taskbar_window_buttons(WnckScreen* screen, gpointer* data)
 {
-    LaunchTaskBarPlugin *ltbp = tb;
-    if(ltbp->mode == LAUNCHBAR) return;
+    LaunchTaskBarPlugin *tb = (LaunchTaskBarPlugin*)data;
+    if(tb->mode == LAUNCHBAR) return;
 
     /* Get the NET_CLIENT_LIST property. */
     int client_count;
@@ -3031,34 +3039,34 @@ static void taskbar_net_client_list(GtkWidget * widget, LaunchTaskBarPlugin * tb
 }
 
 /* Handler for "current-desktop" event from root window listener. */
-static void taskbar_net_current_desktop(GtkWidget * widget, LaunchTaskBarPlugin * tb)
+static void taskbar_active_workspace_changed(WnckScreen* screen, WnckWorkspace* workspace, gpointer* data)
 {
-    LaunchTaskBarPlugin *ltbp = tb;
-    if(ltbp->mode == LAUNCHBAR) return;
+    LaunchTaskBarPlugin *tb = (LaunchTaskBarPlugin*)data;
+    if(tb->mode == LAUNCHBAR) return;
 
     /* Store the local copy of current desktops.  Redisplay the taskbar. */
-    tb->current_desktop = get_net_current_desktop();
+    tb->current_desktop = gdk_x11_screen_get_current_desktop(gdk_screen_get_default());
     recompute_group_visibility_on_current_desktop(tb);
     taskbar_redraw(tb);
 }
 
 /* Handler for "number-of-desktops" event from root window listener. */
-static void taskbar_net_number_of_desktops(GtkWidget * widget, LaunchTaskBarPlugin * tb)
+static void taskbar_workspace_numbers(WnckScreen* screen, WnckWorkspace* workspace, gpointer* data)
 {
-    LaunchTaskBarPlugin *ltbp = tb;
-    if(ltbp->mode == LAUNCHBAR) return;
+    LaunchTaskBarPlugin *tb = (LaunchTaskBarPlugin*)data;
+    if(tb->mode == LAUNCHBAR) return;
 
     /* Store the local copy of number of desktops.  Recompute the popup menu and redisplay the taskbar. */
-    tb->number_of_desktops = get_net_number_of_desktops();
+    tb->number_of_desktops = gdk_x11_screen_get_number_of_desktops(gdk_screen_get_default());
     taskbar_make_menu(tb);
     taskbar_redraw(tb);
 }
 
 /* Handler for "active-window" event from root window listener. */
-static void taskbar_net_active_window(GtkWidget * widget, LaunchTaskBarPlugin * tb)
+static void taskbar_on_active_window_changed(WnckScreen* screen, WnckWindow* window, gpointer* data)
 {
-    LaunchTaskBarPlugin *ltbp = tb;
-    if(ltbp->mode == LAUNCHBAR) return;
+    LaunchTaskBarPlugin *tb = (LaunchTaskBarPlugin*)data;
+    if(tb->mode == LAUNCHBAR) return;
 
     gboolean drop_old = FALSE;
     gboolean make_new = FALSE;
@@ -3533,7 +3541,7 @@ static void taskbar_apply_configuration(LaunchTaskBarPlugin *ltbp)
 
     /* Refetch the client list and redraw. */
     recompute_group_visibility_on_current_desktop(ltbp);
-    taskbar_net_client_list(NULL, ltbp);
+    taskbar_window_buttons(wnck_screen_get_default(),(gpointer* )ltbp);
 }
 
 static GtkWidget *launchbar_constructor(LXPanel *panel, config_setting_t *settings)

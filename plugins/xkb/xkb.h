@@ -25,7 +25,6 @@
 #include <glib.h>
 
 #include "plugin.h"
-#include "ev.h"
 
 typedef enum {
     DISP_TYPE_IMAGE=0,

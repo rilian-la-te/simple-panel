@@ -79,7 +79,7 @@ static void  xkb_update_layouts_n_variants(XkbPlugin *p_xkb);
 static void  xkb_add_layout(XkbPlugin *p_xkb, gchar *layout, gchar*variant);
 static int   xkb_get_flag_size(XkbPlugin *p_xkb);
 
-static void      on_xkb_fbev_active_window_event(FbEv *ev, gpointer p_data);
+static void      on_active_window_changed(WnckScreen *screen, WnckWindow *previously_active_window, gpointer p_data);
 static gboolean  on_xkb_button_scroll_event(GtkWidget * widget, GdkEventScroll * event, gpointer p_data);
 static void      on_radiobutton_disp_type_image_toggled(GtkToggleButton *p_radiobutton, gpointer p_data);
 static void      on_radiobutton_disp_type_image_cust_toggled(GtkToggleButton *p_radiobutton, gpointer p_data);

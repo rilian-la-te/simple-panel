@@ -26,10 +26,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib/gi18n.h>
+#include <gdk/gdkx.h>
+
+#ifndef WNCK_I_KNOW_THIS_IS_UNSTABLE
+#define WNCK_I_KNOW_THIS_IS_UNSTABLE
+#endif
+#include <libwnck/libwnck.h>
 
 #include "plugin.h"
 #include "misc.h"
-#include "ev.h"
 
 /* Private context for desktop number plugin. */
 typedef struct {
@@ -43,55 +48,29 @@ typedef struct {
 } DesknoPlugin;
 
 static void deskno_destructor(gpointer user_data);
+//static void deskno_redraw(WnckWorkspace* workspace, gpointer* data);
 
 /* Handler for current_desktop event from window manager. */
-static gboolean deskno_name_update(GtkWidget * widget, DesknoPlugin * dc)
+static gboolean deskno_name_update(WnckScreen* screen, WnckWorkspace* space,gpointer* data)
 {
-    /* Compute and redraw the desktop number. */
-    int desktop_number = get_net_current_desktop();
-    if (desktop_number < dc->number_of_desktops)
-        lxpanel_draw_label_text(dc->panel, dc->label, dc->desktop_labels[desktop_number], dc->bold, 1, TRUE);
-    return TRUE;
-}
-
-/* Handler for desktop_name and number_of_desktops events from window manager.
- * Also used on a configuration change to get a full redraw. */
-static void deskno_redraw(GtkWidget * widget, DesknoPlugin * dc)
-{
-    /* Get the NET_DESKTOP_NAMES property. */
-    dc->number_of_desktops = get_net_number_of_desktops();
-    int number_of_desktop_names;
-    char * * desktop_names;
-    desktop_names = get_utf8_property_list(GDK_ROOT_WINDOW(), a_NET_DESKTOP_NAMES, &number_of_desktop_names);
-
-    /* Reallocate the vector of labels. */
-    if (dc->desktop_labels != NULL)
-        g_strfreev(dc->desktop_labels);
-    dc->desktop_labels = g_new0(gchar *, dc->number_of_desktops + 1);
-
-    /* Loop to copy the desktop names to the vector of labels.
-     * If there are more desktops than labels, label the extras with a decimal number. */
-    int i = 0;
+    DesknoPlugin * dc = (DesknoPlugin*)data;
+    WnckWorkspace* workspace = wnck_screen_get_active_workspace(screen);
+    const gchar* name;
     if (dc->wm_labels)
-        for ( ; ((desktop_names != NULL) && (i < MIN(dc->number_of_desktops, number_of_desktop_names))); i++)
-            dc->desktop_labels[i] = g_strdup(desktop_names[i]);
-    for ( ; i < dc->number_of_desktops; i++)
-        dc->desktop_labels[i] = g_strdup_printf("%d", i + 1);
-
-    /* Free the property. */
-    if (desktop_names != NULL)
-        g_strfreev(desktop_names);
-
-    /* Redraw the label. */
-    deskno_name_update(widget, dc);
+        name = wnck_workspace_get_name(workspace);
+    else
+    {
+        name = g_strdup_printf("%d",wnck_workspace_get_number(workspace)+1);
+    }
+    lxpanel_draw_label_text(dc->panel, dc->label, name, dc->bold, 1, TRUE);
 }
 
 /* Handler for button-press-event on top level widget. */
 static gboolean deskno_button_press_event(GtkWidget * widget, GdkEventButton * event, LXPanel * p)
 {
     /* Right-click goes to next desktop, wrapping around to first. */
-    int desknum = get_net_current_desktop();
-    int desks = get_net_number_of_desktops();
+    int desknum = gdk_x11_screen_get_current_desktop(gdk_screen_get_default());
+    int desks = gdk_x11_screen_get_number_of_desktops(gdk_screen_get_default());
     int newdesk = desknum + 1;
     if (newdesk >= desks)
         newdesk = 0;
@@ -132,12 +111,12 @@ static GtkWidget *deskno_constructor(LXPanel *panel, config_setting_t *settings)
     gtk_container_add(GTK_CONTAINER(p), dc->label);
 
     /* Connect signals.  Note use of window manager event object. */
-    g_signal_connect(G_OBJECT(fbev), "current-desktop", G_CALLBACK(deskno_name_update), (gpointer) dc);
-    g_signal_connect(G_OBJECT(fbev), "desktop-names", G_CALLBACK(deskno_redraw), (gpointer) dc);
-    g_signal_connect(G_OBJECT(fbev), "number-of-desktops", G_CALLBACK(deskno_redraw), (gpointer) dc);
+    WnckScreen* screen = wnck_screen_get_default();
+    g_signal_connect(screen, "active-workspace-changed", G_CALLBACK(deskno_name_update), (gpointer*) dc);
 
     /* Initialize value and show the widget. */
-    deskno_redraw(NULL, dc);
+    wnck_screen_force_update(screen);
+    deskno_name_update(screen,NULL,(gpointer*) dc);
     gtk_widget_show_all(p);
     return p;
 }
@@ -148,8 +127,8 @@ static void deskno_destructor(gpointer user_data)
     DesknoPlugin * dc = (DesknoPlugin *) user_data;
 
     /* Disconnect signal from window manager event object. */
-    g_signal_handlers_disconnect_by_func(G_OBJECT(fbev), deskno_name_update, dc);
-    g_signal_handlers_disconnect_by_func(G_OBJECT(fbev), deskno_redraw, dc);
+    WnckScreen* screen = wnck_screen_get_default();
+    g_signal_handlers_disconnect_by_func(screen, deskno_name_update, dc);
 
     /* Deallocate all memory. */
     if (dc->desktop_labels != NULL)
@@ -161,7 +140,7 @@ static void deskno_destructor(gpointer user_data)
 static gboolean deskno_apply_configuration(gpointer user_data)
 {
     DesknoPlugin * dc = lxpanel_plugin_get_data(user_data);
-    deskno_redraw(NULL, dc);
+    deskno_name_update(wnck_screen_get_default(),wnck_screen_get_active_workspace(wnck_screen_get_default()),(gpointer*) dc);
     config_group_set_int(dc->settings, "BoldFont", dc->bold);
     config_group_set_int(dc->settings, "WMLabels", dc->wm_labels);
     return FALSE;
@@ -184,7 +163,7 @@ static GtkWidget *deskno_configure(LXPanel *panel, GtkWidget *p)
 static void deskno_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
 {
     DesknoPlugin * dc = lxpanel_plugin_get_data(p);
-    deskno_name_update(NULL, dc);
+    deskno_name_update(wnck_screen_get_default(),NULL, (gpointer*)dc);
 }
 
 FM_DEFINE_MODULE(lxpanel_gtk, deskno)
