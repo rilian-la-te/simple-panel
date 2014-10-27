@@ -383,7 +383,8 @@ void panel_set_wm_strut(Panel *p)
 void _panel_set_wm_strut(LXPanel *panel)
 {
     int index;
-    Display *xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+    GdkAtom atom;
+    GdkWindow* xwin = gtk_widget_get_window(GTK_WIDGET(panel));
     Panel *p = panel->priv;
     gulong strut_size;
     gulong strut_lower;
@@ -464,15 +465,17 @@ void _panel_set_wm_strut(LXPanel *panel)
          * Set STRUT also for window managers that do not support STRUT_PARTIAL. */
         if (strut_size != 0)
         {
-            XChangeProperty(xdisplay, p->topxwin, a_NET_WM_STRUT_PARTIAL,
-                XA_CARDINAL, 32, PropModeReplace,  (unsigned char *) desired_strut, 12);
-            XChangeProperty(xdisplay, p->topxwin, a_NET_WM_STRUT,
-                XA_CARDINAL, 32, PropModeReplace,  (unsigned char *) desired_strut, 4);
+            atom = gdk_atom_intern_static_string("_NET_WM_STRUT_PARTIAL");
+            gdk_property_change(xwin,atom,gdk_atom_intern_static_string("CARDINAL"),32,GDK_PROP_MODE_REPLACE,(guchar*)desired_strut,12);
+            atom = gdk_atom_intern_static_string("_NET_WM_STRUT");
+            gdk_property_change(xwin,atom,gdk_atom_intern_static_string("CARDINAL"),32,GDK_PROP_MODE_REPLACE,(guchar*)desired_strut,4);
         }
         else
         {
-            XDeleteProperty(xdisplay, p->topxwin, a_NET_WM_STRUT);
-            XDeleteProperty(xdisplay, p->topxwin, a_NET_WM_STRUT_PARTIAL);
+            atom = gdk_atom_intern_static_string("_NET_WM_STRUT_PARTIAL");
+            gdk_property_delete(xwin,atom);
+            atom = gdk_atom_intern_static_string("_NET_WM_STRUT");
+            gdk_property_delete(xwin,atom);
         }
     }
 }
@@ -1196,16 +1199,11 @@ make_round_corners(Panel *p)
 
 void panel_set_dock_type(Panel *p)
 {
-    Display *xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
-
     if (p->setdocktype) {
-        Atom state = a_NET_WM_WINDOW_TYPE_DOCK;
-        XChangeProperty(xdisplay, p->topxwin,
-                        a_NET_WM_WINDOW_TYPE, XA_ATOM, 32,
-                        PropModeReplace, (unsigned char *) &state, 1);
+        gtk_window_set_type_hint(GTK_WINDOW(p->topgwin),GDK_WINDOW_TYPE_HINT_DOCK);
     }
     else {
-        XDeleteProperty( xdisplay, p->topxwin, a_NET_WM_WINDOW_TYPE );
+        gtk_window_set_type_hint(GTK_WINDOW(p->topgwin),GDK_WINDOW_TYPE_HINT_NORMAL);
     }
 }
 
@@ -1262,10 +1260,8 @@ gboolean lxpanel_image_set_icon_theme(LXPanel * p, GtkWidget * image, const gcha
 static void
 panel_start_gui(LXPanel *panel)
 {
-    Atom state[3];
-    XWMHints wmhints;
+//    XWMHints wmhints;
     gulong val;
-    Display *xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     Panel *p = panel->priv;
     GtkWidget *w = GTK_WIDGET(panel);
 
@@ -1284,6 +1280,10 @@ panel_start_gui(LXPanel *panel)
     gtk_window_set_title(GTK_WINDOW(panel), "panel");
     gtk_window_set_position(GTK_WINDOW(panel), GTK_WIN_POS_NONE);
     gtk_window_set_decorated(GTK_WINDOW(panel), FALSE);
+    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(panel),TRUE);
+    gtk_window_set_skip_pager_hint(GTK_WINDOW(panel),TRUE);
+    gtk_window_stick(GTK_WINDOW(panel));
+    gtk_window_set_accept_focus(GTK_WINDOW(panel),FALSE);
 
     gtk_window_group_add_window( win_grp, (GtkWindow*)panel );
 
@@ -1303,36 +1303,25 @@ panel_start_gui(LXPanel *panel)
     DBG("topxwin = %x\n", p->topxwin);
 
     /* the settings that should be done before window is mapped */
-    wmhints.flags = InputHint;
-    wmhints.input = 0;
-    XSetWMHints (xdisplay, p->topxwin, &wmhints);
-#define WIN_HINTS_SKIP_FOCUS      (1<<0)    /* "alt-tab" skips this win */
-    val = WIN_HINTS_SKIP_FOCUS;
-    XChangeProperty(xdisplay, p->topxwin,
-          XInternAtom(xdisplay, "_WIN_HINTS", False), XA_CARDINAL, 32,
-          PropModeReplace, (unsigned char *) &val, 1);
+//    wmhints.flags = InputHint;
+//    wmhints.input = 0;
+//    XSetWMHints (xdisplay, p->topxwin, &wmhints);
 
     panel_set_dock_type(p);
 
     /* window mapping point */
     gtk_widget_show_all(w);
-
     /* the settings that should be done after window is mapped */
     _panel_establish_autohide(panel);
 
-    /* send it to running wm */
-    Xclimsg(p->topxwin, a_NET_WM_DESKTOP, G_MAXULONG, 0, 0, 0, 0);
-    /* and assign it ourself just for case when wm is not running */
+//    /* send it to running wm */
+//    Xclimsg(p->topxwin, a_NET_WM_DESKTOP, G_MAXULONG, 0, 0, 0, 0);
+//    /* and assign it ourself just for case when wm is not running */
     val = G_MAXULONG;
-    XChangeProperty(xdisplay, p->topxwin, a_NET_WM_DESKTOP, XA_CARDINAL, 32,
-          PropModeReplace, (unsigned char *) &val, 1);
-
-    state[0] = a_NET_WM_STATE_SKIP_PAGER;
-    state[1] = a_NET_WM_STATE_SKIP_TASKBAR;
-    state[2] = a_NET_WM_STATE_STICKY;
-    XChangeProperty(xdisplay, p->topxwin, a_NET_WM_STATE, XA_ATOM,
-          32, PropModeReplace, (unsigned char *) state, 3);
-
+    gdk_property_change(gtk_widget_get_window(w),
+                        gdk_atom_intern_static_string("_NET_WM_DESKTOP"),
+                        gdk_atom_intern_static_string("CARDINAL"),
+                        32, GDK_PROP_MODE_REPLACE, (guchar*)&val, 1);
     _calculate_position(panel);
     gdk_window_move_resize(gtk_widget_get_window(w), p->ax, p->ay, p->aw, p->ah);
     _panel_set_wm_strut(panel);
