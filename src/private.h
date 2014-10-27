@@ -28,6 +28,7 @@
 #include <gdk/gdk.h>
 #include <stdio.h>
 #include "panel.h"
+#include "app.h"
 
 /* -----------------------------------------------------------------------------
  *   Definitions used by lxpanel main code internally */
@@ -54,6 +55,7 @@ extern gchar *cprofile;
 struct _Panel {
     char* name;
     LXPanel * topgwin;			/* Main panel window */
+    PanelApp* app;
 //    Window topxwin;			/* Main panel's X window   */
     GdkDisplay * display;		/* Main panel's GdkDisplay */
     GtkIconTheme* icon_theme; /*Default icon theme*/

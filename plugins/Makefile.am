@@ -85,7 +85,8 @@ cpufreq_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\"
 cpufreq_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # deskno
-deskno_la_SOURCES = deskno/deskno.c
+deskno_la_SOURCES = deskno/deskno.c  \
+            X/x-misc.c
 deskno_la_CFLAGS = $(WNCK_CFLAGS)
 deskno_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
 
@@ -165,7 +166,9 @@ weather_la_CFLAGS = \
 weather_la_LDFLAGS = -module @LXPANEL_MODULE@ $(LIBXML2_LIBS)
 
 # launchtaskbar
-launchtaskbar_la_SOURCES = X/launchtaskbar.c
+launchtaskbar_la_SOURCES = \
+        X/launchtaskbar.c \
+        X/x-misc.c
 launchtaskbar_la_CFLAGS = \
         $(WNCK_CFLAGS) \
        -I$(srcdir)/X \
@@ -174,12 +177,14 @@ launchtaskbar_la_CFLAGS = \
 launchtaskbar_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
 
 # pager
-pager_la_SOURCES = X/pager.c
+pager_la_SOURCES = X/pager.c \
+        X/x-misc.c
 pager_la_CFLAGS = $(WNCK_CFLAGS)
 pager_la_LDFLAGS = $(WNCK_LIBS) -module @LXPANEL_MODULE@
 
 # tray
-tray_la_SOURCES = X/tray.c
+tray_la_SOURCES = X/tray.c \
+        X/x-misc.c
 tray_la_CFLAGS = \
        -I$(srcdir)/X \
        -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
@@ -187,7 +192,8 @@ tray_la_CFLAGS = \
 tray_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # wincmd
-wincmd_la_SOURCES = X/wincmd.c
+wincmd_la_SOURCES = X/wincmd.c \
+        X/x-misc.c
 wincmd_la_CFLAGS = \
        -I$(srcdir)/X \
        -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
@@ -203,7 +209,8 @@ xkb_la_CFLAGS = \
 	-DXKBCONFDIR=\"$(datadir)/lxpanel/xkeyboardconfig\"
 xkb_la_SOURCES = \
 	xkb/xkb-plugin.c \
-	xkb/xkb.c
+        xkb/xkb.c \
+        X/x-misc.c
 xkb_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
 
 xkeyboardconfigdir=$(datadir)/lxpanel/xkeyboardconfig

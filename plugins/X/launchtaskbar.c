@@ -60,7 +60,7 @@
 #endif
 #include <libwnck/libwnck.h>
 
-#include "misc.h"
+#include "x-misc.h"
 #include "plugin.h"
 #include "icon.xpm"
 #include "icon-grid.h"

@@ -359,11 +359,7 @@ void lxpanel_plugin_show_config_dialog(GtkWidget* plugin)
         _panel_show_config_dialog(panel, plugin, dlg);
 }
 
-#if GLIB_CHECK_VERSION(2, 32, 0)
 static GRecMutex _mutex;
-#else
-static GStaticRecMutex _mutex = G_STATIC_REC_MUTEX_INIT;
-#endif
 
 #ifndef DISABLE_PLUGINS_LOADING
 FM_MODULE_DEFINE_TYPE(lxpanel_gtk, LXPanelPluginInit, 1)

@@ -34,7 +34,7 @@
 #include <libwnck/libwnck.h>
 
 #include "plugin.h"
-#include "misc.h"
+#include "X/x-misc.h"
 
 /* Private context for desktop number plugin. */
 typedef struct {

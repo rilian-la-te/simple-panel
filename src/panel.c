@@ -33,22 +33,17 @@
 
 #define __LXPANEL_INTERNALS__
 
+#include "app.h"
 #include "private.h"
 #include "misc.h"
 #include "css.h"
-
-#include "lxpanelctl.h"
 #include "dbg.h"
 
-static gchar *cfgfile = NULL;
-static gchar version[] = VERSION;
-gchar *cprofile = "default";
-
-static GtkWindowGroup* win_grp; /* window group used to limit the scope of model dialog. */
+static PanelApp* win_grp;
 
 static int config = 0;
 
-GSList* all_panels = NULL;  /* a single-linked list storing all panels */
+GList* all_panels = NULL;
 
 gboolean is_restarting = FALSE;
 
@@ -82,11 +77,7 @@ static void lxpanel_finalize(GObject *object)
     G_OBJECT_CLASS(lxpanel_parent_class)->finalize(object);
 }
 
-#if GTK_CHECK_VERSION(3,0,0)
 static void lxpanel_destroy(GtkWidget *object)
-#else
-static void lxpanel_destroy(GtkObject *object)
-#endif
 {
     LXPanel *self = LXPANEL(object);
     Panel *p = self->priv;
@@ -104,7 +95,7 @@ static void lxpanel_destroy(GtkObject *object)
 
     if (p->initialized)
     {
-        gtk_window_group_remove_window(win_grp, GTK_WINDOW(self));
+        gtk_application_remove_window(GTK_APPLICATION(win_grp), GTK_WINDOW(self));
         gdk_flush();
         p->initialized = FALSE;
     }
@@ -114,11 +105,7 @@ static void lxpanel_destroy(GtkObject *object)
         g_source_remove(p->background_update_queued);
         p->background_update_queued = 0;
     }
-#if GTK_CHECK_VERSION(3,0,0)
 	GTK_WIDGET_CLASS(lxpanel_parent_class)->destroy(object);
-#else
-    GTK_OBJECT_CLASS(lxpanel_parent_class)->destroy(object);
-#endif
 }
 
 static gboolean idle_update_background(gpointer p)
@@ -129,11 +116,7 @@ static gboolean idle_update_background(gpointer p)
         return FALSE;
 
     /* Panel could be destroyed while background update scheduled */
-#if GTK_CHECK_VERSION(2, 20, 0)
     if (gtk_widget_get_realized(p))
-#else
-    if (GTK_WIDGET_REALIZED(p))
-#endif
     {
         gdk_display_sync( gtk_widget_get_display(p) );
         _panel_update_background(panel);
@@ -170,22 +153,15 @@ static void lxpanel_style_set(GtkWidget *widget, GtkStyle* prev)
 static void lxpanel_size_request(GtkWidget *widget, GtkRequisition *req)
 {
     Panel *p = LXPANEL(widget)->priv;
-#if GTK_CHECK_VERSION(3,0,0)
 		GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_height(widget, &req->height,&req->height);
 		GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_width(widget, &req->width,&req->width);
 		req->height=p->ah;
 		req->width=p->aw;
-#else
-    GTK_WIDGET_CLASS(lxpanel_parent_class)->size_request(widget, req);
-#endif
+
     if (!p->visible)
         /* When the panel is in invisible state, the content box also got hidden, thus always
          * report 0 size.  Ask the content box instead for its size. */
-#if GTK_CHECK_VERSION (3, 0, 0)
 		gtk_widget_get_preferred_size(p->box, req, NULL);
-#else
-        gtk_widget_size_request(p->box, req);
-#endif
 
     /* FIXME: is this ever required? */
     if (p->widthtype == WIDTH_REQUEST)
@@ -201,9 +177,7 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     Panel *p = LXPANEL(widget)->priv;
 
 	GTK_WIDGET_CLASS(lxpanel_parent_class)->size_allocate(widget, a);
-#if GTK_CHECK_VERSION (3, 0, 0)
 	gtk_widget_set_allocation(widget,a);
-#endif
     if (p->widthtype == WIDTH_REQUEST)
         p->width = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->width : a->height;
     if (p->heighttype == HEIGHT_REQUEST)
@@ -219,16 +193,12 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     {
         g_source_remove(p->background_update_queued);
         p->background_update_queued = 0;
-#if GTK_CHECK_VERSION(2, 20, 0)
+
         if (gtk_widget_get_realized(widget))
-#else
-        if (GTK_WIDGET_REALIZED(widget))
-#endif
             _panel_update_background(LXPANEL(widget));
     }
 }
 
-#if GTK_CHECK_VERSION (3,0,0)
 static void
 lxpanel_get_preferred_width (GtkWidget *widget,
 							   gint      *minimal_width,
@@ -250,7 +220,6 @@ lxpanel_get_preferred_height (GtkWidget *widget,
 
   *minimal_height = *natural_height = requisition.height;
 }
-#endif
 
 static gboolean lxpanel_configure_event (GtkWidget *widget, GdkEventConfigure *e)
 {
@@ -291,9 +260,6 @@ static gboolean lxpanel_button_press(GtkWidget *widget, GdkEventButton *event)
 static void lxpanel_class_init(PanelWindowClass *klass)
 {
     GObjectClass *gobject_class = (GObjectClass *)klass;
-#if !GTK_CHECK_VERSION(3,0,0)
-    GtkObjectClass *gtk_object_class = (GtkObjectClass *)klass;
-#endif
     GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
 
     gobject_class->finalize = lxpanel_finalize;
@@ -389,11 +355,7 @@ void _panel_set_wm_strut(LXPanel *panel)
     gulong strut_lower;
     gulong strut_upper;
 
-#if GTK_CHECK_VERSION(2, 20, 0)
     if (!gtk_widget_get_mapped(GTK_WIDGET(panel)))
-#else
-    if (!GTK_WIDGET_MAPPED(panel))
-#endif
         return;
     /* most wm's tend to ignore struts of unmapped windows, and that's how
      * lxpanel hides itself. so no reason to set it. */
@@ -477,77 +439,6 @@ void _panel_set_wm_strut(LXPanel *panel)
             gdk_property_delete(xwin,atom);
         }
     }
-}
-
-static void process_client_msg ( XClientMessageEvent* ev )
-{
-    int cmd = ev->data.b[0];
-    switch( cmd )
-    {
-#ifndef DISABLE_MENU
-        case LXPANEL_CMD_SYS_MENU:
-        {
-            GSList* l;
-            for( l = all_panels; l; l = l->next )
-            {
-                LXPanel* p = (LXPanel*)l->data;
-                GList *plugins, *pl;
-
-                plugins = gtk_container_get_children(GTK_CONTAINER(p->priv->box));
-                for (pl = plugins; pl; pl = pl->next)
-                {
-                    const LXPanelPluginInit *init = PLUGIN_CLASS(pl->data);
-                    if (init->show_system_menu)
-                        /* queue to show system menu */
-                        init->show_system_menu(pl->data);
-                }
-                g_list_free(plugins);
-            }
-            break;
-        }
-#endif
-        case LXPANEL_CMD_RUN:
-            gtk_run();
-            break;
-        case LXPANEL_CMD_CONFIG:
-            {
-            LXPanel * p = ((all_panels != NULL) ? all_panels->data : NULL);
-            if (p != NULL)
-                panel_configure(p, 0);
-            }
-            break;
-        case LXPANEL_CMD_RESTART:
-            restart();
-            break;
-        case LXPANEL_CMD_EXIT:
-            gtk_main_quit();
-            break;
-    }
-}
-
-static GdkFilterReturn
-panel_event_filter(GdkXEvent *xevent, GdkEvent *event, gpointer not_used)
-{
-    Atom at;
-    Window win;
-    XEvent *ev = (XEvent *) xevent;
-
-    ENTER;
-    DBG("win = 0x%x\n", ev->xproperty.window);
-    if (ev->type != PropertyNotify )
-    {
-        /* private client message from lxpanelctl */
-        if( ev->type == ClientMessage && ev->xproperty.atom == a_LXPANEL_CMD )
-        {
-            process_client_msg( (XClientMessageEvent*)ev );
-        }
-        else if( ev->type == DestroyNotify )
-        {
-//            fb_ev_emit_destroy( fbev, ((XDestroyWindowEvent*)ev)->window );
-        }
-        RET(GDK_FILTER_CONTINUE);
-    }
-    return GDK_FILTER_CONTINUE;
 }
 
 /****************************************************
@@ -906,6 +797,7 @@ static void panel_popupmenu_create_panel( GtkMenuItem* item, LXPanel* panel )
     LXPanel *new_panel = panel_allocate();
     Panel *p = new_panel->priv;
     config_setting_t *global;
+    p->app =panel->priv->app;
 
     /* Allocate the edge. */
     screen = gdk_screen_get_default();
@@ -941,7 +833,8 @@ found_edge:
     gtk_widget_show_all(GTK_WIDGET(new_panel));
 
     lxpanel_config_save(new_panel);
-    all_panels = g_slist_prepend(all_panels, new_panel);
+    gtk_application_add_window(GTK_APPLICATION(p->app),GTK_WINDOW(new_panel));
+    all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
 }
 
 static void panel_popupmenu_delete_panel( GtkMenuItem* item, LXPanel* panel )
@@ -960,13 +853,14 @@ static void panel_popupmenu_delete_panel( GtkMenuItem* item, LXPanel* panel )
     if( ok )
     {
         gchar *fname;
-        all_panels = g_slist_remove( all_panels, panel );
 
         /* delete the config file of this panel */
         fname = _user_config_file_name("panels", panel->priv->name);
         g_unlink( fname );
         g_free(fname);
         panel->priv->config_changed = 0;
+        gtk_application_remove_window(GTK_APPLICATION(panel->priv->app),GTK_WINDOW(panel));
+        all_panels = gtk_application_get_windows(GTK_APPLICATION(panel->priv->app));
         gtk_widget_destroy(GTK_WIDGET(panel));
     }
 }
@@ -1049,6 +943,7 @@ GtkMenu* lxpanel_get_plugin_menu( LXPanel* panel, GtkWidget* plugin, gboolean us
     char* tmp;
 
     ret = menu = GTK_MENU(gtk_menu_new());
+    GList* all_panels = gtk_application_get_windows(GTK_APPLICATION(panel->priv->app));
 
     if (plugin)
     {
@@ -1227,7 +1122,7 @@ panel_start_gui(LXPanel *panel)
     gtk_window_stick(GTK_WINDOW(panel));
     gtk_window_set_accept_focus(GTK_WINDOW(panel),FALSE);
 
-    gtk_window_group_add_window( win_grp, (GtkWindow*)panel );
+    gtk_application_add_window(GTK_APPLICATION(win_grp), (GtkWindow*)panel );
 
     gtk_widget_add_events( w, GDK_BUTTON_PRESS_MASK );
 
@@ -1483,7 +1378,7 @@ void panel_destroy(Panel *p)
     gtk_widget_destroy(GTK_WIDGET(p->topgwin));
 }
 
-static LXPanel* panel_new( const char* config_file, const char* config_name )
+LXPanel* panel_new(PanelApp* app,const char* config_file, const char* config_name)
 {
     LXPanel* panel = NULL;
 
@@ -1491,6 +1386,8 @@ static LXPanel* panel_new( const char* config_file, const char* config_name )
     {
         panel = panel_allocate();
         panel->priv->name = g_strdup(config_name);
+        panel->priv->app = app;
+        win_grp=app;
         g_debug("starting panel from file %s",config_file);
         if (!config_read_file(panel->priv->config, config_file) ||
             !panel_start(panel))
@@ -1501,286 +1398,6 @@ static LXPanel* panel_new( const char* config_file, const char* config_name )
         }
     }
     return panel;
-}
-
-static void
-usage()
-{
-    g_print(_("lxpanel %s - lightweight GTK2+ panel for UNIX desktops\n"), version);
-    g_print(_("Command line options:\n"));
-    g_print(_(" --help      -- print this help and exit\n"));
-    g_print(_(" --version   -- print version and exit\n"));
-//    g_print(_(" --log <number> -- set log level 0-5. 0 - none 5 - chatty\n"));
-//    g_print(_(" --configure -- launch configuration utility\n"));
-    g_print(_(" --profile name -- use specified profile\n"));
-    g_print("\n");
-    g_print(_(" -h  -- same as --help\n"));
-    g_print(_(" -p  -- same as --profile\n"));
-    g_print(_(" -v  -- same as --version\n"));
- //   g_print(_(" -C  -- same as --configure\n"));
-    g_print(_("\nVisit http://lxde.org/ for detail.\n\n"));
-}
-
-/* Lightweight lock related functions - X clipboard hacks */
-
-#define CLIPBOARD_NAME "LXPANEL_SELECTION"
-
-/*
- * clipboard_get_func - dummy get_func for gtk_clipboard_set_with_data ()
- */
-static void
-clipboard_get_func(
-    GtkClipboard *clipboard G_GNUC_UNUSED,
-    GtkSelectionData *selection_data G_GNUC_UNUSED,
-    guint info G_GNUC_UNUSED,
-    gpointer user_data_or_owner G_GNUC_UNUSED)
-{
-}
-
-/*
- * clipboard_clear_func - dummy clear_func for gtk_clipboard_set_with_data ()
- */
-static void clipboard_clear_func(
-    GtkClipboard *clipboard G_GNUC_UNUSED,
-    gpointer user_data_or_owner G_GNUC_UNUSED)
-{
-}
-
-/*
- * Lightweight version for checking single instance.
- * Try and get the CLIPBOARD_NAME clipboard instead of using file manipulation.
- *
- * Returns TRUE if successfully retrieved and FALSE otherwise.
- */
-static gboolean check_main_lock()
-{
-    static const GtkTargetEntry targets[] = { { CLIPBOARD_NAME, 0, 0 } };
-    gboolean retval = FALSE;
-    GtkClipboard *clipboard;
-    Atom atom;
-    Display *xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
-
-    atom = gdk_x11_get_xatom_by_name(CLIPBOARD_NAME);
-
-    XGrabServer(xdisplay);
-
-    if (XGetSelectionOwner(xdisplay, atom) != None)
-        goto out;
-
-    clipboard = gtk_clipboard_get(gdk_atom_intern(CLIPBOARD_NAME, FALSE));
-
-    if (gtk_clipboard_set_with_data(clipboard, targets,
-                                    G_N_ELEMENTS (targets),
-                                    clipboard_get_func,
-                                    clipboard_clear_func, NULL))
-        retval = TRUE;
-
-out:
-    XUngrabServer (xdisplay);
-    gdk_flush ();
-
-    return retval;
-}
-#undef CLIPBOARD_NAME
-
-static void _start_panels_from_dir(const char *panel_dir)
-{
-    GDir* dir = g_dir_open( panel_dir, 0, NULL );
-    const gchar* name;
-
-    if( ! dir )
-    {
-        return;
-    }
-
-    while((name = g_dir_read_name(dir)) != NULL)
-    {
-        char* panel_config = g_build_filename( panel_dir, name, NULL );
-        if (strchr(panel_config, '~') == NULL)    /* Skip editor backup files in case user has hand edited in this directory */
-        {
-            LXPanel* panel = panel_new( panel_config, name );
-            if( panel )
-                all_panels = g_slist_prepend( all_panels, panel );
-        }
-        g_free( panel_config );
-    }
-    g_dir_close( dir );
-}
-
-static gboolean start_all_panels( )
-{
-    char *panel_dir;
-    const gchar * const * dir;
-
-    /* try user panels */
-    panel_dir = _user_config_file_name("panels", NULL);
-    _start_panels_from_dir(panel_dir);
-    g_free(panel_dir);
-    if (all_panels != NULL)
-        return TRUE;
-    /* else try XDG fallbacks */
-    dir = g_get_system_config_dirs();
-    if (dir) while (dir[0])
-    {
-        panel_dir = _system_config_file_name(dir[0], "panels");
-        _start_panels_from_dir(panel_dir);
-        g_free(panel_dir);
-        if (all_panels != NULL)
-            return TRUE;
-        dir++;
-    }
-    /* last try at old fallback for compatibility reasons */
-    panel_dir = _old_system_config_file_name("panels");
-    _start_panels_from_dir(panel_dir);
-    g_free(panel_dir);
-    return all_panels != NULL;
-}
-
-void load_global_config();
-void free_global_config();
-
-static void _ensure_user_config_dirs(void)
-{
-    char *dir = g_build_filename(g_get_user_config_dir(), "lxpanel", cprofile,
-                                 "panels", NULL);
-
-    /* make sure the private profile and panels dir exists */
-    g_mkdir_with_parents(dir, 0700);
-    g_free(dir);
-}
-
-int main(int argc, char *argv[], char *env[])
-{
-    int i;
-    const char* desktop_name;
-    char *file;
-
-    setlocale(LC_CTYPE, "");
-
-    //g_thread_init(NULL);
-/*    gdk_threads_init();
-    gdk_threads_enter(); */
-
-    gtk_init(&argc, &argv);
-
-#ifdef ENABLE_NLS
-    bindtextdomain ( GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR );
-    bind_textdomain_codeset ( GETTEXT_PACKAGE, "UTF-8" );
-    textdomain ( GETTEXT_PACKAGE );
-#endif
-
-    XSetLocaleModifiers("");
-    XSetErrorHandler((XErrorHandler) panel_handle_x_error);
-
-    resolve_atoms();
-
-    desktop_name = g_getenv("XDG_CURRENT_DESKTOP");
-    is_in_lxde = desktop_name && (0 == strcmp(desktop_name, "LXDE"));
-
-    for (i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
-            usage();
-            exit(0);
-        } else if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--version")) {
-            printf("lxpanel %s\n", version);
-            exit(0);
-        } else if (!strcmp(argv[i], "--log")) {
-            i++;
-            if (i == argc) {
-                g_critical( "lxpanel: missing log level");
-                usage();
-                exit(1);
-            } else {
-                /* deprecated */
-            }
-        } else if (!strcmp(argv[i], "--configure") || !strcmp(argv[i], "-C")) {
-            config = 1;
-        } else if (!strcmp(argv[i], "--profile") || !strcmp(argv[i], "-p")) {
-            i++;
-            if (i == argc) {
-                g_critical( "lxpanel: missing profile name");
-                usage();
-                exit(1);
-            } else {
-                cprofile = g_strdup(argv[i]);
-            }
-        } else {
-            printf("lxpanel: unknown option - %s\n", argv[i]);
-            usage();
-            exit(1);
-        }
-    }
-
-//TODO: CSS File.
-    /* Add a gtkrc file to be parsed too. */
-//    file = _user_config_file_name("gtkrc", NULL);
-//    gtk_rc_parse(file);
-//    g_free(file);
-
-    /* Check for duplicated lxpanel instances */
-    if (!check_main_lock() && !config) {
-        printf("There is already an instance of LXPanel.  Now to exit\n");
-        exit(1);
-    }
-
-    _ensure_user_config_dirs();
-
-    /* Add our own icons to the search path of icon theme */
-    gtk_icon_theme_append_search_path( gtk_icon_theme_get_default(), PACKAGE_DATA_DIR "/images" );
-
-    win_grp = gtk_window_group_new();
-
-    is_restarting = FALSE;
-
-    /* init LibFM */
-    fm_gtk_init(NULL);
-
-    /* prepare modules data */
-    _prepare_modules();
-
-    load_global_config();
-
-    /* NOTE: StructureNotifyMask is required by XRandR
-     * See init_randr_support() in gdkscreen-x11.c of gtk+ for detail.
-     */
-    gdk_window_set_events(gdk_get_default_root_window(), GDK_STRUCTURE_MASK |
-            GDK_SUBSTRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK);
-    gdk_window_add_filter(gdk_get_default_root_window (), (GdkFilterFunc)panel_event_filter, NULL);
-
-    if( G_UNLIKELY( ! start_all_panels() ) )
-        g_warning( "Config files are not found.\n" );
-/*
- * FIXME: configure??
-    if (config)
-        configure();
-*/
-    gtk_main();
-
-    XSelectInput (GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), GDK_ROOT_WINDOW(), NoEventMask);
-    gdk_window_remove_filter(gdk_get_default_root_window (), (GdkFilterFunc)panel_event_filter, NULL);
-
-    /* destroy all panels */
-    g_slist_foreach( all_panels, (GFunc) gtk_widget_destroy, NULL );
-    g_slist_free( all_panels );
-    all_panels = NULL;
-    g_free( cfgfile );
-
-    free_global_config();
-
-    _unload_modules();
-    fm_gtk_finalize();
-
-    /* gdk_threads_leave(); */
-
-    g_object_unref(win_grp);
-
-    if (!is_restarting)
-        return 0;
-    if (strchr(argv[0], G_DIR_SEPARATOR))
-        execve(argv[0], argv, env);
-    else
-        execve(g_find_program_in_path(argv[0]), argv, env);
-    return 1;
 }
 
 GtkOrientation panel_get_orientation(LXPanel *panel)
@@ -1830,7 +1447,7 @@ GtkWidget *panel_separator_new(LXPanel *panel)
 
 gboolean _class_is_present(const LXPanelPluginInit *init)
 {
-    GSList *sl;
+    GList *sl;
 
     for (sl = all_panels; sl; sl = sl->next )
     {

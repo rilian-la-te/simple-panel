@@ -20,6 +20,7 @@
 #define __PANEL_H__ 1
 
 #include <gtk/gtk.h>
+#include "app.h"
 
 G_BEGIN_DECLS
 
@@ -117,6 +118,9 @@ extern gboolean panel_is_at_bottom(LXPanel *panel);
 extern gboolean panel_is_dynamic(LXPanel *panel);
 extern GtkWidget *panel_box_new(LXPanel *panel, gint spacing);
 extern GtkWidget *panel_separator_new(LXPanel *panel);
+
+LXPanel* panel_new(PanelApp* app, const char* config_file, const char* config_name);
+
 
 G_END_DECLS
 

@@ -20,7 +20,7 @@
 
 #include <glib/gi18n.h>
 
-#include "misc.h"
+#include "x-misc.h"
 #include "plugin.h"
 
 /* Commands that can be issued. */

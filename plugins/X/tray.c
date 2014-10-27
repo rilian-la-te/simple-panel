@@ -31,7 +31,7 @@
 #include <glib/gi18n.h>
 
 #include "plugin.h"
-#include "misc.h"
+#include "x-misc.h"
 #include "icon-grid.h"
 
 #if GTK_CHECK_VERSION (3,0,0)

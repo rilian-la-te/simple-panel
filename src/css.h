@@ -36,5 +36,6 @@ inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboole
 inline gchar* css_generate_font_color(GdkRGBA color);
 inline gchar* css_generate_font_size(gint size);
 inline gchar* css_generate_font_weight(gboolean is_bold);
+inline gchar* css_apply_from_file (GtkWidget* widget, gchar* file);
 
 #endif /* __FB_BG_H__ */

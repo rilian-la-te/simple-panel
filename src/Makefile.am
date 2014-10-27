@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-bin_PROGRAMS = lxpanel lxpanelctl
+bin_PROGRAMS = lxpanel
 
 lxpanel_CFLAGS = \
 	-I$(top_srcdir) \
@@ -28,6 +28,8 @@ lxpanel_SOURCES = \
 	panel.c \
 	plugin.c \
 	conf.c \
+        app.c \
+        main.c \
 	$(MENU_SOURCES)
 
 lxpanel_includedir = $(includedir)/lxpanel
@@ -47,17 +49,15 @@ lxpanel_DEPENDENCIES_EXTRA = $(BUILTIN_PLUGINS)
 lxpanel_LDADD = \
 		$(BUILTIN_PLUGINS) \
 		$(PACKAGE_LIBS) \
-		$(X11_LIBS) \
 		$(INTLLIBS)
-
-lxpanelctl_SOURCES = lxpanelctl.c lxpanelctl.h
-lxpanelctl_LDADD = $(X11_LIBS) $(INTLLIBS)
+##		$(X11_LIBS) \
 
 EXTRA_DIST = \
         css.h \
 	dbg.h \
 	menu-policy.h \
-	private.h
+        private.h \
+        app.h
 
 $(top_builddir)/plugins/libbuiltin_plugins.a: $(lxpanel_include_HEADERS)
 	cd $(top_builddir)/plugins && $(MAKE) libbuiltin_plugins.a
