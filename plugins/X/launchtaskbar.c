@@ -766,7 +766,7 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
         g_signal_connect(ltbp->screen, "window-manager-changed", G_CALLBACK(taskbar_window_manager_changed), ltbp);
 
         /* Fetch the client list and redraw the taskbar.  Then determine what window has focus. */
-       // taskbar_window_buttons(screen,(gpointer* ) ltbp);
+//        taskbar_window_buttons(screen,(gpointer* ) ltbp);
         taskbar_on_active_window_changed(screen,NULL,(gpointer* ) ltbp);
     }
     gtk_widget_set_visible(ltbp->tb_icon_grid, TRUE);

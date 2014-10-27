@@ -1097,7 +1097,6 @@ gboolean lxpanel_image_set_icon_theme(LXPanel * p, GtkWidget * image, const gcha
 static void
 panel_start_gui(LXPanel *panel)
 {
-//    XWMHints wmhints;
     gulong val;
     Panel *p = panel->priv;
     GtkWidget *w = GTK_WIDGET(panel);

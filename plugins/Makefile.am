@@ -87,7 +87,7 @@ cpufreq_la_LDFLAGS = -module @LXPANEL_MODULE@
 # deskno
 deskno_la_SOURCES = deskno/deskno.c
 deskno_la_CFLAGS = $(WNCK_CFLAGS)
-deskno_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
+deskno_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS) $(X11_LIBS)
 
 # indicator
 indicator_la_SOURCES = indicator/indicator.c
@@ -162,7 +162,7 @@ weather_la_SOURCES = \
 weather_la_CFLAGS = \
 	-I$(srcdir)/weather \
 	$(LIBXML2_CFLAGS)
-weather_la_LDFLAGS = -module @LXPANEL_MODULE@ $(LIBXML2_LIBS)
+weather_la_LDFLAGS = -module @LXPANEL_MODULE@ $(LIBXML2_LIBS) $(X11_LIBS)
 
 # launchtaskbar
 launchtaskbar_la_SOURCES = \
@@ -173,13 +173,13 @@ launchtaskbar_la_CFLAGS = \
        -I$(srcdir)/X \
        -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
        -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
-launchtaskbar_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
+launchtaskbar_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS) $(X11_LIBS)
 
 # pager
 pager_la_SOURCES = X/pager.c \
         X/x-misc.c
 pager_la_CFLAGS = $(WNCK_CFLAGS)
-pager_la_LDFLAGS = $(WNCK_LIBS) -module @LXPANEL_MODULE@
+pager_la_LDFLAGS = $(WNCK_LIBS) -module @LXPANEL_MODULE@ $(X11_LIBS)
 
 # tray
 tray_la_SOURCES = X/tray.c \
@@ -188,7 +188,7 @@ tray_la_CFLAGS = \
        -I$(srcdir)/X \
        -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
        -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
-tray_la_LDFLAGS = -module @LXPANEL_MODULE@
+tray_la_LDFLAGS = -module @LXPANEL_MODULE@ $(X11_LIBS)
 
 # wincmd
 wincmd_la_SOURCES = X/wincmd.c \
@@ -197,7 +197,7 @@ wincmd_la_CFLAGS = \
        -I$(srcdir)/X \
        -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
        -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
-wincmd_la_LDFLAGS = -module @LXPANEL_MODULE@
+wincmd_la_LDFLAGS = -module @LXPANEL_MODULE@ $(X11_LIBS)
 
 # xkb
 xkb_la_CFLAGS = \
@@ -210,7 +210,7 @@ xkb_la_SOURCES = \
 	xkb/xkb-plugin.c \
         xkb/xkb.c \
         X/x-misc.c
-xkb_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS)
+xkb_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS) $(X11_LIBS)
 
 xkeyboardconfigdir=$(datadir)/lxpanel/xkeyboardconfig
 xkeyboardconfig_DATA = \

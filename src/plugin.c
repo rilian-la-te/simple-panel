@@ -182,30 +182,6 @@ static void plugin_get_available_classes(void)
 {
     /* Initialize static plugins on first call. */
     init_plugin_class_list();
-
-#ifndef DISABLE_PLUGINS_LOADING
-    GDir * dir = g_dir_open(PACKAGE_LIB_DIR "/lxpanel/plugins", 0, NULL);
-    if (dir != NULL)
-    {
-        const char * file;
-        while ((file = g_dir_read_name(dir)) != NULL)
-        {
-            if (g_str_has_suffix(file, ".so"))
-            {
-                char * type = g_strndup(file, strlen(file) - 3);
-                if (_find_plugin(type) == NULL)
-                {
-                    /* If it has not been loaded, do it.  If successful, add it to the result. */
-                    char * path = g_build_filename(PACKAGE_LIB_DIR "/lxpanel/plugins", file, NULL );
-                    plugin_load_dynamic(type, path);
-                    g_free(path);
-                }
-                g_free(type);
-            }
-        }
-        g_dir_close(dir);
-    }
-#endif
 }
 
 /* Recursively set the background of all widgets on a panel background configuration change. */
@@ -291,12 +267,6 @@ void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * near, Gtk
     *py = y;
 }
 
-/* for old plugins compatibility -- popup_req is ignored here */
-void plugin_popup_set_position_helper(Plugin * p, GtkWidget * near, GtkWidget * popup, GtkRequisition * popup_req, gint * px, gint * py)
-{
-    lxpanel_plugin_popup_set_position_helper(p->panel->topgwin, near, popup, px, py);
-}
-
 /* Adjust the position of a popup window to ensure that it is not hidden by the panel.
  * It is observed that some window managers do not honor the strut that is set on the panel. */
 void lxpanel_plugin_adjust_popup_position(GtkWidget * popup, GtkWidget * parent)
@@ -308,12 +278,6 @@ void lxpanel_plugin_adjust_popup_position(GtkWidget * popup, GtkWidget * parent)
                                              popup, &x, &y);
     /* Move the popup to position. */
     gdk_window_move(gtk_widget_get_window(popup), x, y);
-}
-
-/* for old plugins compatibility */
-void plugin_adjust_popup_position(GtkWidget * popup, Plugin * plugin)
-{
-    lxpanel_plugin_adjust_popup_position(popup, plugin->pwid);
 }
 
 /* Open a specified path in a file manager. */
