@@ -63,6 +63,8 @@
 
 #include "x-misc.h"
 #include "plugin.h"
+#include "panel.h"
+#include "css.h"
 #include "icon.xpm"
 #include "icon-grid.h"
 #ifndef DISABLE_MENU
@@ -198,21 +200,16 @@ struct LaunchTaskBarPlugin {
     gboolean         fixed_mode;        /* if mode cannot be changed */
 };
 
-static gchar *launchtaskbar_rc = "style 'launchtaskbar-style' = 'theme-panel'\n"
-        "{\n"
-        "GtkWidget::focus-line-width=0\n"
-        "GtkWidget::focus-padding=0\n"
-        "GtkButton::default-border={0,0,0,0}\n"
-        "GtkButton::default-outside-border={0,0,0,0}\n"
-        "GtkButton::inner-border={0,0,0,0}\n"
-        "}\n"
-        "widget '*launchbar.*' style 'launchtaskbar-style'\n"
-        "widget '*taskbar.*' style 'launchtaskbar-style'";
+static gchar *launchtaskbar_css_normal = ".-panel-task-normal {\n"
+        "padding: 0px;\n"
+        " -GtkWidget-focus-line-width: 0px;\n"
+        " -GtkWidget-focus-padding: 0px;\n"
+        "}\n";
+
 
 #define DRAG_ACTIVE_DELAY    1000
 #define TASK_WIDTH_MAX       200
 #define ALL_WORKSPACES       -1
-#define ICON_ONLY_EXTRA      6      /* Amount needed to have button lay out symmetrically */
 #define ICON_BUTTON_TRIM 4      /* Amount needed to have button remain on panel */
 
 static void launchtaskbar_destructor(gpointer user_data);
@@ -778,8 +775,6 @@ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *s
 {
     GtkWidget *p;
     LaunchTaskBarPlugin *ltbp;
-//TODO: CSS Replacement
-//    gtk_rc_parse_string(launchtaskbar_rc);
 
     /* Allocate plugin context and set into Plugin private data pointer. */
     ltbp = g_new0(LaunchTaskBarPlugin, 1);
@@ -877,6 +872,7 @@ static void launchtaskbar_destructor_task(LaunchTaskBarPlugin *ltbp)
     /* Remove GDK event filter. */
     gdk_window_remove_filter(NULL, (GdkFilterFunc) taskbar_event_filter, ltbp);
 
+    gdk_error_trap_pop_ignored();
     /* Remove root window signal handlers. */
     WnckScreen* screen = wnck_screen_get_default();
     g_signal_handlers_disconnect_by_func(screen, taskbar_active_workspace_changed, ltbp);
@@ -2363,8 +2359,6 @@ static GdkPixbuf * task_update_icon(LaunchTaskBarPlugin * tb, Task * tk, Atom so
 static void flash_window_update(Task * tk)
 {
     /* Set state on the button and redraw. */
-    if ( ! tk->tb->flat_button)
-        gtk_widget_set_state_flags(tk->button,tk->flash_state ? GTK_STATE_SELECTED : GTK_STATE_NORMAL,TRUE);
     task_draw_label(tk);
 
     /* Complement the flashing context. */
@@ -2645,10 +2639,6 @@ static gboolean taskbar_task_control_event(GtkWidget * widget, GdkEventButton * 
                 0, event->time);
         }
     }
-
-    /* As a matter of policy, avoid showing selected or prelight states on flat buttons. */
-    if (tb->flat_button)
-        gtk_widget_set_state_flags(widget, GTK_STATE_NORMAL,TRUE);
     return TRUE;
 }
 
@@ -2742,8 +2732,6 @@ static void taskbar_button_enter(GtkWidget * widget, Task * tk)
 {
     tk->tb->dnd_task_moving = FALSE;
     tk->entered_state = TRUE;
-    if (tk->tb->flat_button)
-        gtk_widget_set_state_flags(widget, GTK_STATE_NORMAL,TRUE);
     task_draw_label(tk);
 }
 
@@ -2808,8 +2796,46 @@ static void taskbar_update_style(LaunchTaskBarPlugin * tb)
 {
     panel_icon_grid_set_geometry(PANEL_ICON_GRID(tb->tb_icon_grid),
         panel_get_orientation(tb->panel),
-        ((tb->icons_only) ? tb->icon_size + ICON_ONLY_EXTRA : tb->task_width_max),
+        ((tb->icons_only) ? tb->icon_size : tb->task_width_max),
         tb->icon_size, tb->spacing, 0, panel_get_height(tb->panel));
+}
+static gchar* taskbar_css_flat_generate(GtkWidget* w,LaunchTaskBarPlugin* tb){
+    gchar* returnie;
+    GdkRGBA color, active_color;
+    gtk_style_context_get_color(gtk_widget_get_style_context(w),gtk_widget_get_state_flags(w),&color);
+    color.alpha = 0.6;
+    active_color.red=color.red;
+    active_color.green=color.green;
+    active_color.blue=color.blue;
+    active_color.alpha =0.4;
+    gchar* edge;
+    if (panel_is_at_top(tb->panel))
+        edge="0px 0px 2px 0px";
+    if (panel_is_at_bottom(tb->panel))
+        edge="2px 0px 0px 0px";
+    if (panel_is_at_left(tb->panel))
+        edge="0px 2px 0px 0px";
+    if (panel_is_at_right(tb->panel))
+        edge="0px 0px 0px 2px";
+    returnie = g_strdup_printf(".-panel-task-flat {\n"
+                               "padding: 0px;\n"
+                               " -GtkWidget-focus-line-width: 0px;\n"
+                               " -GtkWidget-focus-padding: 0px;\n"
+                               "}\n"
+                               ".-panel-task-flat:hover,"
+                               ".-panel-task-flat.highlight,"
+                               ".-panel-task-flat:hover:active,"
+                               ".-panel-task-flat:active:hover {\n"
+                               "border-style: solid;"
+                               "border-width: %s;"
+                               "border-color: %s;"
+                               "}\n"
+                               ".-panel-task-flat:active {\n"
+                               "border-style: solid;"
+                               "border-width: %s;"
+                               "border-color: %s;"
+                               "}\n",edge,gdk_rgba_to_string(&color),edge,gdk_rgba_to_string(&active_color));
+    return returnie;
 }
 
 /* Update style on a task button when created or after a configuration change. */
@@ -2822,13 +2848,17 @@ static void task_update_style(Task * tk, LaunchTaskBarPlugin * tb)
 
     if( tb->flat_button )
     {
-        gtk_toggle_button_set_active((GtkToggleButton*)tk->button, FALSE);
-        gtk_button_set_relief(GTK_BUTTON(tk->button), GTK_RELIEF_NONE);
+        gchar* launchtaskbar_css_flat = taskbar_css_flat_generate(tk->button,tb);
+        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-normal",TRUE);
+        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_flat,"-panel-task-flat",FALSE);
+        g_free(launchtaskbar_css_flat);
+        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,TRUE);
     }
     else
     {
-        gtk_toggle_button_set_active((GtkToggleButton*)tk->button, tk->focused);
-        gtk_button_set_relief(GTK_BUTTON(tk->button), GTK_RELIEF_NORMAL);
+        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-normal",FALSE);
+        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-flat",TRUE);
+        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,FALSE);
     }
 
     task_draw_label(tk);
@@ -2865,8 +2895,6 @@ static void task_build_gui(LaunchTaskBarPlugin * tb, Task * tk)
     /* Allocate a toggle button as the top level widget. */
     tk->button = gtk_toggle_button_new();
     gtk_container_set_border_width(GTK_CONTAINER(tk->button), 0);
-    if (!tb->flat_button)
-        gtk_widget_set_state_flags(tk->button, GTK_STATE_NORMAL,TRUE);
     gtk_drag_dest_set(tk->button, 0, NULL, 0, 0);
     gtk_drag_source_set(tk->button, GDK_BUTTON1_MASK, task_button_target_list, task_button_n_targets, GDK_ACTION_MOVE);
 
@@ -2942,26 +2970,25 @@ static void taskbar_window_buttons(WnckScreen* screen, gpointer* data)
     if(tb->mode == LAUNCHBAR) return;
 
     /* Get the NET_CLIENT_LIST property. */
-    int client_count;
-    Window * client_list = get_xaproperty(GDK_ROOT_WINDOW(), a_NET_CLIENT_LIST, XA_WINDOW, &client_count);
-    if (client_list != NULL)
+    GList* cl_list = wnck_screen_get_windows(screen);
+    if (cl_list != NULL)
     {
-        /* Loop over client list, correlating it with task list. */
-        int i;
-        for (i = 0; i < client_count; i++)
+        GList* cl_cursor;
+        for (cl_cursor=cl_list;cl_cursor != NULL; cl_cursor=cl_cursor->next)
         {
+            Window cl_window = wnck_window_get_xid(cl_cursor->data);
             /* Search for the window in the task list.  Set up context to do an insert right away if needed. */
             Task * tk_pred = NULL;
             Task * tk_cursor;
             Task * tk = NULL;
             for (tk_cursor = tb->p_task_list; tk_cursor != NULL; tk_pred = tk_cursor, tk_cursor = tk_cursor->p_task_flink_xwid)
             {
-                if (tk_cursor->win == client_list[i])
+                if (tk_cursor->win == cl_window)
                 {
                     tk = tk_cursor;
                     break;
                 }
-                if (tk_cursor->win > client_list[i])
+                if (tk_cursor->win > cl_window)
                     break;
             }
 
@@ -2975,15 +3002,15 @@ static void taskbar_window_buttons(WnckScreen* screen, gpointer* data)
                 /* Evaluate window state and window type to see if it should be in task list. */
                 NetWMWindowType nwwt;
                 NetWMState nws;
-                get_net_wm_state(client_list[i], &nws);
-                get_net_wm_window_type(client_list[i], &nwwt);
+                get_net_wm_state(cl_window, &nws);
+                get_net_wm_window_type(cl_window, &nwwt);
                 if ((accept_net_wm_state(&nws))
                 && (accept_net_wm_window_type(&nwwt)))
                 {
                     /* Allocate and initialize new task structure. */
                     tk = g_new0(Task, 1);
                     tk->present_in_client_list = TRUE;
-                    tk->win = client_list[i];
+                    tk->win = cl_window;
                     tk->tb = tb;
                     tk->name_source = None;
                     tk->image_source = None;
@@ -3011,7 +3038,6 @@ static void taskbar_window_buttons(WnckScreen* screen, gpointer* data)
                 }
             }
         }
-        XFree(client_list);
     }
 
     /* Remove windows from the task list that are not present in the NET_CLIENT_LIST. */
@@ -3112,16 +3138,13 @@ static void taskbar_on_active_window_changed(WnckScreen* screen, WnckWindow* win
     {
         ctk->focused = FALSE;
         tb->focused = NULL;
-        if(!tb->flat_button) /* relieve the button if flat buttons is not used. */
             gtk_toggle_button_set_active((GtkToggleButton*)ctk->button, FALSE);
-
         task_button_redraw(ctk, tb);
     }
 
     /* If a task gained focus, update data structures. */
     if ((ntk != NULL) && (make_new))
     {
-        if(!tb->flat_button) /* depress the button if flat buttons is not used. */
             gtk_toggle_button_set_active((GtkToggleButton*)ntk->button, TRUE);
         ntk->focused = TRUE;
         tb->focused = ntk;
@@ -3285,10 +3308,12 @@ static GdkFilterReturn taskbar_event_filter(XEvent * xev, GdkEvent * event, Laun
     LaunchTaskBarPlugin *ltbp = tb;
     if(ltbp->mode == LAUNCHBAR) return GDK_FILTER_CONTINUE;
 
+    gdk_error_trap_push();
     if (xev->type == PropertyNotify)
         taskbar_property_notify_event(tb, xev);
     else if (xev->type == ConfigureNotify)
         taskbar_configure_notify_event(tb, &xev->xconfigure);
+//    gdk_error_trap_pop_ignored();
 
     return GDK_FILTER_CONTINUE;
 }

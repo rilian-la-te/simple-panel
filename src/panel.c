@@ -1415,6 +1415,21 @@ gboolean panel_is_at_bottom(LXPanel *panel)
     return panel->priv->edge == EDGE_BOTTOM;
 }
 
+gboolean panel_is_at_top(LXPanel *panel)
+{
+    return panel->priv->edge == EDGE_TOP;
+}
+
+gboolean panel_is_at_left(LXPanel *panel)
+{
+    return panel->priv->edge == EDGE_LEFT;
+}
+
+gboolean panel_is_at_right(LXPanel *panel)
+{
+    return panel->priv->edge == EDGE_RIGHT;
+}
+
 gboolean panel_is_dynamic(LXPanel *panel)
 {
     return panel->priv->widthtype == WIDTH_REQUEST;
