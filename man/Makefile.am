@@ -1,5 +1,4 @@
-man_MANS = \
-	lxpanel.1 \
-	lxpanelctl.1
+#man_MANS = \
+#	simple-panel.1
 
-EXTRA_DIST = $(man_MANS)
+#EXTRA_DIST = $(man_MANS)

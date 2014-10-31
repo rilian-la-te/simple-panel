@@ -9,13 +9,13 @@ typedef struct _PanelApp PanelApp;
 typedef struct _PanelAppClass PanelAppClass;
 typedef struct _PanelAppPrivate PanelAppPrivate;
 
-#define LX_TYPE_PANEL_APP                  (panel_app_get_type())
+#define SIMPLE_TYPE_PANEL_APP                  (panel_app_get_type())
 #define PANEL_APP(obj)                   (G_TYPE_CHECK_INSTANCE_CAST((obj), \
-                                        LX_TYPE_PANEL_APP, PanelApp))
+                                        SIMPLE_TYPE_PANEL_APP, PanelApp))
 #define PANEL_APP_CLASS(klass)           (G_TYPE_CHECK_CLASS_CAST((klass), \
-                                        LX_TYPE_PANEL_APP, PanelAppClass))
-#define LX_IS_PANEL_APP(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                                        LX_TYPE_PANEL_APP))
+                                        SIMPLE_TYPE_PANEL_APP, PanelAppClass))
+#define SIMPLE_IS_PANEL_APP(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
+                                        SIMPLE_TYPE_PANEL_APP))
 
 extern GType panel_app_get_type          (void) G_GNUC_CONST;
 

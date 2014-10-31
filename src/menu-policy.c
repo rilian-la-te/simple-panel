@@ -48,16 +48,16 @@ MenuCache * panel_menu_cache_new(guint32* visibility_flags)
 #endif
     if(visibility_flags)
     {
-        if(is_in_lxde)
-            *visibility_flags = SHOW_IN_LXDE;
-        else
-        {
+//        if(is_in_lxde)
+//            *visibility_flags = SHOW_IN_LXDE;
+//        else
+//        {
             const char* de_name = g_getenv("XDG_CURRENT_DESKTOP");
             if(de_name)
                 *visibility_flags = menu_cache_get_desktop_env_flag(cache, de_name);
             else
                 *visibility_flags = SHOW_IN_LXDE|SHOW_IN_GNOME|SHOW_IN_KDE|SHOW_IN_XFCE;
-        }
+//        }
     }
     return cache;
 }

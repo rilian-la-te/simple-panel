@@ -758,7 +758,7 @@ netstatus_dialog_new (NetstatusIface *iface)
   if ( !gtk_builder_add_from_file(data->builder, PACKAGE_UI_DIR "/netstatus.ui", NULL) )
   {
       g_object_unref(data->builder);
-      return;
+      return NULL;
   }
   data->dialog = (GtkWidget*)gtk_builder_get_object(data->builder, "network_status_dialog");
 

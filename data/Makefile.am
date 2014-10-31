@@ -1,21 +1,21 @@
 default_config_DATA = \
 	default/config
-default_configdir = $(sysconfdir)/xdg/lxpanel/default
+default_configdir = $(sysconfdir)/xdg/simple-panel/default
 
 default_config_panel_DATA = \
 	default/panels/panel
-default_config_paneldir = $(sysconfdir)/xdg/lxpanel/default/panels
+default_config_paneldir = $(sysconfdir)/xdg/simple-panel/default/panels
 
 two_panels_config_DATA = \
 	two_panels/config
-two_panels_configdir = $(sysconfdir)/xdg/lxpanel/two_panels
+two_panels_configdir = $(sysconfdir)/xdg/simple-panel/two_panels
 
 two_panels_config_panel_DATA = \
 	two_panels/panels/bottom \
 	two_panels/panels/top
-two_panels_config_paneldir = $(sysconfdir)/xdg/lxpanel/two_panels/panels
+two_panels_config_paneldir = $(sysconfdir)/xdg/simple-panel/two_panels/panels
 
-uidir=$(datadir)/lxpanel/ui
+uidir=$(datadir)/simple-panel/ui
 ui_in_files= \
 	ui/panel-pref.glade \
 	ui/launchtaskbar.glade \
@@ -31,7 +31,7 @@ CLEANFILES = \
 	$(ui_DATA)
 
 
-lxpanel_images_DATA = \
+simple_panel_images_DATA = \
 	images/my-computer.png \
 	images/stock_volume.png \
 	images/file-manager.png \
@@ -71,12 +71,12 @@ lxpanel_images_DATA = \
 	images/cpufreq-icon.png
 
 
-lxpanel_imagesdir = $(datadir)/lxpanel/images
+simple_panel_imagesdir = $(datadir)/simple-panel/images
 
 EXTRA_DIST = \
 	default/panels/panel.in \
-	$(lxpanel_DATA) \
-	$(lxpanel_images_DATA) \
+        $(simple_panel_DATA) \
+        $(simple_panel_images_DATA) \
 	$(ui_DATA) \
 	$(ui_in_files) \
 	$(default_config_DATA) \

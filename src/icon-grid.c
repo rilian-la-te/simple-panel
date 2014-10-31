@@ -203,7 +203,7 @@ panel_icon_grid_get_preferred_width (GtkWidget *widget,
                                gint      *natural_width)
 {
     GtkRequisition requisition;
-    gint parent_width;
+    gint parent_width = 0;
     GTK_WIDGET_GET_CLASS(gtk_widget_get_parent(widget))->get_preferred_width,(&parent_width,NULL);
 
     panel_icon_grid_size_request (widget, &requisition);
@@ -225,7 +225,7 @@ panel_icon_grid_get_preferred_height (GtkWidget *widget,
                                 gint      *natural_height)
 {
     GtkRequisition requisition;
-    gint parent_height;
+    gint parent_height = 0;
     GTK_WIDGET_GET_CLASS(gtk_widget_get_parent(widget))->get_preferred_height,(&parent_height,NULL);
 
     panel_icon_grid_size_request (widget, &requisition);
@@ -547,7 +547,6 @@ static void panel_icon_grid_realize(GtkWidget *widget)
 {
     PanelIconGrid *ig = PANEL_ICON_GRID(widget);
     GdkWindow *window;
-    GtkStyle *style;
     GtkAllocation allocation;
     GdkWindowAttr attributes;
     guint border = gtk_container_get_border_width(GTK_CONTAINER(widget));
@@ -636,34 +635,6 @@ static void panel_icon_grid_unmap(GtkWidget *widget)
         gdk_window_hide(ig->event_window);
     GTK_WIDGET_CLASS(panel_icon_grid_parent_class)->unmap(widget);
 }
-
-#if GTK_CHECK_VERSION (3,0,0)
-static gboolean panel_icon_grid_draw(GtkWidget *widget, cairo_t *cr)
-{
-    if (gtk_widget_is_drawable(widget))
-    {
-        GTK_WIDGET_CLASS(panel_icon_grid_parent_class)->draw(widget, cr);
-    }
-    return FALSE;
-}
-#else
-static gboolean panel_icon_grid_expose(GtkWidget *widget, GdkEventExpose *event)
-{
-    if (gtk_widget_is_drawable(widget))
-    {
-        if (gtk_widget_get_has_window(widget) &&
-            !gtk_widget_get_app_paintable(widget))
-            gtk_paint_flat_box(gtk_widget_get_style(widget),
-                               gtk_widget_get_window(widget),
-                               gtk_widget_get_state(widget), GTK_SHADOW_NONE,
-                               &event->area, widget, "panelicongrid",
-                               0, 0, -1, -1);
-
-        GTK_WIDGET_CLASS(panel_icon_grid_parent_class)->expose_event(widget, event);
-    }
-    return FALSE;
-}
-#endif
 
 static void panel_icon_grid_forall(GtkContainer *container,
                                    gboolean      include_internals,

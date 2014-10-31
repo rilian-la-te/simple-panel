@@ -122,9 +122,6 @@ extern gboolean panel_is_dynamic(LXPanel *panel);
 extern GtkWidget *panel_box_new(LXPanel *panel, gint spacing);
 extern GtkWidget *panel_separator_new(LXPanel *panel);
 
-LXPanel* panel_new(PanelApp* app, const char* config_file, const char* config_name);
-
-
 G_END_DECLS
 
 #endif

@@ -22,7 +22,7 @@
   </refentryinfo>
   <refmeta
 >    <refentrytitle
->LXPANEL</refentrytitle>
+>simple-panel</refentrytitle>
 <refmiscinfo class="source">http://LXDE.org</refmiscinfo>
 
     <manvolnum
@@ -30,15 +30,15 @@
   </refmeta>
   <refnamediv
 >    <refname
->lxpanel</refname>
+>simple-panel</refname>
 
     <refpurpose
->a lightweight GTK2-based panel for the LXDE desktop.</refpurpose>
+>a lightweight GTK3-based panel for the LXDE desktop.</refpurpose>
   </refnamediv>
   <refsynopsisdiv
 >    <cmdsynopsis
 >      <command
->lxpanel</command>
+>simple-panel</command>
     </cmdsynopsis>
   </refsynopsisdiv>
   <refsect1
@@ -48,12 +48,12 @@
     <para
 >This manual page documents briefly the
       <command
->lxpanel</command> command.</para>
+>simple-panel</command> command.</para>
 
     <para
 ><command
->lxpanel</command> is a program that provides a panel
-    for the desktop, usually for LXDE. It is a lightweight GTK+ 2.x based desktop 
+>simple-panel</command> is a program that provides a panel
+    for the desktop, usually for LXDE. It is a lightweight GTK+ 3.x based desktop 
     panel.
     </para>
    
@@ -95,13 +95,6 @@ mark="bullet"
     	<listitem
 ><para
 >Volume control plug-in (optional)</para></listitem>
-    	<listitem
-><para
->lxpanelctl, an external controller lets you control lxpanel in
-    		other programs. For example, "lxpanelctl run" will show the Run
-    		dialog in lxpanel, and "lxpanelctl menu" will show the application
-    		menu. This is useful in key bindings provided by window managers.</para>
-    	</listitem>
     </itemizedlist>
     </para>
   </refsect1>
@@ -146,7 +139,7 @@ mark="bullet"
 >     <varlistentry
 >       <term
 ><filename
->~/.config/lxpanel/<replaceable>PROFILE</replaceable></filename></term>
+>~/.config/simple-panel/<replaceable>PROFILE</replaceable></filename></term>
        <listitem
 >         <para
 >config file, can be edited by preference dialog.</para>
@@ -160,7 +153,7 @@ mark="bullet"
 >SEE ALSO</title>
 
     <para
->lxsession (1), lxpanelctl (1).</para>
+>lxsession (1).</para>
 
   </refsect1>
   <refsect1

@@ -37,7 +37,6 @@
 //#define DEBUG
 #include "dbg.h"
 
-static void init_plugin_class_list(void);
 static void plugin_class_unref(PluginClass * pc);
 
 GQuark lxpanel_plugin_qinit;
@@ -45,18 +44,6 @@ GQuark lxpanel_plugin_qconf;
 GQuark lxpanel_plugin_qdata;
 GQuark lxpanel_plugin_qsize;
 static GHashTable *_all_types = NULL;
-
-/* Dynamic parameter for static (built-in) plugins must be FALSE so we will not try to unload them */
-#define REGISTER_STATIC_PLUGIN_CLASS(pc) \
-do {\
-    extern PluginClass pc;\
-    register_plugin_class(&pc, FALSE);\
-} while (0)
-
-/* The same for new plugins type - they will be not unloaded by FmModule */
-#define REGISTER_STATIC_MODULE(pc) do { \
-    extern LXPanelPluginInit lxpanel_static_plugin_##pc; \
-    lxpanel_register_plugin_type(#pc, &lxpanel_static_plugin_##pc); } while (0)
 
 static inline const LXPanelPluginInit *_find_plugin(const char *name)
 {
@@ -102,32 +89,6 @@ static void register_plugin_class(PluginClass * pc, gboolean dynamic)
     init->expand_default = pc->expand_default;
     pc->dynamic = dynamic;
     g_hash_table_insert(_all_types, g_strdup(pc->type), init);
-}
-
-/* Initialize the static plugins. */
-static void init_plugin_class_list(void)
-{
-#ifdef STATIC_SEPARATOR
-    REGISTER_STATIC_MODULE(separator);
-#endif
-
-#ifdef STATIC_DCLOCK
-    REGISTER_STATIC_MODULE(dclock);
-#endif
-
-#ifdef STATIC_DIRMENU
-    REGISTER_STATIC_MODULE(dirmenu);
-#endif
-
-#ifndef DISABLE_MENU
-#ifdef STATIC_MENU
-    REGISTER_STATIC_MODULE(menu);
-#endif
-#endif
-
-#ifdef STATIC_SPACE
-    REGISTER_STATIC_MODULE(space);
-#endif
 }
 
 /* Load a dynamic plugin. */
@@ -177,13 +138,6 @@ static void plugin_class_unref(PluginClass * pc)
     }
 }
 
-/* Loads all available old type plugins. Should be removed in future releases. */
-static void plugin_get_available_classes(void)
-{
-    /* Initialize static plugins on first call. */
-    init_plugin_class_list();
-}
-
 /* Recursively set the background of all widgets on a panel background configuration change. */
 void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
 {
@@ -208,12 +162,6 @@ static gboolean lxpanel_plugin_button_press_event(GtkWidget *plugin, GdkEventBut
         return TRUE;
     }
     return FALSE;
-}
-
-/* for old plugins compatibility */
-gboolean plugin_button_press_event(GtkWidget *widget, GdkEventButton *event, Plugin *plugin)
-{
-    return lxpanel_plugin_button_press_event(plugin->pwid, event, PLUGIN_PANEL(plugin->pwid));
 }
 
 /* Helper for position-calculation callback for popup menus. */
@@ -335,8 +283,6 @@ static gboolean fm_module_callback_lxpanel_gtk(const char *name, gpointer init, 
 }
 #endif
 
-static gboolean old_plugins_loaded = FALSE;
-
 void _prepare_modules(void)
 {
     _all_types = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -345,7 +291,7 @@ void _prepare_modules(void)
     lxpanel_plugin_qconf = g_quark_from_static_string("LXPanel::plugin-conf");
     lxpanel_plugin_qsize = g_quark_from_static_string("LXPanel::plugin-size");
 #ifndef DISABLE_PLUGINS_LOADING
-    fm_modules_add_directory(PACKAGE_LIB_DIR "/lxpanel/plugins");
+    fm_modules_add_directory(PACKAGE_LIB_DIR "/simple-panel/plugins");
     fm_module_register_lxpanel_gtk();
 #endif
 }
@@ -369,7 +315,6 @@ void _unload_modules(void)
 #ifndef DISABLE_PLUGINS_LOADING
     fm_module_unregister_type("lxpanel_gtk");
 #endif
-    old_plugins_loaded = FALSE;
 }
 
 gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPluginInit *init)
@@ -390,34 +335,6 @@ gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPluginInit 
     }
     g_rec_mutex_unlock(&_mutex);
     return (data == NULL);
-}
-
-static void _old_plugin_save_hook(const config_setting_t * setting, FILE * f, gpointer user_data)
-{
-    Plugin *pl = user_data;
-    PluginClass *pc = pl->klass;
-    if (pc->save)
-        pc->save(pl, f);
-}
-
-/* This is called right before Plugin instance is destroyed */
-static void _old_plugin_destroy(gpointer data)
-{
-    Plugin *pl = data;
-
-    plugin_class_unref(pl->klass);
-
-    /* Free the Plugin structure. */
-    g_free(pl);
-}
-
-static void _on_old_widget_destroy(GtkWidget *widget, Plugin *pl)
-{
-    /* Never let run it again. */
-    g_signal_handlers_disconnect_by_func(widget, _on_old_widget_destroy, pl);
-    /* Run the destructor before destroying the top level widget.
-     * This prevents problems with the plugin destroying child widgets. */
-    pl->klass->destructor(pl);
 }
 
 static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, LXPanel *p)
@@ -442,9 +359,6 @@ GtkWidget *lxpanel_add_plugin(LXPanel *p, const char *name, config_setting_t *cf
     gint expand, padding = 0, border = 0, i;
 
     CHECK_MODULES();
-    if (!old_plugins_loaded)
-        plugin_get_available_classes();
-    old_plugins_loaded = TRUE;
     init = _find_plugin(name);
     if (init == NULL)
         return NULL;
@@ -484,31 +398,7 @@ GtkWidget *lxpanel_add_plugin(LXPanel *p, const char *name, config_setting_t *cf
     }
     else
     {
-        Plugin *pl = g_new0(Plugin, 1);
-        PluginClass *pc = init->_reserved1;
-        char *conf = config_setting_to_string(pconf), *fp;
-
-        pl->klass = pc;
-        pl->panel = p->priv;
-        widget = NULL;
-        fp = &conf[9]; /* skip "Config {\n" */
-        /* g_debug("created conf: %s",conf); */
-    /* Call the constructor.
-     * It is responsible for parsing the parameters, and setting "pwid" to the top level widget. */
-        if (pc->constructor(pl, &fp))
-            widget = pl->pwid;
-        g_free(conf);
-
-        if (widget == NULL) /* failed */
-        {
-            g_free(pl);
-            return widget;
-        }
-
-        pc->count += 1;
-        g_signal_connect(widget, "destroy", G_CALLBACK(_on_old_widget_destroy), pl);
-        config_setting_set_save_hook(pconf, _old_plugin_save_hook, pl);
-        lxpanel_plugin_set_data(widget, pl, _old_plugin_destroy);
+        g_error("simple-panel: Plugin \"%s\" is invalid",init->name);
     }
     gtk_widget_set_name(widget, name);
     gtk_box_pack_start(GTK_BOX(p->priv->box), widget, expand, TRUE, padding);

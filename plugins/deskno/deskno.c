@@ -62,6 +62,7 @@ static gboolean deskno_name_update(WnckScreen* screen, WnckWorkspace* space,gpoi
         name = g_strdup_printf("%d",wnck_workspace_get_number(workspace)+1);
     }
     lxpanel_draw_label_text(dc->panel, dc->label, name, dc->bold, 1, TRUE);
+    return FALSE;
 }
 
 /* Handler for button-press-event on top level widget. */

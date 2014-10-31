@@ -16,6 +16,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <glib/gi18n.h>
 #include <stdlib.h>
@@ -27,6 +30,24 @@
 #include <locale.h>
 #include <string.h>
 #include <libfm/fm-gtk.h>
+/*
+ * Copyright (c) Konstantin Pugin.
+ * Copyright (c) 2006-2014 LxDE Developers, see the file AUTHORS for details.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
 
 #define __LXPANEL_INTERNALS__
 
@@ -34,12 +55,16 @@
 #include "panel.h"
 #include "css.h"
 #include "private.h"
-#define VERSION "0.7.1"
+
+/* The same for new plugins type - they will be not unloaded by FmModule */
+#define REGISTER_STATIC_MODULE(pc) do { \
+    extern LXPanelPluginInit lxpanel_static_plugin_##pc; \
+    lxpanel_register_plugin_type(#pc, &lxpanel_static_plugin_##pc); } while (0)
+
 G_DEFINE_TYPE_WITH_PRIVATE(PanelApp, panel_app, GTK_TYPE_APPLICATION);
 
 gchar *cprofile = "default";
 gchar *ccommand = NULL;
-static gchar cversion[] = VERSION;
 static gboolean is_started;
 
 static const gchar* panel_commands = "run menu config exit ";
@@ -56,18 +81,16 @@ static gboolean start_all_panels(PanelApp* app);
 static void _ensure_user_config_dirs(void);
 void load_global_config();
 void free_global_config();
+static void init_plugin_class_list(void);
 
 static void panel_app_startup(GApplication* app)
 {
-    GtkCssProvider* provider;
-    GError* error;
-    gboolean status;
     G_APPLICATION_CLASS (panel_app_parent_class)->startup (app);
     setlocale(LC_CTYPE, "");
 #ifdef ENABLE_NLS
     bindtextdomain ( GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR );
     bind_textdomain_codeset ( GETTEXT_PACKAGE, "UTF-8" );
-    textdomain ( GETTEXT_PACKAGE )
+    textdomain ( GETTEXT_PACKAGE );
 #endif
 
     /* Add our own icons to the search path of icon theme */
@@ -77,9 +100,6 @@ static void panel_app_startup(GApplication* app)
 
     /* prepare modules data */
     _prepare_modules();
-//TODO: CSS File.
-    /* Add a gtkrc file to be parsed too. */
-
 }
 
 static void panel_app_shutdown(GApplication* app)
@@ -110,6 +130,7 @@ void panel_app_activate(GApplication* app)
         load_global_config();
         gdk_window_set_events(gdk_get_default_root_window(), GDK_STRUCTURE_MASK |
                 GDK_SUBSTRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK);
+        init_plugin_class_list();
         if( G_UNLIKELY( ! start_all_panels((PanelApp*)app) ) )
             g_warning( "Config files are not found.\n" );
         else
@@ -227,6 +248,7 @@ int panel_app_command_line(GApplication* application,GApplicationCommandLine* co
         g_free(checker);
     }
     g_application_activate (application);
+    return 0;
 }
 
 static void _start_panels_from_dir(PanelApp* app,const char *panel_dir)
@@ -290,6 +312,32 @@ static void _ensure_user_config_dirs(void)
     /* make sure the private profile and panels dir exists */
     g_mkdir_with_parents(dir, 0700);
     g_free(dir);
+}
+
+/* Initialize the static plugins. */
+static void init_plugin_class_list(void)
+{
+#ifdef STATIC_SEPARATOR
+    REGISTER_STATIC_MODULE(separator);
+#endif
+
+#ifdef STATIC_DCLOCK
+    REGISTER_STATIC_MODULE(dclock);
+#endif
+
+#ifdef STATIC_DIRMENU
+    REGISTER_STATIC_MODULE(dirmenu);
+#endif
+
+#ifndef DISABLE_MENU
+#ifdef STATIC_MENU
+    REGISTER_STATIC_MODULE(menu);
+#endif
+#endif
+
+#ifdef STATIC_SPACE
+    REGISTER_STATIC_MODULE(space);
+#endif
 }
 
 void panel_app_init(PanelApp *self)

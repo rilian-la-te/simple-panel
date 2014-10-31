@@ -158,16 +158,9 @@ menu_pos(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, GtkWidget *widget)
     ENTER;
     m = g_object_get_data(G_OBJECT(widget), "plugin");
     gdk_window_get_origin(gtk_widget_get_window(widget), &ox, &oy);
-//#if GTK_CHECK_VERSION(2,20,0)
-//    GtkRequisition requisition;
-//    gtk_widget_get_requisition(GTK_WIDGET(menu), &requisition);
-//    w = requisition.width;
-//    h = requisition.height;
+    gtk_widget_get_preferred_width(GTK_WIDGET(menu),&w,NULL);
+    gtk_widget_get_preferred_height(GTK_WIDGET(menu),&h,NULL);;
 
-//#else
-//    w = GTK_WIDGET(menu)->requisition.width;
-//    h = GTK_WIDGET(menu)->requisition.height;
-//#endif
     if (panel_get_orientation(m->panel) == GTK_ORIENTATION_HORIZONTAL) {
         *x = ox;
         if (*x + w > gdk_screen_width())

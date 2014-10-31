@@ -660,13 +660,8 @@ netstatus_icon_realize (GtkWidget *widget)
   guint         border_width;
   GtkAllocation allocation;
   GdkWindow    *window;
-  GtkStyle     *style;
 
-#if GTK_CHECK_VERSION(2, 20, 0)
   gtk_widget_set_realized(widget, TRUE);
-#else
-  GTK_WIDGET_SET_FLAGS (widget, GTK_REALIZED);
-#endif
 
   gtk_widget_get_allocation (widget, &allocation);
 

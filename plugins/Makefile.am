@@ -8,6 +8,9 @@ AM_CPPFLAGS = \
 	$(G_CAST_CHECKS)
 
 AM_LDFLAGS = \
+	-module -avoid-version -shared -export-dynamic \
+	-no-undefined -rpath $(libdir)/simple-panel/plugins \
+	$(top_builddir)/src/libsimplepanel.la \
 	$(PACKAGE_LIBS)
 
 
@@ -15,8 +18,8 @@ AM_LDFLAGS = \
 noinst_LIBRARIES = libbuiltin_plugins.a
 
 libbuiltin_plugins_a_CFLAGS = \
-	-DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
-	-DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\" \
+	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
+	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
 
 if ENABLE_MENU_CACHE
@@ -60,34 +63,31 @@ EXTRA_LTLIBRARIES = \
 	volume.la \
 	volumealsa.la \
 	weather.la \
-        pager.la \
-        wincmd.la \
-        launchtaskbar.la \
-        tray.la \
+	pager.la \
+	wincmd.la \
+	launchtaskbar.la \
+	tray.la \
 	xkb.la
 
-pkglibdir = $(libdir)/lxpanel/plugins
+pkglibdir = $(libdir)/simple-panel/plugins
 
 # batt
 batt_la_SOURCES = \
 	batt/batt.c \
 	batt/batt_sys.c
 batt_la_CFLAGS = -I$(srcdir)/batt
-batt_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # cpu
 cpu_la_SOURCES = cpu/cpu.c
-cpu_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # cpufreq
 cpufreq_la_SOURCES = cpufreq/cpufreq.c
-cpufreq_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\"
-cpufreq_la_LDFLAGS = -module @LXPANEL_MODULE@
+cpufreq_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
 
 # deskno
 deskno_la_SOURCES = deskno/deskno.c
 deskno_la_CFLAGS = $(WNCK_CFLAGS)
-deskno_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS) $(X11_LIBS)
+deskno_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
 # indicator
 indicator_la_SOURCES = indicator/indicator.c
@@ -95,16 +95,15 @@ indicator_la_CFLAGS = \
 	-DINDICATOR_DIR=\""$(INDICATORDIR)"\" \
 	-DINDICATOR_ICONS_DIR=\""$(INDICATORICONSDIR)"\" \
 	$(APPLET_CFLAGS)
-indicator_la_LDFLAGS = -module @LXPANEL_MODULE@ $(APPLET_LIBS)
+indicator_la_LIBADD = $(APPLET_LIBS)
 
 # kbled
 kbled_la_SOURCES = kbled/kbled.c
-kbled_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\"
-kbled_la_LDFLAGS = -module @LXPANEL_MODULE@
+kbled_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
+kbled_la_LIBADD = $(X11_LIBS)
 
 # monitors
 monitors_la_SOURCES = monitors/monitors.c
-monitors_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # netstat
 netstat_la_SOURCES = \
@@ -116,8 +115,8 @@ netstat_la_SOURCES = \
 	netstat/passwd_gui.c
 netstat_la_CFLAGS = \
 	-I$(srcdir)/netstat \
-	-DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\"
-netstat_la_LDFLAGS = -module @LXPANEL_MODULE@ -liw
+        -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
+netstat_la_LIBADD = -liw
 
 # netstatus
 netstatus_la_SOURCES = \
@@ -130,25 +129,22 @@ netstatus_la_SOURCES = \
 	netstatus/netstatus-util.c
 netstatus_la_CFLAGS = \
 	-I$(srcdir)/netstatus \
-	-DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
-	-DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
-netstatus_la_LDFLAGS = -module @LXPANEL_MODULE@
+        -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
+        -DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\"
 
 # thermal
 thermal_la_SOURCES = thermal/thermal.c
-thermal_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # volume (OSS)
 volume_la_SOURCES = \
 	volume/volume-impl.c \
 	volume/volume.c
 volume_la_CFLAGS = -I$(srcdir)/volume
-volume_la_LDFLAGS = -module @LXPANEL_MODULE@
 
 # volumealsa
 volumealsa_la_SOURCES = volumealsa/volumealsa.c
-volumealsa_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\"
-volumealsa_la_LDFLAGS = -module @LXPANEL_MODULE@ -lasound
+volumealsa_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
+volumealsa_la_LIBADD = -lasound
 
 # weather
 weather_la_SOURCES = \
@@ -162,63 +158,63 @@ weather_la_SOURCES = \
 weather_la_CFLAGS = \
 	-I$(srcdir)/weather \
 	$(LIBXML2_CFLAGS)
-weather_la_LDFLAGS = -module @LXPANEL_MODULE@ $(LIBXML2_LIBS) $(X11_LIBS)
+weather_la_LIBADD = $(LIBXML2_LIBS) $(X11_LIBS)
 
 # launchtaskbar
 launchtaskbar_la_SOURCES = \
-        X/launchtaskbar.c \
-        X/x-misc.c
+	X/launchtaskbar.c \
+	X/x-misc.c
 launchtaskbar_la_CFLAGS = \
-        $(WNCK_CFLAGS) \
-       -I$(srcdir)/X \
-       -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
-       -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
-launchtaskbar_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS) $(X11_LIBS)
+	$(WNCK_CFLAGS) \
+	-I$(srcdir)/X \
+	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
+	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\"
+launchtaskbar_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
 # pager
 pager_la_SOURCES = X/pager.c \
-        X/x-misc.c
+	X/x-misc.c
 pager_la_CFLAGS = $(WNCK_CFLAGS)
-pager_la_LDFLAGS = $(WNCK_LIBS) -module @LXPANEL_MODULE@ $(X11_LIBS)
+pager_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
 # tray
 tray_la_SOURCES = X/tray.c \
-        X/x-misc.c
+	X/x-misc.c
 tray_la_CFLAGS = \
-       -I$(srcdir)/X \
-       -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
-       -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
-tray_la_LDFLAGS = -module @LXPANEL_MODULE@ $(X11_LIBS)
+	-I$(srcdir)/X \
+	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
+	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\"
+tray_la_LIBADD = $(X11_LIBS)
 
 # wincmd
 wincmd_la_SOURCES = X/wincmd.c \
-        X/x-misc.c
+	X/x-misc.c
 wincmd_la_CFLAGS = \
-       -I$(srcdir)/X \
-       -DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
-       -DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\"
-wincmd_la_LDFLAGS = -module @LXPANEL_MODULE@ $(X11_LIBS)
+	-I$(srcdir)/X \
+	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
+	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\"
+wincmd_la_LIBADD = $(X11_LIBS)
 
 # xkb
 xkb_la_CFLAGS = \
-         $(WNCK_CFLAGS) \
+	$(WNCK_CFLAGS) \
 	-I$(srcdir)/xkb \
-	-DFLAGSDIR=\"$(datadir)/lxpanel/images/xkb-flags\" \
-	-DFLAGSCUSTDIR=\"$(datadir)/lxpanel/images/xkb-flags-cust\" \
-	-DXKBCONFDIR=\"$(datadir)/lxpanel/xkeyboardconfig\"
+	-DFLAGSDIR=\"$(datadir)/simple-panel/images/xkb-flags\" \
+	-DFLAGSCUSTDIR=\"$(datadir)/simple-panel/images/xkb-flags-cust\" \
+	-DXKBCONFDIR=\"$(datadir)/simple-panel/xkeyboardconfig\"
 xkb_la_SOURCES = \
 	xkb/xkb-plugin.c \
-        xkb/xkb.c \
-        X/x-misc.c
-xkb_la_LDFLAGS = -module @LXPANEL_MODULE@ $(WNCK_LIBS) $(X11_LIBS)
+	xkb/xkb.c \
+	X/x-misc.c
+xkb_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
-xkeyboardconfigdir=$(datadir)/lxpanel/xkeyboardconfig
+xkeyboardconfigdir=$(datadir)/simple-panel/xkeyboardconfig
 xkeyboardconfig_DATA = \
 	xkb/xkeyboardconfig/models.cfg \
 	xkb/xkeyboardconfig/layouts.cfg \
 	xkb/xkeyboardconfig/toggle.cfg
 
-flagsdir=$(datadir)/lxpanel/images/xkb-flags
+flagsdir=$(datadir)/simple-panel/images/xkb-flags
 flags_DATA= \
 	xkb/flags/ad.png \
 	xkb/flags/ae.png \
@@ -377,12 +373,10 @@ EXTRA_DIST = \
 	icon.xpm
 
 install-exec-hook:
-	rm -f $(DESTDIR)$(libdir)/lxpanel/plugins/*.la
-	rm -f $(DESTDIR)$(libdir)/lxpanel/plugins/*.a
-	rm -f $(DESTDIR)$(libdir)/lxpanel/plugins/*.
+	rm -f $(DESTDIR)$(libdir)/simple-panel/plugins/*.la
 
 if BUILD_PLUGIN_LOADER
 DYNAMIC_PLUGINS_INSTALLED = $(DYNAMIC_PLUGINS:.la=.so)
 uninstall-hook:
-	cd $(DESTDIR)$(libdir)/lxpanel/plugins && rm -f $(DYNAMIC_PLUGINS_INSTALLED) || true
+	cd $(DESTDIR)$(libdir)/simple-panel/plugins && rm -f $(DYNAMIC_PLUGINS_INSTALLED) || true
 endif

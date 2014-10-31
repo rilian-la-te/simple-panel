@@ -41,8 +41,6 @@
 
 static PanelApp* win_grp;
 
-static int config = 0;
-
 GList* all_panels = NULL;
 
 gboolean is_restarting = FALSE;
@@ -454,9 +452,9 @@ void panel_determine_background_pixmap(Panel * panel, GtkWidget * widget, GdkWin
 void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
 {
 	Panel * p = panel->priv;
-	gchar* css;
+    gchar* css = NULL;
     GdkRGBA color;
-    gboolean system;
+    gboolean system = FALSE;
     gdk_rgba_parse(&color,"transparent");
     if (p->background)
 	{
@@ -476,12 +474,13 @@ void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
     else
     {
         system = TRUE;
-        css=g_strdup_printf("No CSS");
     }
 
-    css_apply_with_class(widget,css,"-lxpanel-background",system);
     if (css)
+    {
+        css_apply_with_class(widget,css,"-lxpanel-background",system);
         g_free(css);
+    }
 }
 
 /* Update the background of the entire panel.
@@ -935,7 +934,7 @@ void panel_apply_icon( GtkWindow *w )
     gtk_window_set_icon(w, window_icon);
 }
 
-GtkMenu* lxpanel_get_plugin_menu( LXPanel* panel, GtkWidget* plugin, gboolean use_sub_menu )
+GtkMenu* lxpanel_get_plugin_menu(LXPanel* panel, GtkWidget* plugin, gboolean use_sub_menu )
 {
     GtkWidget  *menu_item, *img;
     GtkMenu *ret,*menu;

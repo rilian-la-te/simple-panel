@@ -1,12 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 
-bin_PROGRAMS = lxpanel
+bin_PROGRAMS = simple-panel
 
-lxpanel_CFLAGS = \
+simple_panel_CFLAGS = \
 	-I$(top_srcdir) \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
-	-DPACKAGE_DATA_DIR=\""$(datadir)/lxpanel"\" \
-	-DPACKAGE_UI_DIR=\""$(datadir)/lxpanel/ui"\" \
+        -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
+        -DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
 	-DPACKAGE_BIN_DIR=\""$(bindir)"\" \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	$(PACKAGE_CFLAGS) \
@@ -14,50 +14,61 @@ lxpanel_CFLAGS = \
 
 BUILTIN_PLUGINS = $(top_builddir)/plugins/libbuiltin_plugins.a
 
+pkglib_LTLIBRARIES = libsimplepanel.la
+
+libsimplepanel_la_CFLAGS = $(simple_panel_CFLAGS)
+libsimplepanel_la_SOURCES = \
+        misc.c \
+        css.c \
+        configurator.c \
+        dbg.c \
+        icon-grid.c \
+        panel.c \
+        plugin.c \
+        conf.c \
+        app.c
+
+libsimplepanel_la_LIBADD = \
+       $(PACKAGE_LIBS)
+
+
 if ENABLE_MENU_CACHE
 MENU_SOURCES = menu-policy.c
 endif
 
-lxpanel_SOURCES = \
-	misc.c \
-	gtk-run.c \
-        css.c \
-	configurator.c \
-	dbg.c \
-	icon-grid.c \
-	panel.c \
-	plugin.c \
-	conf.c \
-        app.c \
+simple_panel_SOURCES = \
+        gtk-run.c \
         main.c \
 	$(MENU_SOURCES)
 
-lxpanel_includedir = $(includedir)/lxpanel
-lxpanel_include_HEADERS = \
+simple_panel_includedir = $(includedir)/simple-panel
+simple_panel_include_HEADERS = \
 	plugin.h \
 	panel.h \
 	misc.h \
 	icon-grid.h \
-	conf.h
+	conf.h \
+	css.h
 
 if BUILD_PLUGIN_LOADER
 DYNAMIC_FLAGS = -export-dynamic
 endif
-lxpanel_LDFLAGS = $(DYNAMIC_FLAGS)
-lxpanel_DEPENDENCIES_EXTRA = $(BUILTIN_PLUGINS)
+simple_panel_LDFLAGS = $(DYNAMIC_FLAGS)
+simple_panel_DEPENDENCIES_EXTRA = $(BUILTIN_PLUGINS)
 
-lxpanel_LDADD = \
+simple_panel_LDADD = \
+		libsimplepanel.la \
 		$(BUILTIN_PLUGINS) \
 		$(PACKAGE_LIBS) \
 		$(INTLLIBS)
 ##		$(X11_LIBS) \
 
 EXTRA_DIST = \
-        css.h \
+	css.h \
 	dbg.h \
 	menu-policy.h \
-        private.h \
-        app.h
+	private.h \
+	app.h
 
-$(top_builddir)/plugins/libbuiltin_plugins.a: $(lxpanel_include_HEADERS)
+$(top_builddir)/plugins/libbuiltin_plugins.a: $(simple_panel_include_HEADERS)
 	cd $(top_builddir)/plugins && $(MAKE) libbuiltin_plugins.a

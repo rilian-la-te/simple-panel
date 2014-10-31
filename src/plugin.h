@@ -115,7 +115,7 @@ typedef struct {
  * This descriptor instance should be defined in each plugin code as main
  * entry point for plugin creation. Primitive plugin example follows:
  *
- * #include <lxpanel/plugin.h>
+ * #include <simple-panel/plugin.h>
  *
  * GtkWidget *test_new_instance(LXPanel *panel, config_setting_t *settings)
  * {
@@ -234,7 +234,14 @@ extern void lxpanel_plugin_show_config_dialog(GtkWidget* plugin);
 
 /**
  * PluginConfType:
- *
+ * @CONF_TYPE_STR: string entry, pointer is char **
+ * @CONF_TYPE_INT: spin entry (range 0...1000), pointer is gint *
+ * @CONF_TYPE_BOOL: check button, pointer is gboolean *
+ * @CONF_TYPE_FILE: file chooser, pointer is char **
+ * @CONF_TYPE_FILE_ENTRY: file path entry, pointer is char **
+ * @CONF_TYPE_DIRECTORY_ENTRY: directory path entry, pointer is char **
+ * @CONF_TYPE_TRIM: just a text in italic, pointer is ignored
+ * @CONF_TYPE_EXTERNAL: provided by caller, pointer is GtkWidget *
  * Type of variable passed to lxpanel_generic_config_dlg().
  */
 typedef enum {
@@ -244,7 +251,8 @@ typedef enum {
     CONF_TYPE_FILE,
     CONF_TYPE_FILE_ENTRY,
     CONF_TYPE_DIRECTORY_ENTRY,
-    CONF_TYPE_TRIM
+    CONF_TYPE_TRIM,
+    CONF_TYPE_EXTERNAL
 } PluginConfType;
 
 /**

@@ -1,11 +1,11 @@
 #include "app.h"
 
-int main (int argc, char *argv[], char* env)
+int main (int argc, char *argv[], char** env)
 {
     PanelApp *app;
     gint status;
 
-    app = g_object_new (LX_TYPE_PANEL_APP,
+    app = g_object_new (SIMPLE_TYPE_PANEL_APP,
                         "application-id", "org.simple.panel",
                         "flags", G_APPLICATION_HANDLES_COMMAND_LINE,
                         NULL);

@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT(lxpanel, 0.7.1, http://lxde.org/)
+AC_INIT(simple-panel, 0.1.0, http://lxde.org/)
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects no-dist-gzip dist-xz])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -24,6 +24,7 @@ LT_PREREQ([2.2])
 LT_INIT
 
 # Checks for libraries.
+AC_SEARCH_LIBS([log], [m])
 CFLAGS="$CFLAGS -DENABLE_GTK3"
 pkg_modules="$pkg_modules gtk+-3.0 libfm-gtk3 >= 1.2.0"
 pkg_modules="$pkg_modules \
@@ -65,11 +66,6 @@ fi
 	AC_SUBST(INDICATORDIR)
 	AC_SUBST(INDICATORICONSDIR)
 fi
-
-
-pkg_modules="x11"
-PKG_CHECK_MODULES(X11, [$pkg_modules])
-AC_SUBST(X11_LIBS)
 
 pkg_modules="libmenu-cache"
 PKG_CHECK_MODULES(MENU_CACHE, [$pkg_modules],
@@ -152,9 +148,9 @@ dnl FIXME: filter for undefined symbols in plugins
 # there are no undefined references.  However, we intend not to
 # fix at the moment since we don't have spin-off libraray containing
 # the necessary functions.
-if test ! -z "$LDFLAGS"; then
-    LDFLAGS=`echo "$LDFLAGS" | sed -e 's/-Wl,-z,defs//'`
-fi
+dnl if test ! -z "$LDFLAGS"; then
+dnl    LDFLAGS=`echo "$LDFLAGS" | sed -e 's/-Wl,-z,defs//'`
+dnl fi
 
 LXPANEL_MODULE="-avoid-version \
 -rpath \$(libdir)/lxpanel/plugins \
@@ -186,19 +182,6 @@ AM_CONDITIONAL(BUILD_PLUGIN_LOADER, test x$plugins_loading = xyes)
 if test x"$plugins_loading" = "xno"; then
     AC_DEFINE(DISABLE_PLUGINS_LOADING, [1], [Disable plugin loading])
 fi
-
-AC_ARG_ENABLE([xorg-plugins],
-    AS_HELP_STRING([--disable-xorg-plugins],
-                    [compile X.Org plugins (default: enable)]),
-            X_plugins_support=$enableval, X_plugins_support="yes")
-
-X_PLUGINS_LIST=""
-if test x"$X_plugins_support" = "xyes"; then
-    X_PLUGINS_LIST="pager.la wincmd.la launchtaskbar.la tray.la"
-    AC_SUBST(X_PLUGINS_LIST)
-fi
-
-AC_MSG_RESULT($x_plugins)
 
 dnl Here are plugin listing.
 plugin_netstatus=
@@ -288,6 +271,23 @@ dnl Exclude indicator support when there is no support.
 if test x"$indicator_support" = "xno"; then
     plugin_indicator=
 fi
+
+pkg_modules="x11"
+PKG_CHECK_MODULES(X11, [$pkg_modules],
+X_plugins_support=yes, X_plugins_support=no)
+if test x"$X_plugins_support" = "xyes"; then
+    AC_SUBST(X11_LIBS)
+    X_PLUGINS_LIST="pager.la wincmd.la launchtaskbar.la tray.la"
+    AC_SUBST(X_PLUGINS_LIST)
+fi
+if test x"$X_plugins_support" = "xno"; then
+    AC_WARN([No XLib found.  All X.Org plugins are not built.])
+    plugin_deskno=
+    plugin_xkb=
+    plugin_kbled=
+fi
+
+AC_MSG_RESULT($x_plugins)
 
 PLUGINS_LIST="\
     $plugin_netstatus \
@@ -393,7 +393,7 @@ then
 fi
 
 AC_CONFIG_FILES([
-    lxpanel.pc
+    simple-panel.pc
     Makefile
     src/Makefile
     plugins/Makefile
