@@ -73,7 +73,7 @@ weather_destructor(gpointer pData)
  * @return Pointer to a new weather widget.
  */
 static GtkWidget *
-weather_constructor(LXPanel *pPanel, config_setting_t *pConfig)
+weather_constructor(SimplePanel *pPanel, config_setting_t *pConfig)
 {
   WeatherPluginPrivate * pPriv = g_new0(WeatherPluginPrivate, 1);
 
@@ -263,7 +263,7 @@ void weather_save_configuration(GtkWidget * pWeather, LocationInfo * pLocation)
  * @param pPlugin Pointer to the PluginClass wrapper instance.
  */
 static void
-weather_configuration_changed(LXPanel *pPanel, GtkWidget *pWidget)
+weather_configuration_changed(SimplePanel *pPanel, GtkWidget *pWidget)
 {
   LXW_LOG(LXW_DEBUG, "weather_configuration_changed()");
 
@@ -288,7 +288,7 @@ weather_configuration_changed(LXPanel *pPanel, GtkWidget *pWidget)
  * @return Instance of the widget.
  */
 static GtkWidget *
-weather_configure(LXPanel *pPanel G_GNUC_UNUSED, GtkWidget *pWidget)
+weather_configure(SimplePanel *pPanel G_GNUC_UNUSED, GtkWidget *pWidget)
 {
   LXW_LOG(LXW_DEBUG, "weather_configure()");
 
@@ -304,7 +304,7 @@ FM_DEFINE_MODULE(lxpanel_gtk, weather)
 /**
  * Definition of the weather plugin module
  */
-LXPanelPluginInit fm_module_init_lxpanel_gtk =
+SimplePanelPluginInit fm_module_init_lxpanel_gtk =
   {
     .name = N_("Weather Plugin"),
     .description = N_("Show weather conditions for a location."),

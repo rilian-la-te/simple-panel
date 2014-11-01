@@ -205,7 +205,7 @@ static gboolean on_xkb_button_scroll_event(GtkWidget * widget, GdkEventScroll * 
 }
 
 /* Handler for button-press-event on top level widget. */
-static gboolean on_xkb_button_press_event(GtkWidget * widget,  GdkEventButton * event, LXPanel * panel)
+static gboolean on_xkb_button_press_event(GtkWidget * widget,  GdkEventButton * event, SimplePanel * panel)
 {
     /* Change to next group. */
     xkb_change_group(lxpanel_plugin_get_data(widget), 1);
@@ -225,7 +225,7 @@ static void on_xkb_entry_advanced_opt_icon_press(GtkEntry             *p_entry,
 }
 
 /* Plugin constructor. */
-static GtkWidget *xkb_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *xkb_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     XkbPlugin * p_xkb = g_new0(XkbPlugin, 1);
@@ -1201,7 +1201,7 @@ static void xkb_settings_fill_layout_tree_model_with_config(XkbPlugin *p_xkb)
 }
 
 /* Callback when the configuration dialog is to be shown. */
-static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
+static GtkWidget *xkb_configure(SimplePanel *panel, GtkWidget *p)
 {
     XkbPlugin * p_xkb = lxpanel_plugin_get_data(p);
     gchar       markup_str[MAX_MARKUP_LEN];
@@ -1507,7 +1507,7 @@ static GtkWidget *xkb_configure(LXPanel *panel, GtkWidget *p)
 }
 
 /* Callback when panel configuration changes. */
-static void xkb_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
+static void xkb_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
     /* Do a full redraw. */
     xkb_redraw(lxpanel_plugin_get_data(p));
@@ -1516,7 +1516,7 @@ static void xkb_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
 FM_DEFINE_MODULE(lxpanel_gtk, xkb)
 
 /* Plugin descriptor. */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Keyboard Layout Handler"),
     .description = N_("Handle keyboard layouts"),
 

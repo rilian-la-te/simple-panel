@@ -47,25 +47,24 @@ gboolean is_restarting = FALSE;
 
 gboolean is_in_lxde = FALSE;
 
-static void panel_start_gui(LXPanel *p);
-static void ah_start(LXPanel *p);
-static void ah_stop(LXPanel *p);
-static void _panel_update_background(LXPanel * p);
-static void _panel_update_fonts(LXPanel * p);
+static void panel_start_gui(SimplePanel *p);
+static void ah_start(SimplePanel *p);
+static void ah_stop(SimplePanel *p);
+static void _panel_update_background(SimplePanel * p);
+static void _panel_update_fonts(SimplePanel * p);
 
 
 G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_WINDOW);
 
 static void lxpanel_finalize(GObject *object)
 {
-    LXPanel *self = LXPANEL(object);
+    SimplePanel *self = LXPANEL(object);
     Panel *p = self->priv;
 
     if( p->config_changed )
         lxpanel_config_save( self );
     config_destroy(p->config);
 
-//    XFree(p->workarea);
     g_free( p->background_file );
     g_slist_free( p->system_menus );
 
@@ -77,7 +76,7 @@ static void lxpanel_finalize(GObject *object)
 
 static void lxpanel_destroy(GtkWidget *object)
 {
-    LXPanel *self = LXPANEL(object);
+    SimplePanel *self = LXPANEL(object);
     Panel *p = self->priv;
 
     if (p->autohide)
@@ -108,7 +107,7 @@ static void lxpanel_destroy(GtkWidget *object)
 
 static gboolean idle_update_background(gpointer p)
 {
-    LXPanel *panel = LXPANEL(p);
+    SimplePanel *panel = LXPANEL(p);
 
     if (g_source_is_destroyed(g_main_current_source()))
         return FALSE;
@@ -124,7 +123,7 @@ static gboolean idle_update_background(gpointer p)
     return FALSE;
 }
 
-void _panel_queue_update_background(LXPanel *panel)
+void _panel_queue_update_background(SimplePanel *panel)
 {
     if (panel->priv->background_update_queued)
         return;
@@ -137,14 +136,6 @@ static void lxpanel_realize(GtkWidget *widget)
 {
     GTK_WIDGET_CLASS(lxpanel_parent_class)->realize(widget);
 
-    _panel_queue_update_background(LXPANEL(widget));
-}
-
-static void lxpanel_style_set(GtkWidget *widget, GtkStyle* prev)
-{
-    GTK_WIDGET_CLASS(lxpanel_parent_class)->style_set(widget, prev);
-
-    /* FIXME: This dirty hack is used to fix the background of systray... */
     _panel_queue_update_background(LXPANEL(widget));
 }
 
@@ -267,7 +258,6 @@ static void lxpanel_class_init(PanelWindowClass *klass)
 	widget_class->get_preferred_height = lxpanel_get_preferred_height;
     widget_class->size_allocate = lxpanel_size_allocate;
     widget_class->configure_event = lxpanel_configure_event;
-    widget_class->style_set = lxpanel_style_set;
     widget_class->map_event = lxpanel_map_event;
     widget_class->button_press_event = lxpanel_button_press;
 }
@@ -308,7 +298,7 @@ static void lxpanel_init(PanelWindow *self)
 
 
 /* Allocate and initialize new Panel structure. */
-static LXPanel* panel_allocate(void)
+static SimplePanel* panel_allocate(void)
 {
     return g_object_new(LX_TYPE_PANEL, NULL);
 }
@@ -343,7 +333,7 @@ void panel_set_wm_strut(Panel *p)
     _panel_set_wm_strut(p->topgwin);
 }
 
-void _panel_set_wm_strut(LXPanel *panel)
+void _panel_set_wm_strut(SimplePanel *panel)
 {
     int index;
     GdkAtom atom;
@@ -442,14 +432,14 @@ void _panel_set_wm_strut(LXPanel *panel)
 /****************************************************
  *         panel's handlers for GTK events          *
  ****************************************************/
-void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget);
+void _panel_determine_background_css(SimplePanel * panel, GtkWidget * widget);
 
 void panel_determine_background_pixmap(Panel * panel, GtkWidget * widget, GdkWindow * window)
 {
     _panel_determine_background_css(panel->topgwin, widget);
 }
 
-void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
+void _panel_determine_background_css(SimplePanel * panel, GtkWidget * widget)
 {
 	Panel * p = panel->priv;
     gchar* css = NULL;
@@ -490,7 +480,7 @@ void panel_update_background(Panel * p)
     _panel_update_background(p->topgwin);
 }
 
-static void _panel_update_background(LXPanel * p)
+static void _panel_update_background(SimplePanel * p)
 {
     GtkWidget *w = GTK_WIDGET(p);
 
@@ -503,7 +493,7 @@ void panel_update_fonts(Panel * p)
     _panel_update_fonts(p->topgwin);
 }
 
-void _panel_update_fonts(LXPanel * p)
+void _panel_update_fonts(SimplePanel * p)
 {
     gchar* css;
     if (p->priv->usefontcolor){
@@ -554,10 +544,10 @@ typedef enum
     AH_STATE_HIDDEN
 } PanelAHState;
 
-static void ah_state_set(LXPanel *p, PanelAHState ah_state);
+static void ah_state_set(SimplePanel *p, PanelAHState ah_state);
 
 static gboolean
-mouse_watch(LXPanel *panel)
+mouse_watch(SimplePanel *panel)
 {
     Panel *p = panel->priv;
     gint x, y;
@@ -615,12 +605,12 @@ static gboolean ah_state_hide_timeout(gpointer p)
     if (!g_source_is_destroyed(g_main_current_source()))
     {
         ah_state_set(p, AH_STATE_HIDDEN);
-        ((LXPanel *)p)->priv->hide_timeout = 0;
+        ((SimplePanel *)p)->priv->hide_timeout = 0;
     }
     return FALSE;
 }
 
-static void ah_state_set(LXPanel *panel, PanelAHState ah_state)
+static void ah_state_set(SimplePanel *panel, PanelAHState ah_state)
 {
     Panel *p = panel->priv;
 
@@ -688,7 +678,7 @@ static void ah_state_set(LXPanel *panel, PanelAHState ah_state)
 }
 
 /* starts autohide behaviour */
-static void ah_start(LXPanel *p)
+static void ah_start(SimplePanel *p)
 {
     ENTER;
     if (!p->priv->mouse_timeout)
@@ -697,7 +687,7 @@ static void ah_start(LXPanel *p)
 }
 
 /* stops autohide */
-static void ah_stop(LXPanel *p)
+static void ah_stop(SimplePanel *p)
 {
     ENTER;
     if (p->priv->mouse_timeout) {
@@ -716,7 +706,7 @@ static void ah_stop(LXPanel *p)
 static gint
 panel_popupmenu_configure(GtkWidget *widget, gpointer user_data)
 {
-    panel_configure( (LXPanel*)user_data, 0 );
+    panel_configure( (SimplePanel*)user_data, 0 );
     return TRUE;
 }
 
@@ -730,7 +720,7 @@ static void panel_popupmenu_config_plugin( GtkMenuItem* item, GtkWidget* plugin 
     panel->config_changed = TRUE;
 }
 
-static void panel_popupmenu_add_item( GtkMenuItem* item, LXPanel* panel )
+static void panel_popupmenu_add_item( GtkMenuItem* item, SimplePanel* panel )
 {
     /* panel_add_plugin( panel, panel->topgwin ); */
     panel_configure( panel, 2 );
@@ -789,11 +779,11 @@ static char* gen_panel_name( int edge, gint monitor )
 
 /* FIXME: Potentially we can support multiple panels at the same edge,
  * but currently this cannot be done due to some positioning problems. */
-static void panel_popupmenu_create_panel( GtkMenuItem* item, LXPanel* panel )
+static void panel_popupmenu_create_panel( GtkMenuItem* item, SimplePanel* panel )
 {
     gint m, e, monitors;
     GdkScreen *screen;
-    LXPanel *new_panel = panel_allocate();
+    SimplePanel *new_panel = panel_allocate();
     Panel *p = new_panel->priv;
     config_setting_t *global;
     p->app =panel->priv->app;
@@ -836,7 +826,7 @@ found_edge:
     all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
 }
 
-static void panel_popupmenu_delete_panel( GtkMenuItem* item, LXPanel* panel )
+static void panel_popupmenu_delete_panel( GtkMenuItem* item, SimplePanel* panel )
 {
     GtkWidget* dlg;
     gboolean ok;
@@ -934,11 +924,11 @@ void panel_apply_icon( GtkWindow *w )
     gtk_window_set_icon(w, window_icon);
 }
 
-GtkMenu* lxpanel_get_plugin_menu(LXPanel* panel, GtkWidget* plugin, gboolean use_sub_menu )
+GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin, gboolean use_sub_menu )
 {
     GtkWidget  *menu_item, *img;
     GtkMenu *ret,*menu;
-    const LXPanelPluginInit *init;
+    const SimplePanelPluginInit *init;
     char* tmp;
 
     ret = menu = GTK_MENU(gtk_menu_new());
@@ -1048,7 +1038,7 @@ void panel_establish_autohide(Panel *p)
     _panel_establish_autohide(p->topgwin);
 }
 
-void _panel_establish_autohide(LXPanel *p)
+void _panel_establish_autohide(SimplePanel *p)
 {
     if (p->priv->autohide)
         ah_start(p);
@@ -1070,7 +1060,7 @@ void panel_image_set_from_file(Panel * p, GtkWidget * image, const char * file)
     }
 }
 
-void lxpanel_image_set_from_file(LXPanel * p, GtkWidget * image, const char * file)
+void lxpanel_image_set_from_file(SimplePanel * p, GtkWidget * image, const char * file)
 {
     panel_image_set_from_file(p->priv, image, file);
 }
@@ -1088,13 +1078,13 @@ gboolean panel_image_set_icon_theme(Panel * p, GtkWidget * image, const gchar * 
     return FALSE;
 }
 
-gboolean lxpanel_image_set_icon_theme(LXPanel * p, GtkWidget * image, const gchar * icon)
+gboolean lxpanel_image_set_icon_theme(SimplePanel * p, GtkWidget * image, const gchar * icon)
 {
     return panel_image_set_icon_theme(p->priv, image, icon);
 }
 
 static void
-panel_start_gui(LXPanel *panel)
+panel_start_gui(SimplePanel *panel)
 {
     gulong val;
     Panel *p = panel->priv;
@@ -1186,7 +1176,7 @@ void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,
 }
 
 
-void lxpanel_draw_label_text(LXPanel * p, GtkWidget * label, const char * text,
+void lxpanel_draw_label_text(SimplePanel * p, GtkWidget * label, const char * text,
                            gboolean bold, float custom_size_factor,
                            gboolean custom_color)
 {
@@ -1198,7 +1188,7 @@ void panel_set_panel_configuration_changed(Panel *p)
     _panel_set_panel_configuration_changed(p->topgwin);
 }
 
-void _panel_set_panel_configuration_changed(LXPanel *panel)
+void _panel_set_panel_configuration_changed(SimplePanel *panel)
 {
     Panel *p = panel->priv;
     GList *plugins, *l;
@@ -1237,7 +1227,7 @@ void _panel_set_panel_configuration_changed(LXPanel *panel)
     plugins = p->box ? gtk_container_get_children(GTK_CONTAINER(p->box)) : NULL;
     for( l = plugins; l; l = l->next ) {
         GtkWidget *w = (GtkWidget*)l->data;
-        const LXPanelPluginInit *init = PLUGIN_CLASS(w);
+        const SimplePanelPluginInit *init = PLUGIN_CLASS(w);
         if (init->reconfigure)
             init->reconfigure(panel, w);
     }
@@ -1312,7 +1302,7 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
 }
 
 static int
-panel_parse_plugin(LXPanel *p, config_setting_t *cfg)
+panel_parse_plugin(SimplePanel *p, config_setting_t *cfg)
 {
     const char *type = NULL;
 
@@ -1330,7 +1320,7 @@ error:
     RET(0);
 }
 
-static int panel_start( LXPanel *p )
+static int panel_start( SimplePanel *p )
 {
     config_setting_t *list, *s;
     int i;
@@ -1362,9 +1352,9 @@ void panel_destroy(Panel *p)
     gtk_widget_destroy(GTK_WIDGET(p->topgwin));
 }
 
-LXPanel* panel_new(PanelApp* app,const char* config_file, const char* config_name)
+SimplePanel* panel_new(PanelApp* app,const char* config_file, const char* config_name)
 {
-    LXPanel* panel = NULL;
+    SimplePanel* panel = NULL;
 
     if (G_LIKELY(config_file))
     {
@@ -1384,73 +1374,73 @@ LXPanel* panel_new(PanelApp* app,const char* config_file, const char* config_nam
     return panel;
 }
 
-GtkOrientation panel_get_orientation(LXPanel *panel)
+GtkOrientation panel_get_orientation(SimplePanel *panel)
 {
     return panel->priv->orientation;
 }
 
-gint panel_get_icon_size(LXPanel *panel)
+gint panel_get_icon_size(SimplePanel *panel)
 {
     return panel->priv->icon_size;
 }
 
-gint panel_get_height(LXPanel *panel)
+gint panel_get_height(SimplePanel *panel)
 {
     return panel->priv->height;
 }
 
-gint panel_get_monitor(LXPanel *panel)
+gint panel_get_monitor(SimplePanel *panel)
 {
     return panel->priv->monitor;
 }
 
-GtkIconTheme *panel_get_icon_theme(LXPanel *panel)
+GtkIconTheme *panel_get_icon_theme(SimplePanel *panel)
 {
     return panel->priv->icon_theme;
 }
 
-gboolean panel_is_at_bottom(LXPanel *panel)
+gboolean panel_is_at_bottom(SimplePanel *panel)
 {
     return panel->priv->edge == EDGE_BOTTOM;
 }
 
-gboolean panel_is_at_top(LXPanel *panel)
+gboolean panel_is_at_top(SimplePanel *panel)
 {
     return panel->priv->edge == EDGE_TOP;
 }
 
-gboolean panel_is_at_left(LXPanel *panel)
+gboolean panel_is_at_left(SimplePanel *panel)
 {
     return panel->priv->edge == EDGE_LEFT;
 }
 
-gboolean panel_is_at_right(LXPanel *panel)
+gboolean panel_is_at_right(SimplePanel *panel)
 {
     return panel->priv->edge == EDGE_RIGHT;
 }
 
-gboolean panel_is_dynamic(LXPanel *panel)
+gboolean panel_is_dynamic(SimplePanel *panel)
 {
     return panel->priv->widthtype == WIDTH_REQUEST;
 }
 
-GtkWidget *panel_box_new(LXPanel *panel, gint spacing)
+GtkWidget *panel_box_new(SimplePanel *panel, gint spacing)
 {
     return gtk_box_new(panel->priv->orientation, spacing);
 }
 
-GtkWidget *panel_separator_new(LXPanel *panel)
+GtkWidget *panel_separator_new(SimplePanel *panel)
 {
     return gtk_separator_new(panel->priv->orientation);
 }
 
-gboolean _class_is_present(const LXPanelPluginInit *init)
+gboolean _class_is_present(const SimplePanelPluginInit *init)
 {
     GList *sl;
 
     for (sl = all_panels; sl; sl = sl->next )
     {
-        LXPanel *panel = (LXPanel*)sl->data;
+        SimplePanel *panel = (SimplePanel*)sl->data;
         GList *plugins, *p;
 
         plugins = gtk_container_get_children(GTK_CONTAINER(panel->priv->box));

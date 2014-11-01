@@ -186,7 +186,7 @@ struct LaunchTaskBarPlugin {
     GtkWidget       *p_menuitem_separator;
 #endif
     GtkWidget * plugin;                 /* Back pointer to Plugin */
-    LXPanel * panel;                    /* Back pointer to panel */
+    SimplePanel * panel;                    /* Back pointer to panel */
     config_setting_t * settings;
     GdkScreen       *screen;
     GtkWidget       *config_dlg;        /* Configuration dialog */
@@ -629,7 +629,7 @@ static gboolean _launchbutton_create_id(LaunchTaskBarPlugin * lb, config_setting
                 G_KEY_FILE_DESKTOP_KEY_TYPE "=" G_KEY_FILE_DESKTOP_TYPE_APPLICATION "\n"
                 G_KEY_FILE_DESKTOP_KEY_NAME "=%s\n"
                 G_KEY_FILE_DESKTOP_KEY_EXEC "=%s\n"
-                G_KEY_FILE_DESKTOP_KEY_CATEGORIES "=X-LXPanel;\n",
+                G_KEY_FILE_DESKTOP_KEY_CATEGORIES "=X-SimplePanel;\n",
                 name, exec);
             if (icon)
                 g_string_append_printf(content, "Icon=%s\n", icon);
@@ -770,7 +770,7 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
 }
 
 /* Plugin constructor. */
-static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *settings,
+static GtkWidget *_launchtaskbar_constructor(SimplePanel *panel, config_setting_t *settings,
                                              LtbMode mode)
 {
     GtkWidget *p;
@@ -845,7 +845,7 @@ static GtkWidget *_launchtaskbar_constructor(LXPanel *panel, config_setting_t *s
     return p;
 }
 
-static GtkWidget *launchtaskbar_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *launchtaskbar_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     resolve_atoms();
     return _launchtaskbar_constructor(panel, settings, LAUNCHTASKBAR);
@@ -1327,7 +1327,7 @@ static void on_menu_view_row_activated(GtkTreeView *tree_view, GtkTreePath *path
 }
 
 /* Callback when the configuration dialog is to be shown. */
-static GtkWidget *launchtaskbar_configure(LXPanel *panel, GtkWidget *p)
+static GtkWidget *launchtaskbar_configure(SimplePanel *panel, GtkWidget *p)
 {
     LaunchTaskBarPlugin *ltbp = lxpanel_plugin_get_data(p);
 
@@ -1436,7 +1436,7 @@ static GtkWidget *launchtaskbar_configure(LXPanel *panel, GtkWidget *p)
 }
 
 /* Callback when panel configuration changes. */
-static void launchtaskbar_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
+static void launchtaskbar_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
     /* Set orientation into the icon grid. */
     LaunchTaskBarPlugin *ltbp = lxpanel_plugin_get_data(p);
@@ -3561,18 +3561,18 @@ static void taskbar_apply_configuration(LaunchTaskBarPlugin *ltbp)
     taskbar_window_buttons(wnck_screen_get_default(),(gpointer* )ltbp);
 }
 
-static GtkWidget *launchbar_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *launchbar_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     return _launchtaskbar_constructor(panel, settings, LAUNCHBAR);
 }
 
-static GtkWidget *taskbar_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *taskbar_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     resolve_atoms();
     return _launchtaskbar_constructor(panel, settings, TASKBAR);
 }
 
-static LXPanelPluginInit _launchbar_init = {
+static SimplePanelPluginInit _launchbar_init = {
     .name = N_("Application Launch Bar"),
     .description = N_("Bar with buttons to launch application"),
 
@@ -3581,7 +3581,7 @@ static LXPanelPluginInit _launchbar_init = {
     .reconfigure = launchtaskbar_panel_configuration_changed
 };
 
-static LXPanelPluginInit _taskbar_init = {
+static SimplePanelPluginInit _taskbar_init = {
     .name = N_("Task Bar (Window List)"),
     .description = N_("Taskbar shows all opened windows and allow to iconify them, shade or get focus"),
 
@@ -3602,7 +3602,7 @@ static void launchtaskbar_init(void)
 FM_DEFINE_MODULE(lxpanel_gtk, launchtaskbar);
 
 /* Plugin descriptor. */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Application Launch and Task Bar"),
     .description = N_("Bar with buttons to launch application and/or show all opened windows"),
 

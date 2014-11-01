@@ -36,7 +36,7 @@
 /* Private context for digital clock plugin. */
 typedef struct {
     GtkWidget * plugin;				/* Back pointer to plugin */
-    LXPanel * panel;
+    SimplePanel * panel;
     config_setting_t *settings;
     GtkWidget * clock_label;			/* Label containing clock value */
     GtkWidget * clock_icon;			/* Icon when icon_only */
@@ -73,10 +73,10 @@ static void dclock_popup_map(GtkWidget * widget, DClockPlugin * dc)
 static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
 {
     /* Create a new window. */
-    GtkWidget * win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    GtkWidget * win = gtk_window_new(GTK_WINDOW_POPUP);
     gtk_window_set_default_size(GTK_WINDOW(win), 180, 180);
     gtk_window_set_decorated(GTK_WINDOW(win), FALSE);
-	gtk_window_set_resizable(GTK_WINDOW(win), FALSE);
+    gtk_window_set_resizable(GTK_WINDOW(win), FALSE);
 	gtk_container_set_border_width(GTK_CONTAINER(win), 5);
     gtk_window_set_skip_taskbar_hint(GTK_WINDOW(win), TRUE);
     gtk_window_set_skip_pager_hint(GTK_WINDOW(win), TRUE);
@@ -102,7 +102,7 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
 }
 
 /* Handler for "button-press-event" event from main widget. */
-static gboolean dclock_button_press_event(GtkWidget * widget, GdkEventButton * evt, LXPanel * panel)
+static gboolean dclock_button_press_event(GtkWidget * widget, GdkEventButton * evt, SimplePanel * panel)
 {
     DClockPlugin * dc = lxpanel_plugin_get_data(widget);
 
@@ -275,7 +275,7 @@ static gboolean dclock_update_display(DClockPlugin * dc)
 }
 
 /* Plugin constructor. */
-static GtkWidget *dclock_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *dclock_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     DClockPlugin * dc = g_new0(DClockPlugin, 1);
@@ -412,7 +412,7 @@ static gboolean dclock_apply_configuration(gpointer user_data)
 }
 
 /* Callback when the configuration dialog is to be shown. */
-static GtkWidget *dclock_configure(LXPanel *panel, GtkWidget *p)
+static GtkWidget *dclock_configure(SimplePanel *panel, GtkWidget *p)
 {
     DClockPlugin * dc = lxpanel_plugin_get_data(p);
     return lxpanel_generic_config_dlg(_("Digital Clock"), panel,
@@ -428,13 +428,13 @@ static GtkWidget *dclock_configure(LXPanel *panel, GtkWidget *p)
 }
 
 /* Callback when panel configuration changes. */
-static void dclock_reconfigure(LXPanel *panel, GtkWidget *p)
+static void dclock_reconfigure(SimplePanel *panel, GtkWidget *p)
 {
     dclock_apply_configuration(p);
 }
 
 /* Plugin descriptor. */
-LXPanelPluginInit lxpanel_static_plugin_dclock = {
+SimplePanelPluginInit lxpanel_static_plugin_dclock = {
     .name = N_("Digital Clock"),
     .description = N_("Display digital clock and tooltip"),
 

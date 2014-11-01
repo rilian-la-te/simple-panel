@@ -29,8 +29,8 @@ gchar *expand_tilda(const gchar *file);
 
 void get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name);
 guint32 gcolor2rgb24(GdkRGBA *color);
-GtkWidget *lxpanel_button_new_for_icon(LXPanel *panel, const gchar *name, GdkRGBA *color, const gchar *label);
-GtkWidget *lxpanel_button_new_for_fm_icon(LXPanel *panel, FmIcon *icon, GdkRGBA *color, const gchar *label);
+GtkWidget *lxpanel_button_new_for_icon(SimplePanel *panel, const gchar *name, GdkRGBA *color, const gchar *label);
+GtkWidget *lxpanel_button_new_for_fm_icon(SimplePanel *panel, FmIcon *icon, GdkRGBA *color, const gchar *label);
 void lxpanel_button_set_icon(GtkWidget* btn, const gchar *name, gint size);
 void lxpanel_button_update_icon(GtkWidget* btn, FmIcon *icon, gint size);
 

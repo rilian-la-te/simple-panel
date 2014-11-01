@@ -54,7 +54,7 @@ extern gchar *cprofile;
 /* Context of a panel on a given edge. */
 struct _Panel {
     char* name;
-    LXPanel * topgwin;			/* Main panel window */
+    SimplePanel * topgwin;			/* Main panel window */
     PanelApp* app;
 //    Window topxwin;			/* Main panel's X window   */
     GdkDisplay * display;		/* Main panel's GdkDisplay */
@@ -189,29 +189,29 @@ static inline char *_user_config_file_name(const char *name1, const char *name2)
 void _prepare_modules(void);
 void _unload_modules(void);
 
-GtkWidget *lxpanel_add_plugin(LXPanel *p, const char *name, config_setting_t *cfg, gint at);
+GtkWidget *lxpanel_add_plugin(SimplePanel *p, const char *name, config_setting_t *cfg, gint at);
 GHashTable *lxpanel_get_all_types(void); /* transfer none */
 
 extern GQuark lxpanel_plugin_qinit; /* access to LXPanelPluginInit data */
-#define PLUGIN_CLASS(_i) ((LXPanelPluginInit*)g_object_get_qdata(G_OBJECT(_i),lxpanel_plugin_qinit))
+#define PLUGIN_CLASS(_i) ((SimplePanelPluginInit*)g_object_get_qdata(G_OBJECT(_i),lxpanel_plugin_qinit))
 
 extern GQuark lxpanel_plugin_qconf; /* access to congig_setting_t data */
 
-#define PLUGIN_PANEL(_i) ((LXPanel*)gtk_widget_get_toplevel(_i))
+#define PLUGIN_PANEL(_i) ((SimplePanel*)gtk_widget_get_toplevel(_i))
 
-gboolean _class_is_present(const LXPanelPluginInit *init);
+gboolean _class_is_present(const SimplePanelPluginInit *init);
 
-void _panel_show_config_dialog(LXPanel *panel, GtkWidget *p, GtkWidget *dlg);
+void _panel_show_config_dialog(SimplePanel *panel, GtkWidget *p, GtkWidget *dlg);
 
-void _calculate_position(LXPanel *panel);
+void _calculate_position(SimplePanel *panel);
 
-void _panel_determine_background_pixmap(LXPanel * p, GtkWidget * widget);
-void _panel_establish_autohide(LXPanel *p);
-void _panel_set_wm_strut(LXPanel *p);
-void _panel_set_panel_configuration_changed(LXPanel *p);
-void _panel_queue_update_background(LXPanel *p);
+void _panel_determine_background_pixmap(SimplePanel * p, GtkWidget * widget);
+void _panel_establish_autohide(SimplePanel *p);
+void _panel_set_wm_strut(SimplePanel *p);
+void _panel_set_panel_configuration_changed(SimplePanel *p);
+void _panel_queue_update_background(SimplePanel *p);
 
-void panel_configure(LXPanel* p, int sel_page);
+void panel_configure(SimplePanel* p, int sel_page);
 gboolean panel_edge_available(Panel* p, int edge, gint monitor);
 void restart(void);
 void logout(void);
@@ -240,7 +240,7 @@ extern void panel_set_dock_type(Panel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
 extern void panel_update_background( Panel* p );
 extern void panel_update_fonts( Panel * p);
-extern LXPanel* panel_new(PanelApp* app, const char* config_file, const char* config_name);
+extern SimplePanel* panel_new(PanelApp* app, const char* config_file, const char* config_name);
 
 /* if current window manager is EWMH conforming. */
 extern gboolean is_ewmh_supported;

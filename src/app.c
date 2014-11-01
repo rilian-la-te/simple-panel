@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2014 Konstantin Pugin.
+ * Copyright (c) Konstantin Pugin.
+ * Copyright (c) 2006-2014 LxDE Developers, see the file AUTHORS for details.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,24 +31,6 @@
 #include <locale.h>
 #include <string.h>
 #include <libfm/fm-gtk.h>
-/*
- * Copyright (c) Konstantin Pugin.
- * Copyright (c) 2006-2014 LxDE Developers, see the file AUTHORS for details.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
 
 #define __LXPANEL_INTERNALS__
 
@@ -58,7 +41,7 @@
 
 /* The same for new plugins type - they will be not unloaded by FmModule */
 #define REGISTER_STATIC_MODULE(pc) do { \
-    extern LXPanelPluginInit lxpanel_static_plugin_##pc; \
+    extern SimplePanelPluginInit lxpanel_static_plugin_##pc; \
     lxpanel_register_plugin_type(#pc, &lxpanel_static_plugin_##pc); } while (0)
 
 G_DEFINE_TYPE_WITH_PRIVATE(PanelApp, panel_app, GTK_TYPE_APPLICATION);
@@ -159,13 +142,13 @@ void panel_app_activate(GApplication* app)
             GList* all_panels = gtk_application_get_windows(GTK_APPLICATION(app));
             for( l = all_panels; l; l = l->next )
             {
-                LXPanel* p = (LXPanel*)l->data;
+                SimplePanel* p = (SimplePanel*)l->data;
                 GList *plugins, *pl;
 
                 plugins = gtk_container_get_children(GTK_CONTAINER(p->priv->box));
                 for (pl = plugins; pl; pl = pl->next)
                 {
-                    const LXPanelPluginInit *init = PLUGIN_CLASS(pl->data);
+                    const SimplePanelPluginInit *init = PLUGIN_CLASS(pl->data);
                     if (init->show_system_menu)
                     /* queue to show system menu */
                         init->show_system_menu(pl->data);
@@ -179,7 +162,7 @@ void panel_app_activate(GApplication* app)
         else if (!g_strcmp0(ccommand,"config"))
         {
             GList* all_panels = gtk_application_get_windows(GTK_APPLICATION(app));
-            LXPanel * p = ((all_panels != NULL) ? all_panels->data : NULL);
+            SimplePanel * p = ((all_panels != NULL) ? all_panels->data : NULL);
             if (p != NULL)
                 panel_configure(p, 0);
         }
@@ -200,23 +183,6 @@ static gint panel_app_handle_local_options(GApplication *application, GVariantDi
     return -1;
 }
 
-//static void
-//usage()
-//{
-//    g_print(_("lxpanel %s - lightweight GTK2+ panel for UNIX desktops\n"), VERSION);
-//    g_print(_("Command line options:\n"));
-//    g_print(_(" --help      -- print this help and exit\n"));
-//    g_print(_(" --version   -- print version and exit\n"));
-////    g_print(_(" --log <number> -- set log level 0-5. 0 - none 5 - chatty\n"));
-////    g_print(_(" --configure -- launch configuration utility\n"));
-//    g_print(_(" --profile name -- use specified profile\n"));
-//    g_print("\n");
-//    g_print(_(" -h  -- same as --help\n"));
-//    g_print(_(" -p  -- same as --profile\n"));
-//    g_print(_(" -v  -- same as --version\n"));
-// //   g_print(_(" -C  -- same as --configure\n"));
-//    g_print(_("\nVisit http://lxde.org/ for detail.\n\n"));
-//}
 int panel_app_command_line(GApplication* application,GApplicationCommandLine* commandline)
 {
     static gchar* profile_name = NULL;
@@ -266,7 +232,7 @@ static void _start_panels_from_dir(PanelApp* app,const char *panel_dir)
         char* panel_config = g_build_filename( panel_dir, name, NULL );
         if (strchr(panel_config, '~') == NULL)    /* Skip editor backup files in case user has hand edited in this directory */
         {
-            LXPanel* panel = panel_new(app,panel_config, name );
+            SimplePanel* panel = panel_new(app,panel_config, name );
             if( panel )
                 gtk_application_add_window(GTK_APPLICATION(app),GTK_WINDOW(panel));
         }

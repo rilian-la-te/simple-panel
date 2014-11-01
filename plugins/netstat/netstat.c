@@ -427,7 +427,7 @@ static void netstat_destructor(gpointer user_data)
     RET();
 }
 
-static GtkWidget *netstat_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *netstat_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     netstat *ns;
     const char *tmp;
@@ -468,7 +468,7 @@ static GtkWidget *netstat_constructor(LXPanel *panel, config_setting_t *settings
     RET(p);
 }
 
-static void orientation_changed(LXPanel *panel, GtkWidget *p)
+static void orientation_changed(SimplePanel *panel, GtkWidget *p)
 {
     netstat *ns = lxpanel_plugin_get_data(p);
 
@@ -478,7 +478,7 @@ static void orientation_changed(LXPanel *panel, GtkWidget *p)
 
 FM_DEFINE_MODULE(lxpanel_gtk, netstat)
 
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Manage Networks"),
     .description = N_("Monitor and Manage networks"),
 

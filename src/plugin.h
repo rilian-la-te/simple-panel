@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 #define FM_MODULE_lxpanel_gtk_VERSION 1 /* version of this API */
 
 /**
- * LXPanelPluginInit:
+ * SimplePanelPluginInit:
  * @init: (allow-none): callback on lxpanel start
  * @finalize: (allow-none): callback on lxpanel exit
  * @name: name to represent plugin in lists
@@ -93,10 +93,10 @@ typedef struct {
     void (*finalize)(void);     /* optional finalize */
     char *name;                 /* name to represent in lists */
     char *description;          /* tooltip text */
-    GtkWidget *(*new_instance)(LXPanel *panel, config_setting_t *settings);
-    GtkWidget *(*config)(LXPanel *panel, GtkWidget *instance);
-    void (*reconfigure)(LXPanel *panel, GtkWidget *instance);
-    gboolean (*button_press_event)(GtkWidget *widget, GdkEventButton *event, LXPanel *panel);
+    GtkWidget *(*new_instance)(SimplePanel *panel, config_setting_t *settings);
+    GtkWidget *(*config)(SimplePanel *panel, GtkWidget *instance);
+    void (*reconfigure)(SimplePanel *panel, GtkWidget *instance);
+    gboolean (*button_press_event)(GtkWidget *widget, GdkEventButton *event, SimplePanel *panel);
     void (*show_system_menu)(GtkWidget *widget);
     gboolean (*update_context_menu)(GtkWidget *plugin, GtkMenu *menu);
     gboolean (*control)(GtkWidget *plugin, const char *cmd); /* not implemented */
@@ -109,7 +109,7 @@ typedef struct {
     int expand_available : 1;   /* True if "stretch" option is available */
     int expand_default : 1;     /* True if "stretch" option is default */
     int superseded : 1;         /* True if plugin was superseded by another */
-} LXPanelPluginInit; /* constant data */
+} SimplePanelPluginInit; /* constant data */
 
 /*
  * This descriptor instance should be defined in each plugin code as main
@@ -117,20 +117,20 @@ typedef struct {
  *
  * #include <simple-panel/plugin.h>
  *
- * GtkWidget *test_new_instance(LXPanel *panel, config_setting_t *settings)
+ * GtkWidget *test_new_instance(SimplePanel *panel, config_setting_t *settings)
  * {
  *      return gtk_image_new_from_stock(GTK_STOCK_OK, panel_get_icon_size(panel));
  * }
  *
  * FM_DEFINE_MODULE(lxpanel_gtk, test)
  *
- * LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+ * SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
  *      .name = "Test plugin",
  *      .description = "An image with OK icon",
  *      .new_instance = test_new_instance
  * }
  */
-extern LXPanelPluginInit fm_module_init_lxpanel_gtk;
+extern SimplePanelPluginInit fm_module_init_lxpanel_gtk;
 
 extern GQuark lxpanel_plugin_qdata; /* access to plugin private data */
 /**
@@ -165,7 +165,7 @@ extern GQuark lxpanel_plugin_qdata; /* access to plugin private data */
  *
  * Returns: %TRUE in case of success.
  */
-extern gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPluginInit *init);
+extern gboolean lxpanel_register_plugin_type(const char *name, const SimplePanelPluginInit *init);
 
 /**
  * lxpanel_get_plugin_menu
@@ -177,7 +177,7 @@ extern gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPlug
  *
  * Returns: (transfer full): new menu widget.
  */
-extern GtkMenu* lxpanel_get_plugin_menu(LXPanel* panel, GtkWidget* plugin, gboolean use_sub_menu);
+extern GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin, gboolean use_sub_menu);
 
 /**
  * lxpanel_plugin_adjust_popup_position
@@ -201,7 +201,7 @@ extern void lxpanel_plugin_adjust_popup_position(GtkWidget * popup, GtkWidget * 
  * @near accordingly to position of panel @p and returns its coordinates.
  * Can be used in position-calculation callback for popup menus.
  */
-extern void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * near, GtkWidget * popup, gint * px, gint * py);
+extern void lxpanel_plugin_popup_set_position_helper(SimplePanel * p, GtkWidget * near, GtkWidget * popup, gint * px, gint * py);
 
 /**
  * plugin_widget_set_background
@@ -211,7 +211,7 @@ extern void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * ne
  * Recursively set the background of @widget and its children. Can be
  * used on a panel background configuration change.
  */
-extern void plugin_widget_set_background(GtkWidget * widget, LXPanel * p);
+extern void plugin_widget_set_background(GtkWidget * widget, SimplePanel * p);
 
 /**
  * lxpanel_launch_path
@@ -222,7 +222,7 @@ extern void plugin_widget_set_background(GtkWidget * widget, LXPanel * p);
  *
  * Returns: %TRUE if launch was successful.
  */
-extern gboolean lxpanel_launch_path(LXPanel *panel, FmPath *path);
+extern gboolean lxpanel_launch_path(SimplePanel *panel, FmPath *path);
 
 /**
  * lxpanel_plugin_show_config_dialog
@@ -274,7 +274,7 @@ typedef enum {
  * Returns: (tranfer full): new created dialog widget.
  */
 /* Parameters: const char* name, gpointer ret_value, PluginConfType type, ....NULL */
-extern GtkWidget *lxpanel_generic_config_dlg(const char *title, LXPanel *panel,
+extern GtkWidget *lxpanel_generic_config_dlg(const char *title, SimplePanel *panel,
                                              GSourceFunc apply_func,
                                              GtkWidget *plugin,
                                              const char *name, ...);

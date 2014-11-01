@@ -74,7 +74,7 @@ typedef struct _tray_client {
 /* Private context for system tray plugin. */
 typedef struct _tray_plugin {
     GtkWidget * plugin;				/* Back pointer to Plugin */
-    LXPanel * panel;
+    SimplePanel * panel;
     TrayClient * client_list;			/* List of tray clients */
     BalloonMessage * incomplete_messages;	/* List of balloon messages for which we are awaiting data */
     BalloonMessage * messages;			/* List of balloon messages actively being displayed or waiting to be displayed */
@@ -634,7 +634,7 @@ tray_draw_box (GtkWidget *box,
 #endif
 
 /* Plugin constructor. */
-static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *tray_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     GtkWidget *p;
     resolve_atoms();
@@ -772,7 +772,7 @@ static void tray_destructor(gpointer user_data)
 }
 
 /* Callback when panel configuration changes. */
-static void tray_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
+static void tray_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
     /* Set orientation into the icon grid. */
     panel_icon_grid_set_geometry(PANEL_ICON_GRID(p), panel_get_orientation(panel),
@@ -784,7 +784,7 @@ static void tray_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
 FM_DEFINE_MODULE(lxpanel_gtk, tray)
 
 /* Plugin descriptor. */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("System Tray"),
     .description = N_("System tray"),
 

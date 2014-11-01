@@ -296,7 +296,7 @@ cpufreq_menu(cpufreq *cf){
 
 
 static  gboolean
-clicked(GtkWidget *widget, GdkEventButton *evt, LXPanel *panel)
+clicked(GtkWidget *widget, GdkEventButton *evt, SimplePanel *panel)
 {
     ENTER;
 
@@ -336,7 +336,7 @@ static gboolean update_tooltip(gpointer user_data)
     return _update_tooltip(user_data);
 }
 
-static GtkWidget *cpufreq_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *cpufreq_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     cpufreq *cf;
     //GtkWidget *button;
@@ -381,7 +381,7 @@ static gboolean applyConfig(gpointer user_data)
     return FALSE;
 }
 
-static GtkWidget *config(LXPanel *panel, GtkWidget *p, GtkWindow *parent)
+static GtkWidget *config(SimplePanel *panel, GtkWidget *p, GtkWindow *parent)
 {
     cpufreq *cf = lxpanel_plugin_get_data(p);
     return lxpanel_generic_config_dlg(_("CPUFreq frontend"), panel, applyConfig, p,
@@ -404,7 +404,7 @@ cpufreq_destructor(gpointer user_data)
 FM_DEFINE_MODULE(lxpanel_gtk, cpufreq)
 
 /* Plugin descriptor. */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("CPUFreq frontend"),
     .description = N_("Display CPU frequency and allow to change governors and frequency"),
 
