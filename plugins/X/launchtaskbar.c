@@ -201,13 +201,16 @@ struct LaunchTaskBarPlugin {
 };
 
 static gchar *launchtaskbar_css_normal = ".-panel-task-normal {\n"
-        "padding: 0px 2px 0px 2px;\n"
+        " -GtkWidget-focus-line-width: 1px;\n"
+        " -GtkWidget-focus-padding: 1px;\n"
+        "padding: 0px 0px 0px 0px;\n"
         "}\n";
 
 
 #define DRAG_ACTIVE_DELAY    1000
 #define TASK_WIDTH_MAX       200
 #define ALL_WORKSPACES       -1
+#define ICON_ONLY_EXTRA      2      /* Amount needed to have button lay out symmetrically */
 #define ICON_BUTTON_TRIM 4      /* Amount needed to have button remain on panel */
 
 static void launchtaskbar_destructor(gpointer user_data);
@@ -2794,7 +2797,7 @@ static void taskbar_update_style(LaunchTaskBarPlugin * tb)
 {
     panel_icon_grid_set_geometry(PANEL_ICON_GRID(tb->tb_icon_grid),
         panel_get_orientation(tb->panel),
-        ((tb->icons_only) ? tb->icon_size : tb->task_width_max),
+        ((tb->icons_only) ? tb->icon_size + ICON_ONLY_EXTRA : tb->task_width_max),
         tb->icon_size, tb->spacing, 0, panel_get_height(tb->panel));
 }
 
