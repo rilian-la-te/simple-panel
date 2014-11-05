@@ -290,7 +290,6 @@ static void lxpanel_init(PanelWindow *self)
     p->autohide = 0;
     p->visible = TRUE;
     p->height_when_hidden = 2;
-    p->transparent = 0;
     gdk_rgba_parse(&p->gtintcolor,"transparent");
     p->usefontcolor = 0;
     p->usefontsize = 0;
@@ -329,8 +328,6 @@ static void panel_normalize_configuration(Panel* p)
     }
     if (p->monitor < 0)
         p->monitor = 0;
-    if (p->background)
-        p->transparent = 0;
 }
 
 /****************************************************
@@ -455,7 +452,7 @@ void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
     GdkRGBA color;
     gboolean system = FALSE;
     gdk_rgba_parse(&color,"transparent");
-    if (p->background)
+    if (p->background == PANEL_BACKGROUND_CUSTOM_IMAGE)
 	{
 		/* User specified background pixmap. */
         if (p->background_file != NULL)
@@ -464,7 +461,7 @@ void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
             css = css_generate_background(p->background_file,color,FALSE);
         }
 	}
-	else if (p->transparent)
+    else if (p->background == PANEL_BACKGROUND_CUSTOM_COLOR)
 	{
 		/* User specified background color. */
         system = FALSE;
@@ -483,6 +480,14 @@ void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
     else if (system)
     {
         css_apply_with_class(widget,"","-lxpanel-background",system);
+    }
+    if (p->background == PANEL_BACKGROUND_GNOME)
+    {
+        gtk_style_context_add_class(gtk_widget_get_style_context(GTK_WIDGET(p->topgwin)),"gnome-panel-menu-bar");
+    }
+    else
+    {
+        gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(p->topgwin)),"gnome-panel-menu-bar");
     }
 }
 
@@ -1278,8 +1283,6 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         p->setstrut = i != 0;
     if (config_setting_lookup_int(cfg, "RoundCorners", &i))
         p->round_corners = i != 0;
-    if (config_setting_lookup_int(cfg, "transparent", &i))
-        p->transparent = i != 0;
     if (config_setting_lookup_int(cfg, "autohide", &i))
         p->autohide = i != 0;
     if (config_setting_lookup_int(cfg, "heightwhenhidden", &i))
@@ -1300,8 +1303,8 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         p->usefontsize = i != 0;
     if (config_setting_lookup_int(cfg, "fontsize", &i) && i > 0)
         p->fontsize = i;
-    if (config_setting_lookup_int(cfg, "background", &i))
-        p->background = i != 0;
+    if (config_setting_lookup_string(cfg, "background", &str))
+        p->background = str2num(background_pair, str, PANEL_BACKGROUND_GTK);
     if (config_setting_lookup_string(cfg, "backgroundfile", &str))
         p->background_file = g_strdup(str);
     config_setting_lookup_int(cfg, "iconsize", &p->icon_size);

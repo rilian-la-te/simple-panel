@@ -48,7 +48,6 @@ typedef enum {
 } PanelEdgeStrutType;
 typedef enum {
     PANEL_BACKGROUND_GTK=0,
-    PANEL_BACKGROUND_DARK,
     PANEL_BACKGROUND_GNOME,
     PANEL_BACKGROUND_CUSTOM_COLOR,
     PANEL_BACKGROUND_CUSTOM_IMAGE
@@ -88,6 +87,7 @@ struct _Panel {
     int allign, margin;
     GtkPositionType edge;
     GtkOrientation orientation;
+    PanelBackgroundType background;
     int widthtype, width;
     int heighttype, height;
     gint monitor;
@@ -104,8 +104,6 @@ struct _Panel {
     guint usefontcolor : 1;
     guint usefontsize : 1;
     guint fontsize;
-    guint transparent : 1;
-    guint background : 1;
     guint spacing;
 
     guint autohide : 1;
@@ -160,6 +158,7 @@ typedef struct {
 extern pair allign_pair[];
 extern pair edge_pair[];
 extern pair strut_pair[];
+extern pair background_pair[];
 extern pair bool_pair[];
 
 int str2num(pair *p, const gchar *str, int defval);

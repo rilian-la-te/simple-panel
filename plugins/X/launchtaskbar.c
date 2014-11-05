@@ -2844,6 +2844,27 @@ static gchar* taskbar_css_flat_generate(GtkWidget* w,LaunchTaskBarPlugin* tb){
     return returnie;
 }
 
+static void task_style_updated(GtkWidget* btn,gpointer* data)
+{
+//    LaunchTaskBarPlugin* tb = (LaunchTaskBarPlugin*) data;
+//    g_signal_handlers_block_by_func(btn,task_style_updated,data);
+//    if( tb->flat_button)
+//    {
+//        gchar* launchtaskbar_css_flat = taskbar_css_flat_generate(btn,tb);
+//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,"-panel-task-normal",TRUE);
+//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_flat,"-panel-task-flat",FALSE);
+//        g_free(launchtaskbar_css_flat);
+//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,TRUE);
+//    }
+//    else
+//    {
+//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,"-panel-task-normal",FALSE);
+//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,"-panel-task-flat",TRUE);
+//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,FALSE);
+//    }
+//    g_signal_handlers_unblock_by_func(btn,task_style_updated,data);
+}
+
 /* Update style on a task button when created or after a configuration change. */
 static void task_update_style(Task * tk, LaunchTaskBarPlugin * tb)
 {
@@ -2890,11 +2911,7 @@ static void task_build_gui(LaunchTaskBarPlugin * tb, Task * tk)
      *
      * Do not change event mask to gtk windows spawned by this gtk client
      * this breaks gtk internals */
-#if GTK_CHECK_VERSION(2, 24, 0)
     if (!gdk_x11_window_lookup_for_display(display, tk->win))
-#else
-    if (! gdk_window_lookup(tk->win))
-#endif
         XSelectInput(GDK_DISPLAY_XDISPLAY(display), tk->win,
                      PropertyChangeMask | StructureNotifyMask);
 
@@ -2914,6 +2931,7 @@ static void task_build_gui(LaunchTaskBarPlugin * tb, Task * tk)
     g_signal_connect_after(G_OBJECT (tk->button), "leave", G_CALLBACK(taskbar_button_leave), (gpointer) tk);
     g_signal_connect_after(G_OBJECT(tk->button), "scroll-event", G_CALLBACK(taskbar_button_scroll_event), (gpointer) tk);
     g_signal_connect(tk->button, "size-allocate", G_CALLBACK(taskbar_button_size_allocate), (gpointer) tk);
+    g_signal_connect(tk->button, "style-updated", G_CALLBACK(task_style_updated),(gpointer) tb);
 
     /* Create a box to contain the application icon and window title. */
     GtkWidget * container = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);

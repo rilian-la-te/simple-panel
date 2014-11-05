@@ -74,7 +74,7 @@ pair strut_pair[] = {
 
 pair background_pair[] = {
     { PANEL_BACKGROUND_GTK, "gtk-normal" },
-    { PANEL_BACKGROUND_DARK, "gtk-dark" },
+//    { PANEL_BACKGROUND_DARK, "gtk-dark" },
     { PANEL_BACKGROUND_GNOME, "gtk-gnome-panel" },
     { PANEL_BACKGROUND_CUSTOM_COLOR, "color" },
     { PANEL_BACKGROUND_CUSTOM_IMAGE, "image" },

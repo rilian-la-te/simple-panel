@@ -289,28 +289,23 @@ static void set_strut_type( GtkWidget *item, LXPanel* panel )
 
 /* FIXME: heighttype and spacing and RoundCorners */
 
-static void transparency_toggle( GtkWidget *b, Panel* p)
+static void set_background_type(GtkWidget* item, LXPanel* panel)
 {
-    GtkWidget* tr = (GtkWidget*)g_object_get_data(G_OBJECT(b), "tint_clr");
-    gboolean t;
+    Panel *p = panel->priv;
+    int type;
 
-    ENTER;
+    type = gtk_combo_box_get_active(GTK_COMBO_BOX(item));
+    if (p->background == type) /* not changed */
+        return;
 
-    t = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b));
-    gtk_widget_set_sensitive(tr, t);
-/*
-    gtk_widget_set_sensitive(tr_colorl, t);
-    gtk_widget_set_sensitive(tr_colorb, t);
-*/
-    /* Update background immediately. */
-    if (t&&!p->transparent) {
-        p->transparent = 1;
-        p->background = 0;
-        panel_update_background( p );
-        UPDATE_GLOBAL_INT(p, "transparent", p->transparent);
-        UPDATE_GLOBAL_INT(p, "background", p->background);
-    }
-    RET();
+    p->background = type;
+    GtkWidget* color = (GtkWidget*)g_object_get_data(G_OBJECT(item), "tint_clr" );
+    GtkWidget* image = (GtkWidget*)g_object_get_data(G_OBJECT(item), "img_file" );
+    gtk_widget_set_sensitive(color,p->background == PANEL_BACKGROUND_CUSTOM_COLOR);
+    gtk_widget_set_sensitive(image,p->background == PANEL_BACKGROUND_CUSTOM_IMAGE);
+    panel_update_background(p);
+    _panel_set_panel_configuration_changed(panel);
+    UPDATE_GLOBAL_STRING(p, "background", num2str(background_pair, type, "gtk-normal"));
 }
 
 static void background_file_helper(Panel * p, GtkWidget * toggle, GtkFileChooser * file_chooser)
@@ -321,50 +316,14 @@ static void background_file_helper(Panel * p, GtkWidget * toggle, GtkFileChooser
         g_free(p->background_file);
         p->background_file = file;
         UPDATE_GLOBAL_STRING(p, "backgroundfile", p->background_file);
+        panel_update_background(p);
     }
-
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle)))
-    {
-        if ( ! p->background)
-        {
-            p->transparent = FALSE;
-            p->background = TRUE;
-            panel_update_background(p);
-            UPDATE_GLOBAL_INT(p, "transparent", p->transparent);
-            UPDATE_GLOBAL_INT(p, "background", p->background);
-        }
-    }
-}
-
-static void background_toggle( GtkWidget *b, Panel* p)
-{
-    GtkWidget * fc = (GtkWidget*) g_object_get_data(G_OBJECT(b), "img_file");
-    gtk_widget_set_sensitive(fc, gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b)));
-    background_file_helper(p, b, GTK_FILE_CHOOSER(fc));
 }
 
 static void background_changed(GtkFileChooser *file_chooser,  Panel* p )
 {
     GtkWidget * btn = GTK_WIDGET(g_object_get_data(G_OBJECT(file_chooser), "bg_image"));
     background_file_helper(p, btn, file_chooser);
-}
-
-static void
-background_disable_toggle( GtkWidget *b, Panel* p )
-{
-    ENTER;
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b))) {
-        if (p->background!=0||p->transparent!=0) {
-            p->background = 0;
-            p->transparent = 0;
-            /* Update background immediately. */
-            panel_update_background( p );
-            UPDATE_GLOBAL_INT(p, "transparent", p->transparent);
-            UPDATE_GLOBAL_INT(p, "background", p->background);
-        }
-    }
-
-    RET();
 }
 
 static void
@@ -1094,33 +1053,22 @@ void panel_configure( LXPanel* panel, int sel_page )
     /* transparancy */
     tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
     gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
-    if ( ! p->transparent )
+    if (p->background != PANEL_BACKGROUND_CUSTOM_COLOR )
         gtk_widget_set_sensitive( w, FALSE );
     g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
 
     /* background */
     {
-        GtkWidget* none, *trans, *img;
+        GtkWidget* type_list;
         GtkIconInfo* info;
-        none = (GtkWidget*)gtk_builder_get_object( builder, "bg_none" );
-        trans = (GtkWidget*)gtk_builder_get_object( builder, "bg_transparency" );
-        img = (GtkWidget*)gtk_builder_get_object( builder, "bg_image" );
-
-        g_object_set_data(G_OBJECT(trans), "tint_clr", tint_clr);
-
-        if (p->background)
-            gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(img), TRUE);
-        else if (p->transparent)
-            gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(trans), TRUE);
-        else
-            gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(none), TRUE);
-
-        g_signal_connect(none, "toggled", G_CALLBACK(background_disable_toggle), p);
-        g_signal_connect(trans, "toggled", G_CALLBACK(transparency_toggle), p);
-        g_signal_connect(img, "toggled", G_CALLBACK(background_toggle), p);
+        type_list = (GtkWidget*)gtk_builder_get_object( builder, "background_type_combo" );
+        update_opt_menu( type_list, p->background);
+        g_object_set_data(G_OBJECT(type_list), "tint_clr", tint_clr);
 
         w = (GtkWidget*)gtk_builder_get_object( builder, "img_file" );
-        g_object_set_data(G_OBJECT(img), "img_file", w);
+        g_object_set_data(G_OBJECT(type_list), "img_file", w);
+        g_signal_connect( type_list, "changed",
+                         G_CALLBACK(set_background_type), panel);
         if (p->background_file != NULL)
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), p->background_file);
         else if ((info = gtk_icon_theme_lookup_icon(p->icon_theme, "lxpanel-background", 0, 0)))
@@ -1129,9 +1077,9 @@ void panel_configure( LXPanel* panel, int sel_page )
             g_object_unref(info);
         }
 
-        if (!p->background)
+        if (p->background != PANEL_BACKGROUND_CUSTOM_IMAGE)
             gtk_widget_set_sensitive( w, FALSE);
-        g_object_set_data( G_OBJECT(w), "bg_image", img );
+        g_object_set_data( G_OBJECT(w), "bg_image", type_list );
         g_signal_connect( w, "file-set", G_CALLBACK (background_changed), p);
     }
 
