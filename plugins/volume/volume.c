@@ -42,7 +42,7 @@ static GtkWidget *curr_image;
 static gboolean skip_botton1_event;
 
 typedef struct {
-    LXPanel *panel;
+    SimplePanel *panel;
     GtkWidget *dlg;
 } volume_t;
 
@@ -154,7 +154,7 @@ static void on_mouse_scroll (GtkWidget* widget, GdkEventScroll* evt, volume_t *v
 	}
 }
 
-static gboolean on_button_press (GtkWidget* widget, GdkEventButton* evt, LXPanel* p)
+static gboolean on_button_press (GtkWidget* widget, GdkEventButton* evt, SimplePanel* p)
 {
 	volume_t *vol = lxpanel_plugin_get_data(widget);
 
@@ -229,7 +229,7 @@ static gboolean on_button_press (GtkWidget* widget, GdkEventButton* evt, LXPanel
 	return FALSE;
 }
 
-static GtkWidget *volume_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *volume_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     volume_t *vol;
     GtkWidget *p;
@@ -282,7 +282,7 @@ _error:
 
 FM_DEFINE_MODULE(lxpanel_gtk, volume)
 
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Volume Control"),
     .description = "Display and control volume",
 

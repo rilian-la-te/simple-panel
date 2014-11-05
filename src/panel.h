@@ -26,29 +26,29 @@ G_BEGIN_DECLS
 
 #define LX_TYPE_PANEL                  (lxpanel_get_type())
 #define LXPANEL(obj)                   (G_TYPE_CHECK_INSTANCE_CAST((obj), \
-                                        LX_TYPE_PANEL, LXPanel))
+                                        LX_TYPE_PANEL, SimplePanel))
 #define LXPANEL_CLASS(klass)           (G_TYPE_CHECK_CLASS_CAST((klass), \
-                                        LX_TYPE_PANEL, LXPanelClass))
+                                        LX_TYPE_PANEL, SimplePanelClass))
 #define LX_IS_PANEL(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
                                         LX_TYPE_PANEL))
 
 extern GType lxpanel_get_type          (void) G_GNUC_CONST;
 
 /* A little trick to be compatible with some themes which rely on the
-   PanelToplevel class, so we use LXPanel as alias for PanelToplevel */
-typedef struct _LXPanel LXPanel;
-typedef struct _LXPanel PanelWindow;
-typedef struct _LXPanelClass PanelWindowClass;
+   PanelToplevel class, so we use SimplePanel as alias for PanelToplevel */
+typedef struct _SimplePanel SimplePanel;
+typedef struct _SimplePanel PanelWindow;
+typedef struct _SimplePanelClass PanelWindowClass;
 
 typedef struct _Panel Panel;
 
-struct _LXPanel
+struct _SimplePanel
 {
     GtkWindow window;
     Panel *priv;
 };
 
-struct _LXPanelClass
+struct _SimplePanelClass
 {
     GtkWindowClass parent_class;
 };
@@ -73,7 +73,7 @@ extern void panel_apply_icon(GtkWindow *w);
  * Changes @label to contain @text with appropriate attributes using the
  * panel @p settings.
  */
-extern void lxpanel_draw_label_text(LXPanel * p, GtkWidget * label, const char * text,
+extern void lxpanel_draw_label_text(SimplePanel * p, GtkWidget * label, const char * text,
                                     gboolean bold, float custom_size_factor,
                                     gboolean custom_color);
 
@@ -86,7 +86,7 @@ extern void lxpanel_draw_label_text(LXPanel * p, GtkWidget * label, const char *
  * Applies icon from @file to @image in accordance with icon size setting
  * on panel @p.
  */
-extern void lxpanel_image_set_from_file(LXPanel * p, GtkWidget * image, const char * file);
+extern void lxpanel_image_set_from_file(SimplePanel * p, GtkWidget * image, const char * file);
 
 /**
  * lxpanel_image_set_icon_theme
@@ -97,7 +97,7 @@ extern void lxpanel_image_set_from_file(LXPanel * p, GtkWidget * image, const ch
  * Applies icon size and theme from settings of @p to @image using @icon
  * name to select icon.
  */
-extern gboolean lxpanel_image_set_icon_theme(LXPanel * p, GtkWidget * image, const gchar * icon);
+extern gboolean lxpanel_image_set_icon_theme(SimplePanel * p, GtkWidget * image, const gchar * icon);
 
 /**
  * lxpanel_config_save
@@ -105,9 +105,10 @@ extern gboolean lxpanel_image_set_icon_theme(LXPanel * p, GtkWidget * image, con
  *
  * Immediately saves current configuration for panel @p.
  */
-void lxpanel_config_save(LXPanel *p); /* defined in configurator.c */
+void lxpanel_config_save(SimplePanel *p); /* defined in configurator.c */
 
 /* Accessors APIs for Panel* */
+<<<<<<< HEAD
 extern GtkOrientation panel_get_orientation(LXPanel *panel);
 extern gint panel_get_icon_size(LXPanel *panel);
 extern gint panel_get_height(LXPanel *panel);
@@ -118,6 +119,21 @@ extern GtkPositionType panel_get_edge(LXPanel *panel);
 extern gboolean panel_is_dynamic(LXPanel *panel);
 extern GtkWidget *panel_box_new(LXPanel *panel, gint spacing);
 extern GtkWidget *panel_separator_new(LXPanel *panel);
+=======
+extern GtkOrientation panel_get_orientation(SimplePanel *panel);
+extern gint panel_get_icon_size(SimplePanel *panel);
+extern gint panel_get_height(SimplePanel *panel);
+extern gint panel_get_monitor(SimplePanel *panel);
+extern GtkStyle *panel_get_defstyle(SimplePanel *panel);
+extern GtkIconTheme *panel_get_icon_theme(SimplePanel *panel);
+extern gboolean panel_is_at_bottom(SimplePanel *panel);
+extern gboolean panel_is_at_top(SimplePanel *panel);
+extern gboolean panel_is_at_left(SimplePanel *panel);
+extern gboolean panel_is_at_right(SimplePanel *panel);
+extern gboolean panel_is_dynamic(SimplePanel *panel);
+extern GtkWidget *panel_box_new(SimplePanel *panel, gint spacing);
+extern GtkWidget *panel_separator_new(SimplePanel *panel);
+>>>>>>> 978346c59d7570a07308180ea49d4e96e06a231c
 
 G_END_DECLS
 

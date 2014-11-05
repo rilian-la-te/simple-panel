@@ -62,7 +62,7 @@ static int xkb_error_base = 0;
 
 /* Private context for keyboard LED plugin. */
 typedef struct {
-    LXPanel * panel;				/* Back pointer to panel */
+    SimplePanel * panel;				/* Back pointer to panel */
     config_setting_t *settings;
     GtkWidget *indicator_image[3];		/* Image for each indicator */
     unsigned int current_state;			/* Current LED state, bit encoded */
@@ -128,7 +128,7 @@ static GdkFilterReturn kbled_event_filter(GdkXEvent * gdkxevent, GdkEvent * even
 }
 
 /* Plugin constructor. */
-static GtkWidget *kbled_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *kbled_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     KeyboardLEDPlugin * kl = g_new0(KeyboardLEDPlugin, 1);
@@ -222,7 +222,7 @@ static gboolean kbled_apply_configuration(gpointer user_data)
 }
 
 /* Callback when the configuration dialog is to be shown. */
-static GtkWidget *kbled_configure(LXPanel *panel, GtkWidget *p)
+static GtkWidget *kbled_configure(SimplePanel *panel, GtkWidget *p)
 {
     KeyboardLEDPlugin * kl = lxpanel_plugin_get_data(p);
     GtkWidget * dlg = lxpanel_generic_config_dlg(_("Keyboard LED"),
@@ -236,7 +236,7 @@ static GtkWidget *kbled_configure(LXPanel *panel, GtkWidget *p)
 }
 
 /* Callback when panel configuration changes. */
-static void kbled_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
+static void kbled_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
     /* Set orientation into the icon grid. */
     KeyboardLEDPlugin * kl = lxpanel_plugin_get_data(p);
@@ -255,7 +255,7 @@ static void kbled_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
 FM_DEFINE_MODULE(lxpanel_gtk, kbled)
 
 /* Plugin descriptor. */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Keyboard LED"),
     .description = N_("Indicators for CapsLock, NumLock, and ScrollLock keys"),
 

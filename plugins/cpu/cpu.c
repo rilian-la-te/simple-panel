@@ -229,7 +229,7 @@ static gboolean configure_event(GtkWidget * widget, GdkEventConfigure * event, C
 //}
 
 /* Plugin constructor. */
-static GtkWidget *cpu_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *cpu_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     CPUPlugin * c = g_new0(CPUPlugin, 1);
@@ -278,7 +278,7 @@ static void cpu_destructor(gpointer user_data)
 FM_DEFINE_MODULE(lxpanel_gtk, cpu)
 
 /* Plugin descriptor. */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("CPU Usage Monitor"),
     .description = N_("Display CPU usage"),
     .new_instance = cpu_constructor,

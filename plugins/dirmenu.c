@@ -35,7 +35,7 @@ typedef struct _directory_name {
 
 /* Private context for directory menu plugin. */
 typedef struct {
-    LXPanel * panel; /* The panel and settings are required to apply config */
+    SimplePanel * panel; /* The panel and settings are required to apply config */
     config_setting_t * settings;
     char * image;			/* Icon for top level widget */
     char * path;			/* Top level path for widget */
@@ -234,7 +234,7 @@ static void dirmenu_show_menu(GtkWidget * widget, DirMenuPlugin * dm, int btn, g
 }
 
 /* Handler for button-press-event on top level widget. */
-static gboolean dirmenu_button_press_event(GtkWidget * widget, GdkEventButton * event, LXPanel * p)
+static gboolean dirmenu_button_press_event(GtkWidget * widget, GdkEventButton * event, SimplePanel * p)
 {
     DirMenuPlugin * dm = lxpanel_plugin_get_data(widget);
 
@@ -250,7 +250,7 @@ static gboolean dirmenu_button_press_event(GtkWidget * widget, GdkEventButton * 
 }
 
 /* Plugin constructor. */
-static GtkWidget *dirmenu_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *dirmenu_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     DirMenuPlugin * dm = g_new0(DirMenuPlugin, 1);
@@ -347,7 +347,7 @@ static gboolean dirmenu_apply_configuration(gpointer user_data)
 }
 
 /* Callback when the configuration dialog is to be shown. */
-static GtkWidget *dirmenu_configure(LXPanel *panel, GtkWidget *p)
+static GtkWidget *dirmenu_configure(SimplePanel *panel, GtkWidget *p)
 {
     DirMenuPlugin * dm = lxpanel_plugin_get_data(p);
     return lxpanel_generic_config_dlg(_("Directory Menu"),
@@ -359,13 +359,13 @@ static GtkWidget *dirmenu_configure(LXPanel *panel, GtkWidget *p)
 }
 
 /* Callback when panel configuration changes. */
-static void dirmenu_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
+static void dirmenu_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
     dirmenu_apply_configuration(p);
 }
 
 /* Plugin descriptor. */
-LXPanelPluginInit lxpanel_static_plugin_dirmenu = {
+SimplePanelPluginInit lxpanel_static_plugin_dirmenu = {
     .name = N_("Directory Menu"),
     .description = N_("Browse directory tree via menu (Author = PCMan)"),
 

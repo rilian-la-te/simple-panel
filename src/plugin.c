@@ -45,14 +45,14 @@ GQuark lxpanel_plugin_qdata;
 GQuark lxpanel_plugin_qsize;
 static GHashTable *_all_types = NULL;
 
-static inline const LXPanelPluginInit *_find_plugin(const char *name)
+static inline const SimplePanelPluginInit *_find_plugin(const char *name)
 {
     return g_hash_table_lookup(_all_types, name);
 }
 
-static GtkWidget *_old_plugin_config(LXPanel *panel, GtkWidget *instance)
+static GtkWidget *_old_plugin_config(SimplePanel *panel, GtkWidget *instance)
 {
-    const LXPanelPluginInit *init = PLUGIN_CLASS(instance);
+    const SimplePanelPluginInit *init = PLUGIN_CLASS(instance);
     Plugin * plugin;
 
     g_return_val_if_fail(init != NULL && init->new_instance == NULL, NULL);
@@ -62,9 +62,9 @@ static GtkWidget *_old_plugin_config(LXPanel *panel, GtkWidget *instance)
     return NULL;
 }
 
-static void _old_plugin_reconfigure(LXPanel *panel, GtkWidget *instance)
+static void _old_plugin_reconfigure(SimplePanel *panel, GtkWidget *instance)
 {
-    const LXPanelPluginInit *init = PLUGIN_CLASS(instance);
+    const SimplePanelPluginInit *init = PLUGIN_CLASS(instance);
     Plugin * plugin;
 
     g_return_if_fail(init != NULL && init->new_instance == NULL);
@@ -76,7 +76,7 @@ static void _old_plugin_reconfigure(LXPanel *panel, GtkWidget *instance)
 /* Register a PluginClass. */
 static void register_plugin_class(PluginClass * pc, gboolean dynamic)
 {
-    LXPanelPluginInit *init = g_new0(LXPanelPluginInit, 1);
+    SimplePanelPluginInit *init = g_new0(SimplePanelPluginInit, 1);
     init->_reserved1 = pc;
     init->name = pc->name;
     init->description = pc->description;
@@ -139,7 +139,7 @@ static void plugin_class_unref(PluginClass * pc)
 }
 
 /* Recursively set the background of all widgets on a panel background configuration change. */
-void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
+void plugin_widget_set_background(GtkWidget * w, SimplePanel * panel)
 {
     GdkRGBA transparent;
     gdk_rgba_parse(&transparent,"transparent");
@@ -152,7 +152,7 @@ void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
 }
 /* Handler for "button_press_event" signal with Plugin as parameter.
  * External so can be used from a plugin. */
-static gboolean lxpanel_plugin_button_press_event(GtkWidget *plugin, GdkEventButton *event, LXPanel *panel)
+static gboolean lxpanel_plugin_button_press_event(GtkWidget *plugin, GdkEventButton *event, SimplePanel *panel)
 {
     if (event->button == 3 && /* right button */
         (event->state & gtk_accelerator_get_default_mod_mask()) == 0) /* no key */
@@ -165,7 +165,7 @@ static gboolean lxpanel_plugin_button_press_event(GtkWidget *plugin, GdkEventBut
 }
 
 /* Helper for position-calculation callback for popup menus. */
-void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * near, GtkWidget * popup, gint * px, gint * py)
+void lxpanel_plugin_popup_set_position_helper(SimplePanel * p, GtkWidget * near, GtkWidget * popup, gint * px, gint * py)
 {
     gint x, y;
     GtkAllocation allocation;
@@ -252,15 +252,15 @@ static gboolean _open_dir_in_file_manager(GAppLaunchContext* ctx, GList* folder_
     return ret;
 }
 
-gboolean lxpanel_launch_path(LXPanel *panel, FmPath *path)
+gboolean lxpanel_launch_path(SimplePanel *panel, FmPath *path)
 {
     return fm_launch_path_simple(NULL, NULL, path, _open_dir_in_file_manager, NULL);
 }
 
 void lxpanel_plugin_show_config_dialog(GtkWidget* plugin)
 {
-    const LXPanelPluginInit *init = PLUGIN_CLASS(plugin);
-    LXPanel *panel = PLUGIN_PANEL(plugin);
+    const SimplePanelPluginInit *init = PLUGIN_CLASS(plugin);
+    SimplePanel *panel = PLUGIN_PANEL(plugin);
     GtkWidget *dlg = panel->priv->plugin_pref_dialog;
 
     if (dlg && g_object_get_data(G_OBJECT(dlg), "generic-config-plugin") == plugin)
@@ -274,7 +274,7 @@ void lxpanel_plugin_show_config_dialog(GtkWidget* plugin)
 static GRecMutex _mutex;
 
 #ifndef DISABLE_PLUGINS_LOADING
-FM_MODULE_DEFINE_TYPE(lxpanel_gtk, LXPanelPluginInit, 1)
+FM_MODULE_DEFINE_TYPE(lxpanel_gtk, SimplePanelPluginInit, 1)
 
 static gboolean fm_module_callback_lxpanel_gtk(const char *name, gpointer init, int ver)
 {
@@ -286,10 +286,10 @@ static gboolean fm_module_callback_lxpanel_gtk(const char *name, gpointer init, 
 void _prepare_modules(void)
 {
     _all_types = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-    lxpanel_plugin_qdata = g_quark_from_static_string("LXPanel::plugin-data");
-    lxpanel_plugin_qinit = g_quark_from_static_string("LXPanel::plugin-init");
-    lxpanel_plugin_qconf = g_quark_from_static_string("LXPanel::plugin-conf");
-    lxpanel_plugin_qsize = g_quark_from_static_string("LXPanel::plugin-size");
+    lxpanel_plugin_qdata = g_quark_from_static_string("SimplePanel::plugin-data");
+    lxpanel_plugin_qinit = g_quark_from_static_string("SimplePanel::plugin-init");
+    lxpanel_plugin_qconf = g_quark_from_static_string("SimplePanel::plugin-conf");
+    lxpanel_plugin_qsize = g_quark_from_static_string("SimplePanel::plugin-size");
 #ifndef DISABLE_PLUGINS_LOADING
     fm_modules_add_directory(PACKAGE_LIB_DIR "/simple-panel/plugins");
     fm_module_register_lxpanel_gtk();
@@ -304,7 +304,7 @@ void _unload_modules(void)
     g_hash_table_iter_init(&iter, _all_types);
     while(g_hash_table_iter_next(&iter, &key, &val))
     {
-        register const LXPanelPluginInit *init = val;
+        register const SimplePanelPluginInit *init = val;
         if (init->new_instance == NULL) /* old type of plugin */
         {
             plugin_class_unref(init->_reserved1);
@@ -317,9 +317,9 @@ void _unload_modules(void)
 #endif
 }
 
-gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPluginInit *init)
+gboolean lxpanel_register_plugin_type(const char *name, const SimplePanelPluginInit *init)
 {
-    const LXPanelPluginInit *data;
+    const SimplePanelPluginInit *data;
 
     /* validate it */
     if (init->new_instance == NULL || name == NULL || name[0] == '\0')
@@ -337,7 +337,7 @@ gboolean lxpanel_register_plugin_type(const char *name, const LXPanelPluginInit 
     return (data == NULL);
 }
 
-static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, LXPanel *p)
+static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, SimplePanel *p)
 {
     GdkRectangle *alloc;
 
@@ -351,9 +351,9 @@ static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, LXPane
 //    _queue_panel_calculate_size(p);
 }
 
-GtkWidget *lxpanel_add_plugin(LXPanel *p, const char *name, config_setting_t *cfg, gint at)
+GtkWidget *lxpanel_add_plugin(SimplePanel *p, const char *name, config_setting_t *cfg, gint at)
 {
-    const LXPanelPluginInit *init;
+    const SimplePanelPluginInit *init;
     GtkWidget *widget;
     config_setting_t *s, *pconf;
     gint expand, padding = 0, border = 0, i;

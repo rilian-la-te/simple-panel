@@ -52,7 +52,7 @@
 typedef gint (*GetTempFunc)(char const *);
 
 typedef struct thermal {
-    LXPanel *panel;
+    SimplePanel *panel;
     config_setting_t *settings;
     GtkWidget *namew;
     GString *tip;
@@ -490,7 +490,7 @@ thermal_destructor(gpointer user_data)
 }
 
 static GtkWidget *
-thermal_constructor(LXPanel *panel, config_setting_t *settings)
+thermal_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     thermal *th;
     GtkWidget *p;
@@ -548,7 +548,7 @@ thermal_constructor(LXPanel *panel, config_setting_t *settings)
     RET(p);
 }
 
-static GtkWidget *config(LXPanel *panel, GtkWidget *p)
+static GtkWidget *config(SimplePanel *panel, GtkWidget *p)
 {
     ENTER;
 
@@ -571,7 +571,7 @@ static GtkWidget *config(LXPanel *panel, GtkWidget *p)
 
 FM_DEFINE_MODULE(lxpanel_gtk, thermal)
 
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Temperature Monitor"),
     .description = N_("Display system temperature"),
 

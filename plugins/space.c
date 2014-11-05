@@ -24,7 +24,7 @@
 
 /* Private context for space plugin. */
 typedef struct {
-    LXPanel *panel; /* The panel and settings are required to apply config */
+    SimplePanel *panel; /* The panel and settings are required to apply config */
     config_setting_t *settings;
     int size;				/* Size of spacer */
 } SpacePlugin;
@@ -32,7 +32,7 @@ typedef struct {
 static gboolean space_apply_configuration(gpointer user_data);
 
 /* Plugin constructor. */
-static GtkWidget *space_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *space_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     SpacePlugin * sp = g_new0(SpacePlugin, 1);
@@ -78,7 +78,7 @@ static gboolean space_apply_configuration(gpointer user_data)
 }
 
 /* Callback when the configuration dialog is to be shown. */
-static GtkWidget *space_configure(LXPanel *panel, GtkWidget *instance)
+static GtkWidget *space_configure(SimplePanel *panel, GtkWidget *instance)
 {
     SpacePlugin * sp = lxpanel_plugin_get_data(instance);
     GtkWidget * dlg;
@@ -91,7 +91,7 @@ static GtkWidget *space_configure(LXPanel *panel, GtkWidget *instance)
 }
 
 /* Plugin descriptor. */
-LXPanelPluginInit lxpanel_static_plugin_space = {
+SimplePanelPluginInit lxpanel_static_plugin_space = {
     .name = N_("Spacer"),
     .description = N_("Allocate space"),
 

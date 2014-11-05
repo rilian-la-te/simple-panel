@@ -78,7 +78,7 @@ static void on_response( GtkDialog* dlg, gint response, netstatus *ns )
     }
 }
 
-static gboolean on_button_press( GtkWidget* widget, GdkEventButton* evt, LXPanel *p )
+static gboolean on_button_press( GtkWidget* widget, GdkEventButton* evt, SimplePanel *p )
 {
     NetstatusIface* iface;
     netstatus *ns = lxpanel_plugin_get_data(widget);
@@ -102,7 +102,7 @@ static gboolean on_button_press( GtkWidget* widget, GdkEventButton* evt, LXPanel
 }
 
 static GtkWidget *
-netstatus_constructor(LXPanel *panel, config_setting_t *settings)
+netstatus_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     netstatus *ns;
     NetstatusIface* iface;
@@ -145,7 +145,7 @@ static gboolean apply_config(gpointer user_data)
     return FALSE;
 }
 
-static GtkWidget *netstatus_config(LXPanel *panel, GtkWidget *p)
+static GtkWidget *netstatus_config(SimplePanel *panel, GtkWidget *p)
 {
     GtkWidget* dlg;
     netstatus *ns = lxpanel_plugin_get_data(p);
@@ -160,7 +160,7 @@ static GtkWidget *netstatus_config(LXPanel *panel, GtkWidget *p)
 
 FM_DEFINE_MODULE(lxpanel_gtk, netstatus)
 
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Network Status Monitor"),
     .description = N_("Monitor network status"),
 

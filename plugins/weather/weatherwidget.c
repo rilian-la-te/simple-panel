@@ -118,7 +118,7 @@ struct _GtkWeatherPrivate
   gpointer    previous_location;
   gpointer    location;
   gpointer    forecast;
-  LXPanel* panel;
+  SimplePanel* panel;
 
   /* Data for location and forecast retrieval threads */
   LocationThreadData location_data;
@@ -236,7 +236,7 @@ gtk_weather_get_type(void)
  * @return A new instance of this widget type.
  */
 GtkWidget *
-gtk_weather_new(LXPanel* panel)
+gtk_weather_new(SimplePanel* panel)
 {
   GObject * object = g_object_new(gtk_weather_get_type(), NULL);
 

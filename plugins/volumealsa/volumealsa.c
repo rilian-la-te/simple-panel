@@ -37,7 +37,7 @@ typedef struct {
 
     /* Graphics. */
     GtkWidget * plugin;				/* Back pointer to the widget */
-    LXPanel * panel;				/* Back pointer to panel */
+    SimplePanel * panel;				/* Back pointer to panel */
     config_setting_t * settings;		/* Plugin settings */
     GtkWidget * tray_icon;			/* Displayed image */
     GtkWidget * popup_window;			/* Top level window for popup */
@@ -366,7 +366,7 @@ static void volumealsa_update_display(VolumeALSAPlugin * vol)
 
 
 /* Handler for "button-press-event" signal on main widget. */
-static gboolean volumealsa_button_press_event(GtkWidget * widget, GdkEventButton * event, LXPanel * panel)
+static gboolean volumealsa_button_press_event(GtkWidget * widget, GdkEventButton * event, SimplePanel * panel)
 {
     VolumeALSAPlugin * vol = lxpanel_plugin_get_data(widget);
 
@@ -525,7 +525,7 @@ static void volumealsa_build_popup_window(GtkWidget *p)
 }
 
 /* Plugin constructor. */
-static GtkWidget *volumealsa_constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget *volumealsa_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     VolumeALSAPlugin * vol = g_new0(VolumeALSAPlugin, 1);
@@ -586,7 +586,7 @@ static void volumealsa_destructor(gpointer user_data)
 
 /* Callback when the configuration dialog is to be shown. */
 
-static GtkWidget *volumealsa_configure(LXPanel *panel, GtkWidget *p)
+static GtkWidget *volumealsa_configure(SimplePanel *panel, GtkWidget *p)
 {
     VolumeALSAPlugin * vol = lxpanel_plugin_get_data(p);
     char *path = NULL;
@@ -649,7 +649,7 @@ static GtkWidget *volumealsa_configure(LXPanel *panel, GtkWidget *p)
 }
 
 /* Callback when panel configuration changes. */
-static void volumealsa_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
+static void volumealsa_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
     /* Do a full redraw. */
     volumealsa_update_display(lxpanel_plugin_get_data(p));
@@ -658,7 +658,7 @@ static void volumealsa_panel_configuration_changed(LXPanel *panel, GtkWidget *p)
 FM_DEFINE_MODULE(lxpanel_gtk, volumealsa)
 
 /* Plugin descriptor. */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Volume Control"),
     .description = N_("Display and control volume for ALSA"),
 

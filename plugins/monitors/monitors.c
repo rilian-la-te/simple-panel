@@ -121,7 +121,7 @@ typedef void (*tooltip_update_func) (Monitor *);
 
 /* Our plugin */
 typedef struct {
-    LXPanel *panel;
+    SimplePanel *panel;
     config_setting_t *settings;
     Monitor  *monitors[N_MONITORS];          /* Monitors                      */
     int      displayed_monitors[N_MONITORS]; /* Booleans                      */
@@ -486,7 +486,7 @@ expose_event(GtkWidget * widget, GdkEventExpose * event, Monitor *m)
 }
 
 
-static gboolean monitors_button_press_event(GtkWidget* widget, GdkEventButton* evt, LXPanel *panel)
+static gboolean monitors_button_press_event(GtkWidget* widget, GdkEventButton* evt, SimplePanel *panel)
 {
     MonitorsPlugin* mp = lxpanel_plugin_get_data(widget);
 
@@ -603,7 +603,7 @@ monitors_add_monitor (GtkWidget *p, MonitorsPlugin *mp, update_func update,
 }
 
 static GtkWidget *
-monitors_constructor(LXPanel *panel, config_setting_t *settings)
+monitors_constructor(SimplePanel *panel, config_setting_t *settings)
 {
     ENTER;
     int i;
@@ -684,7 +684,7 @@ monitors_destructor(gpointer user_data)
 
 
 static GtkWidget *
-monitors_config (LXPanel *panel, GtkWidget *p)
+monitors_config (SimplePanel *panel, GtkWidget *p)
 {
     ENTER;
 
@@ -777,7 +777,7 @@ start:
 
 FM_DEFINE_MODULE(lxpanel_gtk, monitors)
 
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Resource monitors"),
     .description = N_("Display monitors (CPU, RAM)"),
     .new_instance = monitors_constructor,

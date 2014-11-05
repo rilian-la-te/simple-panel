@@ -1,5 +1,5 @@
 /*
- * ACPI battery monitor plugin for LXPanel
+ * ACPI battery monitor plugin for SimplePanel
  *
  * Copyright (C) 2007 by Greg McNew <gmcnew@gmail.com>
  * Copyright (C) 2008 by Hong Jen Yee <pcman.tw@gmail.com>
@@ -87,7 +87,7 @@ typedef struct {
     battery* b;
     gboolean has_ac_adapter;
     gboolean show_extended_information;
-    LXPanel *panel;
+    SimplePanel *panel;
     config_setting_t *settings;
 } lx_battery;
 
@@ -341,7 +341,7 @@ static int update_timout(lx_battery *lx_b) {
 
 /* An update will be performed whenever the user clicks on the charge bar */
 static gboolean buttonPressEvent(GtkWidget *p, GdkEventButton *event,
-                                 LXPanel *panel)
+                                 SimplePanel *panel)
 {
     lx_battery *lx_b = lxpanel_plugin_get_data(p);
 
@@ -412,7 +412,7 @@ static gint draw(GtkWidget *widget, GdkEventExpose *event, lx_battery *lx_b) {
 }
 
 
-static GtkWidget * constructor(LXPanel *panel, config_setting_t *settings)
+static GtkWidget * constructor(SimplePanel *panel, config_setting_t *settings)
 {
     ENTER;
 
@@ -561,7 +561,7 @@ destructor(gpointer data)
 }
 
 
-static void orientation(LXPanel *panel, GtkWidget *p) {
+static void orientation(SimplePanel *panel, GtkWidget *p) {
 
     ENTER;
 
@@ -633,7 +633,7 @@ static gboolean applyConfig(gpointer user_data)
 }
 
 
-static GtkWidget *config(LXPanel *panel, GtkWidget *p) {
+static GtkWidget *config(SimplePanel *panel, GtkWidget *p) {
     lx_battery *b = lxpanel_plugin_get_data(p);
     return lxpanel_generic_config_dlg(_("Battery Monitor"),
             panel, applyConfig, p,
@@ -655,7 +655,7 @@ static GtkWidget *config(LXPanel *panel, GtkWidget *p) {
 FM_DEFINE_MODULE(lxpanel_gtk, batt)
 
 /* Plugin descriptor. */
-LXPanelPluginInit fm_module_init_lxpanel_gtk = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name        = N_("Battery Monitor"),
     .description = N_("Display battery status using ACPI"),
 
