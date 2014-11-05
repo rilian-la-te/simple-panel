@@ -34,10 +34,25 @@
  *   Definitions used by lxpanel main code internally */
 
 /* Extracted from panel.h */
-enum { ALLIGN_NONE, ALLIGN_LEFT, ALLIGN_CENTER, ALLIGN_RIGHT  };
-enum { EDGE_NONE=0, EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, EDGE_BOTTOM };
-enum { WIDTH_NONE, WIDTH_REQUEST, WIDTH_PIXEL, WIDTH_PERCENT };
-enum { HEIGHT_NONE, HEIGHT_PIXEL, HEIGHT_REQUEST };
+typedef enum {
+    PANEL_ALLIGN_NONE=0,
+    PANEL_ALLIGN_LEFT,
+    PANEL_ALLIGN_CENTER,
+    PANEL_ALLIGN_RIGHT
+} PanelAllign;
+typedef enum {
+    STRUT_FILL=0,
+    STRUT_DYNAMIC,
+    STRUT_PIXEL,
+    STRUT_PERCENT
+} PanelEdgeStrutType;
+typedef enum {
+    PANEL_BACKGROUND_GTK=0,
+    PANEL_BACKGROUND_DARK,
+    PANEL_BACKGROUND_GNOME,
+    PANEL_BACKGROUND_CUSTOM_COLOR,
+    PANEL_BACKGROUND_CUSTOM_IMAGE
+} PanelBackgroundType;
 
 #define PANEL_ICON_SIZE               24	/* Default size of panel icons */
 #define PANEL_HEIGHT_DEFAULT          26	/* Default height of horizontal panel */
@@ -56,7 +71,6 @@ struct _Panel {
     char* name;
     LXPanel * topgwin;			/* Main panel window */
     PanelApp* app;
-//    Window topxwin;			/* Main panel's X window   */
     GdkDisplay * display;		/* Main panel's GdkDisplay */
     GtkIconTheme* icon_theme; /*Default icon theme*/
 
@@ -71,8 +85,9 @@ struct _Panel {
 
     int ax, ay, aw, ah;  /* prefferd allocation of a panel */
     int cx, cy, cw, ch;  /* current allocation (as reported by configure event) allocation */
-    int allign, edge, margin;
-    guint orientation;
+    int allign, margin;
+    GtkPositionType edge;
+    GtkOrientation orientation;
     int widthtype, width;
     int heighttype, height;
     gint monitor;
@@ -144,8 +159,7 @@ typedef struct {
 
 extern pair allign_pair[];
 extern pair edge_pair[];
-extern pair width_pair[];
-extern pair height_pair[];
+extern pair strut_pair[];
 extern pair bool_pair[];
 
 int str2num(pair *p, const gchar *str, int defval);

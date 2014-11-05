@@ -154,25 +154,25 @@ static void set_edge(LXPanel* panel, int edge)
 static void edge_bottom_toggle(GtkToggleButton *widget, LXPanel *p)
 {
     if (gtk_toggle_button_get_active(widget))
-        set_edge(p, EDGE_BOTTOM);
+        set_edge(p, GTK_POS_BOTTOM);
 }
 
 static void edge_top_toggle(GtkToggleButton *widget, LXPanel *p)
 {
     if (gtk_toggle_button_get_active(widget))
-        set_edge(p, EDGE_TOP);
+        set_edge(p, GTK_POS_TOP);
 }
 
 static void edge_left_toggle(GtkToggleButton *widget, LXPanel *p)
 {
     if (gtk_toggle_button_get_active(widget))
-        set_edge(p, EDGE_LEFT);
+        set_edge(p, GTK_POS_LEFT);
 }
 
 static void edge_right_toggle(GtkToggleButton *widget, LXPanel *p)
 {
     if (gtk_toggle_button_get_active(widget))
-        set_edge(p, EDGE_RIGHT);
+        set_edge(p, GTK_POS_RIGHT);
 }
 
 static void set_monitor(GtkSpinButton *widget, LXPanel *panel)
@@ -190,7 +190,7 @@ static void set_alignment(LXPanel* panel, int align)
     Panel *p = panel->priv;
 
     if (p->margin_control)
-        gtk_widget_set_sensitive(p->margin_control, (align != ALLIGN_CENTER));
+        gtk_widget_set_sensitive(p->margin_control, (align != PANEL_ALLIGN_CENTER));
     p->allign = align;
     update_panel_geometry(panel);
     UPDATE_GLOBAL_STRING(p, "allign", num2str(allign_pair, align, "none"));
@@ -199,19 +199,19 @@ static void set_alignment(LXPanel* panel, int align)
 static void align_left_toggle(GtkToggleButton *widget, LXPanel *p)
 {
     if (gtk_toggle_button_get_active(widget))
-        set_alignment(p, ALLIGN_LEFT);
+        set_alignment(p, PANEL_ALLIGN_LEFT);
 }
 
 static void align_center_toggle(GtkToggleButton *widget, LXPanel *p)
 {
     if (gtk_toggle_button_get_active(widget))
-        set_alignment(p, ALLIGN_CENTER);
+        set_alignment(p, PANEL_ALLIGN_CENTER);
 }
 
 static void align_right_toggle(GtkToggleButton *widget, LXPanel *p)
 {
     if (gtk_toggle_button_get_active(widget))
-        set_alignment(p, ALLIGN_RIGHT);
+        set_alignment(p, PANEL_ALLIGN_RIGHT);
 }
 
 static void
@@ -244,7 +244,7 @@ set_height(GtkSpinButton* spin, LXPanel* panel)
     UPDATE_GLOBAL_INT(p, "height", p->height);
 }
 
-static void set_width_type( GtkWidget *item, LXPanel* panel )
+static void set_strut_type( GtkWidget *item, LXPanel* panel )
 {
     GtkWidget* spin;
     Panel *p = panel->priv;
@@ -258,16 +258,16 @@ static void set_width_type( GtkWidget *item, LXPanel* panel )
     p->widthtype = widthtype;
 
     spin = (GtkWidget*)g_object_get_data(G_OBJECT(item), "width_spin" );
-    t = (widthtype != WIDTH_REQUEST);
+    t = (widthtype != STRUT_DYNAMIC);
     gtk_widget_set_sensitive( spin, t );
     switch (widthtype)
     {
-    case WIDTH_PERCENT:
+    case STRUT_PERCENT:
         gtk_spin_button_set_range( GTK_SPIN_BUTTON(spin), 0, 100 );
         gtk_spin_button_set_value( GTK_SPIN_BUTTON(spin), 100 );
         break;
-    case WIDTH_PIXEL:
-        if ((p->edge == EDGE_TOP) || (p->edge == EDGE_BOTTOM))
+    case STRUT_PIXEL:
+        if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
         {
             gtk_spin_button_set_range( GTK_SPIN_BUTTON(spin), 0, gdk_screen_width() );
             gtk_spin_button_set_value( GTK_SPIN_BUTTON(spin), gdk_screen_width() );
@@ -278,13 +278,13 @@ static void set_width_type( GtkWidget *item, LXPanel* panel )
             gtk_spin_button_set_value( GTK_SPIN_BUTTON(spin), gdk_screen_height() );
         }
         break;
-    case WIDTH_REQUEST:
+    case STRUT_DYNAMIC:
         break;
     default: ;
     }
 
     update_panel_geometry(panel);
-    UPDATE_GLOBAL_STRING(p, "widthtype", num2str(width_pair, widthtype, "none"));
+    UPDATE_GLOBAL_STRING(p, "widthtype", num2str(strut_pair, widthtype, "none"));
 }
 
 /* FIXME: heighttype and spacing and RoundCorners */
@@ -979,16 +979,16 @@ void panel_configure( LXPanel* panel, int sel_page )
 
     /* position */
     w = (GtkWidget*)gtk_builder_get_object( builder, "edge_bottom" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, EDGE_BOTTOM));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_BOTTOM));
     g_signal_connect(w, "toggled", G_CALLBACK(edge_bottom_toggle), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "edge_top" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, EDGE_TOP));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_TOP));
     g_signal_connect(w, "toggled", G_CALLBACK(edge_top_toggle), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "edge_left" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, EDGE_LEFT));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_LEFT));
     g_signal_connect(w, "toggled", G_CALLBACK(edge_left_toggle), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "edge_right" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, EDGE_RIGHT));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_RIGHT));
     g_signal_connect(w, "toggled", G_CALLBACK(edge_right_toggle), panel);
 
     /* monitor */
@@ -1004,31 +1004,31 @@ void panel_configure( LXPanel* panel, int sel_page )
 
     /* alignment */
     p->alignment_left_label = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_left" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == ALLIGN_LEFT));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_LEFT));
     g_signal_connect(w, "toggled", G_CALLBACK(align_left_toggle), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_center" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == ALLIGN_CENTER));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_CENTER));
     g_signal_connect(w, "toggled", G_CALLBACK(align_center_toggle), panel);
     p->alignment_right_label = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_right" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == ALLIGN_RIGHT));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_RIGHT));
     g_signal_connect(w, "toggled", G_CALLBACK(align_right_toggle), panel);
 
     /* margin */
     p->margin_control = w = (GtkWidget*)gtk_builder_get_object( builder, "margin" );
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(w), p->margin);
-    gtk_widget_set_sensitive(p->margin_control, (p->allign != ALLIGN_CENTER));
+    gtk_widget_set_sensitive(p->margin_control, (p->allign != PANEL_ALLIGN_CENTER));
     g_signal_connect( w, "value-changed",
                       G_CALLBACK(set_margin), panel);
 
     /* size */
     p->width_label = (GtkWidget*)gtk_builder_get_object( builder, "width_label");
     p->width_control = w = (GtkWidget*)gtk_builder_get_object( builder, "width" );
-    gtk_widget_set_sensitive( w, p->widthtype != WIDTH_REQUEST );
+    gtk_widget_set_sensitive( w, p->widthtype != STRUT_DYNAMIC );
     gint upper = 0;
-    if( p->widthtype == WIDTH_PERCENT)
+    if( p->widthtype == STRUT_PERCENT)
         upper = 100;
-    else if( p->widthtype == WIDTH_PIXEL)
-        upper = (((p->edge == EDGE_TOP) || (p->edge == EDGE_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
+    else if( p->widthtype == STRUT_PIXEL)
+        upper = (((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
     gtk_spin_button_set_range( GTK_SPIN_BUTTON(w), 0, upper );
     gtk_spin_button_set_value( GTK_SPIN_BUTTON(w), p->width );
     g_signal_connect( w, "value-changed", G_CALLBACK(set_width), panel );
@@ -1037,7 +1037,7 @@ void panel_configure( LXPanel* panel, int sel_page )
     update_opt_menu( w, p->widthtype - 1 );
     g_object_set_data(G_OBJECT(w), "width_spin", p->width_control );
     g_signal_connect( w, "changed",
-                     G_CALLBACK(set_width_type), panel);
+                     G_CALLBACK(set_strut_type), panel);
 
     p->height_label = (GtkWidget*)gtk_builder_get_object( builder, "height_label");
     p->height_control = w = (GtkWidget*)gtk_builder_get_object( builder, "height" );
@@ -1046,7 +1046,7 @@ void panel_configure( LXPanel* panel, int sel_page )
     g_signal_connect( w, "value-changed", G_CALLBACK(set_height), panel );
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "height_unit" );
-    update_opt_menu( w, HEIGHT_PIXEL - 1);
+    update_opt_menu( w, STRUT_PIXEL - 1);
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "icon_size" );
     gtk_spin_button_set_range( GTK_SPIN_BUTTON(w), PANEL_HEIGHT_MIN, PANEL_HEIGHT_MAX );

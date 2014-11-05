@@ -44,7 +44,7 @@ struct cpu_stat {
 
 /* Private context for CPU plugin. */
 typedef struct {
-    GdkColor foreground_color;			/* Foreground color for drawing area */
+    GdkRGBA foreground_color;			/* Foreground color for drawing area */
     GtkWidget * da;				/* Drawing area */
     cairo_surface_t * pixmap;				/* Pixmap to be drawn on drawing area */
 
@@ -78,7 +78,7 @@ static void redraw_pixmap(CPUPlugin * c)
     /* Recompute pixmap. */
     unsigned int i;
     unsigned int drawing_cursor = c->ring_cursor;
-//    gdk_cairo_set_source_color(cr, &c->foreground_color);
+    gdk_cairo_set_source_rgba(cr, &c->foreground_color);
     for (i = 0; i < c->pixmap_width; i++)
     {
         /* Draw one bar of the CPU usage graph. */

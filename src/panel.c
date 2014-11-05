@@ -162,9 +162,9 @@ static void lxpanel_size_request(GtkWidget *widget, GtkRequisition *req)
 		gtk_widget_get_preferred_size(p->box, req, NULL);
 
     /* FIXME: is this ever required? */
-    if (p->widthtype == WIDTH_REQUEST)
+    if (p->widthtype == STRUT_DYNAMIC)
         p->width = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? req->width : req->height;
-    if (p->heighttype == HEIGHT_REQUEST)
+    if (p->heighttype == STRUT_DYNAMIC)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? req->height : req->width;
     calculate_position(p);
     gtk_widget_set_size_request( widget, p->aw, p->ah );
@@ -176,9 +176,9 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
 
 	GTK_WIDGET_CLASS(lxpanel_parent_class)->size_allocate(widget, a);
 	gtk_widget_set_allocation(widget,a);
-    if (p->widthtype == WIDTH_REQUEST)
+    if (p->widthtype == STRUT_DYNAMIC)
         p->width = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->width : a->height;
-    if (p->heighttype == HEIGHT_REQUEST)
+    if (p->heighttype == STRUT_DYNAMIC)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->height : a->width;
     calculate_position(p);
 	if (a->width != p->aw || a->height != p->ah || a->x != p->ax || a->y != p->ay)
@@ -278,11 +278,10 @@ static void lxpanel_init(PanelWindow *self)
 
     self->priv = p;
     p->topgwin = self;
-    p->allign = ALLIGN_CENTER;
-    p->edge = EDGE_NONE;
-    p->widthtype = WIDTH_PERCENT;
+    p->allign = PANEL_ALLIGN_CENTER;
+    p->widthtype = STRUT_PERCENT;
     p->width = 100;
-    p->heighttype = HEIGHT_PIXEL;
+    p->heighttype = STRUT_PIXEL;
     p->height = PANEL_HEIGHT_DEFAULT;
     p->monitor = 0;
     p->setdocktype = 1;
@@ -319,10 +318,10 @@ static void panel_normalize_configuration(Panel* p)
     panel_set_panel_configuration_changed( p );
     if (p->width < 0)
         p->width = 100;
-    if (p->widthtype == WIDTH_PERCENT && p->width > 100)
+    if (p->widthtype == STRUT_PERCENT && p->width > 100)
         p->width = 100;
-    p->heighttype = HEIGHT_PIXEL;
-    if (p->heighttype == HEIGHT_PIXEL) {
+    p->heighttype = STRUT_PIXEL;
+    if (p->heighttype == STRUT_PIXEL) {
         if (p->height < PANEL_HEIGHT_MIN)
             p->height = PANEL_HEIGHT_MIN;
         else if (p->height > PANEL_HEIGHT_MAX)
@@ -363,25 +362,25 @@ void _panel_set_wm_strut(LXPanel *panel)
     /* Dispatch on edge to set up strut parameters. */
     switch (p->edge)
     {
-        case EDGE_LEFT:
+        case GTK_POS_LEFT:
             index = 0;
             strut_size = p->aw;
             strut_lower = p->ay;
             strut_upper = p->ay + p->ah;
             break;
-        case EDGE_RIGHT:
+        case GTK_POS_RIGHT:
             index = 1;
             strut_size = p->aw;
             strut_lower = p->ay;
             strut_upper = p->ay + p->ah;
             break;
-        case EDGE_TOP:
+        case GTK_POS_TOP:
             index = 2;
             strut_size = p->ah;
             strut_lower = p->ax;
             strut_upper = p->ax + p->aw;
             break;
-        case EDGE_BOTTOM:
+        case GTK_POS_BOTTOM:
             index = 3;
             strut_size = p->ah;
             strut_lower = p->ax;
@@ -481,6 +480,10 @@ void _panel_determine_background_css(LXPanel * panel, GtkWidget * widget)
         css_apply_with_class(widget,css,"-lxpanel-background",system);
         g_free(css);
     }
+    else if (system)
+    {
+        css_apply_with_class(widget,"","-lxpanel-background",system);
+    }
 }
 
 /* Update the background of the entire panel.
@@ -494,7 +497,6 @@ static void _panel_update_background(LXPanel * p)
 {
     GtkWidget *w = GTK_WIDGET(p);
 
-    /* Redraw the top level widget. */
     _panel_determine_background_css(p, w);
 }
 
@@ -588,17 +590,17 @@ mouse_watch(LXPanel *panel)
     if (p->ah_state == AH_STATE_HIDDEN) {
         gap = MAX(p->height_when_hidden, GAP);
         switch (p->edge) {
-        case EDGE_LEFT:
+        case GTK_POS_LEFT:
             cw = gap;
             break;
-        case EDGE_RIGHT:
+        case GTK_POS_RIGHT:
             cx = cx + cw - gap;
             cw = gap;
             break;
-        case EDGE_TOP:
+        case GTK_POS_TOP:
             ch = gap;
             break;
-        case EDGE_BOTTOM:
+        case GTK_POS_BOTTOM:
             cy = cy + ch - gap;
             ch = gap;
             break;
@@ -1157,7 +1159,7 @@ void panel_adjust_geometry_terminology(Panel * p)
     if ((p->height_label != NULL) && (p->width_label != NULL)
     && (p->alignment_left_label != NULL) && (p->alignment_right_label != NULL))
     {
-        if ((p->edge == EDGE_TOP) || (p->edge == EDGE_BOTTOM))
+        if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
         {
             gtk_label_set_text(GTK_LABEL(p->height_label), _("Height:"));
             gtk_label_set_text(GTK_LABEL(p->width_label), _("Width:"));
@@ -1204,7 +1206,7 @@ void _panel_set_panel_configuration_changed(LXPanel *panel)
     GList *plugins, *l;
 
     GtkOrientation previous_orientation = p->orientation;
-    p->orientation = (p->edge == EDGE_TOP || p->edge == EDGE_BOTTOM)
+    p->orientation = (p->edge == GTK_POS_TOP || p->edge == GTK_POS_BOTTOM)
         ? GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
 
     /* either first run or orientation was changed */
@@ -1215,7 +1217,7 @@ void _panel_set_panel_configuration_changed(LXPanel *panel)
             p->height = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? PANEL_HEIGHT_DEFAULT : PANEL_WIDTH_DEFAULT);
         if (p->height_control != NULL)
             gtk_spin_button_set_value(GTK_SPIN_BUTTON(p->height_control), p->height);
-        if ((p->widthtype == WIDTH_PIXEL) && (p->width_control != NULL))
+        if ((p->widthtype == STRUT_PIXEL) && (p->width_control != NULL))
         {
             int value = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? gdk_screen_width() : gdk_screen_height());
             gtk_spin_button_set_range(GTK_SPIN_BUTTON(p->width_control), 0, value);
@@ -1259,16 +1261,14 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         RET(0);
     }
     if (config_setting_lookup_string(cfg, "edge", &str))
-        p->edge = str2num(edge_pair, str, EDGE_NONE);
+        p->edge = str2num(edge_pair, str, GTK_POS_BOTTOM);
     if (config_setting_lookup_string(cfg, "allign", &str))
-        p->allign = str2num(allign_pair, str, ALLIGN_NONE);
+        p->allign = str2num(allign_pair, str, PANEL_ALLIGN_NONE);
     config_setting_lookup_int(cfg, "monitor", &p->monitor);
     config_setting_lookup_int(cfg, "margin", &p->margin);
     if (config_setting_lookup_string(cfg, "widthtype", &str))
-        p->widthtype = str2num(width_pair, str, WIDTH_NONE);
+        p->widthtype = str2num(strut_pair, str, STRUT_FILL);
     config_setting_lookup_int(cfg, "width", &p->width);
-    if (config_setting_lookup_string(cfg, "heighttype", &str))
-        p->heighttype = str2num(height_pair, str, HEIGHT_NONE);
     config_setting_lookup_int(cfg, "height", &p->height);
     if (config_setting_lookup_int(cfg, "spacing", &i) && i > 0)
         p->spacing = i;
@@ -1409,29 +1409,14 @@ GtkIconTheme *panel_get_icon_theme(LXPanel *panel)
     return panel->priv->icon_theme;
 }
 
-gboolean panel_is_at_bottom(LXPanel *panel)
+GtkPositionType panel_get_edge(LXPanel *panel)
 {
-    return panel->priv->edge == EDGE_BOTTOM;
-}
-
-gboolean panel_is_at_top(LXPanel *panel)
-{
-    return panel->priv->edge == EDGE_TOP;
-}
-
-gboolean panel_is_at_left(LXPanel *panel)
-{
-    return panel->priv->edge == EDGE_LEFT;
-}
-
-gboolean panel_is_at_right(LXPanel *panel)
-{
-    return panel->priv->edge == EDGE_RIGHT;
+    return panel->priv->edge;
 }
 
 gboolean panel_is_dynamic(LXPanel *panel)
 {
-    return panel->priv->widthtype == WIDTH_REQUEST;
+    return panel->priv->widthtype == STRUT_DYNAMIC;
 }
 
 GtkWidget *panel_box_new(LXPanel *panel, gint spacing)

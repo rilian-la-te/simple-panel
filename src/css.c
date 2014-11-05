@@ -78,6 +78,25 @@ gchar* css_apply_from_file (GtkWidget* widget, gchar* file)
     return NULL;
 }
 
+inline gchar* css_generate_panel_icon_button(GdkRGBA color){
+    gchar* returnie;
+    color.alpha = 0.2;
+    returnie = g_strdup_printf(".-panel-icon-button {\n"
+                               "padding: 1px;\n"
+                               " -GtkWidget-focus-line-width: 0px;\n"
+                               " -GtkWidget-focus-padding: 0px;\n"
+                               " background-color: transparent;\n"
+                               " background-image: none;\n"
+                               "}\n"
+                               ".-panel-icon-button:hover,"
+                               ".-panel-icon-button.highlight,"
+                               ".-panel-icon-button:hover:active,"
+                               ".-panel-icon-button:active:hover {\n"
+                               "color: %s;"
+                               "}\n",gdk_rgba_to_string(&color));
+    return returnie;
+}
+
 
 inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboolean no_image)
 {

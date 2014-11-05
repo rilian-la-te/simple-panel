@@ -33,6 +33,7 @@
 
 void css_apply_with_class (GtkWidget* widget, gchar* css, gchar* klass ,gboolean remove);
 inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboolean no_image);
+inline gchar* css_generate_panel_icon_button(GdkRGBA color);
 inline gchar* css_generate_font_color(GdkRGBA color);
 inline gchar* css_generate_font_size(gint size);
 inline gchar* css_generate_font_weight(gboolean is_bold);

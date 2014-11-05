@@ -73,16 +73,17 @@ static void dclock_popup_map(GtkWidget * widget, DClockPlugin * dc)
 static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
 {
     /* Create a new window. */
-    GtkWidget * win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    GtkWidget * win = gtk_window_new(GTK_WINDOW_POPUP);
+//    gtk_style_context_remove_class(gtk_widget_get_style_context(win),GTK_STYLE_CLASS_BACKGROUND);
     gtk_window_set_default_size(GTK_WINDOW(win), 180, 180);
-    gtk_window_set_decorated(GTK_WINDOW(win), FALSE);
-	gtk_window_set_resizable(GTK_WINDOW(win), FALSE);
-	gtk_container_set_border_width(GTK_CONTAINER(win), 5);
-    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(win), TRUE);
-    gtk_window_set_skip_pager_hint(GTK_WINDOW(win), TRUE);
-    gtk_window_set_type_hint(GTK_WINDOW(win), GDK_WINDOW_TYPE_HINT_UTILITY);
-    gtk_window_stick(GTK_WINDOW(win));
-
+//    gtk_window_set_decorated(GTK_WINDOW(win), FALSE);
+//    gtk_window_set_resizable(GTK_WINDOW(win), FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(win), 5);
+//    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(win), TRUE);
+//    gtk_window_set_skip_pager_hint(GTK_WINDOW(win), TRUE);
+//    gtk_window_set_type_hint(GTK_WINDOW(win), GDK_WINDOW_TYPE_HINT_UTILITY);
+//    gtk_window_stick(GTK_WINDOW(win));
+//    GtkWidget* popover = gtk_popover_new(GTK_WIDGET(dc->plugin));
     /* Create a vertical box as a child of the window. */
     GtkWidget * box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(win), GTK_WIDGET(box));
@@ -92,6 +93,8 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
     gtk_calendar_set_display_options(
         GTK_CALENDAR(calendar),
         GTK_CALENDAR_SHOW_WEEK_NUMBERS | GTK_CALENDAR_SHOW_DAY_NAMES | GTK_CALENDAR_SHOW_HEADING);
+//    gtk_container_add(GTK_CONTAINER(popover),GTK_WIDGET(calendar));
+//    gtk_popover_set_position(GTK_POPOVER(popover),panel_get_popup_direction(dc->panel));
     gtk_box_pack_start(GTK_BOX(box), calendar, TRUE, TRUE, 0);
 
     /* Connect signals. */
@@ -99,6 +102,7 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
 
     /* Return the widget. */
     return win;
+//    return popover;
 }
 
 /* Handler for "button-press-event" event from main widget. */

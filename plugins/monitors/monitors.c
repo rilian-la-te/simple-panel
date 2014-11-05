@@ -93,7 +93,7 @@
 typedef float stats_set;
 
 struct Monitor {
-    GdkColor     foreground_color;  /* Foreground color for drawing area      */
+    GdkRGBA     foreground_color;  /* Foreground color for drawing area      */
     GtkWidget    *da;               /* Drawing area                           */
     cairo_surface_t    *pixmap;     /* Pixmap to be drawn on drawing area     */
     gint         pixmap_width;      /* Width and size of the buffer           */
@@ -198,7 +198,7 @@ monitor_set_foreground_color(MonitorsPlugin *mp, Monitor *m, const gchar *color)
 {
     g_free(m->color);
     m->color = g_strndup(color, COLOR_SIZE - 1);
-    gdk_color_parse(color, &m->foreground_color);
+    gdk_rgba_parse(&m->foreground_color,color);
 }
 /******************************************************************************
  *                          End of monitor functions                          *
@@ -513,7 +513,7 @@ redraw_pixmap (Monitor *m)
 //    gdk_cairo_set_source_color(cr, &style->black);
 //    cairo_paint(cr);
 
-    gdk_cairo_set_source_color(cr, &m->foreground_color);
+    gdk_cairo_set_source_rgba(cr, &m->foreground_color);
     for (i = 0; i < m->pixmap_width; i++)
     {
         unsigned int drawing_cursor = (m->ring_cursor + i) % m->pixmap_width;

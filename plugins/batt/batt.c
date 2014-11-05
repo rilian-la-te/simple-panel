@@ -224,7 +224,7 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
     cairo_set_line_width (cr, 1.0);
 
     /* draw background */
-//    gdk_cairo_set_source_color(cr, &lx_b->background);
+    gdk_cairo_set_source_rgba(cr, &lx_b->background);
     cairo_rectangle(cr, 0, 0, lx_b->width, lx_b->height);
     cairo_fill(cr);
 
@@ -392,7 +392,7 @@ static gint configureEvent(GtkWidget *widget, GdkEventConfigure *event,
 }
 
 
-static gint exposeEvent(GtkWidget *widget, GdkEventExpose *event, lx_battery *lx_b) {
+static gint draw(GtkWidget *widget, GdkEventExpose *event, lx_battery *lx_b) {
 
     ENTER;
     cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
@@ -451,8 +451,8 @@ static GtkWidget * constructor(LXPanel *panel, config_setting_t *settings)
 
     g_signal_connect (G_OBJECT (lx_b->drawingArea),"configure-event",
           G_CALLBACK (configureEvent), (gpointer) lx_b);
-    g_signal_connect (G_OBJECT (lx_b->drawingArea), "expose-event",
-          G_CALLBACK (exposeEvent), (gpointer) lx_b);
+    g_signal_connect (G_OBJECT (lx_b->drawingArea), "draw",
+          G_CALLBACK (draw), (gpointer) lx_b);
 
     sem_init(&(lx_b->alarmProcessLock), 0, 1);
 

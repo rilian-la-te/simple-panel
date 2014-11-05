@@ -198,10 +198,10 @@ void lxpanel_plugin_popup_set_position_helper(LXPanel * p, GtkWidget * near, Gtk
      * Also set "push-in" to avoid any case where it might flow off screen. */
     switch (p->priv->edge)
     {
-        case EDGE_TOP:          y += allocation.height;         break;
-        case EDGE_BOTTOM:       y -= popup_req.height;                break;
-        case EDGE_LEFT:         x += allocation.width;          break;
-        case EDGE_RIGHT:        x -= popup_req.width;                 break;
+        case GTK_POS_TOP:          y += allocation.height;         break;
+        case GTK_POS_BOTTOM:       y -= popup_req.height;                break;
+        case GTK_POS_LEFT:         x += allocation.width;          break;
+        case GTK_POS_RIGHT:        x -= popup_req.width;                 break;
     }
 
     /* Push onscreen. */

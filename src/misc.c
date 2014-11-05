@@ -28,6 +28,7 @@
 
 #include "misc.h"
 #include "private.h"
+#include "css.h"
 
 #include "dbg.h"
 
@@ -45,35 +46,38 @@ static GQuark img_data_id = 0;
 
 static void on_theme_changed(GtkIconTheme* theme, GtkWidget* img);
 static void _gtk_image_set_from_file_scaled(GtkWidget *img, ImgData *data);
+static GtkWidget *_gtk_image_new_for_icon(FmIcon *icon, gint size);
 
 pair allign_pair[] = {
-    { ALLIGN_NONE, "none" },
-    { ALLIGN_LEFT, "left" },
-    { ALLIGN_RIGHT, "right" },
-    { ALLIGN_CENTER, "center"},
+    { PANEL_ALLIGN_NONE, "none" },
+    { PANEL_ALLIGN_LEFT, "left" },
+    { PANEL_ALLIGN_RIGHT, "right" },
+    { PANEL_ALLIGN_CENTER, "center"},
     { 0, NULL },
 };
 
 pair edge_pair[] = {
-    { EDGE_NONE, "none" },
-    { EDGE_LEFT, "left" },
-    { EDGE_RIGHT, "right" },
-    { EDGE_TOP, "top" },
-    { EDGE_BOTTOM, "bottom" },
+    { GTK_POS_LEFT, "left" },
+    { GTK_POS_RIGHT, "right" },
+    { GTK_POS_TOP, "top" },
+    { GTK_POS_BOTTOM, "bottom" },
     { 0, NULL },
 };
 
-pair width_pair[] = {
-    { WIDTH_NONE, "none" },
-    { WIDTH_REQUEST, "request" },
-    { WIDTH_PIXEL, "pixel" },
-    { WIDTH_PERCENT, "percent" },
+pair strut_pair[] = {
+    { STRUT_FILL, "none" },
+    { STRUT_DYNAMIC, "request" },
+    { STRUT_PIXEL, "pixel" },
+    { STRUT_PERCENT, "percent" },
     { 0, NULL },
 };
 
-pair height_pair[] = {
-    { HEIGHT_NONE, "none" },
-    { HEIGHT_PIXEL, "pixel" },
+pair background_pair[] = {
+    { PANEL_BACKGROUND_GTK, "gtk-normal" },
+    { PANEL_BACKGROUND_DARK, "gtk-dark" },
+    { PANEL_BACKGROUND_GNOME, "gtk-gnome-panel" },
+    { PANEL_BACKGROUND_CUSTOM_COLOR, "color" },
+    { PANEL_BACKGROUND_CUSTOM_IMAGE, "image" },
     { 0, NULL },
 };
 
@@ -199,11 +203,7 @@ static void
 calculate_width(int scrw, int wtype, int allign, int margin,
       int *panw, int *x)
 {
-    ENTER;
-    DBG("scrw=%d\n", scrw);
-    DBG("IN panw=%d, margin=%d\n", *panw, margin);
-    //scrw -= 2;
-    if (wtype == WIDTH_PERCENT) {
+    if (wtype == STRUT_PERCENT) {
         /* sanity check */
         if (*panw > 100)
             *panw = 100;
@@ -211,7 +211,7 @@ calculate_width(int scrw, int wtype, int allign, int margin,
             *panw = 1;
         *panw = ((gfloat) scrw * (gfloat) *panw) / 100.0;
     }
-    if (allign != ALLIGN_CENTER) {
+    if (allign != PANEL_ALLIGN_CENTER) {
         if (margin > scrw) {
             g_warning( "margin is bigger then edge size %d > %d. Ignoring margin",
                   margin, scrw);
@@ -219,14 +219,13 @@ calculate_width(int scrw, int wtype, int allign, int margin,
         }
 	*panw = MIN(scrw - margin, *panw);
     }
-    DBG("OUT panw=%d\n", *panw);
-    if (allign == ALLIGN_LEFT)
+    if (allign == PANEL_ALLIGN_LEFT)
         *x += margin;
-    else if (allign == ALLIGN_RIGHT) {
+    else if (allign == PANEL_ALLIGN_RIGHT) {
         *x += scrw - *panw - margin;
         if (*x < 0)
             *x = 0;
-    } else if (allign == ALLIGN_CENTER)
+    } else if (allign == PANEL_ALLIGN_CENTER)
         *x += (scrw - *panw) / 2;
     RET();
 }
@@ -254,13 +253,13 @@ void _calculate_position(LXPanel *panel)
         gdk_screen_get_monitor_geometry(screen,np->monitor,&marea);
     }
 
-    if (np->edge == EDGE_TOP || np->edge == EDGE_BOTTOM) {
+    if (np->edge == GTK_POS_TOP || np->edge == GTK_POS_BOTTOM) {
         np->aw = np->width;
         np->ax = marea.x;
         calculate_width(marea.width, np->widthtype, np->allign, np->margin,
               &np->aw, &np->ax);
         np->ah = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
-        np->ay = marea.y + ((np->edge == EDGE_TOP) ? 0 : (marea.height - np->ah));
+        np->ay = marea.y + ((np->edge == GTK_POS_TOP) ? 0 : (marea.height - np->ah));
 
     } else {
         np->ah = np->width;
@@ -268,7 +267,7 @@ void _calculate_position(LXPanel *panel)
         calculate_width(marea.height, np->widthtype, np->allign, np->margin,
               &np->ah, &np->ay);
         np->aw = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
-        np->ax = marea.x + ((np->edge == EDGE_LEFT) ? 0 : (marea.width - np->aw));
+        np->ax = marea.x + ((np->edge == GTK_POS_LEFT) ? 0 : (marea.width - np->aw));
     }
     //g_debug("%s - x=%d y=%d w=%d h=%d\n", __FUNCTION__, np->ax, np->ay, np->aw, np->ah);
     RET();
@@ -362,12 +361,6 @@ void lxpanel_button_set_icon(GtkWidget* btn, const gchar *name, gint size)
 void lxpanel_button_update_icon(GtkWidget* btn, FmIcon *icon, gint size)
 {
     _lxpanel_button_set_icon(btn, g_object_ref(icon), size);
-}
-
-/* parameters width and keep_ratio are unused, kept for backward compatibility */
-void fb_button_set_from_file(GtkWidget * btn, const char * img_file, gint width, gint height, gboolean keep_ratio)
-{
-    lxpanel_button_set_icon(btn, img_file, height);
 }
 
 static void _gtk_image_set_from_file_scaled(GtkWidget * img, ImgData * data)
@@ -470,7 +463,7 @@ guint32 gcolor2rgb24(GdkRGBA *color)
     RET(i);
 }
 
-/* Handler for "enter-notify-event" signal on image that has highlighting requested. */
+///* Handler for "enter-notify-event" signal on image that has highlighting requested. */
 static gboolean fb_button_enter(GtkImage * widget, GdkEventCrossing * event)
 {
     if (gtk_image_get_storage_type(widget) == GTK_IMAGE_PIXBUF)
@@ -518,7 +511,7 @@ static gboolean fb_button_enter(GtkImage * widget, GdkEventCrossing * event)
     return TRUE;
 }
 
-/* Handler for "leave-notify-event" signal on image that has highlighting requested. */
+///* Handler for "leave-notify-event" signal on image that has highlighting requested. */
 static gboolean fb_button_leave(GtkImage * widget, GdkEventCrossing * event, gpointer user_data)
 {
     if (gtk_image_get_storage_type(widget) == GTK_IMAGE_PIXBUF)
@@ -532,7 +525,7 @@ static gboolean fb_button_leave(GtkImage * widget, GdkEventCrossing * event, gpo
 
 
 /* consumes reference on icon */
-static GtkWidget *_lxpanel_button_new_for_icon(LXPanel *panel, FmIcon *icon,
+static GtkWidget *_lxpanel_button_new_for_icon(FmIcon *icon,
                                                gint size, gulong highlight_color,
                                                const gchar *label)
 {
@@ -573,29 +566,15 @@ static GtkWidget *_lxpanel_button_new_for_icon(LXPanel *panel, FmIcon *icon,
 GtkWidget *lxpanel_button_new_for_icon(LXPanel *panel, const gchar *name, GdkRGBA *color, const gchar *label)
 {
     gulong highlight_color = color ? gcolor2rgb24(color) : PANEL_ICON_HIGHLIGHT;
-    return _lxpanel_button_new_for_icon(panel, fm_icon_from_name(name),
+    return _lxpanel_button_new_for_icon(fm_icon_from_name(name),
                                         panel->priv->icon_size, highlight_color, label);
 }
 
 GtkWidget *lxpanel_button_new_for_fm_icon(LXPanel *panel, FmIcon *icon, GdkRGBA *color, const gchar *label)
 {
     gulong highlight_color = color ? gcolor2rgb24(color) : PANEL_ICON_HIGHLIGHT;
-    return _lxpanel_button_new_for_icon(panel, g_object_ref(icon),
+    return _lxpanel_button_new_for_icon(g_object_ref(icon),
                                         panel->priv->icon_size, highlight_color, label);
-}
-
-/* parameters width and keep_ratio are unused, kept for backward compatibility */
-GtkWidget * fb_button_new_from_file(
-    const gchar * image_file, int width, int height, gulong highlight_color, gboolean keep_ratio)
-{
-    return fb_button_new_from_file_with_label(image_file, width, height, highlight_color, keep_ratio, NULL, NULL);
-}
-
-/* parameters width and keep_ratio are unused, kept for backward compatibility */
-GtkWidget * fb_button_new_from_file_with_label(
-    const gchar * image_file, int width, int height, gulong highlight_color, gboolean keep_ratio, Panel * panel, const gchar * label)
-{
-    return _lxpanel_button_new_for_icon(panel->topgwin, fm_icon_from_name(image_file), height, highlight_color, label);
 }
 
 char* translate_exec_to_cmd( const char* exec, const char* icon,

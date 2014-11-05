@@ -220,7 +220,7 @@ static void on_menu_item_map(GtkWidget *mi, menup *m)
     }
 }
 
-static void on_menu_item_style_set(GtkWidget* mi, GtkStyle* prev, menup *m)
+static void on_menu_item_style_updated(GtkWidget* mi, menup *m)
 {
     /* reload icon */
     on_menu_item_map(mi, m);
@@ -447,7 +447,7 @@ static GtkWidget* create_item(MenuCacheItem *item, menup *m)
             g_signal_connect(mi, "activate", G_CALLBACK(on_menu_item), m);
         }
         g_signal_connect(mi, "map", G_CALLBACK(on_menu_item_map), m);
-        g_signal_connect(mi, "style-set", G_CALLBACK(on_menu_item_style_set), m);
+        g_signal_connect(mi, "style-updated", G_CALLBACK(on_menu_item_style_updated), m);
         g_signal_connect(mi, "button-press-event", G_CALLBACK(on_menu_button_press), m);
         /* allow drag and add empty set for now to allow dragging the item
            the rest will be done by FmDndSrc after drag begins */
@@ -529,8 +529,6 @@ static int load_menu(menup* m, MenuCacheDir* dir, GtkWidget* menu, int pos )
 #endif
     return count;
 }
-
-
 
 static gboolean sys_menu_item_has_data( GtkMenuItem* item )
 {
@@ -893,8 +891,6 @@ read_submenu(menup *m, config_setting_t *s, gboolean as_item)
     GdkRGBA color={0.1, 0.1, 0.1, 0.375};
     guint i;
 
-    ENTER;
-
     menu = gtk_menu_new ();
     gtk_container_set_border_width(GTK_CONTAINER(menu), 0);
 
@@ -951,7 +947,7 @@ read_submenu(menup *m, config_setting_t *s, gboolean as_item)
         mi = make_button(m, m->fname, name, &color, menu);
     }
 
-    RET(mi);
+    return mi;
 
 error:
     // FIXME: we need to recursivly destroy all child menus and their items

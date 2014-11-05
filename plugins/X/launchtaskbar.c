@@ -201,9 +201,7 @@ struct LaunchTaskBarPlugin {
 };
 
 static gchar *launchtaskbar_css_normal = ".-panel-task-normal {\n"
-        "padding: 0px;\n"
-        " -GtkWidget-focus-line-width: 0px;\n"
-        " -GtkWidget-focus-padding: 0px;\n"
+        "padding: 0px 2px 0px 2px;\n"
         "}\n";
 
 
@@ -1594,7 +1592,7 @@ static void recompute_group_visibility_on_current_desktop(LaunchTaskBarPlugin * 
 static void task_draw_label(Task * tk)
 {
     TaskClass * tc = tk->p_taskclass;
-    gboolean bold_style = (((tk->entered_state) || (tk->flash_state)) && (tk->tb->flat_button));
+//    gboolean bold_style = (((tk->entered_state) || (tk->flash_state)) && (tk->tb->flat_button));
     char *label;
 
     if ((tk->tb->grouped_tasks) && (tc != NULL) && (tc->p_task_visible == tk) && (tc->visible_count > 1))
@@ -1609,7 +1607,7 @@ static void task_draw_label(Task * tk)
     if (tk->tb->tooltips)
         gtk_widget_set_tooltip_text(tk->button, label);
 
-    lxpanel_draw_label_text(tk->tb->panel, tk->label, label, bold_style, 1,
+    lxpanel_draw_label_text(tk->tb->panel, tk->label, label, FALSE, 1,
             tk->tb->flat_button);
 
     g_free(label);
@@ -2799,23 +2797,28 @@ static void taskbar_update_style(LaunchTaskBarPlugin * tb)
         ((tb->icons_only) ? tb->icon_size : tb->task_width_max),
         tb->icon_size, tb->spacing, 0, panel_get_height(tb->panel));
 }
+
 static gchar* taskbar_css_flat_generate(GtkWidget* w,LaunchTaskBarPlugin* tb){
     gchar* returnie;
     GdkRGBA color, active_color;
-    gtk_style_context_get_color(gtk_widget_get_style_context(w),gtk_widget_get_state_flags(w),&color);
+    gtk_style_context_get_color(
+                gtk_widget_get_style_context(w),
+                gtk_widget_get_state_flags(w),
+                &color);
     color.alpha = 0.6;
     active_color.red=color.red;
     active_color.green=color.green;
     active_color.blue=color.blue;
     active_color.alpha =0.4;
     gchar* edge;
-    if (panel_is_at_top(tb->panel))
+    GtkPositionType direction = panel_get_edge(tb->panel);
+    if (direction==GTK_POS_TOP)
         edge="0px 0px 2px 0px";
-    if (panel_is_at_bottom(tb->panel))
+    if (direction==GTK_POS_BOTTOM)
         edge="2px 0px 0px 0px";
-    if (panel_is_at_left(tb->panel))
+    if (direction==GTK_POS_LEFT)
         edge="0px 2px 0px 0px";
-    if (panel_is_at_right(tb->panel))
+    if (direction==GTK_POS_RIGHT)
         edge="0px 0px 0px 2px";
     returnie = g_strdup_printf(".-panel-task-flat {\n"
                                "padding: 0px;\n"
@@ -3506,7 +3509,7 @@ static void taskbar_make_menu(LaunchTaskBarPlugin * tb)
     tb->p_menuitem_separator = gtk_separator_menu_item_new();
 #endif
 
-    if (panel_is_at_bottom(tb->panel))
+    if (panel_get_edge(tb->panel)==GTK_POS_BOTTOM)
         _m_add = gtk_menu_shell_append;
     else
         _m_add = gtk_menu_shell_prepend;
