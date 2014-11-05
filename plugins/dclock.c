@@ -74,7 +74,6 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
 {
     /* Create a new window. */
     GtkWidget * win = gtk_window_new(GTK_WINDOW_POPUP);
-<<<<<<< HEAD
 //    gtk_style_context_remove_class(gtk_widget_get_style_context(win),GTK_STYLE_CLASS_BACKGROUND);
     gtk_window_set_default_size(GTK_WINDOW(win), 180, 180);
 //    gtk_window_set_decorated(GTK_WINDOW(win), FALSE);
@@ -85,17 +84,6 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
 //    gtk_window_set_type_hint(GTK_WINDOW(win), GDK_WINDOW_TYPE_HINT_UTILITY);
 //    gtk_window_stick(GTK_WINDOW(win));
 //    GtkWidget* popover = gtk_popover_new(GTK_WIDGET(dc->plugin));
-=======
-    gtk_window_set_default_size(GTK_WINDOW(win), 180, 180);
-    gtk_window_set_decorated(GTK_WINDOW(win), FALSE);
-    gtk_window_set_resizable(GTK_WINDOW(win), FALSE);
-	gtk_container_set_border_width(GTK_CONTAINER(win), 5);
-    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(win), TRUE);
-    gtk_window_set_skip_pager_hint(GTK_WINDOW(win), TRUE);
-    gtk_window_set_type_hint(GTK_WINDOW(win), GDK_WINDOW_TYPE_HINT_UTILITY);
-    gtk_window_stick(GTK_WINDOW(win));
-
->>>>>>> 978346c59d7570a07308180ea49d4e96e06a231c
     /* Create a vertical box as a child of the window. */
     GtkWidget * box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(win), GTK_WIDGET(box));

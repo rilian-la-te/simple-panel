@@ -108,32 +108,16 @@ extern gboolean lxpanel_image_set_icon_theme(SimplePanel * p, GtkWidget * image,
 void lxpanel_config_save(SimplePanel *p); /* defined in configurator.c */
 
 /* Accessors APIs for Panel* */
-<<<<<<< HEAD
-extern GtkOrientation panel_get_orientation(LXPanel *panel);
-extern gint panel_get_icon_size(LXPanel *panel);
-extern gint panel_get_height(LXPanel *panel);
-extern gint panel_get_monitor(LXPanel *panel);
-extern GtkStyle *panel_get_defstyle(LXPanel *panel);
-extern GtkIconTheme *panel_get_icon_theme(LXPanel *panel);
-extern GtkPositionType panel_get_edge(LXPanel *panel);
-extern gboolean panel_is_dynamic(LXPanel *panel);
-extern GtkWidget *panel_box_new(LXPanel *panel, gint spacing);
-extern GtkWidget *panel_separator_new(LXPanel *panel);
-=======
 extern GtkOrientation panel_get_orientation(SimplePanel *panel);
 extern gint panel_get_icon_size(SimplePanel *panel);
 extern gint panel_get_height(SimplePanel *panel);
 extern gint panel_get_monitor(SimplePanel *panel);
 extern GtkStyle *panel_get_defstyle(SimplePanel *panel);
 extern GtkIconTheme *panel_get_icon_theme(SimplePanel *panel);
-extern gboolean panel_is_at_bottom(SimplePanel *panel);
-extern gboolean panel_is_at_top(SimplePanel *panel);
-extern gboolean panel_is_at_left(SimplePanel *panel);
-extern gboolean panel_is_at_right(SimplePanel *panel);
+extern GtkPositionType panel_get_edge(SimplePanel *panel);
 extern gboolean panel_is_dynamic(SimplePanel *panel);
 extern GtkWidget *panel_box_new(SimplePanel *panel, gint spacing);
 extern GtkWidget *panel_separator_new(SimplePanel *panel);
->>>>>>> 978346c59d7570a07308180ea49d4e96e06a231c
 
 G_END_DECLS
 

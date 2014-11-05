@@ -525,11 +525,7 @@ static gboolean fb_button_leave(GtkImage * widget, GdkEventCrossing * event, gpo
 
 
 /* consumes reference on icon */
-<<<<<<< HEAD
 static GtkWidget *_lxpanel_button_new_for_icon(FmIcon *icon,
-=======
-static GtkWidget *_lxpanel_button_new_for_icon(SimplePanel *panel, FmIcon *icon,
->>>>>>> 978346c59d7570a07308180ea49d4e96e06a231c
                                                gint size, gulong highlight_color,
                                                const gchar *label)
 {
@@ -570,25 +566,15 @@ static GtkWidget *_lxpanel_button_new_for_icon(SimplePanel *panel, FmIcon *icon,
 GtkWidget *lxpanel_button_new_for_icon(SimplePanel *panel, const gchar *name, GdkRGBA *color, const gchar *label)
 {
     gulong highlight_color = color ? gcolor2rgb24(color) : PANEL_ICON_HIGHLIGHT;
-<<<<<<< HEAD
     return _lxpanel_button_new_for_icon(fm_icon_from_name(name),
                                         panel->priv->icon_size, highlight_color, label);
-=======
-    return _lxpanel_button_new_for_icon(panel, fm_icon_from_name(name),
-                                        panel_get_icon_size(panel), highlight_color, label);
->>>>>>> 978346c59d7570a07308180ea49d4e96e06a231c
 }
 
 GtkWidget *lxpanel_button_new_for_fm_icon(SimplePanel *panel, FmIcon *icon, GdkRGBA *color, const gchar *label)
 {
     gulong highlight_color = color ? gcolor2rgb24(color) : PANEL_ICON_HIGHLIGHT;
-<<<<<<< HEAD
     return _lxpanel_button_new_for_icon(g_object_ref(icon),
                                         panel->priv->icon_size, highlight_color, label);
-=======
-    return _lxpanel_button_new_for_icon(panel, g_object_ref(icon),
-                                        panel_get_icon_size(panel), highlight_color, label);
->>>>>>> 978346c59d7570a07308180ea49d4e96e06a231c
 }
 
 char* translate_exec_to_cmd( const char* exec, const char* icon,

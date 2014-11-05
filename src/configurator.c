@@ -244,11 +244,7 @@ set_height(GtkSpinButton* spin, SimplePanel* panel)
     UPDATE_GLOBAL_INT(p, "height", p->height);
 }
 
-<<<<<<< HEAD
-static void set_strut_type( GtkWidget *item, LXPanel* panel )
-=======
-static void set_width_type( GtkWidget *item, SimplePanel* panel )
->>>>>>> 978346c59d7570a07308180ea49d4e96e06a231c
+static void set_strut_type( GtkWidget *item, SimplePanel* panel )
 {
     GtkWidget* spin;
     Panel *p = panel->priv;
@@ -293,7 +289,7 @@ static void set_width_type( GtkWidget *item, SimplePanel* panel )
 
 /* FIXME: heighttype and spacing and RoundCorners */
 
-static void set_background_type(GtkWidget* item, LXPanel* panel)
+static void set_background_type(GtkWidget* item, SimplePanel* panel)
 {
     Panel *p = panel->priv;
     int type;

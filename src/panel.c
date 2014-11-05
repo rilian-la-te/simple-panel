@@ -1402,26 +1402,7 @@ GtkIconTheme *panel_get_icon_theme(SimplePanel *panel)
     return panel->priv->icon_theme;
 }
 
-<<<<<<< HEAD
-GtkPositionType panel_get_edge(LXPanel *panel)
-=======
-gboolean panel_is_at_bottom(SimplePanel *panel)
-{
-    return panel->priv->edge == EDGE_BOTTOM;
-}
-
-gboolean panel_is_at_top(SimplePanel *panel)
-{
-    return panel->priv->edge == EDGE_TOP;
-}
-
-gboolean panel_is_at_left(SimplePanel *panel)
-{
-    return panel->priv->edge == EDGE_LEFT;
-}
-
-gboolean panel_is_at_right(SimplePanel *panel)
->>>>>>> 978346c59d7570a07308180ea49d4e96e06a231c
+GtkPositionType panel_get_edge(SimplePanel *panel)
 {
     return panel->priv->edge;
 }
