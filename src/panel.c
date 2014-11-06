@@ -1211,12 +1211,12 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
         if (p->initialized)
             p->height = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? PANEL_HEIGHT_DEFAULT : PANEL_WIDTH_DEFAULT);
         if (p->height_control != NULL)
-            gtk_spin_button_set_value(GTK_SPIN_BUTTON(p->height_control), p->height);
+            simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->height_control), p->height);
         if ((p->widthtype == STRUT_PIXEL) && (p->width_control != NULL))
         {
             int value = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? gdk_screen_width() : gdk_screen_height());
-            gtk_spin_button_set_range(GTK_SPIN_BUTTON(p->width_control), 0, value);
-            gtk_spin_button_set_value(GTK_SPIN_BUTTON(p->width_control), value);
+            simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(p->width_control), 0, value);
+            simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->width_control), value);
         }
     }
 

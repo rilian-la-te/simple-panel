@@ -2841,6 +2841,7 @@ static gchar* taskbar_css_flat_generate(GtkWidget* w,LaunchTaskBarPlugin* tb){
                                "border-width: %s;"
                                "border-color: %s;"
                                "}\n",edge,gdk_rgba_to_string(&color),edge,gdk_rgba_to_string(&active_color));
+    g_object_weak_ref(G_OBJECT(tb->tb_icon_grid), (GWeakNotify)g_free, edge);
     return returnie;
 }
 

@@ -860,4 +860,20 @@ gboolean lxpanel_launch_app(const char* exec, GList* files, gboolean in_terminal
     return (error == NULL);
 }
 
+void simple_panel_scale_button_set_range (GtkScaleButton* b, gint lower, gint upper)
+{
+    gtk_adjustment_set_lower(gtk_scale_button_get_adjustment(b),lower);
+    gtk_adjustment_set_upper(gtk_scale_button_get_adjustment(b),upper);
+    gtk_adjustment_set_step_increment(gtk_scale_button_get_adjustment(b),1);
+    gtk_adjustment_set_page_increment(gtk_scale_button_get_adjustment(b),1);
+}
+
+void simple_panel_scale_button_set_value_labeled (GtkScaleButton* b, gint value)
+{
+    gtk_scale_button_set_value(b,value);
+    gchar* str = g_strdup_printf("%d",value);
+    gtk_button_set_label(GTK_BUTTON(b),str);
+    g_free(str);
+}
+
 /* vim: set sw=4 et sts=4 : */
