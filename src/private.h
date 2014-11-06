@@ -125,8 +125,6 @@ struct _Panel {
     GtkWidget* plugin_pref_dialog;	/* Plugin preference dialog */
     GtkWidget* pref_dialog;		/* preference dialog */
     GtkWidget* margin_control;		/* Margin control in preference dialog */
-    GtkWidget* height_label;		/* Label of height control */
-    GtkWidget* width_label;		/* Label of width control */
     GtkWidget* alignment_left_label;	/* Label of alignment: left control */
     GtkWidget* alignment_right_label;	/* Label of alignment: right control */
     GtkWidget* height_control;		/* Height control in preference dialog */

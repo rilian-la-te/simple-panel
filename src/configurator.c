@@ -132,26 +132,42 @@ static void set_edge(SimplePanel* panel, int edge)
 
 static void edge_bottom_toggle(GtkToggleButton *widget, SimplePanel *p)
 {
+    GtkButton* edge_button = (GtkButton*)g_object_get_data(G_OBJECT(widget), "edge-button" );
     if (gtk_toggle_button_get_active(widget))
+    {
+        gtk_button_set_label(edge_button,gtk_button_get_label(GTK_BUTTON(widget)));
         set_edge(p, GTK_POS_BOTTOM);
+    }
 }
 
 static void edge_top_toggle(GtkToggleButton *widget, SimplePanel *p)
 {
+    GtkButton* edge_button = (GtkButton*)g_object_get_data(G_OBJECT(widget), "edge-button" );
     if (gtk_toggle_button_get_active(widget))
+    {
+        gtk_button_set_label(edge_button,gtk_button_get_label(GTK_BUTTON(widget)));
         set_edge(p, GTK_POS_TOP);
+    }
 }
 
 static void edge_left_toggle(GtkToggleButton *widget, SimplePanel *p)
 {
+    GtkButton* edge_button = (GtkButton*)g_object_get_data(G_OBJECT(widget), "edge-button" );
     if (gtk_toggle_button_get_active(widget))
+    {
+        gtk_button_set_label(edge_button,gtk_button_get_label(GTK_BUTTON(widget)));
         set_edge(p, GTK_POS_LEFT);
+    }
 }
 
 static void edge_right_toggle(GtkToggleButton *widget, SimplePanel *p)
 {
+    GtkButton* edge_button = (GtkButton*)g_object_get_data(G_OBJECT(widget), "edge-button" );
     if (gtk_toggle_button_get_active(widget))
+    {
+        gtk_button_set_label(edge_button,gtk_button_get_label(GTK_BUTTON(widget)));
         set_edge(p, GTK_POS_RIGHT);
+    }
 }
 
 static void set_monitor(GtkSpinButton *widget, SimplePanel *panel)
@@ -177,28 +193,39 @@ static void set_alignment(SimplePanel* panel, int align)
 
 static void align_left_toggle(GtkToggleButton *widget, SimplePanel *p)
 {
+    GtkButton* b = (GtkButton*)g_object_get_data(G_OBJECT(widget), "alignment-button" );
     if (gtk_toggle_button_get_active(widget))
+    {
+        gtk_button_set_label(b,gtk_button_get_label(GTK_BUTTON(widget)));
         set_alignment(p, PANEL_ALLIGN_LEFT);
+    }
 }
 
 static void align_center_toggle(GtkToggleButton *widget, SimplePanel *p)
 {
+    GtkButton* b = (GtkButton*)g_object_get_data(G_OBJECT(widget), "alignment-button" );
     if (gtk_toggle_button_get_active(widget))
+    {
+        gtk_button_set_label(b,gtk_button_get_label(GTK_BUTTON(widget)));
         set_alignment(p, PANEL_ALLIGN_CENTER);
+    }
 }
 
 static void align_right_toggle(GtkToggleButton *widget, SimplePanel *p)
 {
+    GtkButton* b = (GtkButton*)g_object_get_data(G_OBJECT(widget), "alignment-button" );
     if (gtk_toggle_button_get_active(widget))
+    {
+        gtk_button_set_label(b,gtk_button_get_label(GTK_BUTTON(widget)));
         set_alignment(p, PANEL_ALLIGN_RIGHT);
+    }
 }
 
 static void
 set_margin(GtkSpinButton* spin, SimplePanel* panel)
 {
     Panel *p = panel->priv;
-
-    p->margin = (int)gtk_spin_button_get_value(spin);
+    p->margin = gtk_spin_button_get_value(spin);
     update_panel_geometry(panel);
     UPDATE_GLOBAL_INT(p, "margin", p->margin);
 }
@@ -857,7 +884,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
 {
     Panel *p = panel->priv;
     GtkBuilder* builder;
-    GtkWidget *w, *w2, *tint_clr;
+    GtkWidget *w, *w2, *w3, *popover , *tint_clr;
     FmMimeType *mt;
     GtkComboBox *fm;
     GdkScreen *screen;
@@ -885,19 +912,35 @@ void panel_configure( SimplePanel* panel, int sel_page )
     panel_apply_icon(GTK_WINDOW(p->pref_dialog));
 
     /* position */
-    w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
+    w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
+    w2 = (GtkWidget*)gtk_builder_get_object( builder, "edge-box");
+    popover = gtk_popover_new(NULL);
+    gtk_container_add(GTK_CONTAINER(popover),w2);
+    gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
     w = (GtkWidget*)gtk_builder_get_object( builder, "edge_bottom" );
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_BOTTOM));
+    if (edge_selector(p, GTK_POS_BOTTOM))
+        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
     g_signal_connect(w, "toggled", G_CALLBACK(edge_bottom_toggle), panel);
+    g_object_set_data(G_OBJECT(w), "edge-button", w3);
     w = (GtkWidget*)gtk_builder_get_object( builder, "edge_top" );
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_TOP));
+    if (edge_selector(p, GTK_POS_TOP))
+        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
     g_signal_connect(w, "toggled", G_CALLBACK(edge_top_toggle), panel);
+    g_object_set_data(G_OBJECT(w), "edge-button", w3);
     w = (GtkWidget*)gtk_builder_get_object( builder, "edge_left" );
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_LEFT));
+    if (edge_selector(p, GTK_POS_LEFT))
+        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
     g_signal_connect(w, "toggled", G_CALLBACK(edge_left_toggle), panel);
+    g_object_set_data(G_OBJECT(w), "edge-button", w3);
     w = (GtkWidget*)gtk_builder_get_object( builder, "edge_right" );
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_RIGHT));
+    if (edge_selector(p, GTK_POS_RIGHT))
+        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
     g_signal_connect(w, "toggled", G_CALLBACK(edge_right_toggle), panel);
+    g_object_set_data(G_OBJECT(w), "edge-button", w3);
 
     /* monitor */
     monitors = 1;
@@ -911,15 +954,29 @@ void panel_configure( SimplePanel* panel, int sel_page )
     g_signal_connect(w, "value-changed", G_CALLBACK(set_monitor), panel);
 
     /* alignment */
+    w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment-button");
+    w2 = (GtkWidget*)gtk_builder_get_object( builder, "alignment-box");
+    popover = gtk_popover_new(NULL);
+    gtk_container_add(GTK_CONTAINER(popover),w2);
+    gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
     p->alignment_left_label = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_left" );
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_LEFT));
+    g_object_set_data(G_OBJECT(w), "alignment-button", w3);
     g_signal_connect(w, "toggled", G_CALLBACK(align_left_toggle), panel);
+    if ((p->allign == PANEL_ALLIGN_LEFT))
+        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
     w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_center" );
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_CENTER));
+    g_object_set_data(G_OBJECT(w), "alignment-button", w3);
     g_signal_connect(w, "toggled", G_CALLBACK(align_center_toggle), panel);
+    if ((p->allign == PANEL_ALLIGN_CENTER))
+        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
     p->alignment_right_label = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_right" );
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_RIGHT));
+    g_object_set_data(G_OBJECT(w), "alignment-button", w3);
     g_signal_connect(w, "toggled", G_CALLBACK(align_right_toggle), panel);
+    if ((p->allign == PANEL_ALLIGN_RIGHT))
+        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
 
     /* margin */
     p->margin_control = w = (GtkWidget*)gtk_builder_get_object( builder, "margin" );
@@ -942,7 +999,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "width_unit" );
     update_opt_menu( w, p->widthtype - 1 );
-    gtk_button_set_relief(GTK_BUTTON(w),GTK_RELIEF_NONE);
     g_object_set_data(G_OBJECT(w), "scale-width", p->width_control );
     g_signal_connect( w, "changed",
                      G_CALLBACK(set_strut_type), panel);

@@ -139,28 +139,6 @@ static void lxpanel_realize(GtkWidget *widget)
     _panel_queue_update_background(LXPANEL(widget));
 }
 
-static void lxpanel_size_request(GtkWidget *widget, GtkRequisition *req)
-{
-    Panel *p = LXPANEL(widget)->priv;
-		GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_height(widget, &req->height,&req->height);
-		GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_width(widget, &req->width,&req->width);
-		req->height=p->ah;
-		req->width=p->aw;
-
-    if (!p->visible)
-        /* When the panel is in invisible state, the content box also got hidden, thus always
-         * report 0 size.  Ask the content box instead for its size. */
-		gtk_widget_get_preferred_size(p->box, req, NULL);
-
-    /* FIXME: is this ever required? */
-    if (p->widthtype == STRUT_DYNAMIC)
-        p->width = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? req->width : req->height;
-    if (p->heighttype == STRUT_DYNAMIC)
-        p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? req->height : req->width;
-    calculate_position(p);
-    gtk_widget_set_size_request( widget, p->aw, p->ah );
-}
-
 static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
 {
     Panel *p = LXPANEL(widget)->priv;
@@ -193,10 +171,21 @@ lxpanel_get_preferred_width (GtkWidget *widget,
 							   gint      *minimal_width,
 							   gint      *natural_width)
 {
-  GtkRequisition requisition;
-  lxpanel_size_request (widget, &requisition);
-
-  *minimal_width = *natural_width = requisition.width;
+  Panel *p = LXPANEL(widget)->priv;
+  GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_width(widget, minimal_width,natural_width);
+  if (!p->visible)
+      /* When the panel is in invisible state, the content box also got hidden, thus always
+       * report 0 size.  Ask the content box instead for its size. */
+      gtk_widget_get_preferred_width(p->box, minimal_width, natural_width);
+  if (p->widthtype == STRUT_DYNAMIC && (p->orientation == GTK_ORIENTATION_HORIZONTAL))
+  {
+      *minimal_width= (*natural_width<=gdk_screen_width()) ? *natural_width : gdk_screen_width();
+      p->width = *minimal_width;
+  }
+  else
+      *minimal_width=p->aw;
+  *natural_width=*minimal_width;
+  calculate_position(p);
 }
 
 static void
@@ -204,10 +193,22 @@ lxpanel_get_preferred_height (GtkWidget *widget,
 								gint      *minimal_height,
 								gint      *natural_height)
 {
-  GtkRequisition requisition;
-  lxpanel_size_request (widget, &requisition);
-
-  *minimal_height = *natural_height = requisition.height;
+    Panel *p = LXPANEL(widget)->priv;
+    GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_height(widget, minimal_height,natural_height);
+    *minimal_height=p->ah;
+    if (!p->visible)
+        /* When the panel is in invisible state, the content box also got hidden, thus always
+         * report 0 size.  Ask the content box instead for its size. */
+        gtk_widget_get_preferred_width(p->box, minimal_height, natural_height);
+    if (p->widthtype == STRUT_DYNAMIC && p->orientation == GTK_ORIENTATION_VERTICAL)
+    {
+        *minimal_height= (*natural_height<=gdk_screen_height()) ? *natural_height : gdk_screen_height();
+        p->width = *minimal_height;
+    }
+    else
+        *minimal_height=p->ah;
+    *natural_height=*minimal_height;
+    calculate_position(p);
 }
 
 static gboolean lxpanel_configure_event (GtkWidget *widget, GdkEventConfigure *e)
@@ -1151,20 +1152,15 @@ panel_start_gui(SimplePanel *panel)
 /* Exchange the "width" and "height" terminology for vertical and horizontal panels. */
 void panel_adjust_geometry_terminology(Panel * p)
 {
-    if ((p->height_label != NULL) && (p->width_label != NULL)
-    && (p->alignment_left_label != NULL) && (p->alignment_right_label != NULL))
+    if ((p->alignment_left_label != NULL) && (p->alignment_right_label != NULL))
     {
         if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
         {
-            gtk_label_set_text(GTK_LABEL(p->height_label), _("Height:"));
-            gtk_label_set_text(GTK_LABEL(p->width_label), _("Width:"));
             gtk_button_set_label(GTK_BUTTON(p->alignment_left_label), _("Left"));
             gtk_button_set_label(GTK_BUTTON(p->alignment_right_label), _("Right"));
         }
         else
         {
-            gtk_label_set_text(GTK_LABEL(p->height_label), _("Width:"));
-            gtk_label_set_text(GTK_LABEL(p->width_label), _("Height:"));
             gtk_button_set_label(GTK_BUTTON(p->alignment_left_label), _("Top"));
             gtk_button_set_label(GTK_BUTTON(p->alignment_right_label), _("Bottom"));
         }
