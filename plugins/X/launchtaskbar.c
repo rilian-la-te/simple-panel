@@ -232,6 +232,7 @@ static GdkFilterReturn taskbar_event_filter(XEvent * xev, GdkEvent * event, Laun
 static void taskbar_make_menu(LaunchTaskBarPlugin * tb);
 static void taskbar_window_manager_changed(GdkScreen * screen, LaunchTaskBarPlugin * tb);
 static void taskbar_apply_configuration(LaunchTaskBarPlugin * ltbp);
+static void task_update_style(Task * tk, LaunchTaskBarPlugin * tb);
 static void taskbar_style_updated(GtkWidget* btn,gpointer* data);
 
 static void f_get_exec_cmd_from_pid(GPid pid, gchar *buffer_128, const gchar *proc_file)
@@ -2807,8 +2808,8 @@ static gchar* taskbar_css_flat_generate(GtkWidget* w,LaunchTaskBarPlugin* tb){
     gchar* returnie;
     GdkRGBA color, active_color;
     gtk_style_context_get_color(
-                gtk_widget_get_style_context(w),
-                gtk_widget_get_state_flags(w),
+                gtk_widget_get_style_context(GTK_WIDGET(tb->panel)),
+                gtk_widget_get_state_flags(GTK_WIDGET(tb->panel)),
                 &color);
     color.alpha = 0.6;
     active_color.red=color.red;
@@ -2849,24 +2850,11 @@ static gchar* taskbar_css_flat_generate(GtkWidget* w,LaunchTaskBarPlugin* tb){
 
 static void taskbar_style_updated(GtkWidget* btn,gpointer* data)
 {
-    LaunchTaskBarPlugin* tb = (LaunchTaskBarPlugin*) data;
-    taskbar_apply_configuration(tb);
-//    g_signal_handlers_disconnect_by_func(btn,task_style_updated,data);
-//    if( tb->flat_button)
-//    {
-//        gchar* launchtaskbar_css_flat = taskbar_css_flat_generate(btn,tb);
-//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,"-panel-task-normal",TRUE);
-//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_flat,"-panel-task-flat",FALSE);
-//        g_free(launchtaskbar_css_flat);
-//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,TRUE);
-//    }
-//    else
-//    {
-//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,"-panel-task-normal",FALSE);
-//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,"-panel-task-flat",TRUE);
-//        css_apply_with_class(GTK_WIDGET(btn),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,FALSE);
-//    }
-//    g_signal_connect(btn,"style-updated",G_CALLBACK(task_style_updated),data);
+    Task* tk;
+    LaunchTaskBarPlugin* ltbp = (LaunchTaskBarPlugin*) data;
+    /* Update styles on each button. */
+    for (tk = ltbp->p_task_list; tk != NULL; tk = tk->p_task_flink_xwid)
+        task_update_style(tk, ltbp);
 }
 
 /* Update style on a task button when created or after a configuration change. */
