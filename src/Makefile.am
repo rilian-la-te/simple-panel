@@ -25,8 +25,7 @@ libsimplepanel_la_SOURCES = \
         icon-grid.c \
         panel.c \
         plugin.c \
-        conf.c \
-        app.c
+        conf.c
 
 libsimplepanel_la_LIBADD = \
        $(PACKAGE_LIBS)
@@ -38,7 +37,8 @@ endif
 
 simple_panel_SOURCES = \
         gtk-run.c \
-        main.c \
+        main.c  \
+        app.c \
 	$(MENU_SOURCES)
 
 simple_panel_includedir = $(includedir)/simple-panel
@@ -64,7 +64,6 @@ simple_panel_LDADD = \
 ##		$(X11_LIBS) \
 
 EXTRA_DIST = \
-	css.h \
 	dbg.h \
 	menu-policy.h \
 	private.h \

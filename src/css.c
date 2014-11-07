@@ -101,11 +101,11 @@ inline gchar* css_generate_panel_icon_button(GdkRGBA color){
 inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboolean no_image)
 {
 	gchar* returnie;
-	if (no_image) returnie = g_strdup_printf(".-lxpanel-background{\n"
+	if (no_image) returnie = g_strdup_printf(".-simple-panel-background{\n"
 					" background-color: %s;\n"
 					" background-image: none;\n"
 					"}",gdk_rgba_to_string(&color));
-	else returnie = g_strdup_printf(".-lxpanel-background{\n"
+	else returnie = g_strdup_printf(".-simple-panel-background{\n"
 						 " background-color: %s;\n"
                          " background-image: url('%s');\n"
 						 "}",gdk_rgba_to_string(&color),filename);
@@ -113,17 +113,17 @@ inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboole
 }
 
 inline gchar* css_generate_font_color(GdkRGBA color){
-    return g_strdup_printf(".-lxpanel-font-color{\n"
+    return g_strdup_printf(".-simple-panel-font-color{\n"
                     " color: %s;\n"
                     "}",gdk_rgba_to_string(&color));
 }
 inline gchar* css_generate_font_size(gint size){
-    return g_strdup_printf(".-lxpanel-font-size{\n"
+    return g_strdup_printf(".-simple-panel-font-size{\n"
                     " font-size: %dpx;\n"
                     "}",size);
 }
 inline gchar* css_generate_font_weight(gboolean is_bold){
-    return g_strdup_printf(".-lxpanel-font-weight{\n"
+    return g_strdup_printf(".-simple-panel-font-weight{\n"
                     " font-weight: %s;\n"
                     "}",is_bold ? "bold" : "normal");
 }

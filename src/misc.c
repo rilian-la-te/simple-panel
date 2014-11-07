@@ -81,6 +81,13 @@ pair background_pair[] = {
     { 0, NULL },
 };
 
+pair widgettype_pair[] = {
+    { WIDGET_STYLE_NORMAL, "system-normal" },
+    { WIDGET_STYLE_DARK, "system-dark" },
+    { WIDGET_STYLE_CUSTOM, "css-custom" },
+    { 0, NULL },
+};
+
 pair bool_pair[] = {
     { 0, "0" },
     { 1, "1" },

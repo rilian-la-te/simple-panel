@@ -119,15 +119,9 @@ void panel_app_activate(GApplication* app)
         else
         {
             all_panels = gtk_application_get_windows(GTK_APPLICATION(app));
-            file = _user_config_file_name("panel.css", NULL);
             for( l = all_panels; l; l = l->next )
             {
-                msg=css_apply_from_file(GTK_WIDGET(l->data),file);
-                if (msg!=NULL)
-                {
-                    g_warning("Cannot apply custom style: %s\n",msg);
-                    g_free(msg);
-                }
+                apply_styling(l->data);
             }
             g_free(file);
             is_started=TRUE;

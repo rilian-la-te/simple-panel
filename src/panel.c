@@ -173,10 +173,6 @@ lxpanel_get_preferred_width (GtkWidget *widget,
 {
   Panel *p = LXPANEL(widget)->priv;
   GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_width(widget, minimal_width,natural_width);
-  if (!p->visible)
-      /* When the panel is in invisible state, the content box also got hidden, thus always
-       * report 0 size.  Ask the content box instead for its size. */
-      gtk_widget_get_preferred_width(p->box, minimal_width, natural_width);
   if (p->widthtype == STRUT_DYNAMIC && (p->orientation == GTK_ORIENTATION_HORIZONTAL))
   {
       *minimal_width= (*natural_width<=gdk_screen_width()) ? *natural_width : gdk_screen_width();
@@ -185,6 +181,10 @@ lxpanel_get_preferred_width (GtkWidget *widget,
   else
       *minimal_width=p->aw;
   *natural_width=*minimal_width;
+  if (!p->visible)
+      /* When the panel is in invisible state, the content box also got hidden, thus always
+       * report 0 size.  Ask the content box instead for its size. */
+      gtk_widget_get_preferred_width(p->box, minimal_width, natural_width);
   calculate_position(p);
 }
 
@@ -195,19 +195,18 @@ lxpanel_get_preferred_height (GtkWidget *widget,
 {
     Panel *p = LXPANEL(widget)->priv;
     GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_height(widget, minimal_height,natural_height);
-    *minimal_height=p->ah;
-    if (!p->visible)
-        /* When the panel is in invisible state, the content box also got hidden, thus always
-         * report 0 size.  Ask the content box instead for its size. */
-        gtk_widget_get_preferred_width(p->box, minimal_height, natural_height);
     if (p->widthtype == STRUT_DYNAMIC && p->orientation == GTK_ORIENTATION_VERTICAL)
     {
         *minimal_height= (*natural_height<=gdk_screen_height()) ? *natural_height : gdk_screen_height();
-        p->width = *minimal_height;
+        p->height = *minimal_height;
     }
     else
         *minimal_height=p->ah;
     *natural_height=*minimal_height;
+    if (!p->visible)
+        /* When the panel is in invisible state, the content box also got hidden, thus always
+         * report 0 size.  Ask the content box instead for its size. */
+        gtk_widget_get_preferred_height(p->box, minimal_height, natural_height);
     calculate_position(p);
 }
 
@@ -465,12 +464,12 @@ void _panel_determine_background_css(SimplePanel * panel, GtkWidget * widget)
 
     if (css)
     {
-        css_apply_with_class(widget,css,"-lxpanel-background",system);
+        css_apply_with_class(widget,css,"-simple-panel-background",system);
         g_free(css);
     }
     else if (system)
     {
-        css_apply_with_class(widget,"","-lxpanel-background",system);
+        css_apply_with_class(widget,"","-simple-panel-background",system);
     }
     if (p->background == PANEL_BACKGROUND_GNOME)
     {
@@ -506,17 +505,17 @@ void _panel_update_fonts(SimplePanel * p)
     gchar* css;
     if (p->priv->usefontcolor){
         css = css_generate_font_color(p->priv->gfontcolor);
-        css_apply_with_class(GTK_WIDGET(p),css,"-lxpanel-font-color",FALSE);
+        css_apply_with_class(GTK_WIDGET(p),css,"-simple-panel-font-color",FALSE);
         g_free(css);
     } else {
-        css_apply_with_class(GTK_WIDGET(p),css,"-lxpanel-font-color",TRUE);
+        css_apply_with_class(GTK_WIDGET(p),css,"-simple-panel-font-color",TRUE);
     }
     if (p->priv->usefontsize){
         css = css_generate_font_size(p->priv->fontsize);
-        css_apply_with_class(GTK_WIDGET(p),css,"-lxpanel-font-size",FALSE);
+        css_apply_with_class(GTK_WIDGET(p),css,"-simple-panel-font-size",FALSE);
         g_free(css);
     } else {
-        css_apply_with_class(GTK_WIDGET(p),css,"-lxpanel-font-size",TRUE);
+        css_apply_with_class(GTK_WIDGET(p),css,"-simple-panel-font-size",TRUE);
     }
 }
 
@@ -640,7 +639,10 @@ static void ah_state_set(SimplePanel *panel, PanelAHState ah_state)
             break;
         case AH_STATE_HIDDEN:
             if (p->height_when_hidden > 0)
+            {
                 gtk_widget_hide(p->box);
+                gtk_widget_queue_resize(GTK_WIDGET(panel));
+            }
             else
                 gtk_widget_hide(GTK_WIDGET(panel));
             p->visible = FALSE;
@@ -731,7 +733,7 @@ static void panel_popupmenu_config_plugin( GtkMenuItem* item, GtkWidget* plugin 
 static void panel_popupmenu_add_item( GtkMenuItem* item, SimplePanel* panel )
 {
     /* panel_add_plugin( panel, panel->topgwin ); */
-    panel_configure( panel, 2 );
+    panel_configure( panel, 1 );
 }
 
 static void panel_popupmenu_remove_item( GtkMenuItem* item, GtkWidget* plugin )
@@ -1174,7 +1176,7 @@ void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,
 {
     gtk_label_set_text(GTK_LABEL(label),text);
     gchar* css = css_generate_font_weight(bold);
-    css_apply_with_class(label,css,"-lxpanel-font-weight",FALSE);
+    css_apply_with_class(label,css,"-simple-panel-font-weight",FALSE);
     g_free(css);
 }
 

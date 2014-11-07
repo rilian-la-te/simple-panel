@@ -146,7 +146,7 @@ void plugin_widget_set_background(GtkWidget * w, SimplePanel * panel)
     if (w != NULL)
     {
         gchar* css = css_generate_background("",transparent,TRUE);
-        css_apply_with_class(w,css,"-lxpanel-background",FALSE);
+        css_apply_with_class(w,css,"-simple-panel-background",FALSE);
         g_free(css);
     }
 }

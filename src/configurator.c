@@ -32,7 +32,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <glib/gi18n.h>
-#include <libfm/fm-gtk.h>
 
 #include "dbg.h"
 
@@ -46,6 +45,9 @@ enum{
 static void save_global_config();
 
 static char* logout_cmd = NULL;
+static char* appearance_type = NULL;
+static PanelWidgetStyle type_num;
+static char* custom_css = NULL;
 
 extern GSList* all_panels;
 extern int config;
@@ -83,6 +85,7 @@ response_event(GtkDialog *widget, gint arg1, Panel* panel )
     case GTK_RESPONSE_CLOSE:
     case GTK_RESPONSE_NONE:
         panel_config_save( panel );
+        save_global_config();
         /* NOTE: NO BREAK HERE*/
         gtk_widget_destroy(GTK_WIDGET(widget));
         break;
@@ -313,8 +316,11 @@ static void set_background_type(GtkWidget* item, SimplePanel* panel)
     p->background = type;
     GtkWidget* color = (GtkWidget*)g_object_get_data(G_OBJECT(item), "tint_clr" );
     GtkWidget* image = (GtkWidget*)g_object_get_data(G_OBJECT(item), "img_file" );
-    gtk_widget_set_sensitive(color,p->background == PANEL_BACKGROUND_CUSTOM_COLOR);
-    gtk_widget_set_sensitive(image,p->background == PANEL_BACKGROUND_CUSTOM_IMAGE);
+    GtkWidget* button = (GtkWidget*)g_object_get_data(G_OBJECT(item), "settings-button" );
+    gtk_widget_set_visible(color,p->background == PANEL_BACKGROUND_CUSTOM_COLOR);
+    gtk_widget_set_visible(image,p->background == PANEL_BACKGROUND_CUSTOM_IMAGE);
+    gtk_widget_set_sensitive(button,((p->background == PANEL_BACKGROUND_CUSTOM_COLOR)
+                                     || (p->background == PANEL_BACKGROUND_CUSTOM_IMAGE)));
     panel_update_background(p);
     _panel_set_panel_configuration_changed(panel);
     UPDATE_GLOBAL_STRING(p, "background", num2str(background_pair, type, "gtk-normal"));
@@ -421,16 +427,20 @@ set_autohide(GtkToggleButton* toggle, SimplePanel* panel)
     Panel *p = panel->priv;
 
     p->autohide = gtk_toggle_button_get_active(toggle) ? 1 : 0;
+    p->visible = p->autohide ? FALSE : TRUE;
     update_panel_geometry(panel);
     UPDATE_GLOBAL_INT(p, "autohide", p->autohide);
 }
 
 static void
-set_height_when_minimized(GtkSpinButton* spin, SimplePanel* panel)
+set_height_when_minimized(GtkScaleButton* spin, SimplePanel* panel)
 {
     Panel *p = panel->priv;
 
-    p->height_when_hidden = (int)gtk_spin_button_get_value(spin);
+    p->height_when_hidden = (int)gtk_scale_button_get_value(spin);
+    gchar* str = g_strdup_printf("%d",p->height_when_hidden);
+    gtk_button_set_label(GTK_BUTTON(spin),str);
+    g_free(str);
     update_panel_geometry(panel);
     UPDATE_GLOBAL_INT(p, "heightwhenhidden", p->height_when_hidden);
 }
@@ -868,15 +878,42 @@ update_toggle_button(GtkWidget *w, gboolean n)
     RET();
 }
 
-static void on_app_chooser_destroy(GtkComboBox *fm, gpointer _unused)
+static void on_app_chooser_destroy(GtkAppChooser *fm, gpointer _unused)
 {
-    gboolean is_changed;
-    GAppInfo *app = fm_app_chooser_combo_box_dup_selected_app(fm, &is_changed);
+    GAppInfo *app = gtk_app_chooser_get_app_info(fm);
     if(app)
     {
-        if(is_changed)
-            g_app_info_set_as_default_for_type(app, "inode/directory", NULL);
+        g_app_info_set_as_default_for_type(app, "inode/directory", NULL);
         g_object_unref(app);
+    }
+}
+
+static void set_widget_type(GtkWidget* item, SimplePanel* panel)
+{
+    Panel *p = panel->priv;
+    int type;
+
+    type = gtk_combo_box_get_active(GTK_COMBO_BOX(item));
+    if (type_num == type) /* not changed */
+        return;
+
+    type_num = type;
+    appearance_type = num2str(widgettype_pair,type_num,"system-normal");
+    GtkWidget* button = (GtkWidget*)g_object_get_data(G_OBJECT(item), "css-chooser" );
+    gtk_widget_set_sensitive(button,type_num == WIDGET_STYLE_CUSTOM);
+    apply_styling(panel);
+    save_global_config();
+}
+
+static void custom_css_file_helper(GtkFileChooser * file_chooser, SimplePanel * p)
+{
+    char * file = g_strdup(gtk_file_chooser_get_filename(file_chooser));
+    if (file != NULL)
+    {
+        g_free(custom_css);
+        custom_css = file;
+        save_global_config();
+        apply_styling(p);
     }
 }
 
@@ -886,7 +923,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
     GtkBuilder* builder;
     GtkWidget *w, *w2, *w3, *popover , *tint_clr;
     FmMimeType *mt;
-    GtkComboBox *fm;
+    GtkAppChooserButton *fm;
     GdkScreen *screen;
     gint monitors;
 
@@ -1046,8 +1083,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
     g_signal_connect( w, "toggled",
                       G_CALLBACK(set_autohide), panel );
 
-    w = (GtkWidget*)gtk_builder_get_object( builder, "height_when_minimized" );
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(w), p->height_when_hidden);
+    w = (GtkWidget*)gtk_builder_get_object( builder, "scale-minimized" );
+    simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(w), p->height_when_hidden);
     g_signal_connect( w, "value-changed",
                       G_CALLBACK(set_height_when_minimized), panel);
 
@@ -1058,14 +1095,24 @@ void panel_configure( SimplePanel* panel, int sel_page )
         tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
         gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
         if (p->background != PANEL_BACKGROUND_CUSTOM_COLOR )
-            gtk_widget_set_sensitive( w, FALSE );
+            gtk_widget_set_visible(w, FALSE );
         g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
-        type_list = (GtkWidget*)gtk_builder_get_object( builder, "background_type_combo" );
+        type_list = (GtkWidget*)gtk_builder_get_object( builder, "background-type-combo" );
         update_opt_menu( type_list, p->background);
+
+        w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "background-settings-button");
+        w2 = (GtkWidget*)gtk_builder_get_object( builder, "background-box");
+        popover = gtk_popover_new(NULL);
+        gtk_container_add(GTK_CONTAINER(popover),w2);
+        gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
+        gtk_widget_set_sensitive(w3,((p->background == PANEL_BACKGROUND_CUSTOM_COLOR)
+                                         || (p->background == PANEL_BACKGROUND_CUSTOM_IMAGE)));
+        gtk_button_set_image(GTK_BUTTON(w3),gtk_image_new_from_icon_name("preferences-desktop-theme",GTK_ICON_SIZE_MENU));
         g_object_set_data(G_OBJECT(type_list), "tint_clr", tint_clr);
 
         w = (GtkWidget*)gtk_builder_get_object( builder, "img_file" );
         g_object_set_data(G_OBJECT(type_list), "img_file", w);
+        g_object_set_data(G_OBJECT(type_list), "settings-button", w3);
         g_signal_connect( type_list, "changed",
                          G_CALLBACK(set_background_type), panel);
         if (p->background_file != NULL)
@@ -1077,7 +1124,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
         }
 
         if (p->background != PANEL_BACKGROUND_CUSTOM_IMAGE)
-            gtk_widget_set_sensitive( w, FALSE);
+            gtk_widget_set_visible(w, FALSE);
         g_object_set_data( G_OBJECT(w), "bg_image", type_list );
         g_signal_connect( w, "file-set", G_CALLBACK (background_changed), p);
     }
@@ -1129,10 +1176,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
         init_plugin_list( panel, GTK_TREE_VIEW(plugin_list), w );
     }
     /* advanced, applications */
-    mt = fm_mime_type_from_name("inode/directory");
-    fm = GTK_COMBO_BOX(gtk_builder_get_object(builder, "fm_combobox"));
-    fm_app_chooser_combo_box_setup_for_mime_type(fm, mt);
-    fm_mime_type_unref(mt);
+    fm = GTK_APP_CHOOSER_BUTTON(gtk_builder_get_object(builder, "fm-chooser"));
     g_signal_connect(fm, "destroy", G_CALLBACK(on_app_chooser_destroy), NULL);
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "term" );
@@ -1159,6 +1203,17 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     panel_adjust_geometry_terminology(p);
     gtk_widget_show(GTK_WIDGET(p->pref_dialog));
+    w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-combo" );
+    update_opt_menu( w, type_num);
+    g_signal_connect( w, "changed",
+                     G_CALLBACK(set_widget_type), panel);
+    w = (GtkWidget*)gtk_builder_get_object( builder, "css-chooser" );
+    g_object_set_data(G_OBJECT(w3), "css-chooser", w);
+    if (custom_css != NULL)
+        gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), custom_css);
+    if (type_num != WIDGET_STYLE_CUSTOM)
+        gtk_widget_set_sensitive(w, FALSE);
+    g_signal_connect( w, "file-set", G_CALLBACK (custom_css_file_helper), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "notebook" );
     gtk_notebook_set_current_page( GTK_NOTEBOOK(w), sel_page );
 
@@ -1211,6 +1266,25 @@ void logout(void)
         fm_launch_command_simple(NULL, NULL, 0, l_logout_cmd, NULL);
     else
         fm_show_error(NULL, NULL, _("Logout command is not set"));
+}
+
+void apply_styling(SimplePanel *p)
+{
+    gtk_settings_set_long_property(gtk_settings_get_default(),"gtk-application-prefer-dark-theme", type_num == WIDGET_STYLE_DARK ,NULL);
+    if (type_num == WIDGET_STYLE_CUSTOM)
+    {
+        GSList* l;
+        gchar* msg;
+        for( l = all_panels; l; l = l->next )
+        {
+            msg=css_apply_from_file(GTK_WIDGET(l->data),custom_css);
+            if (msg!=NULL)
+            {
+                g_warning("Cannot apply custom style: %s\n",msg);
+                g_free(msg);
+            }
+        }
+    }
 }
 
 static void notify_apply_config( GtkWidget* widget )
@@ -1472,6 +1546,7 @@ GtkWidget *lxpanel_generic_config_dlg(const char *title, SimplePanel *panel,
 }
 
 #define COMMAND_GROUP "Command"
+#define APPEARANCE_GROUP "Appearance"
 
 void load_global_config()
 {
@@ -1544,8 +1619,14 @@ void load_global_config()
                 g_object_unref(l->data);
             g_list_free(apps);
             g_free(tmp);
-            save_global_config();
         }
+        appearance_type = g_key_file_get_string(kf, APPEARANCE_GROUP, "Type", NULL);
+        if (appearance_type)
+            type_num = str2num(widgettype_pair,appearance_type,WIDGET_STYLE_NORMAL);
+        else
+            type_num = WIDGET_STYLE_NORMAL;
+        custom_css = g_key_file_get_string(kf, APPEARANCE_GROUP, "CSS", NULL);
+        save_global_config();
     }
     g_key_file_free( kf );
 }
@@ -1559,6 +1640,11 @@ static void save_global_config()
         fprintf( f, "[" COMMAND_GROUP "]\n");
         if( logout_cmd )
             fprintf( f, "Logout=%s\n", logout_cmd );
+        fprintf( f, "[" APPEARANCE_GROUP "]\n");
+        if( appearance_type )
+            fprintf( f, "Type=%s\n", appearance_type );
+        if( custom_css )
+            fprintf( f, "CSS=%s\n", custom_css );
         fclose( f );
     }
     g_free(file);
@@ -1567,6 +1653,8 @@ static void save_global_config()
 void free_global_config()
 {
     g_free( logout_cmd );
+    g_free( appearance_type );
+    g_free( custom_css );
 }
 
 /* this is dirty and should be removed later */

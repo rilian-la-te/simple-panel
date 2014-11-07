@@ -52,6 +52,11 @@ typedef enum {
     PANEL_BACKGROUND_CUSTOM_COLOR,
     PANEL_BACKGROUND_CUSTOM_IMAGE
 } PanelBackgroundType;
+typedef enum {
+    WIDGET_STYLE_NORMAL=0,
+    WIDGET_STYLE_DARK,
+    WIDGET_STYLE_CUSTOM
+} PanelWidgetStyle;
 
 #define PANEL_ICON_SIZE               24	/* Default size of panel icons */
 #define PANEL_HEIGHT_DEFAULT          26	/* Default height of horizontal panel */
@@ -112,11 +117,6 @@ struct _Panel {
     guint hide_timeout;
     int icon_size;			/* Icon size */
 
-//    int desknum;
-//    int curdesk;
-//    gulong *workarea;
-//    int wa_len;
-
     char* background_file;
 
     PanelConf * config;                 /* Panel configuration data */
@@ -158,6 +158,7 @@ extern pair edge_pair[];
 extern pair strut_pair[];
 extern pair background_pair[];
 extern pair bool_pair[];
+extern pair widgettype_pair[];
 
 int str2num(pair *p, const gchar *str, int defval);
 const gchar *num2str(pair *p, int num, const gchar *defval);
@@ -226,6 +227,7 @@ void panel_configure(SimplePanel* p, int sel_page);
 gboolean panel_edge_available(Panel* p, int edge, gint monitor);
 void restart(void);
 void logout(void);
+void apply_styling (SimplePanel* p);
 void gtk_run(void);
 
 /* -----------------------------------------------------------------------------

@@ -341,7 +341,7 @@ static void panel_icon_grid_add(GtkContainer *container, GtkWidget *widget)
 	gint height,width,dummy;
 	icon_grid_element_get_preferred_height(widget,&height,&dummy,ig);
 	icon_grid_element_get_preferred_width(widget,&width,&dummy,ig);
-	gtk_widget_set_size_request(widget,width,height);
+//	gtk_widget_set_size_request(widget,width,height);
 #else
     g_signal_connect(G_OBJECT(widget), "size-request",
                      G_CALLBACK(icon_grid_element_size_request), container);

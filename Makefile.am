@@ -6,7 +6,7 @@ SUBDIRS = src plugins data po man
 
 EXTRA_DIST = \
         autogen.sh \
-        lxpanel.pc.in
+        simple-panel.pc.in
 
 pkgconfigdir   = $(libdir)/pkgconfig
-pkgconfig_DATA = lxpanel.pc
+pkgconfig_DATA = simple-panel.pc
