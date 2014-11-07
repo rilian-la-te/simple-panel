@@ -2804,50 +2804,6 @@ static void taskbar_update_style(LaunchTaskBarPlugin * tb)
         tb->icon_size, tb->spacing, 0, panel_get_height(tb->panel));
 }
 
-static gchar* taskbar_css_flat_generate(GtkWidget* w,LaunchTaskBarPlugin* tb){
-    gchar* returnie;
-    GdkRGBA color, active_color;
-    gtk_style_context_get_color(
-                gtk_widget_get_style_context(GTK_WIDGET(tb->panel)),
-                gtk_widget_get_state_flags(GTK_WIDGET(tb->panel)),
-                &color);
-    color.alpha = 0.6;
-    active_color.red=color.red;
-    active_color.green=color.green;
-    active_color.blue=color.blue;
-    active_color.alpha =0.4;
-    gchar* edge;
-    GtkPositionType direction = panel_get_edge(tb->panel);
-    if (direction==GTK_POS_TOP)
-        edge="0px 0px 2px 0px";
-    if (direction==GTK_POS_BOTTOM)
-        edge="2px 0px 0px 0px";
-    if (direction==GTK_POS_LEFT)
-        edge="0px 2px 0px 0px";
-    if (direction==GTK_POS_RIGHT)
-        edge="0px 0px 0px 2px";
-    returnie = g_strdup_printf(".-panel-task-flat {\n"
-                               "padding: 0px;\n"
-                               " -GtkWidget-focus-line-width: 0px;\n"
-                               " -GtkWidget-focus-padding: 0px;\n"
-                               "}\n"
-                               ".-panel-task-flat:hover,"
-                               ".-panel-task-flat.highlight,"
-                               ".-panel-task-flat:hover:active,"
-                               ".-panel-task-flat:active:hover {\n"
-                               "border-style: solid;"
-                               "border-width: %s;"
-                               "border-color: %s;"
-                               "}\n"
-                               ".-panel-task-flat:active {\n"
-                               "border-style: solid;"
-                               "border-width: %s;"
-                               "border-color: %s;"
-                               "}\n",edge,gdk_rgba_to_string(&color),edge,gdk_rgba_to_string(&active_color));
-    g_object_weak_ref(G_OBJECT(tb->tb_icon_grid), (GWeakNotify)g_free, edge);
-    return returnie;
-}
-
 static void taskbar_style_updated(GtkWidget* btn,gpointer* data)
 {
     Task* tk;
@@ -2867,16 +2823,16 @@ static void task_update_style(Task * tk, LaunchTaskBarPlugin * tb)
 
     if( tb->flat_button )
     {
-        gchar* launchtaskbar_css_flat = taskbar_css_flat_generate(tk->button,tb);
+        gchar* launchtaskbar_css_flat = css_generate_flat_button(tb->tb_icon_grid,tb->panel);
         css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-normal",TRUE);
-        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_flat,"-panel-task-flat",FALSE);
+        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_flat,"-panel-flat-button",FALSE);
         g_free(launchtaskbar_css_flat);
         css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,TRUE);
     }
     else
     {
         css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-normal",FALSE);
-        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-flat",TRUE);
+        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-flat-button",TRUE);
         css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,FALSE);
     }
 

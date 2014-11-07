@@ -29,6 +29,7 @@
 #include <glib/gi18n.h>
 
 #include "dbg.h"
+#include "css.h"
 
 #define DEFAULT_TIP_FORMAT    "%A %x"
 #define DEFAULT_CLOCK_FORMAT  "%R"
@@ -67,6 +68,14 @@ static gboolean dclock_apply_configuration(gpointer user_data);
 static void dclock_popup_map(GtkWidget * widget, DClockPlugin * dc)
 {
     lxpanel_plugin_adjust_popup_position(widget, dc->plugin);
+}
+
+static void dclock_style_updated(GtkWidget* widget, DClockPlugin* pl)
+{
+    gchar* css = css_generate_flat_button(widget,pl->panel);
+    css_apply_with_class(GTK_WIDGET(pl->clock_label),css,"-panel-flat-button",FALSE);
+    css_apply_with_class(GTK_WIDGET(pl->clock_icon),css,"-panel-flat-button",FALSE);
+    g_free (css);
 }
 
 /* Display a window containing the standard calendar widget. */
@@ -327,6 +336,7 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, config_setting_t *setti
     if (dc->tooltip_format == NULL)
         dc->tooltip_format = g_strdup(_(DEFAULT_TIP_FORMAT));
     dclock_apply_configuration(p);
+    g_signal_connect(dc->panel, "style-updated", G_CALLBACK(dclock_style_updated),(gpointer) dc);
 
     /* Show the widget and return. */
     return p;

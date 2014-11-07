@@ -497,13 +497,14 @@ static void volumealsa_build_popup_window(GtkWidget *p)
     gtk_widget_show(viewport);
 
     /* Create a frame as the child of the viewport. */
-    GtkWidget * frame = gtk_frame_new(_("Volume"));
-    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
-    gtk_container_add(GTK_CONTAINER(viewport), frame);
+//    GtkWidget * frame = gtk_frame_new(_("Volume"));
+//    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
+//    gtk_container_add(GTK_CONTAINER(viewport), frame);
 
     /* Create a vertical box as the child of the frame. */
     GtkWidget * box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(frame), box);
+//    gtk_container_add(GTK_CONTAINER(frame), box);
+      gtk_container_add(GTK_CONTAINER(viewport), box);
 
     /* Create a vertical scale as the child of the vertical box. */
     vol->volume_scale = gtk_scale_new(GTK_ORIENTATION_VERTICAL,GTK_ADJUSTMENT(gtk_adjustment_new(100, 0, 100, 0, 0, 0)));
@@ -516,9 +517,9 @@ static void volumealsa_build_popup_window(GtkWidget *p)
     g_signal_connect(vol->volume_scale, "scroll-event", G_CALLBACK(volumealsa_popup_scale_scrolled), vol);
 
     /* Create a check button as the child of the vertical box. */
-    vol->mute_check = gtk_check_button_new_with_label(_("Mute"));
-    gtk_box_pack_end(GTK_BOX(box), vol->mute_check, FALSE, FALSE, 0);
-    vol->mute_check_handler = g_signal_connect(vol->mute_check, "toggled", G_CALLBACK(volumealsa_popup_mute_toggled), vol);
+//    vol->mute_check = gtk_check_button_new_with_label(_("Mute"));
+//    gtk_box_pack_end(GTK_BOX(box), vol->mute_check, FALSE, FALSE, 0);
+//    vol->mute_check_handler = g_signal_connect(vol->mute_check, "toggled", G_CALLBACK(volumealsa_popup_mute_toggled), vol);
 
     /* Set background to default. */
 //    gtk_widget_set_style(viewport, panel_get_defstyle(vol->panel));
@@ -540,7 +541,7 @@ static GtkWidget *volumealsa_constructor(SimplePanel *panel, config_setting_t *s
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     vol->panel = panel;
-    vol->plugin = p = gtk_event_box_new();
+    vol->plugin = p = gtk_toggle_button_new();
     vol->settings = settings;
     lxpanel_plugin_set_data(p, vol, volumealsa_destructor);
     gtk_widget_add_events(p, GDK_BUTTON_PRESS_MASK);

@@ -127,3 +127,47 @@ inline gchar* css_generate_font_weight(gboolean is_bold){
                     " font-weight: %s;\n"
                     "}",is_bold ? "bold" : "normal");
 }
+
+inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
+    gchar* returnie;
+    GdkRGBA color, active_color;
+    gtk_style_context_get_color(
+                gtk_widget_get_style_context(GTK_WIDGET(panel)),
+                gtk_widget_get_state_flags(GTK_WIDGET(panel)),
+                &color);
+    color.alpha = 0.6;
+    active_color.red=color.red;
+    active_color.green=color.green;
+    active_color.blue=color.blue;
+    active_color.alpha =0.8;
+    gchar* edge;
+    GtkPositionType direction = panel_get_edge(panel);
+    if (direction==GTK_POS_TOP)
+        edge="0px 0px 2px 0px";
+    if (direction==GTK_POS_BOTTOM)
+        edge="2px 0px 0px 0px";
+    if (direction==GTK_POS_LEFT)
+        edge="0px 2px 0px 0px";
+    if (direction==GTK_POS_RIGHT)
+        edge="0px 0px 0px 2px";
+    returnie = g_strdup_printf(".-panel-flat-button {\n"
+                               "padding: 0px;\n"
+                               " -GtkWidget-focus-line-width: 0px;\n"
+                               " -GtkWidget-focus-padding: 0px;\n"
+                               "}\n"
+                               ".-panel-flat-button:hover,"
+                               ".-panel-flat-button.highlight,"
+                               ".-panel-flat-button:hover:active,"
+                               ".-panel-flat-button:active:hover {\n"
+                               "border-style: solid;"
+                               "border-width: %s;"
+                               "border-color: %s;"
+                               "}\n"
+                               ".-panel-flat-button:active {\n"
+                               "border-style: solid;"
+                               "border-width: %s;"
+                               "border-color: %s;"
+                               "}\n",edge,gdk_rgba_to_string(&color),edge,gdk_rgba_to_string(&active_color));
+    g_object_weak_ref(G_OBJECT(widget), (GWeakNotify)g_free, edge);
+    return returnie;
+}
