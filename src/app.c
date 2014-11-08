@@ -38,6 +38,7 @@
 #include "panel.h"
 #include "css.h"
 #include "private.h"
+#include "app-actions.h"
 
 /* The same for new plugins type - they will be not unloaded by FmModule */
 #define REGISTER_STATIC_MODULE(pc) do { \
@@ -52,6 +53,11 @@ static gboolean is_started;
 
 static const gchar* panel_commands = "run menu config exit ";
 
+const GActionEntry app_action_entries[] =
+{
+    {"about", activate_about, NULL, NULL, NULL},
+    {"run", activate_run, NULL, NULL, NULL}
+};
 static const GOptionEntry entries[] =
 {
   { "version", 'v', 0, G_OPTION_ARG_NONE, NULL, N_("Print version and exit"), NULL },
@@ -70,11 +76,9 @@ static void panel_app_startup(GApplication* app)
 {
     G_APPLICATION_CLASS (panel_app_parent_class)->startup (app);
     setlocale(LC_CTYPE, "");
-#ifdef ENABLE_NLS
     bindtextdomain ( GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR );
     bind_textdomain_codeset ( GETTEXT_PACKAGE, "UTF-8" );
     textdomain ( GETTEXT_PACKAGE );
-#endif
 
     /* Add our own icons to the search path of icon theme */
     gtk_icon_theme_append_search_path( gtk_icon_theme_get_default(), PACKAGE_DATA_DIR "/images" );
@@ -83,6 +87,12 @@ static void panel_app_startup(GApplication* app)
 
     /* prepare modules data */
     _prepare_modules();
+
+    /* add actions for all panels */
+    g_action_map_add_action_entries(G_ACTION_MAP(app),app_action_entries,G_N_ELEMENTS(app_action_entries),NULL);
+    GSimpleAction* act = g_simple_action_new("quit",NULL);
+    g_signal_connect(act,"activate",G_CALLBACK(activate_exit),app);
+    g_action_map_add_action(G_ACTION_MAP(app),G_ACTION(act));
 }
 
 static void panel_app_shutdown(GApplication* app)
@@ -92,13 +102,6 @@ static void panel_app_shutdown(GApplication* app)
 
     _unload_modules();
     fm_gtk_finalize();
-//    if (!is_restarting)
-//        return 0;
-//    if (strchr(argv[0], G_DIR_SEPARATOR))
-//        execve(argv[0], argv, env);
-//    else
-//        execve(g_find_program_in_path(argv[0]), argv, env);
-//    return 1;
     G_APPLICATION_CLASS (panel_app_parent_class)->shutdown (app);
 }
 
@@ -127,7 +130,7 @@ void panel_app_activate(GApplication* app)
             is_started=TRUE;
         }
     }
-    else if (ccommand!=NULL)
+    if (ccommand!=NULL)
     {
         if (!g_strcmp0(ccommand,"menu"))
         {
@@ -226,7 +229,7 @@ static void _start_panels_from_dir(PanelApp* app,const char *panel_dir)
         char* panel_config = g_build_filename( panel_dir, name, NULL );
         if (strchr(panel_config, '~') == NULL)    /* Skip editor backup files in case user has hand edited in this directory */
         {
-            SimplePanel* panel = panel_new(app,panel_config, name );
+            SimplePanel* panel = panel_new(GTK_APPLICATION(app),panel_config, name );
             if( panel )
                 gtk_application_add_window(GTK_APPLICATION(app),GTK_WINDOW(panel));
         }
@@ -315,5 +318,4 @@ void panel_app_class_init(PanelAppClass *klass)
     app_class->handle_local_options = panel_app_handle_local_options;
     app_class->command_line = panel_app_command_line;
     app_class->activate = panel_app_activate;
-
 }

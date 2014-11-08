@@ -39,7 +39,7 @@
 #include "css.h"
 #include "dbg.h"
 
-static PanelApp* win_grp;
+static GtkApplication* win_grp;
 
 GList* all_panels = NULL;
 
@@ -52,9 +52,13 @@ static void ah_start(SimplePanel *p);
 static void ah_stop(SimplePanel *p);
 static void _panel_update_background(SimplePanel * p);
 static void _panel_update_fonts(SimplePanel * p);
+static void activate_remove_plugin(GSimpleAction* action, GVariant* param, gpointer pl);
+static void activate_new_panel(GSimpleAction* action, GVariant* param, gpointer data);
+static void activate_remove_panel(GSimpleAction* action, GVariant* param, gpointer data);
+static void activate_panel_settings(GSimpleAction* action, GVariant* param, gpointer data);
+static void panel_add_actions( SimplePanel* p);
 
-
-G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_WINDOW);
+G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_APPLICATION_WINDOW)
 
 static void lxpanel_finalize(GObject *object)
 {
@@ -239,7 +243,7 @@ static gboolean lxpanel_button_press(GtkWidget *widget, GdkEventButton *event)
 {
     if (event->button == 3) /* right button */
     {
-        GtkMenu* popup = (GtkMenu*) lxpanel_get_plugin_menu(LXPANEL(widget), NULL, FALSE);
+        GtkMenu* popup = (GtkMenu*) lxpanel_get_plugin_menu(LXPANEL(widget), NULL);
         gtk_menu_popup(popup, NULL, NULL, NULL, NULL, event->button, event->time);
         return TRUE;
     }
@@ -296,7 +300,7 @@ static void lxpanel_init(PanelWindow *self)
 
 
 /* Allocate and initialize new Panel structure. */
-static SimplePanel* panel_allocate(void)
+static SimplePanel* panel_allocate(GtkApplication* app)
 {
     return g_object_new(LX_TYPE_PANEL, NULL);
 }
@@ -713,15 +717,17 @@ static void ah_stop(SimplePanel *p)
 /* end of the autohide code
  * ------------------------------------------------------------- */
 
-static gint
-panel_popupmenu_configure(GtkWidget *widget, gpointer user_data)
+void activate_panel_settings(GSimpleAction *action, GVariant *param, gpointer data)
 {
-    panel_configure( (SimplePanel*)user_data, 0 );
-    return TRUE;
+    int page = g_variant_get_int32(param);
+    SimplePanel* p = (SimplePanel*)data;
+    panel_configure(p,page);
+
 }
 
-static void panel_popupmenu_config_plugin( GtkMenuItem* item, GtkWidget* plugin )
+static void activate_config_plugin(GSimpleAction *action, GVariant *param, gpointer pl)
 {
+    GtkWidget* plugin = (GtkWidget*) pl;
     Panel *panel = PLUGIN_PANEL(plugin)->priv;
 
     lxpanel_plugin_show_config_dialog(plugin);
@@ -730,14 +736,9 @@ static void panel_popupmenu_config_plugin( GtkMenuItem* item, GtkWidget* plugin 
     panel->config_changed = TRUE;
 }
 
-static void panel_popupmenu_add_item( GtkMenuItem* item, SimplePanel* panel )
+static void activate_remove_plugin(GSimpleAction *action, GVariant *param, gpointer pl)
 {
-    /* panel_add_plugin( panel, panel->topgwin ); */
-    panel_configure( panel, 1 );
-}
-
-static void panel_popupmenu_remove_item( GtkMenuItem* item, GtkWidget* plugin )
-{
+    GtkWidget* plugin = (GtkWidget*) pl;
     Panel* panel = PLUGIN_PANEL(plugin)->priv;
 
     /* If the configuration dialog is open, there will certainly be a crash if the
@@ -789,14 +790,15 @@ static char* gen_panel_name( int edge, gint monitor )
 
 /* FIXME: Potentially we can support multiple panels at the same edge,
  * but currently this cannot be done due to some positioning problems. */
-static void panel_popupmenu_create_panel( GtkMenuItem* item, SimplePanel* panel )
+static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer data)
 {
+    SimplePanel* panel = (SimplePanel*) data;
     gint m, e, monitors;
     GdkScreen *screen;
-    SimplePanel *new_panel = panel_allocate();
+    SimplePanel *new_panel = panel_allocate(panel->priv->app);
     Panel *p = new_panel->priv;
     config_setting_t *global;
-    p->app =panel->priv->app;
+    p->app = panel->priv->app;
 
     /* Allocate the edge. */
     screen = gdk_screen_get_default();
@@ -826,7 +828,9 @@ found_edge:
     /* create new config with first group "Global" */
     global = config_group_add_subgroup(config_root_setting(p->config), "Global");
     config_group_set_string(global, "edge", num2str(edge_pair, p->edge, "none"));
-    config_group_set_int(global, "monitor", p->monitor);    panel_configure(new_panel, 0);
+    config_group_set_int(global, "monitor", p->monitor);
+    panel_add_actions(new_panel);
+    panel_configure(new_panel, 0);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
     gtk_widget_show_all(GTK_WIDGET(new_panel));
@@ -836,8 +840,9 @@ found_edge:
     all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
 }
 
-static void panel_popupmenu_delete_panel( GtkMenuItem* item, SimplePanel* panel )
+static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpointer data)
 {
+    SimplePanel* panel = (SimplePanel*)data;
     GtkWidget* dlg;
     gboolean ok;
     dlg = gtk_message_dialog_new_with_markup( GTK_WINDOW(panel),
@@ -864,57 +869,6 @@ static void panel_popupmenu_delete_panel( GtkMenuItem* item, SimplePanel* panel 
     }
 }
 
-static void panel_popupmenu_about( GtkMenuItem* item, Panel* panel )
-{
-    GtkWidget *about;
-    const gchar* authors[] = {
-        "Hong Jen Yee (PCMan) <pcman.tw@gmail.com>",
-        "Jim Huang <jserv.tw@gmail.com>",
-        "Greg McNew <gmcnew@gmail.com> (battery plugin)",
-        "Fred Chien <cfsghost@gmail.com>",
-        "Daniel Kesler <kesler.daniel@gmail.com>",
-        "Juergen Hoetzel <juergen@archlinux.org>",
-        "Marty Jack <martyj19@comcast.net>",
-        "Martin Bagge <brother@bsnet.se>",
-        "Andriy Grytsenko <andrej@rep.kiev.ua>",
-        "Giuseppe Penone <giuspen@gmail.com>",
-        "Piotr Sipika <piotr.sipika@gmail.com>",
-        NULL
-    };
-    /* TRANSLATORS: Replace this string with your names, one name per line. */
-    gchar *translators = _( "translator-credits" );
-
-    about = gtk_about_dialog_new();
-    panel_apply_icon(GTK_WINDOW(about));
-    gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), VERSION);
-    gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about), _("LXPanel"));
-
-    if(gtk_icon_theme_has_icon(panel->icon_theme, "video-display"))
-    {
-         gtk_about_dialog_set_logo( GTK_ABOUT_DIALOG(about),
-                                    gtk_icon_theme_load_icon(panel->icon_theme, "video-display", 48, 0, NULL));
-    }
-    else if (gtk_icon_theme_has_icon(panel->icon_theme, "start-here"))
-    {
-         gtk_about_dialog_set_logo( GTK_ABOUT_DIALOG(about),
-                                    gtk_icon_theme_load_icon(panel->icon_theme, "start-here", 48, 0, NULL));
-    }
-    else
-    {
-        gtk_about_dialog_set_logo(  GTK_ABOUT_DIALOG(about),
-                                    gdk_pixbuf_new_from_file(PACKAGE_DATA_DIR "/images/my-computer.png", NULL));
-    }
-
-    gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (C) 2008-2014"));
-    gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about), _( "Desktop panel for LXDE project"));
-    gtk_about_dialog_set_license(GTK_ABOUT_DIALOG(about), "This program is free software; you can redistribute it and/or\nmodify it under the terms of the GNU General Public License\nas published by the Free Software Foundation; either version 2\nof the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program; if not, write to the Free Software\nFoundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.");
-    gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(about), "http://lxde.org/");
-    gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(about), authors);
-    gtk_about_dialog_set_translator_credits(GTK_ABOUT_DIALOG(about), translators);
-    gtk_dialog_run(GTK_DIALOG(about));
-    gtk_widget_destroy(about);
-}
-
 void panel_apply_icon( GtkWindow *w )
 {
     GdkPixbuf* window_icon;
@@ -934,92 +888,73 @@ void panel_apply_icon( GtkWindow *w )
     gtk_window_set_icon(w, window_icon);
 }
 
-GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin, gboolean use_sub_menu )
+GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
 {
-    GtkWidget  *menu_item, *img;
-    GtkMenu *ret,*menu;
+    GMenu *gmenu, *gmenusection;
+    GtkMenu *ret;
     const SimplePanelPluginInit *init;
     char* tmp;
-
-    ret = menu = GTK_MENU(gtk_menu_new());
-    GList* all_panels = gtk_application_get_windows(GTK_APPLICATION(panel->priv->app));
-
+    gmenu = g_menu_new();
     if (plugin)
     {
         init = PLUGIN_CLASS(plugin);
         /* create single item - plugin instance settings */
+        g_action_map_remove_action(G_ACTION_MAP(panel),"remove-plugin");
+        g_action_map_remove_action(G_ACTION_MAP(panel),"config-plugin");
+        const GActionEntry plugin_entries[] = {
+            {"remove-plugin",activate_remove_plugin,NULL,NULL,NULL},
+            {"config-plugin",activate_config_plugin,NULL,NULL,NULL},
+        };
+        g_action_map_add_action_entries(G_ACTION_MAP(panel),plugin_entries,
+                                        G_N_ELEMENTS(plugin_entries),
+                                        (gpointer)plugin);
+        gmenusection = g_menu_new();
         tmp = g_strdup_printf( _("\"%s\" Settings"), _(init->name) );
-        menu_item = gtk_menu_item_new_with_label( tmp );
+        g_menu_append(gmenusection,tmp,"win.config-plugin");
         g_free( tmp );
-        gtk_menu_shell_prepend(GTK_MENU_SHELL(ret), menu_item);
-        if( init->config )
-            g_signal_connect( menu_item, "activate", G_CALLBACK(panel_popupmenu_config_plugin), plugin );
-        else
-            gtk_widget_set_sensitive( menu_item, FALSE );
+        if(! init->config )
+            g_action_map_remove_action(G_ACTION_MAP(panel),"config-plugin");
+        tmp = g_strdup_printf( _("Remove \"%s\" From Panel"), _(init->name) );
+        g_menu_append(gmenusection,tmp,"win.remove-plugin");
+        g_free( tmp );
         /* add custom items by plugin if requested */
         if (init->update_context_menu != NULL)
-            use_sub_menu = init->update_context_menu(plugin, ret);
-        /* append a separator */
-        menu_item = gtk_separator_menu_item_new();
-        gtk_menu_shell_append(GTK_MENU_SHELL(ret), menu_item);
+        {
+            tmp = g_strdup_printf("%s", _(init->name) );
+            g_menu_append_submenu(gmenusection,tmp,G_MENU_MODEL(init->update_context_menu(plugin)));
+            g_free( tmp );
+        }
+        g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
+        g_object_unref(gmenusection);
     }
-    if (use_sub_menu)
-        menu = GTK_MENU(gtk_menu_new());
+    gmenusection = g_menu_new();
+    g_menu_append(gmenusection,_("Add / Remove Panel Items"),"win.panel-settings(1)");
+    g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
+    g_object_unref(gmenusection);
+    gmenusection = g_menu_new();
+    g_menu_append(gmenusection,_("Panel Settings"),"win.panel-settings(0)");
+    g_menu_append(gmenusection,_("Create New Panel"),"win.new-panel");
+    gboolean enabled = g_list_length(gtk_application_get_windows(panel->priv->app))>1;
+    g_simple_action_set_enabled (
+                G_SIMPLE_ACTION(g_action_map_lookup_action(G_ACTION_MAP(panel),"remove-panel")),
+                enabled
+                );
+    g_menu_append(gmenusection,_("Delete This Panel"),"win.remove-panel");
+    g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
+    g_object_unref(gmenusection);
+    gmenusection = g_menu_new();
+    g_menu_append(gmenusection,_("About"),"app.about");
+    g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
+    g_object_unref(gmenusection);
 
-    menu_item = gtk_menu_item_new_with_label(_("Add / Remove Panel Items"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    g_signal_connect( menu_item, "activate", G_CALLBACK(panel_popupmenu_add_item), panel );
-
-    if( plugin )
-    {
-        tmp = g_strdup_printf( _("Remove \"%s\" From Panel"), _(init->name) );
-        menu_item = gtk_menu_item_new_with_label( tmp );
-        g_free( tmp );
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-        g_signal_connect( menu_item, "activate", G_CALLBACK(panel_popupmenu_remove_item), plugin );
-    }
-
-    menu_item = gtk_separator_menu_item_new();
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-
-    menu_item = gtk_menu_item_new_with_label(_("Panel Settings"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    g_signal_connect(G_OBJECT(menu_item), "activate", G_CALLBACK(panel_popupmenu_configure), panel );
-
-    menu_item = gtk_menu_item_new_with_label(_("Create New Panel"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    g_signal_connect( menu_item, "activate", G_CALLBACK(panel_popupmenu_create_panel), panel );
-
-    menu_item = gtk_menu_item_new_with_label(_("Delete This Panel"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    g_signal_connect( menu_item, "activate", G_CALLBACK(panel_popupmenu_delete_panel), panel );
-    if( ! all_panels->next )    /* if this is the only panel */
-        gtk_widget_set_sensitive( menu_item, FALSE );
-
-    menu_item = gtk_separator_menu_item_new();
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-
-    menu_item = gtk_menu_item_new_with_label(_("About"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    g_signal_connect( menu_item, "activate", G_CALLBACK(panel_popupmenu_about), panel->priv );
-
-    if( use_sub_menu )
-    {
-        menu_item = gtk_menu_item_new_with_label(_("Panel"));
-        gtk_menu_shell_append(GTK_MENU_SHELL(ret), menu_item);
-        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), GTK_WIDGET(menu) );
-    }
-
+    ret = GTK_MENU(gtk_menu_new_from_model(G_MENU_MODEL(gmenu)));
+    if (plugin)
+        gtk_menu_attach_to_widget(ret,GTK_WIDGET(plugin),NULL);
+    else
+        gtk_menu_attach_to_widget(ret,GTK_WIDGET(panel),NULL);
     gtk_widget_show_all(GTK_WIDGET(ret));
-
-    g_signal_connect( ret, "selection-done", G_CALLBACK(gtk_widget_destroy), NULL );
+    g_object_unref(gmenu);
     return ret;
-}
-
-/* for old plugins compatibility */
-GtkMenu* lxpanel_get_panel_menu( Panel* panel, Plugin* plugin, gboolean use_sub_menu )
-{
-    return lxpanel_get_plugin_menu(panel->topgwin, plugin->pwid, use_sub_menu);
 }
 
 /****************************************************
@@ -1321,6 +1256,17 @@ error:
     RET(0);
 }
 
+static void panel_add_actions( SimplePanel* p)
+{
+    const GActionEntry win_action_entries[] =
+    {
+        {"new-panel", activate_new_panel, NULL, NULL, NULL},
+        {"remove-panel", activate_remove_panel, NULL, NULL, NULL},
+        {"panel-settings", activate_panel_settings, "i", NULL, NULL},
+    };
+    g_action_map_add_action_entries(G_ACTION_MAP(p),win_action_entries,G_N_ELEMENTS(win_action_entries),p);
+}
+
 static int panel_start( SimplePanel *p )
 {
     config_setting_t *list, *s;
@@ -1334,6 +1280,7 @@ static int panel_start( SimplePanel *p )
         RET(0);
 
     panel_start_gui(p);
+    panel_add_actions(p);
 
     for (i = 1; (s = config_setting_get_elem(list, i)) != NULL; )
         if (strcmp(config_setting_get_name(s), "Plugin") == 0 &&
@@ -1353,13 +1300,13 @@ void panel_destroy(Panel *p)
     gtk_widget_destroy(GTK_WIDGET(p->topgwin));
 }
 
-SimplePanel* panel_new(PanelApp* app,const char* config_file, const char* config_name)
+SimplePanel* panel_new(GtkApplication* app,const char* config_file, const char* config_name)
 {
     SimplePanel* panel = NULL;
 
     if (G_LIKELY(config_file))
     {
-        panel = panel_allocate();
+        panel = panel_allocate(app);
         panel->priv->name = g_strdup(config_name);
         panel->priv->app = app;
         win_grp=app;

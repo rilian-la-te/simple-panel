@@ -44,13 +44,13 @@ typedef struct _Panel Panel;
 
 struct _SimplePanel
 {
-    GtkWindow window;
+    GtkApplicationWindow window;
     Panel *priv;
 };
 
 struct _SimplePanelClass
 {
-    GtkWindowClass parent_class;
+    GtkApplicationWindowClass parent_class;
 };
 
 /**

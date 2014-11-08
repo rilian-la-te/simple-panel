@@ -157,7 +157,7 @@ static gboolean lxpanel_plugin_button_press_event(GtkWidget *plugin, GdkEventBut
     if (event->button == 3 && /* right button */
         (event->state & gtk_accelerator_get_default_mod_mask()) == 0) /* no key */
     {
-        GtkMenu* popup = (GtkMenu*)lxpanel_get_plugin_menu(panel, plugin, FALSE);
+        GtkMenu* popup = (GtkMenu*)lxpanel_get_plugin_menu(panel, plugin);
         gtk_menu_popup(popup, NULL, NULL, NULL, NULL, event->button, event->time);
         return TRUE;
     }

@@ -148,6 +148,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
 
     .new_instance = pager_constructor,
     .config = pager_configure,
-    .update_context_menu = pager_update_context_menu,
+//    .update_context_menu = pager_update_context_menu,
     .reconfigure = pager_panel_configuration_changed
 };

@@ -98,7 +98,7 @@ typedef struct {
     void (*reconfigure)(SimplePanel *panel, GtkWidget *instance);
     gboolean (*button_press_event)(GtkWidget *widget, GdkEventButton *event, SimplePanel *panel);
     void (*show_system_menu)(GtkWidget *widget);
-    gboolean (*update_context_menu)(GtkWidget *plugin, GtkMenu *menu);
+    GMenu* (*update_context_menu)(GtkWidget *plugin);
     gboolean (*control)(GtkWidget *plugin, const char *cmd); /* not implemented */
     /*< private >*/
     gpointer _reserved1;
@@ -171,13 +171,12 @@ extern gboolean lxpanel_register_plugin_type(const char *name, const SimplePanel
  * lxpanel_get_plugin_menu
  * @panel: panel instance pointer
  * @plugin: plugin instance pointer
- * @use_sub_menu: %TRUE if panel management options should be in separated submenu
  *
  * Creates context menu for given @panel and @plugin.
  *
  * Returns: (transfer full): new menu widget.
  */
-extern GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin, gboolean use_sub_menu);
+extern GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin);
 
 /**
  * lxpanel_plugin_adjust_popup_position

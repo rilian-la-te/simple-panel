@@ -39,6 +39,7 @@ simple_panel_SOURCES = \
         gtk-run.c \
         main.c  \
         app.c \
+        app-actions.c \
 	$(MENU_SOURCES)
 
 simple_panel_includedir = $(includedir)/simple-panel
@@ -67,7 +68,8 @@ EXTRA_DIST = \
 	dbg.h \
 	menu-policy.h \
 	private.h \
-	app.h
+        app.h \
+        app-actions.h
 
 $(top_builddir)/plugins/libbuiltin_plugins.a: $(simple_panel_include_HEADERS)
 	cd $(top_builddir)/plugins && $(MAKE) libbuiltin_plugins.a

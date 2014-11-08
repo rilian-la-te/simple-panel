@@ -74,7 +74,7 @@ extern gchar *cprofile;
 struct _Panel {
     char* name;
     SimplePanel * topgwin;			/* Main panel window */
-    PanelApp* app;
+    GtkApplication* app; /* Panels holding application path */
     GdkDisplay * display;		/* Main panel's GdkDisplay */
     GtkIconTheme* icon_theme; /*Default icon theme*/
 
@@ -253,7 +253,7 @@ extern void panel_set_dock_type(Panel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
 extern void panel_update_background( Panel* p );
 extern void panel_update_fonts( Panel * p);
-extern SimplePanel* panel_new(PanelApp* app, const char* config_file, const char* config_name);
+extern SimplePanel* panel_new(GtkApplication *app, const char* config_file, const char* config_name);
 
 /* if current window manager is EWMH conforming. */
 extern gboolean is_ewmh_supported;
