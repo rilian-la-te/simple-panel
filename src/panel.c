@@ -84,6 +84,7 @@ static void activate_remove_plugin(GSimpleAction* action, GVariant* param, gpoin
 static void activate_new_panel(GSimpleAction* action, GVariant* param, gpointer data);
 static void activate_remove_panel(GSimpleAction* action, GVariant* param, gpointer data);
 static void activate_panel_settings(GSimpleAction* action, GVariant* param, gpointer data);
+static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
 
 G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_APPLICATION_WINDOW)
@@ -298,11 +299,11 @@ static void simple_panel_set_property(GObject      *object,
         geometry = TRUE;
         break;
     case PROP_HEIGHT:
-        toplevel->priv->height = g_value_get_int (value);
+        toplevel->priv->height = g_value_get_int(value);
         geometry = TRUE;
         break;
     case PROP_WIDTH:
-        toplevel->priv->width = g_value_get_int (value);
+        toplevel->priv->width = g_value_get_int(value);
         geometry = TRUE;
         break;
     case PROP_SIZE_TYPE:
@@ -310,7 +311,7 @@ static void simple_panel_set_property(GObject      *object,
         geometry = TRUE;
         break;
     case PROP_MONITOR:
-        _panel_set_monitor(toplevel,g_value_get_int (value));
+        _panel_set_monitor(toplevel,g_value_get_int(value));
         geometry = TRUE;
         configuration = TRUE;
         break;
@@ -380,21 +381,104 @@ static void simple_panel_set_property(GObject      *object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
     }
-    if (configuration)
-        _panel_set_panel_configuration_changed(toplevel);
-    if (geometry)
-        update_panel_geometry(toplevel);
-    if (background)
-        _panel_update_background(toplevel);
-    if (fonts)
-        _panel_update_fonts(toplevel);
+    if (gtk_widget_get_window(GTK_WIDGET(toplevel))!= NULL)
+    {
+        if (configuration)
+            _panel_set_panel_configuration_changed(toplevel);
+        if (geometry)
+            update_panel_geometry(toplevel);
+        if (background)
+            _panel_update_background(toplevel);
+        if (fonts)
+            _panel_update_fonts(toplevel);
+    }
+}
 
+static void simple_panel_get_property(GObject      *object,
+                                      guint         prop_id,
+                                      GValue *value,
+                                      GParamSpec   *pspec)
+{
+    SimplePanel* toplevel;
+    g_return_if_fail (LX_IS_PANEL (object));
+
+    toplevel = LXPANEL (object);
+
+    switch (prop_id) {
+    case PROP_NAME:
+        g_value_set_string(value,toplevel->priv->name);
+        break;
+    case PROP_EDGE:
+        g_value_set_enum (value,toplevel->priv->edge);
+        break;
+    case PROP_ORIENTATION:
+        g_value_set_enum(value,toplevel->priv->orientation);
+    case PROP_HEIGHT:
+        g_value_set_int (value, toplevel->priv->height);
+        break;
+    case PROP_WIDTH:
+        g_value_set_int (value,toplevel->priv->width);
+        break;
+    case PROP_SIZE_TYPE:
+        g_value_set_enum(value,toplevel->priv->widthtype);
+        break;
+    case PROP_MONITOR:
+        g_value_set_int(value,toplevel->priv->monitor);
+        break;
+    case PROP_ALIGNMENT:
+        g_value_set_enum(value, toplevel->priv->allign);
+        break;
+    case PROP_MARGIN:
+        g_value_set_int(value,toplevel->priv->margin);
+        break;
+    case PROP_BACKGROUNDTYPE:
+        g_value_set_enum(value,toplevel->priv->background);
+        break;
+    case PROP_AUTOHIDE:
+        g_value_set_boolean(value, toplevel->priv->autohide);
+    case PROP_AUTOHIDE_SIZE:
+        g_value_set_int(value,toplevel->priv->height_when_hidden);
+        break;
+    case PROP_ENABLEFONTCOLOR:
+        g_value_set_boolean (value,toplevel->priv->usefontcolor);
+        break;
+    case PROP_ENABLEFONTSIZE:
+        g_value_set_boolean (value,toplevel->priv->usefontsize);
+        break;
+    case PROP_BACKGROUNDFILE:
+        g_value_set_string(value,toplevel->priv->background_file);
+        break;
+    case PROP_TINTCOLOR:
+        g_value_set_string(value,gdk_rgba_to_string(&toplevel->priv->gtintcolor));
+        break;
+    case PROP_FONTCOLOR:
+        g_value_set_string(value,gdk_rgba_to_string(&toplevel->priv->gfontcolor));
+        break;
+    case PROP_FONTSIZE:
+        g_value_set_int(value,toplevel->priv->fontsize);
+        break;
+    case PROP_ICON_SIZE:
+        g_value_set_int(value,toplevel->priv->icon_size);
+        break;
+    case PROP_DOCK:
+        g_value_set_boolean(value,toplevel->priv->setdocktype);
+        break;
+    case PROP_STRUT:
+        g_value_set_boolean(value,toplevel->priv->setstrut);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
 }
 
 static void lxpanel_class_init(PanelWindowClass *klass)
 {
     GObjectClass *gobject_class = (GObjectClass *)klass;
     GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
+
+//    gobject_class->set_property = simple_panel_set_property;
+//    gobject_class->get_property = simple_panel_get_property;
 
     gobject_class->finalize = lxpanel_finalize;
 	widget_class->destroy = lxpanel_destroy;
@@ -434,7 +518,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Orientation of the panel",
                     gtk_orientation_get_type(),
                     GTK_ORIENTATION_HORIZONTAL,
-                    G_PARAM_READABLE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(
                 gobject_class,
                 PROP_HEIGHT,
@@ -1096,13 +1180,16 @@ static void activate_remove_plugin(GSimpleAction *action, GVariant *param, gpoin
     gtk_widget_destroy(plugin);
 }
 
-static gboolean _simple_panel_set_monitor(SimplePanel* panel, int monitor)
+static gboolean _panel_set_monitor(SimplePanel* panel, int monitor)
 {
     int monitors = 1;
     GdkScreen* screen = gdk_screen_get_default();
     if(screen)
         monitors = gdk_screen_get_n_monitors(screen);
     g_assert(monitors >= 1);
+    if (monitors>=1)
+        panel->priv->monitor=monitor;
+    return FALSE;
 }
 /* FIXME: Potentially we can support multiple panels at the same edge,
  * but currently this cannot be done due to some positioning problems. */
