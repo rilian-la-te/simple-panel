@@ -26,11 +26,13 @@
 #include "private.h"
 #include "misc.h"
 #include "css.h"
+#include "panel-enum-types.h"
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <glib.h>
 #include <glib/gi18n.h>
 
 #include "dbg.h"
@@ -46,7 +48,7 @@ static void save_global_config();
 
 static char* logout_cmd = NULL;
 static char* appearance_type = NULL;
-static PanelWidgetStyle type_num;
+static PanelWidgetsStyle type_num;
 static char* custom_css = NULL;
 
 extern GSList* all_panels;
@@ -73,6 +75,12 @@ static void modify_plugin( GtkTreeView* view );
 static gboolean on_entry_focus_out_old( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean on_entry_focus_out( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean _on_entry_focus_out_do_work(GtkWidget* edit, gpointer user_data);
+static void change_set_edge(GSimpleAction* act, GVariant* param, gpointer data);
+extern void update_panel_geometry(SimplePanel* p);
+
+static const GActionEntry entries[] = {
+    {"set-edge",NULL,"s","string \"none\"",change_set_edge},
+};
 
 static void
 response_event(GtkDialog *widget, gint arg1, Panel* panel )
@@ -93,18 +101,6 @@ response_event(GtkDialog *widget, gint arg1, Panel* panel )
     return;
 }
 
-static void
-update_panel_geometry( SimplePanel* p )
-{
-    /* Guard against being called early in panel creation. */
-    _calculate_position(p);
-    gtk_widget_set_size_request(GTK_WIDGET(p), p->priv->aw, p->priv->ah);
-    gdk_window_move(gtk_widget_get_window(GTK_WIDGET(p)), p->priv->ax, p->priv->ay);
-    _panel_queue_update_background(p);
-    _panel_establish_autohide(p);
-    _panel_set_wm_strut(p);
-}
-
 static gboolean edge_selector(Panel* p, int edge)
 {
     return (p->edge == edge);
@@ -123,54 +119,28 @@ gboolean panel_edge_available(Panel* p, int edge, gint monitor)
     return TRUE;
 }
 
-static void set_edge(SimplePanel* panel, int edge)
+static void change_set_edge(GSimpleAction* act, GVariant* param, gpointer data)
 {
+    SimplePanel* panel = (SimplePanel*) data;
     Panel *p = panel->priv;
+    gsize len;
+    int edge = str2num(edge_pair,g_variant_get_string(param,&len),PANEL_EDGE_NONE);
+    g_variant_unref(param);
 
     p->edge = edge;
+    g_simple_action_set_state(act,param);
     update_panel_geometry(panel);
     _panel_set_panel_configuration_changed(panel);
     UPDATE_GLOBAL_STRING(p, "edge", num2str(edge_pair, edge, "none"));
 }
 
-static void edge_bottom_toggle(GtkToggleButton *widget, SimplePanel *p)
+static void change_set_alignment(GSimpleAction* act, GVariant* param, gpointer data)
 {
-    GtkButton* edge_button = (GtkButton*)g_object_get_data(G_OBJECT(widget), "edge-button" );
-    if (gtk_toggle_button_get_active(widget))
-    {
-        gtk_button_set_label(edge_button,gtk_button_get_label(GTK_BUTTON(widget)));
-        set_edge(p, GTK_POS_BOTTOM);
-    }
-}
-
-static void edge_top_toggle(GtkToggleButton *widget, SimplePanel *p)
-{
-    GtkButton* edge_button = (GtkButton*)g_object_get_data(G_OBJECT(widget), "edge-button" );
-    if (gtk_toggle_button_get_active(widget))
-    {
-        gtk_button_set_label(edge_button,gtk_button_get_label(GTK_BUTTON(widget)));
-        set_edge(p, GTK_POS_TOP);
-    }
-}
-
-static void edge_left_toggle(GtkToggleButton *widget, SimplePanel *p)
-{
-    GtkButton* edge_button = (GtkButton*)g_object_get_data(G_OBJECT(widget), "edge-button" );
-    if (gtk_toggle_button_get_active(widget))
-    {
-        gtk_button_set_label(edge_button,gtk_button_get_label(GTK_BUTTON(widget)));
-        set_edge(p, GTK_POS_LEFT);
-    }
-}
-
-static void edge_right_toggle(GtkToggleButton *widget, SimplePanel *p)
-{
-    GtkButton* edge_button = (GtkButton*)g_object_get_data(G_OBJECT(widget), "edge-button" );
-    if (gtk_toggle_button_get_active(widget))
-    {
-        gtk_button_set_label(edge_button,gtk_button_get_label(GTK_BUTTON(widget)));
-        set_edge(p, GTK_POS_RIGHT);
-    }
+    SimplePanel* panel = (SimplePanel*) data;
+    Panel *p = panel->priv;
+    gsize len;
+    int alignment = str2num(allign_pair,g_variant_get_string(param,&len),PANEL_ALLIGN_NONE);
+    g_variant_unref(param);
 }
 
 static void set_monitor(GtkSpinButton *widget, SimplePanel *panel)
@@ -273,15 +243,15 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
     p->widthtype = widthtype;
 
     spin = (GtkWidget*)g_object_get_data(G_OBJECT(item), "scale-width" );
-    t = (widthtype != STRUT_DYNAMIC);
+    t = (widthtype != PANEL_SIZE_DYNAMIC);
     gtk_widget_set_sensitive( spin, t );
     switch (widthtype)
     {
-    case STRUT_PERCENT:
+    case PANEL_SIZE_PERCENT:
         simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,100);
         gtk_scale_button_set_value( GTK_SCALE_BUTTON(spin), 100 );
         break;
-    case STRUT_PIXEL:
+    case PANEL_SIZE_PIXEL:
         if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
         {
             simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_width());
@@ -293,7 +263,7 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
             gtk_scale_button_set_value( GTK_SCALE_BUTTON(spin), gdk_screen_height() );
         }
         break;
-    case STRUT_DYNAMIC:
+    case PANEL_SIZE_DYNAMIC:
         break;
     default: ;
     }
@@ -406,7 +376,7 @@ set_dock_type(GtkToggleButton* toggle, SimplePanel* panel)
     Panel *p = panel->priv;
 
     p->setdocktype = gtk_toggle_button_get_active(toggle) ? 1 : 0;
-    panel_set_dock_type( p );
+    panel_set_dock_type( panel );
     update_panel_geometry(panel);
     UPDATE_GLOBAL_INT(p, "setdocktype", p->setdocktype);
 }
@@ -900,7 +870,7 @@ static void set_widget_type(GtkWidget* item, SimplePanel* panel)
     type_num = type;
     appearance_type = num2str(widgettype_pair,type_num,"system-normal");
     GtkWidget* button = (GtkWidget*)g_object_get_data(G_OBJECT(item), "css-chooser" );
-    gtk_widget_set_sensitive(button,type_num == WIDGET_STYLE_CUSTOM);
+    gtk_widget_set_sensitive(button,type_num == PANEL_WIDGETS_CUSTOM);
     apply_styling(panel);
     save_global_config();
 }
@@ -954,30 +924,30 @@ void panel_configure( SimplePanel* panel, int sel_page )
     popover = gtk_popover_new(NULL);
     gtk_container_add(GTK_CONTAINER(popover),w2);
     gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
-    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_bottom" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_BOTTOM));
-    if (edge_selector(p, GTK_POS_BOTTOM))
-        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-    g_signal_connect(w, "toggled", G_CALLBACK(edge_bottom_toggle), panel);
-    g_object_set_data(G_OBJECT(w), "edge-button", w3);
-    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_top" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_TOP));
-    if (edge_selector(p, GTK_POS_TOP))
-        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-    g_signal_connect(w, "toggled", G_CALLBACK(edge_top_toggle), panel);
-    g_object_set_data(G_OBJECT(w), "edge-button", w3);
-    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_left" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_LEFT));
-    if (edge_selector(p, GTK_POS_LEFT))
-        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-    g_signal_connect(w, "toggled", G_CALLBACK(edge_left_toggle), panel);
-    g_object_set_data(G_OBJECT(w), "edge-button", w3);
-    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_right" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_RIGHT));
-    if (edge_selector(p, GTK_POS_RIGHT))
-        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-    g_signal_connect(w, "toggled", G_CALLBACK(edge_right_toggle), panel);
-    g_object_set_data(G_OBJECT(w), "edge-button", w3);
+//    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_bottom" );
+//    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_BOTTOM));
+//    if (edge_selector(p, GTK_POS_BOTTOM))
+//        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
+//    g_signal_connect(w, "toggled", G_CALLBACK(edge_bottom_toggle), panel);
+//    g_object_set_data(G_OBJECT(w), "edge-button", w3);
+//    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_top" );
+//    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_TOP));
+//    if (edge_selector(p, GTK_POS_TOP))
+//        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
+//    g_signal_connect(w, "toggled", G_CALLBACK(edge_top_toggle), panel);
+//    g_object_set_data(G_OBJECT(w), "edge-button", w3);
+//    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_left" );
+//    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_LEFT));
+//    if (edge_selector(p, GTK_POS_LEFT))
+//        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
+//    g_signal_connect(w, "toggled", G_CALLBACK(edge_left_toggle), panel);
+//    g_object_set_data(G_OBJECT(w), "edge-button", w3);
+//    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_right" );
+//    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_RIGHT));
+//    if (edge_selector(p, GTK_POS_RIGHT))
+//        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
+//    g_signal_connect(w, "toggled", G_CALLBACK(edge_right_toggle), panel);
+//    g_object_set_data(G_OBJECT(w), "edge-button", w3);
 
     /* monitor */
     monitors = 1;
@@ -1024,11 +994,11 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* size */
     p->width_control = w = (GtkWidget*)gtk_builder_get_object( builder, "scale-width" );
-    gtk_widget_set_sensitive( w, p->widthtype != STRUT_DYNAMIC );
+    gtk_widget_set_sensitive( w, p->widthtype != PANEL_SIZE_DYNAMIC );
     gint upper = 0;
-    if( p->widthtype == STRUT_PERCENT)
+    if( p->widthtype == PANEL_SIZE_PERCENT)
         upper = 100;
-    else if( p->widthtype == STRUT_PIXEL)
+    else if( p->widthtype == PANEL_SIZE_PIXEL)
         upper = (((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
     simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),0,upper);
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->width );
@@ -1211,13 +1181,17 @@ void panel_configure( SimplePanel* panel, int sel_page )
     g_object_set_data(G_OBJECT(w3), "css-chooser", w);
     if (custom_css != NULL)
         gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), custom_css);
-    if (type_num != WIDGET_STYLE_CUSTOM)
+    if (type_num != PANEL_WIDGETS_CUSTOM)
         gtk_widget_set_sensitive(w, FALSE);
     g_signal_connect( w, "file-set", G_CALLBACK (custom_css_file_helper), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "notebook" );
     gtk_notebook_set_current_page( GTK_NOTEBOOK(w), sel_page );
 
     g_object_unref(builder);
+    GSimpleActionGroup* configurator = g_simple_action_group_new();
+    g_action_map_add_action_entries(G_ACTION_MAP(configurator),entries,G_N_ELEMENTS(entries),panel);
+    gtk_widget_insert_action_group(GTK_WIDGET(panel),"configurator",G_ACTION_GROUP(configurator));
+    gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"configurator",G_ACTION_GROUP(configurator));
 }
 
 void panel_config_save( Panel* p )
@@ -1270,8 +1244,8 @@ void logout(void)
 
 void apply_styling(SimplePanel *p)
 {
-    gtk_settings_set_long_property(gtk_settings_get_default(),"gtk-application-prefer-dark-theme", type_num == WIDGET_STYLE_DARK ,NULL);
-    if (type_num == WIDGET_STYLE_CUSTOM)
+    gtk_settings_set_long_property(gtk_settings_get_default(),"gtk-application-prefer-dark-theme", type_num == PANEL_WIDGETS_DARK ,NULL);
+    if (type_num == PANEL_WIDGETS_CUSTOM)
     {
         GSList* l;
         gchar* msg;
@@ -1622,9 +1596,9 @@ void load_global_config()
         }
         appearance_type = g_key_file_get_string(kf, APPEARANCE_GROUP, "Type", NULL);
         if (appearance_type)
-            type_num = str2num(widgettype_pair,appearance_type,WIDGET_STYLE_NORMAL);
+            type_num = str2num(widgettype_pair,appearance_type,PANEL_WIDGETS_NORMAL);
         else
-            type_num = WIDGET_STYLE_NORMAL;
+            type_num = PANEL_WIDGETS_NORMAL;
         custom_css = g_key_file_get_string(kf, APPEARANCE_GROUP, "CSS", NULL);
         save_global_config();
     }
@@ -1656,25 +1630,4 @@ void free_global_config()
     g_free( appearance_type );
     g_free( custom_css );
 }
-
-/* this is dirty and should be removed later */
-const char*
-lxpanel_get_file_manager()
-{
-    GAppInfo *app = g_app_info_get_default_for_type("inode/directory", TRUE);
-    static char *exec = NULL;
-    const char *c, *x;
-
-    if (!app)
-        return "pcmanfm %s";
-    c = g_app_info_get_commandline(app);
-    x = strchr(c, ' '); /* skip all arguments */
-    g_free(exec);
-    if (x)
-        exec = g_strndup(c, x - c);
-    else
-        exec = g_strdup(c);
-    return exec;
-}
-
 /* vim: set sw=4 et sts=4 : */

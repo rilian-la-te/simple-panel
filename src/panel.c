@@ -38,6 +38,33 @@
 #include "misc.h"
 #include "css.h"
 #include "dbg.h"
+#include "panel-enum-types.h"
+
+enum
+{
+    PROP_0,
+    PROP_NAME,
+    PROP_EDGE,
+    PROP_ORIENTATION,
+    PROP_HEIGHT,
+    PROP_WIDTH,
+    PROP_SIZE_TYPE,
+    PROP_ALIGNMENT,
+    PROP_MARGIN,
+    PROP_MONITOR,
+    PROP_AUTOHIDE,
+    PROP_AUTOHIDE_SIZE,
+    PROP_ENABLEFONTCOLOR,
+    PROP_ENABLEFONTSIZE,
+    PROP_BACKGROUNDFILE,
+    PROP_BACKGROUNDTYPE,
+    PROP_TINTCOLOR,
+    PROP_FONTCOLOR,
+    PROP_FONTSIZE,
+    PROP_ICON_SIZE,
+    PROP_DOCK,
+    PROP_STRUT
+};
 
 static GtkApplication* win_grp;
 
@@ -47,6 +74,7 @@ gboolean is_restarting = FALSE;
 
 gboolean is_in_lxde = FALSE;
 
+void update_panel_geometry( SimplePanel* p );
 static void panel_start_gui(SimplePanel *p);
 static void ah_start(SimplePanel *p);
 static void ah_stop(SimplePanel *p);
@@ -149,9 +177,9 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
 
 	GTK_WIDGET_CLASS(lxpanel_parent_class)->size_allocate(widget, a);
 	gtk_widget_set_allocation(widget,a);
-    if (p->widthtype == STRUT_DYNAMIC)
+    if (p->widthtype == PANEL_SIZE_DYNAMIC)
         p->width = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->width : a->height;
-    if (p->heighttype == STRUT_DYNAMIC)
+    if (p->heighttype == PANEL_SIZE_DYNAMIC)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->height : a->width;
     calculate_position(p);
 	if (a->width != p->aw || a->height != p->ah || a->x != p->ax || a->y != p->ay)
@@ -177,7 +205,7 @@ lxpanel_get_preferred_width (GtkWidget *widget,
 {
   Panel *p = LXPANEL(widget)->priv;
   GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_width(widget, minimal_width,natural_width);
-  if (p->widthtype == STRUT_DYNAMIC && (p->orientation == GTK_ORIENTATION_HORIZONTAL))
+  if (p->widthtype == PANEL_SIZE_DYNAMIC && (p->orientation == GTK_ORIENTATION_HORIZONTAL))
   {
       *minimal_width= (*natural_width<=gdk_screen_width()) ? *natural_width : gdk_screen_width();
       p->width = *minimal_width;
@@ -199,7 +227,7 @@ lxpanel_get_preferred_height (GtkWidget *widget,
 {
     Panel *p = LXPANEL(widget)->priv;
     GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_height(widget, minimal_height,natural_height);
-    if (p->widthtype == STRUT_DYNAMIC && p->orientation == GTK_ORIENTATION_VERTICAL)
+    if (p->widthtype == PANEL_SIZE_DYNAMIC && p->orientation == GTK_ORIENTATION_VERTICAL)
     {
         *minimal_height= (*natural_height<=gdk_screen_height()) ? *natural_height : gdk_screen_height();
         p->height = *minimal_height;
@@ -250,6 +278,119 @@ static gboolean lxpanel_button_press(GtkWidget *widget, GdkEventButton *event)
     return FALSE;
 }
 
+static void simple_panel_set_property(GObject      *object,
+                                      guint         prop_id,
+                                      const GValue *value,
+                                      GParamSpec   *pspec)
+{
+    SimplePanel* toplevel;
+    g_return_if_fail (LX_IS_PANEL (object));
+
+    toplevel = LXPANEL (object);
+    gboolean geometry,background,configuration,fonts;
+    switch (prop_id) {
+    case PROP_NAME:
+        toplevel->priv->name = g_value_get_string (value);
+        break;
+    case PROP_EDGE:
+        toplevel->priv->edge = g_value_get_enum (value);
+        configuration = TRUE;
+        geometry = TRUE;
+        break;
+    case PROP_HEIGHT:
+        toplevel->priv->height = g_value_get_int (value);
+        geometry = TRUE;
+        break;
+    case PROP_WIDTH:
+        toplevel->priv->width = g_value_get_int (value);
+        geometry = TRUE;
+        break;
+    case PROP_SIZE_TYPE:
+        toplevel->priv->widthtype = g_value_get_enum(value);
+        geometry = TRUE;
+        break;
+    case PROP_MONITOR:
+        _panel_set_monitor(toplevel,g_value_get_int (value));
+        geometry = TRUE;
+        configuration = TRUE;
+        break;
+    case PROP_ALIGNMENT:
+        toplevel->priv->allign = g_value_get_enum(value);
+        geometry = TRUE;
+        break;
+    case PROP_MARGIN:
+        toplevel->priv->margin = g_value_get_int(value);
+        geometry = TRUE;
+        break;
+    case PROP_BACKGROUNDTYPE:
+        toplevel->priv->background = g_value_get_enum(value);
+        background = TRUE;
+        configuration = TRUE;
+        break;
+    case PROP_AUTOHIDE:
+        toplevel->priv->autohide = g_value_get_boolean(value);
+        toplevel->priv->visible = toplevel->priv->autohide ? FALSE : TRUE;
+        geometry=TRUE;
+    case PROP_AUTOHIDE_SIZE:
+        toplevel->priv->height_when_hidden = g_value_get_int(value);
+        geometry=TRUE;
+        break;
+    case PROP_ENABLEFONTCOLOR:
+        toplevel->priv->usefontcolor = g_value_get_boolean (value);
+        fonts = TRUE;
+        configuration = TRUE;
+        break;
+    case PROP_ENABLEFONTSIZE:
+        toplevel->priv->usefontsize = g_value_get_boolean (value);
+        fonts = TRUE;
+        configuration = TRUE;
+        break;
+    case PROP_BACKGROUNDFILE:
+        toplevel->priv->background_file = g_value_get_string(value);
+        background=TRUE;
+        break;
+    case PROP_TINTCOLOR:
+        gdk_rgba_parse(&toplevel->priv->gtintcolor,g_value_get_string(value));
+        background = TRUE;
+        break;
+    case PROP_FONTCOLOR:
+        gdk_rgba_parse(&toplevel->priv->gfontcolor,g_value_get_string(value));
+        fonts = TRUE;
+        configuration = TRUE;
+        break;
+    case PROP_FONTSIZE:
+        toplevel->priv->fontsize = g_value_get_int(value);
+        fonts = TRUE;
+        configuration = TRUE;
+        break;
+    case PROP_ICON_SIZE:
+        toplevel->priv->icon_size = g_value_get_int(value);
+        configuration = TRUE;
+        break;
+    case PROP_DOCK:
+        toplevel->priv->setdocktype = g_value_get_boolean(value);
+        panel_set_dock_type(toplevel);
+        geometry = TRUE;
+        break;
+    case PROP_STRUT:
+        toplevel->priv->setstrut = g_value_get_boolean(value);
+        geometry = TRUE;
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+    if (configuration)
+        _panel_set_panel_configuration_changed(toplevel);
+    if (geometry)
+        update_panel_geometry(toplevel);
+    if (background)
+        _panel_update_background(toplevel);
+    if (fonts)
+        _panel_update_fonts(toplevel);
+
+}
+
 static void lxpanel_class_init(PanelWindowClass *klass)
 {
     GObjectClass *gobject_class = (GObjectClass *)klass;
@@ -264,6 +405,205 @@ static void lxpanel_class_init(PanelWindowClass *klass)
     widget_class->configure_event = lxpanel_configure_event;
     widget_class->map_event = lxpanel_map_event;
     widget_class->button_press_event = lxpanel_button_press;
+
+    g_object_class_install_property (
+                gobject_class,
+                PROP_NAME,
+                g_param_spec_string (
+                    "name",
+                    "Name",
+                    "The name of this panel",
+                    NULL,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_EDGE,
+                g_param_spec_enum(
+                    "edge",
+                    "Edge",
+                    "Edge of the screen where panel attached",
+                    PANEL_SIZE_TYPE,
+                    PANEL_SIZE_PERCENT,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_ORIENTATION,
+                g_param_spec_enum(
+                    "orientation",
+                    "Orientation",
+                    "Orientation of the panel",
+                    gtk_orientation_get_type(),
+                    GTK_ORIENTATION_HORIZONTAL,
+                    G_PARAM_READABLE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_HEIGHT,
+                g_param_spec_int(
+                    "height",
+                    "Height",
+                    "Height of this panel",
+                    PANEL_HEIGHT_MIN,
+                    PANEL_HEIGHT_MAX,
+                    PANEL_HEIGHT_DEFAULT,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_WIDTH,
+                g_param_spec_int(
+                    "width",
+                    "Width",
+                    "Width of this panel (in given size type)",
+                    0,
+                    G_MAXINT,
+                    100,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_SIZE_TYPE,
+                g_param_spec_enum(
+                    "size-type",
+                    "Size Type",
+                    "Type of panel size counting",
+                    PANEL_SIZE_TYPE,
+                    PANEL_SIZE_PERCENT,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_ALIGNMENT,
+                g_param_spec_enum(
+                    "alignment",
+                    "Alignment",
+                    "Panel alignment side",
+                    PANEL_ALLIGN_TYPE,
+                    PANEL_ALLIGN_NONE,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_MONITOR,
+                g_param_spec_int (
+                    "monitor",
+                    "Xinerama monitor",
+                    "The monitor (in terms of Xinerama) which the panel is on",
+                    0,
+                    G_MAXINT,
+                    0,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_AUTOHIDE,
+                g_param_spec_boolean (
+                    "autohide",
+                    "Auto hide",
+                    "Automatically hide the panel when the mouse leaves the panel",
+                    FALSE,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_AUTOHIDE_SIZE,
+                g_param_spec_int (
+                    "autohide-size",
+                    "Auto-hide size",
+                    "The number of pixels visible when the panel has been automatically hidden",
+                    0,
+                    G_MAXINT,
+                    PANEL_AUTOHIDE_SIZE,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_SIZE_TYPE,
+                g_param_spec_enum(
+                    "background-type",
+                    "Background Type",
+                    "Type of panel background",
+                    PANEL_BACKGROUND_TYPE,
+                    PANEL_BACKGROUND_GTK,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_ENABLEFONTCOLOR,
+                g_param_spec_boolean(
+                    "enable-fontcolor",
+                    "Enable custom font color",
+                    "",
+                    FALSE,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_ENABLEFONTSIZE,
+                g_param_spec_boolean(
+                    "enable-fontsize",
+                    "Enable font size",
+                    "Enable custom font size",
+                    FALSE,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_ICON_SIZE,
+                g_param_spec_int(
+                    "iconsize",
+                    "Icon size",
+                    "Size of panel icons",
+                    PANEL_HEIGHT_MIN,
+                    PANEL_HEIGHT_MAX,
+                    PANEL_HEIGHT_DEFAULT,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_BACKGROUNDFILE,
+                g_param_spec_string (
+                    "backgroundfile",
+                    "Background file",
+                    "Background file of this panel",
+                    NULL,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_TINTCOLOR,
+                g_param_spec_string (
+                    "tintcolor",
+                    "Background color",
+                    "Background color of this panel",
+                    NULL,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_FONTCOLOR,
+                g_param_spec_string (
+                    "fontcolor",
+                    "Font color",
+                    "Font color color of this panel",
+                    NULL,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_FONTSIZE,
+                g_param_spec_int(
+                    "fontsize",
+                    "Font size",
+                    "Size of panel fonts",
+                    PANEL_FONT_MIN,
+                    PANEL_FONT_MAX,
+                    PANEL_FONT_DEFAULT,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_STRUT,
+                g_param_spec_boolean (
+                    "strut",
+                    "Set strut",
+                    "Set strut to crop it from maximized windows",
+                    FALSE,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (
+                gobject_class,
+                PROP_DOCK,
+                g_param_spec_boolean (
+                    "dock",
+                    "Dock",
+                    "Make window managers treat panel as dock",
+                    FALSE,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
 }
 
 static void lxpanel_init(PanelWindow *self)
@@ -273,9 +613,8 @@ static void lxpanel_init(PanelWindow *self)
     self->priv = p;
     p->topgwin = self;
     p->allign = PANEL_ALLIGN_CENTER;
-    p->widthtype = STRUT_PERCENT;
+    p->widthtype = PANEL_SIZE_PERCENT;
     p->width = 100;
-    p->heighttype = STRUT_PIXEL;
     p->height = PANEL_HEIGHT_DEFAULT;
     p->monitor = 0;
     p->setdocktype = 1;
@@ -288,7 +627,6 @@ static void lxpanel_init(PanelWindow *self)
     p->usefontcolor = 0;
     p->usefontsize = 0;
     p->fontsize = 10;
-    p->spacing = 0;
     p->icon_size = PANEL_ICON_SIZE;
     p->icon_theme = gtk_icon_theme_get_default();
     p->config = config_new();
@@ -311,10 +649,10 @@ static void panel_normalize_configuration(Panel* p)
     panel_set_panel_configuration_changed( p );
     if (p->width < 0)
         p->width = 100;
-    if (p->widthtype == STRUT_PERCENT && p->width > 100)
+    if (p->widthtype == PANEL_SIZE_PERCENT && p->width > 100)
         p->width = 100;
-    p->heighttype = STRUT_PIXEL;
-    if (p->heighttype == STRUT_PIXEL) {
+    p->heighttype = PANEL_SIZE_PIXEL;
+    if (p->heighttype == PANEL_SIZE_PIXEL) {
         if (p->height < PANEL_HEIGHT_MIN)
             p->height = PANEL_HEIGHT_MIN;
         else if (p->height > PANEL_HEIGHT_MAX)
@@ -720,6 +1058,7 @@ static void ah_stop(SimplePanel *p)
 void activate_panel_settings(GSimpleAction *action, GVariant *param, gpointer data)
 {
     int page = g_variant_get_int32(param);
+    g_variant_unref(param);
     SimplePanel* p = (SimplePanel*)data;
     panel_configure(p,page);
 
@@ -757,6 +1096,14 @@ static void activate_remove_plugin(GSimpleAction *action, GVariant *param, gpoin
     gtk_widget_destroy(plugin);
 }
 
+static gboolean _simple_panel_set_monitor(SimplePanel* panel, int monitor)
+{
+    int monitors = 1;
+    GdkScreen* screen = gdk_screen_get_default();
+    if(screen)
+        monitors = gdk_screen_get_n_monitors(screen);
+    g_assert(monitors >= 1);
+}
 /* FIXME: Potentially we can support multiple panels at the same edge,
  * but currently this cannot be done due to some positioning problems. */
 static char* gen_panel_name( int edge, gint monitor )
@@ -961,6 +1308,17 @@ GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
  *         panel creation                           *
  ****************************************************/
 
+void update_panel_geometry( SimplePanel* p )
+{
+    /* Guard against being called early in panel creation. */
+    _calculate_position(p);
+    gtk_widget_set_size_request(GTK_WIDGET(p), p->priv->aw, p->priv->ah);
+    gdk_window_move(gtk_widget_get_window(GTK_WIDGET(p)), p->priv->ax, p->priv->ay);
+    _panel_queue_update_background(p);
+    _panel_establish_autohide(p);
+    _panel_set_wm_strut(p);
+}
+
 static void
 make_round_corners(Panel *p)
 {
@@ -968,13 +1326,13 @@ make_round_corners(Panel *p)
     /* gdk_window_shape_combine_mask() can be used */
 }
 
-void panel_set_dock_type(Panel *p)
+void panel_set_dock_type(SimplePanel *p)
 {
-    if (p->setdocktype) {
-        gtk_window_set_type_hint(GTK_WINDOW(p->topgwin),GDK_WINDOW_TYPE_HINT_DOCK);
+    if (p->priv->setdocktype) {
+        gtk_window_set_type_hint(GTK_WINDOW(p),GDK_WINDOW_TYPE_HINT_DOCK);
     }
     else {
-        gtk_window_set_type_hint(GTK_WINDOW(p->topgwin),GDK_WINDOW_TYPE_HINT_NORMAL);
+        gtk_window_set_type_hint(GTK_WINDOW(p),GDK_WINDOW_TYPE_HINT_NORMAL);
     }
 }
 
@@ -1066,7 +1424,7 @@ panel_start_gui(SimplePanel *panel)
     if (p->round_corners)
         make_round_corners(p);
 
-    panel_set_dock_type(p);
+    panel_set_dock_type(panel);
 
     /* window mapping point */
     gtk_widget_show_all(w);
@@ -1145,7 +1503,7 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
             p->height = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? PANEL_HEIGHT_DEFAULT : PANEL_WIDTH_DEFAULT);
         if (p->height_control != NULL)
             simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->height_control), p->height);
-        if ((p->widthtype == STRUT_PIXEL) && (p->width_control != NULL))
+        if ((p->widthtype == PANEL_SIZE_PIXEL) && (p->width_control != NULL))
         {
             int value = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? gdk_screen_width() : gdk_screen_height());
             simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(p->width_control), 0, value);
@@ -1195,11 +1553,11 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
     config_setting_lookup_int(cfg, "monitor", &p->monitor);
     config_setting_lookup_int(cfg, "margin", &p->margin);
     if (config_setting_lookup_string(cfg, "widthtype", &str))
-        p->widthtype = str2num(strut_pair, str, STRUT_FILL);
+        p->widthtype = str2num(strut_pair, str, PANEL_SIZE_FILL);
     config_setting_lookup_int(cfg, "width", &p->width);
     config_setting_lookup_int(cfg, "height", &p->height);
-    if (config_setting_lookup_int(cfg, "spacing", &i) && i > 0)
-        p->spacing = i;
+//    if (config_setting_lookup_int(cfg, "spacing", &i) && i > 0)
+//        p->spacing = i;
     if (config_setting_lookup_int(cfg, "setdocktype", &i))
         p->setdocktype = i != 0;
     if (config_setting_lookup_int(cfg, "setpartialstrut", &i))
@@ -1354,7 +1712,7 @@ GtkPositionType panel_get_edge(SimplePanel *panel)
 
 gboolean panel_is_dynamic(SimplePanel *panel)
 {
-    return panel->priv->widthtype == STRUT_DYNAMIC;
+    return panel->priv->widthtype == PANEL_SIZE_DYNAMIC;
 }
 
 GtkWidget *panel_box_new(SimplePanel *panel, gint spacing)

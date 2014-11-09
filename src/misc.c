@@ -65,10 +65,10 @@ pair edge_pair[] = {
 };
 
 pair strut_pair[] = {
-    { STRUT_FILL, "none" },
-    { STRUT_DYNAMIC, "request" },
-    { STRUT_PIXEL, "pixel" },
-    { STRUT_PERCENT, "percent" },
+    { PANEL_SIZE_FILL, "none" },
+    { PANEL_SIZE_DYNAMIC, "request" },
+    { PANEL_SIZE_PIXEL, "pixel" },
+    { PANEL_SIZE_PERCENT, "percent" },
     { 0, NULL },
 };
 
@@ -82,9 +82,9 @@ pair background_pair[] = {
 };
 
 pair widgettype_pair[] = {
-    { WIDGET_STYLE_NORMAL, "system-normal" },
-    { WIDGET_STYLE_DARK, "system-dark" },
-    { WIDGET_STYLE_CUSTOM, "css-custom" },
+    { PANEL_WIDGETS_NORMAL, "system-normal" },
+    { PANEL_WIDGETS_DARK, "system-dark" },
+    { PANEL_WIDGETS_CUSTOM, "css-custom" },
     { 0, NULL },
 };
 
@@ -210,7 +210,7 @@ static void
 calculate_width(int scrw, int wtype, int allign, int margin,
       int *panw, int *x)
 {
-    if (wtype == STRUT_PERCENT) {
+    if (wtype == PANEL_SIZE_PERCENT) {
         /* sanity check */
         if (*panw > 100)
             *panw = 100;

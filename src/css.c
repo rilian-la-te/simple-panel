@@ -29,8 +29,6 @@
 #include <gdk/gdk.h>
 
 #include "css.h"
-
-//#define DEBUG
 #include "dbg.h"
 
 void css_apply_with_class (GtkWidget* widget, gchar* css, gchar* klass ,gboolean remove)

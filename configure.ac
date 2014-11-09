@@ -34,6 +34,7 @@ pkg_modules="$pkg_modules \
 PKG_CHECK_MODULES(PACKAGE, [$pkg_modules])
 AC_SUBST(PACKAGE_CFLAGS)
 AC_SUBST(PACKAGE_LIBS)
+AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
 
 wnck=libwnck-3.0
 PKG_CHECK_MODULES(WNCK, [$wnck])

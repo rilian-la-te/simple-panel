@@ -5,8 +5,8 @@ bin_PROGRAMS = simple-panel
 simple_panel_CFLAGS = \
 	-I$(top_srcdir) \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
-        -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
-        -DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
+	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
+	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
 	-DPACKAGE_BIN_DIR=\""$(bindir)"\" \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	$(PACKAGE_CFLAGS) \
@@ -16,16 +16,45 @@ BUILTIN_PLUGINS = $(top_builddir)/plugins/libbuiltin_plugins.a
 
 pkglib_LTLIBRARIES = libsimplepanel.la
 
+SIMPLE_PANEL_HEADER_FILES = \
+	plugin.h \
+	panel.h \
+	misc.h \
+	icon-grid.h \
+        conf-gsettings.h \
+	css.h
+
+SIMPLE_PANEL_NOINST_HEADER_FILES = \
+	dbg.h \
+	menu-policy.h \
+	private.h \
+	app.h \
+	app-actions.h
+
+SIMPLE_PANEL_ENUM_FILES = $(SIMPLE_PANEL_HEADER_FILES)
+SIMPLE_PANEL_ENUM_FILES += $(SIMPLE_PANEL_NOINST_HEADER_FILES)
+
+panel-enum-types.h: panel-enum-types.h.template $(SIMPLE_PANEL_ENUM_FILES) $(GLIB_MKENUMS)
+	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template panel-enum-types.h.template $(SIMPLE_PANEL_ENUM_FILES)) > $@
+
+panel-enum-types.c: panel-enum-types.c.template $(SIMPLE_PANEL_ENUM_FILES) $(GLIB_MKENUMS)
+	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template panel-enum-types.c.template $(SIMPLE_PANEL_ENUM_FILES)) > $@
+
+simple_panel_built_sources =			\
+	panel-enum-types.c	\
+	panel-enum-types.h
+
 libsimplepanel_la_CFLAGS = $(simple_panel_CFLAGS)
 libsimplepanel_la_SOURCES = \
-        misc.c \
-        css.c \
-        configurator.c \
-        dbg.c \
-        icon-grid.c \
-        panel.c \
-        plugin.c \
-        conf.c
+	misc.c \
+	css.c \
+	configurator.c \
+	dbg.c \
+	icon-grid.c \
+	panel.c \
+	plugin.c \
+        conf-gsettings.c \
+	panel-enum-types.c
 
 libsimplepanel_la_LIBADD = \
        $(PACKAGE_LIBS)
@@ -36,20 +65,14 @@ MENU_SOURCES = menu-policy.c
 endif
 
 simple_panel_SOURCES = \
-        gtk-run.c \
-        main.c  \
-        app.c \
-        app-actions.c \
+	gtk-run.c \
+	main.c  \
+	app.c \
+	app-actions.c \
 	$(MENU_SOURCES)
 
 simple_panel_includedir = $(includedir)/simple-panel
-simple_panel_include_HEADERS = \
-	plugin.h \
-	panel.h \
-	misc.h \
-	icon-grid.h \
-	conf.h \
-	css.h
+simple_panel_include_HEADERS = $(SIMPLE_PANEL_HEADER_FILES)
 
 if BUILD_PLUGIN_LOADER
 DYNAMIC_FLAGS = -export-dynamic
@@ -64,12 +87,11 @@ simple_panel_LDADD = \
 		$(INTLLIBS)
 ##		$(X11_LIBS) \
 
-EXTRA_DIST = \
-	dbg.h \
-	menu-policy.h \
-	private.h \
-        app.h \
-        app-actions.h
+EXTRA_DIST = $(SIMPLE_PANEL_NOINST_HEADER_FILES) \
+	panel-enum-types.h
+
+BUILT_SOURCES = $(simple_panel_built_sources)
+CLEANFILES = panel-enum-types.c panel-enum-types.h
 
 $(top_builddir)/plugins/libbuiltin_plugins.a: $(simple_panel_include_HEADERS)
 	cd $(top_builddir)/plugins && $(MAKE) libbuiltin_plugins.a

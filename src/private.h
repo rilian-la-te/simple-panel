@@ -39,13 +39,13 @@ typedef enum {
     PANEL_ALLIGN_LEFT,
     PANEL_ALLIGN_CENTER,
     PANEL_ALLIGN_RIGHT
-} PanelAllign;
+} PanelAllignType;
 typedef enum {
-    STRUT_FILL=0,
-    STRUT_DYNAMIC,
-    STRUT_PIXEL,
-    STRUT_PERCENT
-} PanelEdgeStrutType;
+    PANEL_SIZE_FILL=0,
+    PANEL_SIZE_DYNAMIC,
+    PANEL_SIZE_PIXEL,
+    PANEL_SIZE_PERCENT
+} PanelSizeType;
 typedef enum {
     PANEL_BACKGROUND_GTK=0,
     PANEL_BACKGROUND_GNOME,
@@ -53,17 +53,28 @@ typedef enum {
     PANEL_BACKGROUND_CUSTOM_IMAGE
 } PanelBackgroundType;
 typedef enum {
-    WIDGET_STYLE_NORMAL=0,
-    WIDGET_STYLE_DARK,
-    WIDGET_STYLE_CUSTOM
-} PanelWidgetStyle;
+    PANEL_WIDGETS_NORMAL=0,
+    PANEL_WIDGETS_DARK,
+    PANEL_WIDGETS_CUSTOM
+} PanelWidgetsStyle;
+typedef enum {
+    PANEL_EDGE_NONE=0,
+    PANEL_EDGE_TOP,
+    PANEL_EDGE_BOTTOM,
+    PANEL_EDGE_LEFT,
+    PANEL_EDGE_RIGHT
+} PanelEdgeType;
 
 #define PANEL_ICON_SIZE               24	/* Default size of panel icons */
 #define PANEL_HEIGHT_DEFAULT          26	/* Default height of horizontal panel */
 #define PANEL_WIDTH_DEFAULT           150	/* Default "height" of vertical panel */
 #define PANEL_HEIGHT_MAX              200	/* Maximum height of panel */
 #define PANEL_HEIGHT_MIN              16	/* Minimum height of panel */
+#define PANEL_FONT_MAX              20	/* Maximum height of panel fonts*/
+#define PANEL_FONT_MIN              2	/* Minimum height of panel fonts*/
+#define PANEL_FONT_DEFAULT          10	/* Default height of horizontal panel */
 #define PANEL_ICON_HIGHLIGHT          0x202020	/* Constant to pass to icon loader */
+#define PANEL_AUTOHIDE_SIZE           2     /* Default autohide size */
 
 /* to check if we are in LXDE */
 extern gboolean is_in_lxde;
@@ -80,7 +91,6 @@ struct _Panel {
 
     GtkWidget * box;			/* Top level widget */
 
-    GtkRequisition requisition;
     GtkWidget *(*my_box_new) (gboolean, gint);
     GtkWidget *(*my_separator_new) ();
 
@@ -90,7 +100,7 @@ struct _Panel {
     int ax, ay, aw, ah;  /* prefferd allocation of a panel */
     int cx, cy, cw, ch;  /* current allocation (as reported by configure event) allocation */
     int allign, margin;
-    GtkPositionType edge;
+    PanelEdgeType edge;
     GtkOrientation orientation;
     PanelBackgroundType background;
     int widthtype, width;
@@ -109,7 +119,7 @@ struct _Panel {
     guint usefontcolor : 1;
     guint usefontsize : 1;
     guint fontsize;
-    guint spacing;
+//    guint spacing;
 
     guint autohide : 1;
     guint visible : 1;
@@ -249,7 +259,7 @@ extern void panel_establish_autohide(Panel *p);
 extern void panel_image_set_from_file(Panel * p, GtkWidget * image, const char * file);
 extern gboolean panel_image_set_icon_theme(Panel * p, GtkWidget * image, const gchar * icon);
 extern void panel_set_wm_strut(Panel *p);
-extern void panel_set_dock_type(Panel *p);
+extern void panel_set_dock_type(SimplePanel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
 extern void panel_update_background( Panel* p );
 extern void panel_update_fonts( Panel * p);
