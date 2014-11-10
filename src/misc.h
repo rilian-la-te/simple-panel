@@ -35,6 +35,8 @@ void lxpanel_button_set_icon(GtkWidget* btn, const gchar *name, gint size);
 void lxpanel_button_update_icon(GtkWidget* btn, FmIcon *icon, gint size);
 void simple_panel_scale_button_set_range (GtkScaleButton* b, gint lower, gint upper);
 void simple_panel_scale_button_set_value_labeled (GtkScaleButton* b, gint value);
+void start_panels_from_dir(GtkApplication* app,const char *panel_dir);
+void simple_panel_add_prop_as_action(GActionMap* map,const char* prop);
 
 G_END_DECLS
 

@@ -22,12 +22,17 @@
 #define APPACTIONS_H
 
 #include <gtk/gtk.h>
+#include "app.h"
 
 G_BEGIN_DECLS
-
 void activate_about(GSimpleAction* simple, GVariant* param, gpointer data);
 void activate_run(GSimpleAction* simple, GVariant* param, gpointer data);
 void activate_exit(GSimpleAction* simple, GVariant* param, gpointer data);
+void activate_logout(GSimpleAction* simple, GVariant* param, gpointer data);
+void activate_shutdown(GSimpleAction* simple, GVariant* param, gpointer data);
+void load_global_config(PanelApp *app);
+void save_global_config(PanelApp *app);
+void apply_styling(PanelApp* app);
 
 G_END_DECLS
 

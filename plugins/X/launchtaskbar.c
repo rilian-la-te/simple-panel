@@ -645,7 +645,7 @@ static gboolean _launchbutton_create_id(LaunchTaskBarPlugin * lb, config_setting
             if (ret) {
                 config_group_set_string(s, "id", filename);
                 /* FIXME: is it reasonable to remove obsolete keys too? */
-                lxpanel_config_save(lb->panel);
+                simple_panel_config_save(lb->panel);
             } else
                 g_unlink(filename);
             g_string_free(content, TRUE);
@@ -3358,7 +3358,7 @@ static void  on_menuitem_lock_tbp_clicked(GtkWidget * widget, LaunchTaskBarPlugi
         btn->settings = config_group_add_subgroup(tb->settings, "Button");
         config_group_set_string(btn->settings, "id", path);
         g_free(path);
-        lxpanel_config_save(tb->panel);
+        simple_panel_config_save(tb->panel);
     }
 }
 
@@ -3370,7 +3370,7 @@ static void  on_menuitem_unlock_tbp_clicked(GtkWidget * widget, LaunchTaskBarPlu
     if(btn != NULL)
     {
         launchbar_remove_button(ltbp, btn);
-        lxpanel_config_save(tb->panel);
+        simple_panel_config_save(tb->panel);
     }
     if (fi)
         fm_file_info_unref(fi);

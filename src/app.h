@@ -5,6 +5,13 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+    PANEL_WIDGETS_NORMAL=0,
+    PANEL_WIDGETS_DARK=1,
+    PANEL_WIDGETS_CSS=2,
+    PANEL_WIDGETS_CSS_DARK=3
+} PanelWidgetsStyle;
+
 typedef struct _PanelApp PanelApp;
 typedef struct _PanelAppClass PanelAppClass;
 typedef struct _PanelAppPrivate PanelAppPrivate;
@@ -33,9 +40,13 @@ struct _PanelAppClass
 struct _PanelAppPrivate
 {
     GtkApplicationClass parent_class;
+    PanelWidgetsStyle widgets_style;
+    gchar* logout_cmd;
+    gchar* shutdown_cmd;
+    gchar* custom_css;
+    gchar* terminal_cmd;
+    gchar* profile;
 };
-
-int panel_app_command_line(GApplication* application, GApplicationCommandLine* commandline);
 
 G_END_DECLS
 

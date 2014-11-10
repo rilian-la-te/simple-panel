@@ -15,6 +15,23 @@ two_panels_config_panel_DATA = \
 	two_panels/panels/top
 two_panels_config_paneldir = $(sysconfdir)/xdg/simple-panel/two_panels/panels
 
+@INTLTOOL_XML_NOMERGE_RULE@
+
+gsettings_ENUM_NAMESPACE = org.simple.panel
+gsettings_ENUM_FILES = $(top_srcdir)/src/private.h
+
+#panel_gschemas_in_in = \
+#	org.simple.panel.gschema.xml.in.in \
+#	org.simple.panel.toplevel.gschema.xml.in.in
+
+#panel_gschemas_in = $(panel_gschemas_in_in:.xml.in.in=.xml.in)
+#gsettings_SCHEMAS = $(panel_gschemas_in:.xml.in=.xml)
+
+#%.gschema.xml.in: %.gschema.xml.in.in Makefile
+#	$(AM_V_GEN) $(SED) -e 's^\@GETTEXT_PACKAGE\@^$(GETTEXT_PACKAGE)^g' < $< > $@
+
+@GSETTINGS_RULES@
+
 uidir=$(datadir)/simple-panel/ui
 ui_in_files= \
 	ui/panel-pref.glade \
@@ -28,8 +45,9 @@ ui_DATA = $(ui_in_files:.glade=.ui)
 	sed 's/<!--.*-->//' < $< | sed ':a;N;$$!ba;s/ *\n *</</g' > $@
 
 CLEANFILES = \
-	$(ui_DATA)
-
+	$(ui_DATA) \
+	$(panel_gschemas_in) \
+	$(gsettings_SCHEMAS)
 
 simple_panel_images_DATA = \
 	images/my-computer.png \

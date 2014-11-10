@@ -1,5 +1,6 @@
-/*
- * Copyright (c) 2014 LxDE Developers, see the file AUTHORS for details.
+/**
+ * Copyright (c) 2006-2014 LxDE Developers, see the file AUTHORS for details.
+ * Copyright (c) 2014 Konstantin Pugin.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,24 +17,17 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-/* This is a config file parser with API similar to one used by libconfig
-   for convenience but contents of the file is the own config format
-   therefore it is much more restricted than libconfig is.
-   Strings cannot be numeric and are not quoted (similarly to INI file format).
-   Groups cannot be inside other group but only inside an anonymous list.
-   That anonymous list is the only list type which is supported and there
-   can be only one anonymous member in any group. */
+#ifndef APPMISC_H
+#define APPMISC_H
 
-#ifndef __CONF_GSETTINGS_H__
-#define __CONF_GSETTINGS_H__ 1
-
+#include <gtk/gtk.h>
 #include <glib.h>
-#include <stdio.h>
+#include "app.h"
 
 G_BEGIN_DECLS
-
-
+inline char* _system_config_file_name(PanelApp* app, const char *dir, const char *file_name);
+inline char* _user_config_file_name(PanelApp* app, const char *name1, const char *name2);
 
 G_END_DECLS
 
-#endif /* __CONF_GSETTINGS_H__ */
+#endif // APPMISC_H

@@ -21,7 +21,7 @@ SIMPLE_PANEL_HEADER_FILES = \
 	panel.h \
 	misc.h \
 	icon-grid.h \
-        conf-gsettings.h \
+	conf-gsettings.h \
 	css.h
 
 SIMPLE_PANEL_NOINST_HEADER_FILES = \
@@ -29,7 +29,9 @@ SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	menu-policy.h \
 	private.h \
 	app.h \
-	app-actions.h
+	conf.h \
+	app-actions.h \
+	app-misc.h
 
 SIMPLE_PANEL_ENUM_FILES = $(SIMPLE_PANEL_HEADER_FILES)
 SIMPLE_PANEL_ENUM_FILES += $(SIMPLE_PANEL_NOINST_HEADER_FILES)
@@ -53,7 +55,8 @@ libsimplepanel_la_SOURCES = \
 	icon-grid.c \
 	panel.c \
 	plugin.c \
-        conf-gsettings.c \
+	conf.c \
+	conf-gsettings.c \
 	panel-enum-types.c
 
 libsimplepanel_la_LIBADD = \
@@ -69,6 +72,7 @@ simple_panel_SOURCES = \
 	main.c  \
 	app.c \
 	app-actions.c \
+	app-misc.c \
 	$(MENU_SOURCES)
 
 simple_panel_includedir = $(includedir)/simple-panel

@@ -36,6 +36,8 @@
 #include <glib/gi18n.h>
 
 #include "dbg.h"
+#include "app.h"
+#include "panel.h"
 
 enum{
     COL_NAME,
@@ -43,8 +45,6 @@ enum{
     COL_DATA,
     N_COLS
 };
-
-static void save_global_config();
 
 static char* logout_cmd = NULL;
 static char* appearance_type = NULL;
@@ -66,8 +66,6 @@ extern int config;
                                                                       0),\
                                               name,PANEL_CONF_TYPE_STRING);\
     if (_s) config_setting_set_string(_s,val); } while(0)
-
-void panel_config_save(Panel *p);
 
 static void update_opt_menu(GtkWidget *w, int ind);
 static void update_toggle_button(GtkWidget *w, gboolean n);
@@ -92,8 +90,7 @@ response_event(GtkDialog *widget, gint arg1, Panel* panel )
     case GTK_RESPONSE_DELETE_EVENT:
     case GTK_RESPONSE_CLOSE:
     case GTK_RESPONSE_NONE:
-        panel_config_save( panel );
-        save_global_config();
+        simple_panel_config_save( panel->topgwin );
         /* NOTE: NO BREAK HERE*/
         gtk_widget_destroy(GTK_WIDGET(widget));
         break;
@@ -124,7 +121,7 @@ static void change_set_edge(GSimpleAction* act, GVariant* param, gpointer data)
     SimplePanel* panel = (SimplePanel*) data;
     Panel *p = panel->priv;
     gsize len;
-    int edge = str2num(edge_pair,g_variant_get_string(param,&len),PANEL_EDGE_NONE);
+    int edge = str2num(edge_pair,g_variant_get_string(param,&len),GTK_POS_TOP);
     g_variant_unref(param);
 
     p->edge = edge;
@@ -578,7 +575,7 @@ static void on_add_plugin_row_activated( GtkTreeView *view,
         {
             gboolean expand;
 
-            panel_config_save(p->priv);
+            simple_panel_config_save(p);
 
             plugin_widget_set_background(pl, p);
             gtk_container_child_get(GTK_CONTAINER(p->priv->box), pl, "expand", &expand, NULL);
@@ -695,7 +692,7 @@ static void on_remove_plugin( GtkButton* btn, GtkTreeView* view )
         /* reset conf pointer because the widget still may be referenced by configurator */
         g_object_set_qdata(G_OBJECT(pl), lxpanel_plugin_qconf, NULL);
         gtk_widget_destroy(pl);
-        panel_config_save(p->priv);
+        simple_panel_config_save(p);
     }
 }
 
@@ -777,7 +774,7 @@ static void on_moveup_plugin(  GtkButton* btn, GtkTreeView* view )
             config_setting_move_elem(s, config_setting_get_parent(s), i);
             /* reorder in panel */
             gtk_box_reorder_child(GTK_BOX(panel->priv->box), pl, i - 1);
-            panel_config_save(panel->priv);
+            simple_panel_config_save(panel);
             return;
         }
         prev = it;
@@ -812,7 +809,7 @@ static void on_movedown_plugin(  GtkButton* btn, GtkTreeView* view )
     config_setting_move_elem(s, config_setting_get_parent(s), i + 1);
     /* reorder in panel */
     gtk_box_reorder_child(GTK_BOX(panel->priv->box), pl, i);
-    panel_config_save(panel->priv);
+    simple_panel_config_save(panel);
 }
 
 static void
@@ -868,9 +865,8 @@ static void set_widget_type(GtkWidget* item, SimplePanel* panel)
         return;
 
     type_num = type;
-    appearance_type = num2str(widgettype_pair,type_num,"system-normal");
     GtkWidget* button = (GtkWidget*)g_object_get_data(G_OBJECT(item), "css-chooser" );
-    gtk_widget_set_sensitive(button,type_num == PANEL_WIDGETS_CUSTOM);
+    gtk_widget_set_sensitive(button,(type_num == PANEL_WIDGETS_CSS) || (type_num == PANEL_WIDGETS_CSS_DARK));
     apply_styling(panel);
     save_global_config();
 }
@@ -1171,8 +1167,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
                         &logout_cmd);
     }
 
-    panel_adjust_geometry_terminology(p);
-    gtk_widget_show(GTK_WIDGET(p->pref_dialog));
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-combo" );
     update_opt_menu( w, type_num);
     g_signal_connect( w, "changed",
@@ -1181,41 +1175,23 @@ void panel_configure( SimplePanel* panel, int sel_page )
     g_object_set_data(G_OBJECT(w3), "css-chooser", w);
     if (custom_css != NULL)
         gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), custom_css);
-    if (type_num != PANEL_WIDGETS_CUSTOM)
+    if (type_num < PANEL_WIDGETS_CSS)
         gtk_widget_set_sensitive(w, FALSE);
     g_signal_connect( w, "file-set", G_CALLBACK (custom_css_file_helper), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "notebook" );
     gtk_notebook_set_current_page( GTK_NOTEBOOK(w), sel_page );
-
+    w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-button" );
+    w2 = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-box");
+    popover = gtk_popover_new(NULL);
+    gtk_container_add(GTK_CONTAINER(popover),w2);
+    gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
     g_object_unref(builder);
     GSimpleActionGroup* configurator = g_simple_action_group_new();
     g_action_map_add_action_entries(G_ACTION_MAP(configurator),entries,G_N_ELEMENTS(entries),panel);
     gtk_widget_insert_action_group(GTK_WIDGET(panel),"configurator",G_ACTION_GROUP(configurator));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"configurator",G_ACTION_GROUP(configurator));
-}
-
-void panel_config_save( Panel* p )
-{
-    gchar *fname;
-
-    fname = _user_config_file_name("panels", p->name);
-    /* existance of 'panels' dir ensured in main() */
-
-    if (!config_write_file(p->config, fname)) {
-        g_warning("can't open for write %s:", fname);
-        g_free( fname );
-        return;
-    }
-    g_free( fname );
-
-    /* save the global config file */
-    save_global_config();
-    p->config_changed = 0;
-}
-
-void lxpanel_config_save(SimplePanel *p)
-{
-    panel_config_save(p->priv);
+    panel_adjust_geometry_terminology(p);
+    gtk_widget_show(GTK_WIDGET(p->pref_dialog));
 }
 
 void restart(void)
@@ -1240,25 +1216,6 @@ void logout(void)
         fm_launch_command_simple(NULL, NULL, 0, l_logout_cmd, NULL);
     else
         fm_show_error(NULL, NULL, _("Logout command is not set"));
-}
-
-void apply_styling(SimplePanel *p)
-{
-    gtk_settings_set_long_property(gtk_settings_get_default(),"gtk-application-prefer-dark-theme", type_num == PANEL_WIDGETS_DARK ,NULL);
-    if (type_num == PANEL_WIDGETS_CUSTOM)
-    {
-        GSList* l;
-        gchar* msg;
-        for( l = all_panels; l; l = l->next )
-        {
-            msg=css_apply_from_file(GTK_WIDGET(l->data),custom_css);
-            if (msg!=NULL)
-            {
-                g_warning("Cannot apply custom style: %s\n",msg);
-                g_free(msg);
-            }
-        }
-    }
 }
 
 static void notify_apply_config( GtkWidget* widget )
@@ -1360,7 +1317,7 @@ static void generic_config_dlg_response(GtkWidget * dlg, int response, Panel * p
     g_object_set_data(G_OBJECT(dlg), "generic-config-plugin", NULL);
     panel->plugin_pref_dialog = NULL;
     gtk_widget_destroy(dlg);
-    panel_config_save(panel);
+    simple_panel_config_save(panel->topgwin);
 }
 
 void _panel_show_config_dialog(SimplePanel *panel, GtkWidget *p, GtkWidget *dlg)
@@ -1517,111 +1474,6 @@ GtkWidget *lxpanel_generic_config_dlg(const char *title, SimplePanel *panel,
     dlg = _lxpanel_generic_config_dlg(title, panel->priv, apply_func, plugin, name, args);
     va_end(args);
     return dlg;
-}
-
-#define COMMAND_GROUP "Command"
-#define APPEARANCE_GROUP "Appearance"
-
-void load_global_config()
-{
-    GKeyFile* kf = g_key_file_new();
-    char* file = NULL;
-    gboolean loaded = FALSE;
-    const gchar * const * dir = g_get_system_config_dirs();
-
-    /* try to load system config file first */
-    if (dir) while (dir[0] && !loaded)
-    {
-        g_free(file);
-        file = _system_config_file_name(dir[0], "config");
-        if (g_key_file_load_from_file(kf, file, 0, NULL))
-            loaded = TRUE;
-        dir++;
-    }
-    if (!loaded) /* fallback to old config place for backward compatibility */
-    {
-        g_free(file);
-        file = _old_system_config_file_name("config");
-        if (g_key_file_load_from_file(kf, file, 0, NULL))
-            loaded = TRUE;
-    }
-    /* now try to load user config file */
-    g_free(file);
-    file = _user_config_file_name("config", NULL);
-    if (g_key_file_load_from_file(kf, file, 0, NULL))
-        loaded = TRUE;
-    g_free(file);
-
-    if( loaded )
-    {
-        char *fm, *tmp;
-        GList *apps, *l;
-
-        logout_cmd = g_key_file_get_string( kf, COMMAND_GROUP, "Logout", NULL );
-        /* check for terminal setting on upgrade */
-        if (fm_config->terminal == NULL)
-        {
-            fm_config->terminal = g_key_file_get_string(kf, COMMAND_GROUP,
-                                                        "Terminal", NULL);
-            if (fm_config->terminal != NULL) /* setting changed, save it */
-                fm_config_save(fm_config, NULL);
-        }
-        /* this is heavy but fortunately it will be ran only once: on upgrade */
-        fm = g_key_file_get_string(kf, COMMAND_GROUP, "FileManager", NULL);
-        if (fm)
-        {
-            tmp = strchr(fm, ' '); /* chop params */
-            if (tmp)
-                *tmp = '\0';
-            tmp = strrchr(fm, '/'); /* use only basename */
-            if (tmp)
-                tmp++;
-            else
-                tmp = fm;
-            tmp = g_strdup_printf("%s.desktop", tmp); /* generate desktop id */
-            g_free(fm);
-            apps = g_app_info_get_all_for_type("inode/directory");
-            for (l = apps; l; l = l->next) /* scan all known applications */
-                if (strcmp(tmp, g_app_info_get_id(l->data)) == 0)
-                    break;
-            if (l != NULL) /* found */
-                g_app_info_set_as_default_for_type(l->data, "inode/directory",
-                                                   NULL);
-            else
-                g_warning("the %s is not valid desktop id of file manager", tmp);
-            for (l = apps; l; l = l->next) /* free retrieved data */
-                g_object_unref(l->data);
-            g_list_free(apps);
-            g_free(tmp);
-        }
-        appearance_type = g_key_file_get_string(kf, APPEARANCE_GROUP, "Type", NULL);
-        if (appearance_type)
-            type_num = str2num(widgettype_pair,appearance_type,PANEL_WIDGETS_NORMAL);
-        else
-            type_num = PANEL_WIDGETS_NORMAL;
-        custom_css = g_key_file_get_string(kf, APPEARANCE_GROUP, "CSS", NULL);
-        save_global_config();
-    }
-    g_key_file_free( kf );
-}
-
-static void save_global_config()
-{
-    char* file = _user_config_file_name("config", NULL);
-    FILE* f = fopen( file, "w" );
-    if( f )
-    {
-        fprintf( f, "[" COMMAND_GROUP "]\n");
-        if( logout_cmd )
-            fprintf( f, "Logout=%s\n", logout_cmd );
-        fprintf( f, "[" APPEARANCE_GROUP "]\n");
-        if( appearance_type )
-            fprintf( f, "Type=%s\n", appearance_type );
-        if( custom_css )
-            fprintf( f, "CSS=%s\n", custom_css );
-        fclose( f );
-    }
-    g_free(file);
 }
 
 void free_global_config()

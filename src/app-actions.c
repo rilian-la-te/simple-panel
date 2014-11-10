@@ -22,11 +22,13 @@
 #endif
 
 #include <glib/gi18n.h>
+#include <glib.h>
+#include <libfm/fm-gtk.h>
 
 #include "app-actions.h"
 #include "private.h"
-
-#define __LXPANEL_INTERNALS__
+#include "app-misc.h"
+#include "css.h"
 
 static void get_about_dialog()
 {
@@ -88,4 +90,131 @@ void activate_run(GSimpleAction* simple, GVariant* param, gpointer data)
 void activate_exit(GSimpleAction* simple, GVariant* param, gpointer data)
 {
     g_application_quit(G_APPLICATION((PanelApp*)data));
+}
+
+void activate_logout(GSimpleAction* simple, GVariant* param, gpointer data)
+{
+    PanelApp* app = (PanelApp*)data;
+    const char* l_logout_cmd = app->priv->logout_cmd;
+    /* If LXSession is running, _LXSESSION_PID will be set */
+    if( ! l_logout_cmd && getenv("_LXSESSION_PID") )
+        l_logout_cmd = "lxsession-logout";
+
+    if( l_logout_cmd )
+        fm_launch_command_simple(NULL, NULL, 0, l_logout_cmd, NULL);
+    else
+        fm_show_error(NULL, NULL, _("Logout command is not set"));
+}
+
+void activate_shutdown(GSimpleAction* simple, GVariant* param, gpointer data)
+{
+    PanelApp* app = (PanelApp*)data;
+    const char* l_logout_cmd = app->priv->shutdown_cmd;
+    /* If LXSession is running, _LXSESSION_PID will be set */
+    if( ! l_logout_cmd && getenv("_LXSESSION_PID") )
+        l_logout_cmd = "lxsession-logout";
+
+    if( l_logout_cmd )
+        fm_launch_command_simple(NULL, NULL, 0, l_logout_cmd, NULL);
+    else
+        fm_show_error(NULL, NULL, _("Shutdown command is not set"));
+}
+
+#define COMMAND_GROUP "Command"
+#define APPEARANCE_GROUP "Appearance"
+
+void load_global_config(PanelApp* app)
+{
+    GKeyFile* kf = g_key_file_new();
+    char* file = NULL;
+    gboolean loaded = FALSE;
+    const gchar * const * dir = g_get_system_config_dirs();
+
+    /* try to load system config file first */
+    if (dir) while (dir[0] && !loaded)
+    {
+        g_free(file);
+        file = _system_config_file_name(app,dir[0], "config");
+        if (g_key_file_load_from_file(kf, file, 0, NULL))
+            loaded = TRUE;
+        dir++;
+    }
+    /* now try to load user config file */
+    g_free(file);
+    file = _user_config_file_name(app,"config", NULL);
+    if (g_key_file_load_from_file(kf, file, 0, NULL))
+        loaded = TRUE;
+    g_free(file);
+
+    if( loaded )
+    {
+        g_object_set(G_OBJECT(app),
+                     "logout-command",g_key_file_get_string( kf, COMMAND_GROUP, "Logout", NULL ),
+                     "shutdown-command",g_key_file_get_string( kf, COMMAND_GROUP, "Shutdown", NULL ),
+                     "widget-style",g_key_file_get_integer(kf, APPEARANCE_GROUP, "Type", NULL),
+                     "css", g_key_file_get_string(kf, APPEARANCE_GROUP, "CSS", NULL),
+                     NULL);
+        /* check for terminal setting on upgrade */
+        if (fm_config->terminal == NULL)
+        {
+            fm_config->terminal = g_key_file_get_string(kf, COMMAND_GROUP,
+                                                        "Terminal", NULL);
+            if (fm_config->terminal != NULL) /* setting changed, save it */
+                fm_config_save(fm_config, NULL);
+        }
+        save_global_config(app);
+    }
+    g_key_file_free( kf );
+}
+
+void save_global_config(PanelApp* app)
+{
+    char* file = _user_config_file_name(app,"config", NULL);
+    FILE* f = fopen( file, "w" );
+    char *logout_cmd,*shutdown_cmd, *css;
+    int type;
+    g_object_get(G_OBJECT(app),
+                 "logout-command",&logout_cmd,
+                 "shutdown-command",&shutdown_cmd,
+                 "widget-style",&type,
+                 "css", &css,
+                 NULL);
+    if( f )
+    {
+        fprintf( f, "[" COMMAND_GROUP "]\n");
+        fprintf( f, "Logout=%s\n", logout_cmd);
+        fprintf( f, "Shutdown=%s\n", shutdown_cmd);
+        fprintf( f, "[" APPEARANCE_GROUP "]\n");
+        fprintf( f, "Type=%d\n", type);
+        fprintf( f, "CSS=%s\n", css);
+        fclose( f );
+        if (logout_cmd != NULL)
+            g_free(logout_cmd);
+        if (shutdown_cmd != NULL)
+            g_free(shutdown_cmd);
+        if (css != NULL)
+            g_free(css);
+    }
+    g_free(file);
+}
+
+void apply_styling(PanelApp* app)
+{
+    gboolean is_dark = (app->priv->widgets_style%2 == 1);
+    if (gtk_settings_get_default() != NULL)
+        gtk_settings_set_long_property(gtk_settings_get_default(),"gtk-application-prefer-dark-theme",is_dark,NULL);
+    if (app->priv->widgets_style >= PANEL_WIDGETS_CSS)
+    {
+        GList* l;
+        gchar* msg;
+        for( l = gtk_application_get_windows(GTK_APPLICATION(app)); l; l = l->next )
+        {
+            msg=css_apply_from_file(GTK_WIDGET(l->data),app->priv->custom_css);
+            if (msg!=NULL)
+            {
+                g_warning("Cannot apply custom style: %s\n",msg);
+                g_free(msg);
+            }
+        }
+    }
 }

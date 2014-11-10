@@ -81,13 +81,6 @@ pair background_pair[] = {
     { 0, NULL },
 };
 
-pair widgettype_pair[] = {
-    { PANEL_WIDGETS_NORMAL, "system-normal" },
-    { PANEL_WIDGETS_DARK, "system-dark" },
-    { PANEL_WIDGETS_CUSTOM, "css-custom" },
-    { 0, NULL },
-};
-
 pair bool_pair[] = {
     { 0, "0" },
     { 1, "1" },
@@ -867,6 +860,30 @@ gboolean lxpanel_launch_app(const char* exec, GList* files, gboolean in_terminal
     return (error == NULL);
 }
 
+void start_panels_from_dir(GtkApplication* app,const char *panel_dir)
+{
+    GDir* dir = g_dir_open( panel_dir, 0, NULL );
+    const gchar* name;
+
+    if( ! dir )
+    {
+        return;
+    }
+
+    while((name = g_dir_read_name(dir)) != NULL)
+    {
+        char* panel_config = g_build_filename( panel_dir, name, NULL );
+        if (strchr(panel_config, '~') == NULL)    /* Skip editor backup files in case user has hand edited in this directory */
+        {
+            SimplePanel* panel = panel_new(app,panel_config, name );
+            if( panel )
+                gtk_application_add_window(app,GTK_WINDOW(panel));
+        }
+        g_free( panel_config );
+    }
+    g_dir_close( dir );
+}
+
 void simple_panel_scale_button_set_range (GtkScaleButton* b, gint lower, gint upper)
 {
     gtk_adjustment_set_lower(gtk_scale_button_get_adjustment(b),lower);
@@ -881,6 +898,16 @@ void simple_panel_scale_button_set_value_labeled (GtkScaleButton* b, gint value)
     gchar* str = g_strdup_printf("%d",value);
     gtk_button_set_label(GTK_BUTTON(b),str);
     g_free(str);
+}
+
+void simple_panel_add_prop_as_action(GActionMap* map,const char* prop)
+{
+    GAction* action;
+    gchar* string = g_strdup_printf("set-%s",prop);
+    action = G_ACTION(g_property_action_new(string,map,prop));
+    g_action_map_add_action(map,action);
+    g_object_unref(action);
+    g_free(string);
 }
 
 /* vim: set sw=4 et sts=4 : */

@@ -28,7 +28,6 @@
 #include <gdk/gdk.h>
 #include <stdio.h>
 #include "panel.h"
-#include "app.h"
 
 /* -----------------------------------------------------------------------------
  *   Definitions used by lxpanel main code internally */
@@ -52,18 +51,6 @@ typedef enum {
     PANEL_BACKGROUND_CUSTOM_COLOR,
     PANEL_BACKGROUND_CUSTOM_IMAGE
 } PanelBackgroundType;
-typedef enum {
-    PANEL_WIDGETS_NORMAL=0,
-    PANEL_WIDGETS_DARK,
-    PANEL_WIDGETS_CUSTOM
-} PanelWidgetsStyle;
-typedef enum {
-    PANEL_EDGE_NONE=0,
-    PANEL_EDGE_TOP,
-    PANEL_EDGE_BOTTOM,
-    PANEL_EDGE_LEFT,
-    PANEL_EDGE_RIGHT
-} PanelEdgeType;
 
 #define PANEL_ICON_SIZE               24	/* Default size of panel icons */
 #define PANEL_HEIGHT_DEFAULT          26	/* Default height of horizontal panel */
@@ -78,8 +65,6 @@ typedef enum {
 
 /* to check if we are in LXDE */
 extern gboolean is_in_lxde;
-
-extern gchar *cprofile;
 
 /* Context of a panel on a given edge. */
 struct _Panel {
@@ -100,7 +85,7 @@ struct _Panel {
     int ax, ay, aw, ah;  /* prefferd allocation of a panel */
     int cx, cy, cw, ch;  /* current allocation (as reported by configure event) allocation */
     int allign, margin;
-    PanelEdgeType edge;
+    GtkPositionType edge;
     GtkOrientation orientation;
     PanelBackgroundType background;
     int widthtype, width;
@@ -130,7 +115,6 @@ struct _Panel {
     char* background_file;
 
     PanelConf * config;                 /* Panel configuration data */
-    GSList * system_menus;		/* List of plugins having menus: deprecated */
 
     GtkWidget* plugin_pref_dialog;	/* Plugin preference dialog */
     GtkWidget* pref_dialog;		/* preference dialog */
@@ -168,28 +152,9 @@ extern pair edge_pair[];
 extern pair strut_pair[];
 extern pair background_pair[];
 extern pair bool_pair[];
-extern pair widgettype_pair[];
 
 int str2num(pair *p, const gchar *str, int defval);
 const gchar *num2str(pair *p, int num, const gchar *defval);
-
-#ifdef __LXPANEL_INTERNALS__
-static inline char *_system_config_file_name(const char *dir, const char *file_name)
-{
-    return g_build_filename(dir, "simple-panel", cprofile, file_name, NULL);
-}
-
-static inline char *_old_system_config_file_name(const char *file_name)
-{
-    return g_build_filename(PACKAGE_DATA_DIR "/profile", cprofile, file_name, NULL);
-}
-
-static inline char *_user_config_file_name(const char *name1, const char *name2)
-{
-    return g_build_filename(g_get_user_config_dir(), "simple-panel", cprofile, name1,
-                            name2, NULL);
-}
-#endif
 
 //void _queue_panel_calculate_size(Panel *panel);
 
@@ -237,7 +202,6 @@ void panel_configure(SimplePanel* p, int sel_page);
 gboolean panel_edge_available(Panel* p, int edge, gint monitor);
 void restart(void);
 void logout(void);
-void apply_styling (SimplePanel* p);
 void gtk_run(void);
 
 /* -----------------------------------------------------------------------------
