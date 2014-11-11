@@ -179,11 +179,11 @@
     <child>
       <object class="GtkRadioButton" id="edge_bottom">
         <property name="label" translatable="yes">Bottom</property>
-        <property name="use_action_appearance">False</property>
+        <property name="use_action_appearance">True</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
-        <property name="action_name">configurator.set-edge(bottom)</property>
+        <property name="action_name">configurator.set-edge('bottom')</property>
         <property name="xalign">0</property>
         <property name="active">True</property>
         <property name="draw_indicator">True</property>
@@ -197,11 +197,11 @@
     <child>
       <object class="GtkRadioButton" id="edge_top">
         <property name="label" translatable="yes">Top</property>
-        <property name="use_action_appearance">False</property>
+        <property name="use_action_appearance">True</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
-        <property name="action_name">configurator.set-edge(top)</property>
+        <property name="action_name">configurator.set-edge('top')</property>
         <property name="xalign">0</property>
         <property name="draw_indicator">True</property>
         <property name="group">edge_bottom</property>
@@ -215,11 +215,11 @@
     <child>
       <object class="GtkRadioButton" id="edge_left">
         <property name="label" translatable="yes">Left</property>
-        <property name="use_action_appearance">False</property>
+        <property name="use_action_appearance">True</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
-        <property name="action_name">configurator.set-edge(left)</property>
+        <property name="action_name">configurator.set-edge('left')</property>
         <property name="xalign">0</property>
         <property name="draw_indicator">True</property>
         <property name="group">edge_bottom</property>
@@ -233,11 +233,11 @@
     <child>
       <object class="GtkRadioButton" id="edge_right">
         <property name="label" translatable="yes">Right</property>
-        <property name="use_action_appearance">False</property>
+        <property name="use_action_appearance">True</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
-        <property name="action_name">configurator.set-edge(right)</property>
+        <property name="action_name">configurator.set-edge('right')</property>
         <property name="xalign">0</property>
         <property name="draw_indicator">True</property>
         <property name="group">edge_bottom</property>
@@ -1306,7 +1306,6 @@
                                 <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkComboBox" id="widget-style-combo">
-                                    <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="model">liststore-widgetstyle</property>
                                     <child>
@@ -1323,6 +1322,22 @@
                                   </packing>
                                 </child>
                                 <child>
+                                  <object class="GtkMenuButton" id="widget-style-button">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <property name="draw_indicator">True</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child>
                                   <object class="GtkFileChooserButton" id="css-chooser">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
@@ -1331,7 +1346,7 @@
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">1</property>
+                                    <property name="position">2</property>
                                   </packing>
                                 </child>
                               </object>
@@ -1385,5 +1400,158 @@
     <action-widgets>
       <action-widget response="-7">close_btn</action-widget>
     </action-widgets>
+  </object>
+  <object class="GtkBox" id="widget-style-box">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkBox" id="box9">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkSwitch" id="switch1">
+            <property name="use_action_appearance">True</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="action_name">app.set-widget-style('normal')</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label8">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Normal</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="box10">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkLabel" id="label12">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Dark</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSwitch" id="switch2">
+            <property name="use_action_appearance">True</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="action_name">app.set-widget-style('dark')</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="box11">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkLabel" id="label13">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Custom</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSwitch" id="switch3">
+            <property name="use_action_appearance">True</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="action_name">app.set-widget-style('css')</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="box12">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkLabel" id="label14">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Custom Dark</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSwitch" id="switch4">
+            <property name="use_action_appearance">True</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="action_name">app.set-widget-style('css-dark')</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">3</property>
+      </packing>
+    </child>
   </object>
 </interface>
