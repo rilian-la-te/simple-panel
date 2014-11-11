@@ -86,7 +86,6 @@ GtkWidget *_gtk_image_new_from_file_scaled(const gchar *file, gint width,
 /* FIXME: those are defined on panel main code */
 void restart(void);
 void gtk_run(void);
-void logout(void);
 
 static void on_data_get(FmDndSrc *ds, GtkWidget *mi)
 {
@@ -135,15 +134,6 @@ spawn_app(GtkWidget *widget, gpointer data)
     if (data) {
         fm_launch_command_simple(NULL, NULL, 0, data, NULL);
     }
-    RET();
-}
-
-
-static void
-run_command(GtkWidget *widget, void (*cmd)(void))
-{
-    ENTER;
-    cmd();
     RET();
 }
 
@@ -653,6 +643,7 @@ reload_system_menu( menup* m, GtkMenu* menu )
 
 static void show_menu( GtkWidget* widget, menup* m, int btn, guint32 time )
 {
+    gtk_menu_attach_to_widget(GTK_MENU(m->menu),m->box,NULL);
     gtk_menu_popup(GTK_MENU(m->menu),
                    NULL, NULL,
                    (GtkMenuPositionFunc)menu_pos, widget,
@@ -743,14 +734,13 @@ make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkW
 typedef struct {
     char *name;
     char *disp_name;
-    void (*cmd)(void);
+    char *action;
 } Command;
 
 static Command commands[] = {
     //{ "configure", N_("Preferences"), configure },
-    { "run", N_("Run"), gtk_run },
-    { "restart", N_("Restart"), restart },
-    { "logout", N_("Logout"), logout },
+    { "run", N_("Run"), "app.run" },
+    { "logout", N_("Logout"), "app.logout" },
     { NULL, NULL },
 };
 
@@ -783,7 +773,7 @@ read_item(menup *m, config_setting_t *s)
     if( cmd_entry ) /* built-in commands */
     {
         item = gtk_image_menu_item_new_with_label( _(cmd_entry->disp_name) );
-        g_signal_connect(G_OBJECT(item), "activate", (GCallback)run_command, cmd_entry->cmd);
+        gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(item),cmd_entry->action);
     }
     else if (action)
     {

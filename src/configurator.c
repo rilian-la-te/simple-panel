@@ -46,11 +46,6 @@ enum{
     N_COLS
 };
 
-static char* logout_cmd = NULL;
-static char* appearance_type = NULL;
-static PanelWidgetsStyle type_num;
-static char* custom_css = NULL;
-
 extern GSList* all_panels;
 extern int config;
 
@@ -91,6 +86,7 @@ response_event(GtkDialog *widget, gint arg1, Panel* panel )
     case GTK_RESPONSE_CLOSE:
     case GTK_RESPONSE_NONE:
         simple_panel_config_save( panel->topgwin );
+        gtk_application_remove_window(panel->app,GTK_WINDOW(panel->pref_dialog));
         /* NOTE: NO BREAK HERE*/
         gtk_widget_destroy(GTK_WIDGET(widget));
         break;
@@ -855,31 +851,12 @@ static void on_app_chooser_destroy(GtkAppChooser *fm, gpointer _unused)
     }
 }
 
-static void set_widget_type(GtkWidget* item, SimplePanel* panel)
-{
-    Panel *p = panel->priv;
-    int type;
-
-    type = gtk_combo_box_get_active(GTK_COMBO_BOX(item));
-    if (type_num == type) /* not changed */
-        return;
-
-    type_num = type;
-    GtkWidget* button = (GtkWidget*)g_object_get_data(G_OBJECT(item), "css-chooser" );
-    gtk_widget_set_sensitive(button,(type_num == PANEL_WIDGETS_CSS) || (type_num == PANEL_WIDGETS_CSS_DARK));
-    apply_styling(panel);
-    save_global_config();
-}
-
 static void custom_css_file_helper(GtkFileChooser * file_chooser, SimplePanel * p)
 {
     char * file = g_strdup(gtk_file_chooser_get_filename(file_chooser));
     if (file != NULL)
     {
-        g_free(custom_css);
-        custom_css = file;
-        save_global_config();
-        apply_styling(p);
+        g_object_set(G_OBJECT(p->priv->app),"css",file,NULL);
     }
 }
 
@@ -892,6 +869,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
     GtkAppChooserButton *fm;
     GdkScreen *screen;
     gint monitors;
+    GMenu* menu;
+    GMenuItem* item;
 
     if( p->pref_dialog )
     {
@@ -909,6 +888,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     p->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "panel_pref" );
     gtk_window_set_transient_for(GTK_WINDOW(p->pref_dialog), GTK_WINDOW(panel));
+    gtk_application_add_window(p->app,GTK_WINDOW(p->pref_dialog));
 //    gtk_window_set_attached_to(GTK_WINDOW(p->pref_dialog), GTK_WIDGET(panel));
     g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), p);
     g_object_add_weak_pointer( G_OBJECT(p->pref_dialog), (gpointer) &p->pref_dialog );
@@ -917,10 +897,15 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* position */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
-    w2 = (GtkWidget*)gtk_builder_get_object( builder, "edge-box");
-    popover = gtk_popover_new(NULL);
-    gtk_container_add(GTK_CONTAINER(popover),w2);
-    gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
+    gtk_button_set_label(GTK_BUTTON(w3),_("Panel Edge"));
+    menu = g_menu_new();
+    g_menu_append(menu,_("Top"),"win.set-edge('top')");
+    g_menu_append(menu,_("Bottom"),"win.set-edge('bottom')");
+    g_menu_append(menu,_("Left"),"win.set-edge('left')");
+    g_menu_append(menu,_("Right"),"win.set-edge('right')");
+    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
+    g_object_unref(menu);
+    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
 
     /* monitor */
     monitors = 1;
@@ -1137,6 +1122,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
         gtk_widget_hide( w );
     }
     else {
+        char* logout_cmd;
+        g_object_get(G_OBJECT(panel->priv->app),"logout-command",&logout_cmd,NULL);
         if(logout_cmd)
             gtk_entry_set_text( GTK_ENTRY(w), logout_cmd );
         g_signal_connect( w, "focus-out-event",
@@ -1144,24 +1131,27 @@ void panel_configure( SimplePanel* panel, int sel_page )
                         &logout_cmd);
     }
 
-    w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-combo" );
-    update_opt_menu( w, type_num);
-    g_signal_connect( w, "changed",
-                     G_CALLBACK(set_widget_type), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "css-chooser" );
     g_object_set_data(G_OBJECT(w3), "css-chooser", w);
+    char* custom_css;
+    g_object_get(G_OBJECT(panel->priv->app),"css",custom_css);
     if (custom_css != NULL)
         gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), custom_css);
-    if (type_num < PANEL_WIDGETS_CSS)
-        gtk_widget_set_sensitive(w, FALSE);
+    g_free(custom_css);
     g_signal_connect( w, "file-set", G_CALLBACK (custom_css_file_helper), panel);
     w = (GtkWidget*)gtk_builder_get_object( builder, "notebook" );
     gtk_notebook_set_current_page( GTK_NOTEBOOK(w), sel_page );
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-button" );
-    w2 = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-box");
-    popover = gtk_popover_new(NULL);
-    gtk_container_add(GTK_CONTAINER(popover),w2);
-    gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
+    gtk_button_set_always_show_image(GTK_BUTTON(w3),TRUE);
+    gtk_button_set_label(GTK_BUTTON(w3),_("Application Widget Style"));
+    menu = g_menu_new();
+    g_menu_append(menu,_("Normal"),"app.set-widget-style('normal')");
+    g_menu_append(menu,_("Dark"),"app.set-widget-style('dark')");
+    g_menu_append(menu,_("Custom CSS"),"app.set-widget-style('css')");
+    g_menu_append(menu,_("Dark & Custom CSS"),"app.set-widget-style('css-dark')");
+    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
+    g_object_unref(menu);
+    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
     g_object_unref(builder);
     GSimpleActionGroup* configurator = g_simple_action_group_new();
     g_action_map_add_action_entries(G_ACTION_MAP(configurator),entries,G_N_ELEMENTS(entries),panel);
@@ -1180,19 +1170,6 @@ void restart(void)
 
     gtk_main_quit();
     RET();
-}
-
-void logout(void)
-{
-    const char* l_logout_cmd = logout_cmd;
-    /* If LXSession is running, _LXSESSION_PID will be set */
-    if( ! l_logout_cmd && getenv("_LXSESSION_PID") )
-        l_logout_cmd = "lxsession-logout";
-
-    if( l_logout_cmd )
-        fm_launch_command_simple(NULL, NULL, 0, l_logout_cmd, NULL);
-    else
-        fm_show_error(NULL, NULL, _("Logout command is not set"));
 }
 
 static void notify_apply_config( GtkWidget* widget )
@@ -1451,12 +1428,5 @@ GtkWidget *lxpanel_generic_config_dlg(const char *title, SimplePanel *panel,
     dlg = _lxpanel_generic_config_dlg(title, panel->priv, apply_func, plugin, name, args);
     va_end(args);
     return dlg;
-}
-
-void free_global_config()
-{
-    g_free( logout_cmd );
-    g_free( appearance_type );
-    g_free( custom_css );
 }
 /* vim: set sw=4 et sts=4 : */

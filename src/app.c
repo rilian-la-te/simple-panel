@@ -128,8 +128,6 @@ static void panel_app_startup(GApplication* app)
 static void panel_app_shutdown(GApplication* app)
 {
         /* destroy all panels */
-    free_global_config();
-
     _unload_modules();
     fm_gtk_finalize();
     G_APPLICATION_CLASS (panel_app_parent_class)->shutdown (app);
@@ -264,7 +262,8 @@ static void panel_app_set_property(GObject      *object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
     }
-    save_global_config(app);
+    if (prop_id != PROP_PROFILE)
+        save_global_config(app);
 }
 
 static void panel_app_get_property(GObject      *object,
@@ -416,7 +415,7 @@ void panel_app_class_init(PanelAppClass *klass)
                     "CSS File",
                     "Custom CSS Style of this panel",
                     "",
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE));
     g_object_class_install_property (
                 gobject_class,
                 PROP_LOGOUT,
@@ -425,7 +424,7 @@ void panel_app_class_init(PanelAppClass *klass)
                     "Logout command",
                     "Command for logout used by this panel",
                     "lxsession-logout",
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE));
     g_object_class_install_property (
                 gobject_class,
                 PROP_SHUTDOWN,
@@ -434,7 +433,7 @@ void panel_app_class_init(PanelAppClass *klass)
                     "Shutdown command",
                     "Command for shutdown used by this panel",
                     "lxsession-logout",
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE));
     g_object_class_install_property (
                 gobject_class,
                 PROP_TERMINAL,
@@ -443,7 +442,7 @@ void panel_app_class_init(PanelAppClass *klass)
                     "Terminal",
                     "Terminal emulator used by this panel",
                     "sakura",
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE));
     g_object_class_install_property(
                 gobject_class,
                 PROP_WIDGET_STYLE,
@@ -453,5 +452,5 @@ void panel_app_class_init(PanelAppClass *klass)
                     "Widget style used by application. May be normal, dark and custom",
                     PANEL_WIDGETS_STYLE,
                     PANEL_WIDGETS_NORMAL,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE));
 }
