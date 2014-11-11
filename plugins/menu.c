@@ -741,6 +741,7 @@ static Command commands[] = {
     //{ "configure", N_("Preferences"), configure },
     { "run", N_("Run"), "app.run" },
     { "logout", N_("Logout"), "app.logout" },
+    { "shutdown", N_("Shutdown"), "app.shutdown" },
     { NULL, NULL },
 };
 
@@ -979,6 +980,9 @@ menu_constructor(SimplePanel *panel, config_setting_t *settings)
         s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
             config_group_set_string(s, "command", "logout");
             config_group_set_string(s, "image", "gnome-logout");
+        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
+            config_group_set_string(s, "command", "shutdown");
+            config_group_set_string(s, "image", "gnome-shutdown");
         config_group_set_string(m->settings, "image", DEFAULT_MENU_ICON);
     }
 
