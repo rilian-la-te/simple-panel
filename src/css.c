@@ -153,19 +153,19 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
                                " -GtkWidget-focus-line-width: 0px;\n"
                                " -GtkWidget-focus-padding: 0px;\n"
                                "}\n"
-                               ".-panel-flat-button:hover,"
-                               ".-panel-flat-button.highlight,"
-                               ".-panel-flat-button:hover:active,"
-                               ".-panel-flat-button:active:hover {\n"
-                               "border-style: solid;"
-                               "border-width: %s;"
-                               "border-color: %s;"
-                               "}\n"
+                               ".-panel-flat-button:checked,"
                                ".-panel-flat-button:active {\n"
                                "border-style: solid;"
                                "border-width: %s;"
                                "border-color: %s;"
-                               "}\n",edge,gdk_rgba_to_string(&color),edge,gdk_rgba_to_string(&active_color));
+                               "}\n"
+                               ".-panel-flat-button:hover,"
+                               ".-panel-flat-button.highlight,"
+                               ".-panel-flat-button:active:hover {\n"
+                               "border-style: solid;"
+                               "border-width: %s;"
+                               "border-color: %s;"
+                               "}\n",edge,gdk_rgba_to_string(&active_color),edge,gdk_rgba_to_string(&color));
     g_object_weak_ref(G_OBJECT(widget), (GWeakNotify)g_free, edge);
     return returnie;
 }

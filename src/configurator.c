@@ -909,6 +909,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     p->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "panel_pref" );
     gtk_window_set_transient_for(GTK_WINDOW(p->pref_dialog), GTK_WINDOW(panel));
+//    gtk_window_set_attached_to(GTK_WINDOW(p->pref_dialog), GTK_WIDGET(panel));
     g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), p);
     g_object_add_weak_pointer( G_OBJECT(p->pref_dialog), (gpointer) &p->pref_dialog );
     gtk_window_set_position( GTK_WINDOW(p->pref_dialog), GTK_WIN_POS_CENTER );
@@ -920,30 +921,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
     popover = gtk_popover_new(NULL);
     gtk_container_add(GTK_CONTAINER(popover),w2);
     gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
-//    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_bottom" );
-//    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_BOTTOM));
-//    if (edge_selector(p, GTK_POS_BOTTOM))
-//        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-//    g_signal_connect(w, "toggled", G_CALLBACK(edge_bottom_toggle), panel);
-//    g_object_set_data(G_OBJECT(w), "edge-button", w3);
-//    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_top" );
-//    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_TOP));
-//    if (edge_selector(p, GTK_POS_TOP))
-//        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-//    g_signal_connect(w, "toggled", G_CALLBACK(edge_top_toggle), panel);
-//    g_object_set_data(G_OBJECT(w), "edge-button", w3);
-//    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_left" );
-//    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_LEFT));
-//    if (edge_selector(p, GTK_POS_LEFT))
-//        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-//    g_signal_connect(w, "toggled", G_CALLBACK(edge_left_toggle), panel);
-//    g_object_set_data(G_OBJECT(w), "edge-button", w3);
-//    w = (GtkWidget*)gtk_builder_get_object( builder, "edge_right" );
-//    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), edge_selector(p, GTK_POS_RIGHT));
-//    if (edge_selector(p, GTK_POS_RIGHT))
-//        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-//    g_signal_connect(w, "toggled", G_CALLBACK(edge_right_toggle), panel);
-//    g_object_set_data(G_OBJECT(w), "edge-button", w3);
 
     /* monitor */
     monitors = 1;

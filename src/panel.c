@@ -89,6 +89,7 @@ static void activate_remove_panel(GSimpleAction* action, GVariant* param, gpoint
 static void activate_panel_settings(GSimpleAction* action, GVariant* param, gpointer data);
 static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
+void simple_panel_config_save( SimplePanel* panel );
 
 G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_APPLICATION_WINDOW)
 
@@ -190,18 +191,19 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     Panel *p = LXPANEL(widget)->priv;
 
 	GTK_WIDGET_CLASS(lxpanel_parent_class)->size_allocate(widget, a);
-	gtk_widget_set_allocation(widget,a);
+    gtk_widget_set_allocation(widget,a);
     if (p->widthtype == PANEL_SIZE_DYNAMIC)
         p->width = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->width : a->height;
     if (p->heighttype == PANEL_SIZE_DYNAMIC)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->height : a->width;
+
     calculate_position(p);
-	if (a->width != p->aw || a->height != p->ah || a->x != p->ax || a->y != p->ay)
+    if (a->width != p->aw || a->height != p->ah || a->x != p->ax || a->y != p->ay)
     {
         gtk_window_move(GTK_WINDOW(widget), p->ax, p->ay);
         _panel_set_wm_strut(LXPANEL(widget));
     }
-	else
+    else
 		if (p->background_update_queued)
     {
         g_source_remove(p->background_update_queued);
@@ -1393,8 +1395,10 @@ void update_panel_geometry( SimplePanel* p )
 {
     /* Guard against being called early in panel creation. */
     _calculate_position(p);
+    gtk_widget_hide(GTK_WIDGET(p));
     gtk_widget_set_size_request(GTK_WIDGET(p), p->priv->aw, p->priv->ah);
-    gdk_window_move(gtk_widget_get_window(GTK_WIDGET(p)), p->priv->ax, p->priv->ay);
+    gtk_window_move(GTK_WINDOW(p),p->priv->ax,p->priv->ay);
+    gtk_widget_show(GTK_WIDGET(p));
     _panel_queue_update_background(p);
     _panel_establish_autohide(p);
     _panel_set_wm_strut(p);
@@ -1579,7 +1583,6 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     /* either first run or orientation was changed */
     if (!p->initialized || previous_orientation != p->orientation)
     {
-        panel_adjust_geometry_terminology(p);
         if (p->initialized)
             p->height = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? PANEL_HEIGHT_DEFAULT : PANEL_WIDTH_DEFAULT);
         if (p->height_control != NULL)

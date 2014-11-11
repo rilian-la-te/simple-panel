@@ -183,7 +183,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
-        <property name="action_name">configurator.set-edge('bottom')</property>
+        <property name="action_name">win.set-edge('bottom')</property>
         <property name="xalign">0</property>
         <property name="active">True</property>
         <property name="draw_indicator">True</property>
@@ -201,7 +201,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
-        <property name="action_name">configurator.set-edge('top')</property>
+        <property name="action_name">win.set-edge('top')</property>
         <property name="xalign">0</property>
         <property name="draw_indicator">True</property>
         <property name="group">edge_bottom</property>
@@ -219,7 +219,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
-        <property name="action_name">configurator.set-edge('left')</property>
+        <property name="action_name">win.set-edge('left')</property>
         <property name="xalign">0</property>
         <property name="draw_indicator">True</property>
         <property name="group">edge_bottom</property>
@@ -237,7 +237,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
-        <property name="action_name">configurator.set-edge('right')</property>
+        <property name="action_name">win.set-edge('right')</property>
         <property name="xalign">0</property>
         <property name="draw_indicator">True</property>
         <property name="group">edge_bottom</property>
@@ -379,7 +379,6 @@
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="relief">none</property>
-                                    <property name="use_popover">True</property>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -396,7 +395,6 @@
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="relief">none</property>
-                                    <property name="use_popover">True</property>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -658,7 +656,6 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
-                                    <property name="use_popover">True</property>
                                     <child>
                                       <placeholder/>
                                     </child>
