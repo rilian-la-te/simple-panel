@@ -57,10 +57,10 @@ pair allign_pair[] = {
 };
 
 pair edge_pair[] = {
-    { GTK_POS_LEFT, "left" },
-    { GTK_POS_RIGHT, "right" },
-    { GTK_POS_TOP, "top" },
-    { GTK_POS_BOTTOM, "bottom" },
+    { PANEL_EDGE_LEFT, "left" },
+    { PANEL_EDGE_RIGHT, "right" },
+    { PANEL_EDGE_TOP, "top" },
+    { PANEL_EDGE_BOTTOM, "bottom" },
     { 0, NULL },
 };
 
@@ -253,13 +253,13 @@ void _calculate_position(SimplePanel *panel)
         gdk_screen_get_monitor_geometry(screen,np->monitor,&marea);
     }
 
-    if (np->edge == GTK_POS_TOP || np->edge == GTK_POS_BOTTOM) {
+    if (np->edge == PANEL_EDGE_TOP || np->edge == PANEL_EDGE_BOTTOM) {
         np->aw = np->width;
         np->ax = marea.x;
         calculate_width(marea.width, np->widthtype, np->allign, np->margin,
               &np->aw, &np->ax);
         np->ah = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
-        np->ay = marea.y + ((np->edge == GTK_POS_TOP) ? 0 : (marea.height - np->ah));
+        np->ay = marea.y + ((np->edge == PANEL_EDGE_TOP) ? 0 : (marea.height - np->ah));
 
     } else {
         np->ah = np->width;
@@ -267,7 +267,7 @@ void _calculate_position(SimplePanel *panel)
         calculate_width(marea.height, np->widthtype, np->allign, np->margin,
               &np->ah, &np->ay);
         np->aw = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
-        np->ax = marea.x + ((np->edge == GTK_POS_LEFT) ? 0 : (marea.width - np->aw));
+        np->ax = marea.x + ((np->edge == PANEL_EDGE_LEFT) ? 0 : (marea.width - np->aw));
     }
     //g_debug("%s - x=%d y=%d w=%d h=%d\n", __FUNCTION__, np->ax, np->ay, np->aw, np->ah);
     RET();
@@ -903,11 +903,18 @@ void simple_panel_scale_button_set_value_labeled (GtkScaleButton* b, gint value)
 void simple_panel_add_prop_as_action(GActionMap* map,const char* prop)
 {
     GAction* action;
-    gchar* string = g_strdup_printf("set-%s",prop);
-    action = G_ACTION(g_property_action_new(string,map,prop));
+    action = G_ACTION(g_property_action_new(prop,map,prop));
     g_action_map_add_action(map,action);
     g_object_unref(action);
-    g_free(string);
+}
+
+void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,const char* prop)
+{
+    GAction* action;
+    g_settings_bind(settings,prop,G_OBJECT(map),prop,G_SETTINGS_BIND_DEFAULT);
+    action = G_ACTION(g_settings_create_action(settings,prop));
+    g_action_map_add_action(map,action);
+    g_object_unref(action);
 }
 
 /* vim: set sw=4 et sts=4 : */

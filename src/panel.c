@@ -526,7 +526,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Edge",
                     "Edge of the screen where panel attached",
                     gtk_position_type_get_type(),
-                    GTK_POS_TOP,
+                    PANEL_EDGE_TOP,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(
                 gobject_class,
@@ -771,25 +771,25 @@ void _panel_set_wm_strut(SimplePanel *panel)
     /* Dispatch on edge to set up strut parameters. */
     switch (p->edge)
     {
-        case GTK_POS_LEFT:
+        case PANEL_EDGE_LEFT:
             index = 0;
             strut_size = p->aw;
             strut_lower = p->ay;
             strut_upper = p->ay + p->ah;
             break;
-        case GTK_POS_RIGHT:
+        case PANEL_EDGE_RIGHT:
             index = 1;
             strut_size = p->aw;
             strut_lower = p->ay;
             strut_upper = p->ay + p->ah;
             break;
-        case GTK_POS_TOP:
+        case PANEL_EDGE_TOP:
             index = 2;
             strut_size = p->ah;
             strut_lower = p->ax;
             strut_upper = p->ax + p->aw;
             break;
-        case GTK_POS_BOTTOM:
+        case PANEL_EDGE_BOTTOM:
             index = 3;
             strut_size = p->ah;
             strut_lower = p->ax;
@@ -1007,17 +1007,17 @@ mouse_watch(SimplePanel *panel)
     if (p->ah_state == AH_STATE_HIDDEN) {
         gap = MAX(p->height_when_hidden, GAP);
         switch (p->edge) {
-        case GTK_POS_LEFT:
+        case PANEL_EDGE_LEFT:
             cw = gap;
             break;
-        case GTK_POS_RIGHT:
+        case PANEL_EDGE_RIGHT:
             cx = cx + cw - gap;
             cw = gap;
             break;
-        case GTK_POS_TOP:
+        case PANEL_EDGE_TOP:
             ch = gap;
             break;
-        case GTK_POS_BOTTOM:
+        case PANEL_EDGE_BOTTOM:
             cy = cy + ch - gap;
             ch = gap;
             break;
@@ -1534,7 +1534,7 @@ void panel_adjust_geometry_terminology(Panel * p)
 {
     if ((p->alignment_left_label != NULL) && (p->alignment_right_label != NULL))
     {
-        if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
+        if ((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM))
         {
             gtk_button_set_label(GTK_BUTTON(p->alignment_left_label), _("Left"));
             gtk_button_set_label(GTK_BUTTON(p->alignment_right_label), _("Right"));
@@ -1577,7 +1577,7 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     GList *plugins, *l;
 
     GtkOrientation previous_orientation = p->orientation;
-    p->orientation = (p->edge == GTK_POS_TOP || p->edge == GTK_POS_BOTTOM)
+    p->orientation = (p->edge == PANEL_EDGE_TOP || p->edge == PANEL_EDGE_BOTTOM)
         ? GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
 
     /* either first run or orientation was changed */
@@ -1631,7 +1631,7 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         RET(0);
     }
     if (config_setting_lookup_string(cfg, "edge", &str))
-        p->edge = str2num(edge_pair, str, GTK_POS_BOTTOM);
+        p->edge = str2num(edge_pair, str, PANEL_EDGE_BOTTOM);
     if (config_setting_lookup_string(cfg, "allign", &str))
         p->allign = str2num(allign_pair, str, PANEL_ALLIGN_NONE);
     config_setting_lookup_int(cfg, "monitor", &p->monitor);
@@ -1831,7 +1831,17 @@ GtkIconTheme *panel_get_icon_theme(SimplePanel *panel)
 
 GtkPositionType panel_get_edge(SimplePanel *panel)
 {
-    return panel->priv->edge;
+    switch (panel->priv->edge)
+    {
+    case PANEL_EDGE_BOTTOM:
+        return GTK_POS_BOTTOM;
+    case PANEL_EDGE_TOP:
+        return GTK_POS_TOP;
+    case PANEL_EDGE_LEFT:
+        return GTK_POS_LEFT;
+    case PANEL_EDGE_RIGHT:
+        return GTK_POS_RIGHT;
+    }
 }
 
 gboolean panel_is_dynamic(SimplePanel *panel)

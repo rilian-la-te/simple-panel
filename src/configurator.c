@@ -117,7 +117,7 @@ static void change_set_edge(GSimpleAction* act, GVariant* param, gpointer data)
     SimplePanel* panel = (SimplePanel*) data;
     Panel *p = panel->priv;
     gsize len;
-    int edge = str2num(edge_pair,g_variant_get_string(param,&len),GTK_POS_TOP);
+    int edge = str2num(edge_pair,g_variant_get_string(param,&len),PANEL_EDGE_TOP);
     g_variant_unref(param);
 
     p->edge = edge;
@@ -245,7 +245,7 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
         gtk_scale_button_set_value( GTK_SCALE_BUTTON(spin), 100 );
         break;
     case PANEL_SIZE_PIXEL:
-        if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
+        if ((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM))
         {
             simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_width());
             gtk_scale_button_set_value( GTK_SCALE_BUTTON(spin), gdk_screen_width() );
@@ -899,10 +899,10 @@ void panel_configure( SimplePanel* panel, int sel_page )
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
     gtk_button_set_label(GTK_BUTTON(w3),_("Panel Edge"));
     menu = g_menu_new();
-    g_menu_append(menu,_("Top"),"win.set-edge('top')");
-    g_menu_append(menu,_("Bottom"),"win.set-edge('bottom')");
-    g_menu_append(menu,_("Left"),"win.set-edge('left')");
-    g_menu_append(menu,_("Right"),"win.set-edge('right')");
+    g_menu_append(menu,_("Top"),"win.edge('top')");
+    g_menu_append(menu,_("Bottom"),"win.edge('bottom')");
+    g_menu_append(menu,_("Left"),"win.edge('left')");
+    g_menu_append(menu,_("Right"),"win.edge('right')");
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
     g_object_unref(menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
@@ -957,7 +957,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
     if( p->widthtype == PANEL_SIZE_PERCENT)
         upper = 100;
     else if( p->widthtype == PANEL_SIZE_PIXEL)
-        upper = (((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
+        upper = (((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
     simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),0,upper);
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->width );
     g_signal_connect( w, "value-changed", G_CALLBACK(set_width), panel );
@@ -1131,10 +1131,10 @@ void panel_configure( SimplePanel* panel, int sel_page )
                         &logout_cmd);
     }
 
+    char* custom_css;
     w = (GtkWidget*)gtk_builder_get_object( builder, "css-chooser" );
     g_object_set_data(G_OBJECT(w3), "css-chooser", w);
-    char* custom_css;
-    g_object_get(G_OBJECT(panel->priv->app),"css",custom_css);
+    g_object_get(G_OBJECT(panel->priv->app),"css",custom_css,NULL);
     if (custom_css != NULL)
         gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), custom_css);
     g_free(custom_css);
@@ -1145,10 +1145,10 @@ void panel_configure( SimplePanel* panel, int sel_page )
     gtk_button_set_always_show_image(GTK_BUTTON(w3),TRUE);
     gtk_button_set_label(GTK_BUTTON(w3),_("Application Widget Style"));
     menu = g_menu_new();
-    g_menu_append(menu,_("Normal"),"app.set-widget-style('normal')");
-    g_menu_append(menu,_("Dark"),"app.set-widget-style('dark')");
-    g_menu_append(menu,_("Custom CSS"),"app.set-widget-style('css')");
-    g_menu_append(menu,_("Dark & Custom CSS"),"app.set-widget-style('css-dark')");
+    g_menu_append(menu,_("Normal"),"app.widget-style('normal')");
+    g_menu_append(menu,_("Dark"),"app.widget-style('dark')");
+    g_menu_append(menu,_("Custom CSS"),"app.widget-style('css')");
+    g_menu_append(menu,_("Dark & Custom CSS"),"app.widget-style('css-dark')");
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
     g_object_unref(menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);

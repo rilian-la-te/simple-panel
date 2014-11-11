@@ -16,7 +16,7 @@
       <_description>The edge of the panel. Possible values are "top", "bottom", "left", "right". The key specifies which screen edge the panel is on.</_description>
     </key>
     <key name="height" type="i">
-	  <range min=16 max=200>
+	  <range min="16" max="200"/>
       <default>26</default>
       <_summary>Panel height</_summary>
       <_description>The height (width for a vertical panel) of the panel. The minimum size is 16 px. The maximum size is 200 px.</_description>
@@ -31,8 +31,13 @@
       <_summary>Panel height type</_summary>
       <_description>This key determines as width for panel counts. If dynamic, it taken from size request, if pixel, it exactly as in width key, is percent it will be a value from 1 to 100.</_description>
     </key>
+    <key name="alignment" enum="org.simple.panel.PanelAllignType">
+      <default>'center'</default>
+      <_summary>Panel alignment type</_summary>
+      <_description>This key determines from which point width for panel counts.</_description>
+    </key>
     <key name="icon-size" type="i">
-	  <range min=16 max=200>
+	  <range min="16" max="200"/>
       <default>24</default>
       <_summary>Panel icon size</_summary>
       <_description>Size of icons on the panel in pixels. Minimum is 16px, maximum is 200px.</_description>
@@ -47,10 +52,10 @@
       <_summary>Do not overlap panel by other windows</_summary>
       <_description>If true, the panel will not overlapped by another windows like maximized ones.</_description>
     </key>
-    <key name="autohide" type="b">
-      <default>false</default>
-      <_summary>Automatically hide panel into corner</_summary>
-      <_description>If true, the panel is automatically hidden into a corner of the screen when the pointer leaves the panel area. Moving the pointer to that corner again will cause the panel to re-appear.</_description>
+    <key name="margin" type="i">
+      <default>0</default>
+      <_summary>Margin from side</_summary>
+      <_description>If alignment is not center, margin determines number of free pixels before panel.</_description>
     </key>
     <key name="autohide" type="b">
       <default>false</default>
@@ -58,7 +63,7 @@
       <_description>If true, the panel is automatically hidden into a corner of the screen when the pointer leaves the panel area. Moving the pointer to that corner again will cause the panel to re-appear.</_description>
     </key>
     <key name="autohide-size" type="i">
-	  <range min=0 max=10>
+	  <range min="0" max="10"/>
       <default>1</default>
       <_summary>Visible pixels when hidden</_summary>
       <_description>Specifies the number of pixels visible when the panel is automatically hidden into a corner. This key is only relevant if the autohide key is true.</_description>
@@ -89,7 +94,7 @@
       <_summary>Use custom font size</_summary>
       <_description>If true, the panel use custom font size for all items.</_description>
     </key>
-    <key name="custom-size" type="b">
+    <key name="custom-color" type="b">
       <default>false</default>
       <_summary>Use custom font color</_summary>
       <_description>If true, the panel use custom font color for all items.</_description>
@@ -100,7 +105,7 @@
       <_description>Specifies the background color for the panel in rgba(red,green,blue,alpha) format.</_description>
     </key>
     <key name="size" type="i">
-	  <range min=2 max=96>
+	  <range min="2" max="96"/>
       <default>10</default>
       <_summary>Font size</_summary>
       <_description>Custom font size of the panel.</_description>

@@ -41,6 +41,8 @@ struct _PanelAppPrivate
 {
     GtkApplicationClass parent_class;
     PanelWidgetsStyle widgets_style;
+    GSettings* config;
+    GSettingsBackend* config_file;
     gchar* logout_cmd;
     gchar* shutdown_cmd;
     gchar* custom_css;

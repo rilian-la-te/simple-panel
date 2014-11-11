@@ -1,16 +1,11 @@
 <schemalist gettext-domain="@GETTEXT_PACKAGE@">
-  <schema id="org.simple.panel" path="/org/simple/panel/general/">
-    <key name="use-dark" type="b">
-      <default>false</default>
-      <_summary>Use dark GTK theme for panel</_summary>
-      <_description>See "gtk-application-prefers-dark-theme"</_description>
-    </key>
-    <key name="use-custom-css" type="b">
-      <default>false</default>
+  <schema id="org.simple.panel" path="/org/simple/panel/">
+    <key name="widget-style" enum="org.simple.panel.PanelWidgetsStyle">
+      <default>'normal'</default>
       <_summary>Use custom CSS file for theming a panel</_summary>
       <_description>If true, custom CSS file will be loaded from css-file key.</_description>
     </key>
-    <key name="css-file" type="s">
+    <key name="css" type="s">
       <default>""</default>
       <_summary>Panel CSS theme</_summary>
       <_description>Specifies the file to be used as the panel theme.</_description>
@@ -20,7 +15,12 @@
       <_summary>Command for logging out.</_summary>
       <_description>Command for logging out from the session</_description>
     </key>
-    <key name="terminal" type="s">
+    <key name="shutdown-command" type="s">
+      <default>"gnome-logout"</default>
+      <_summary>Command for shutting down.</_summary>
+      <_description>Command for shutting down the computer</_description>
+    </key>
+    <key name="terminal-command" type="s">
       <default>"sakura"</default>
       <_summary>Terminal emulator</_summary>
       <_description>Command for using as terminal emulator.</_description>

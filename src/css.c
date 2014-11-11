@@ -76,6 +76,25 @@ gchar* css_apply_from_file (GtkWidget* widget, gchar* file)
     return NULL;
 }
 
+gchar* css_apply_from_file_to_app (gchar* file)
+{
+    GtkCssProvider  *provider;
+    GError* error = NULL;
+
+    provider = gtk_css_provider_new ();
+    gtk_css_provider_load_from_path (provider, file, &error);
+    if (error)
+    {
+        gchar* returnie=g_strdup(error->message);
+        g_error_free(error);
+        return returnie;
+    }
+    gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+                                    GTK_STYLE_PROVIDER (provider),
+                                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    return NULL;
+}
+
 inline gchar* css_generate_panel_icon_button(GdkRGBA color){
     gchar* returnie;
     color.alpha = 0.2;
@@ -153,7 +172,9 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
                                " -GtkWidget-focus-line-width: 0px;\n"
                                " -GtkWidget-focus-padding: 0px;\n"
                                "}\n"
+#if GTK_CHECK_VERSION (3, 14, 0)
                                ".-panel-flat-button:checked,"
+#endif
                                ".-panel-flat-button:active {\n"
                                "border-style: solid;"
                                "border-width: %s;"

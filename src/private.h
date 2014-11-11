@@ -52,6 +52,13 @@ typedef enum {
     PANEL_BACKGROUND_CUSTOM_IMAGE
 } PanelBackgroundType;
 
+typedef enum {
+    PANEL_EDGE_TOP=0,
+    PANEL_EDGE_BOTTOM,
+    PANEL_EDGE_LEFT,
+    PANEL_EDGE_RIGHT,
+} PanelEdgeType;
+
 #define PANEL_ICON_SIZE               24	/* Default size of panel icons */
 #define PANEL_HEIGHT_DEFAULT          26	/* Default height of horizontal panel */
 #define PANEL_WIDTH_DEFAULT           150	/* Default "height" of vertical panel */

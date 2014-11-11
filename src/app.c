@@ -90,6 +90,7 @@ static void init_plugin_class_list(void);
 static void panel_app_startup(GApplication* app)
 {
     G_APPLICATION_CLASS (panel_app_parent_class)->startup (app);
+    PANEL_APP(app)->priv = PANEL_APP_GET_PRIVATE(app);
     setlocale(LC_CTYPE, "");
     bindtextdomain ( GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR );
     bind_textdomain_codeset ( GETTEXT_PACKAGE, "UTF-8" );
@@ -105,15 +106,10 @@ static void panel_app_startup(GApplication* app)
 
     /* add actions for all panels */
     g_action_map_add_action_entries(G_ACTION_MAP(app),app_action_entries,G_N_ELEMENTS(app_action_entries),app);
-    simple_panel_add_prop_as_action(G_ACTION_MAP(app),"logout-command");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(app),"shutdown-command");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(app),"terminal-command");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(app),"css");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(app),"widget-style");
 
     /*load config*/
     _ensure_user_config_dirs(PANEL_APP(app));
-    load_global_config(PANEL_APP(app));
+    PANEL_APP(app)->priv->config = load_global_config_gsettings(PANEL_APP(app),&(PANEL_APP(app)->priv->config_file));
     gdk_window_set_events(gdk_get_default_root_window(), GDK_STRUCTURE_MASK |
             GDK_SUBSTRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK);
     init_plugin_class_list();
@@ -128,6 +124,9 @@ static void panel_app_startup(GApplication* app)
 static void panel_app_shutdown(GApplication* app)
 {
         /* destroy all panels */
+    PANEL_APP(app)->priv = PANEL_APP_GET_PRIVATE(app);
+    g_object_unref(PANEL_APP(app)->priv->config);
+    g_object_unref(PANEL_APP(app)->priv->config_file);
     _unload_modules();
     fm_gtk_finalize();
     G_APPLICATION_CLASS (panel_app_parent_class)->shutdown (app);
@@ -262,8 +261,6 @@ static void panel_app_set_property(GObject      *object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
     }
-    if (prop_id != PROP_PROFILE)
-        save_global_config(app);
 }
 
 static void panel_app_get_property(GObject      *object,

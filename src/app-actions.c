@@ -25,10 +25,14 @@
 #include <glib.h>
 #include <libfm/fm-gtk.h>
 
+#define G_SETTINGS_ENABLE_BACKEND
+#include <gio/gsettingsbackend.h>
+
 #include "app-actions.h"
 #include "private.h"
 #include "app-misc.h"
 #include "css.h"
+#include "misc.h"
 
 static void get_about_dialog()
 {
@@ -120,14 +124,13 @@ void activate_shutdown(GSimpleAction* simple, GVariant* param, gpointer data)
         fm_show_error(NULL, NULL, _("Shutdown command is not set"));
 }
 
-#define COMMAND_GROUP "Command"
-#define APPEARANCE_GROUP "Appearance"
-
-void load_global_config(PanelApp* app)
+GSettings* load_global_config_gsettings(PanelApp* app, GSettingsBackend** config)
 {
-    GKeyFile* kf = g_key_file_new();
     char* file = NULL;
+    gchar* user_file = NULL;
     gboolean loaded = FALSE;
+    GSettings *settings;
+    GSettingsBackend* b;
     const gchar * const * dir = g_get_system_config_dirs();
 
     /* try to load system config file first */
@@ -135,67 +138,32 @@ void load_global_config(PanelApp* app)
     {
         g_free(file);
         file = _system_config_file_name(app,dir[0], "config");
-        if (g_key_file_load_from_file(kf, file, 0, NULL))
+        if (g_file_test(file, G_FILE_TEST_EXISTS))
             loaded = TRUE;
         dir++;
     }
     /* now try to load user config file */
-    g_free(file);
-    file = _user_config_file_name(app,"config", NULL);
-    if (g_key_file_load_from_file(kf, file, 0, NULL))
-        loaded = TRUE;
-    g_free(file);
-
-    if( loaded )
+    user_file = _user_config_file_name(app,"config", NULL);
+    if (!g_file_test(file, G_FILE_TEST_EXISTS) && loaded)
     {
-        g_object_set(G_OBJECT(app),
-                     "logout-command",g_key_file_get_string( kf, COMMAND_GROUP, "Logout", NULL ),
-                     "shutdown-command",g_key_file_get_string( kf, COMMAND_GROUP, "Shutdown", NULL ),
-                     "widget-style",g_key_file_get_integer(kf, APPEARANCE_GROUP, "Type", NULL),
-                     "css", g_key_file_get_string(kf, APPEARANCE_GROUP, "CSS", NULL),
-                     NULL);
-        /* check for terminal setting on upgrade */
-        if (fm_config->terminal == NULL)
-        {
-            fm_config->terminal = g_key_file_get_string(kf, COMMAND_GROUP,
-                                                        "Terminal", NULL);
-            if (fm_config->terminal != NULL) /* setting changed, save it */
-                fm_config_save(fm_config, NULL);
-        }
-        save_global_config(app);
-    }
-    g_key_file_free( kf );
-}
-
-void save_global_config(PanelApp* app)
-{
-    char* file = _user_config_file_name(app,"config", NULL);
-    FILE* f = fopen( file, "w" );
-    char *logout_cmd,*shutdown_cmd, *css;
-    int type;
-    g_object_get(G_OBJECT(app),
-                 "logout-command",&logout_cmd,
-                 "shutdown-command",&shutdown_cmd,
-                 "widget-style",&type,
-                 "css", &css,
-                 NULL);
-    if( f )
-    {
-        fprintf( f, "[" COMMAND_GROUP "]\n");
-        fprintf( f, "Logout=%s\n", logout_cmd);
-        fprintf( f, "Shutdown=%s\n", shutdown_cmd);
-        fprintf( f, "[" APPEARANCE_GROUP "]\n");
-        fprintf( f, "Type=%d\n", type);
-        fprintf( f, "CSS=%s\n", css);
-        fclose( f );
-        if (logout_cmd != NULL)
-            g_free(logout_cmd);
-        if (shutdown_cmd != NULL)
-            g_free(shutdown_cmd);
-        if (css != NULL)
-            g_free(css);
+        GFile* src = g_file_new_for_path(file);
+        GFile* dest = g_file_new_for_path(file);
+        g_file_copy(src,dest,G_FILE_COPY_BACKUP,NULL,NULL,NULL,NULL);
+        g_object_unref(src);
+        g_object_unref(dest);
     }
     g_free(file);
+
+    b = g_keyfile_settings_backend_new(user_file,"/org/simple/panel/","global");
+    settings = g_settings_new_with_backend_and_path("org.simple.panel",b,"/org/simple/panel/");
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"logout-command");
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"shutdown-command");
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"terminal-command");
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"css");
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"widget-style");
+    g_free(user_file);
+    *config=b;
+    return settings;
 }
 
 void apply_styling(PanelApp* app)
@@ -205,16 +173,12 @@ void apply_styling(PanelApp* app)
         gtk_settings_set_long_property(gtk_settings_get_default(),"gtk-application-prefer-dark-theme",is_dark,NULL);
     if (app->priv->widgets_style >= PANEL_WIDGETS_CSS)
     {
-        GList* l;
         gchar* msg;
-        for( l = gtk_application_get_windows(GTK_APPLICATION(app)); l; l = l->next )
+        msg=css_apply_from_file_to_app(app->priv->custom_css);
+        if (msg!=NULL)
         {
-            msg=css_apply_from_file(GTK_WIDGET(l->data),app->priv->custom_css);
-            if (msg!=NULL)
-            {
-                g_warning("Cannot apply custom style: %s\n",msg);
-                g_free(msg);
-            }
+            g_warning("Cannot apply custom style: %s\n",msg);
+            g_free(msg);
         }
     }
 }
