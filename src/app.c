@@ -110,15 +110,25 @@ static void panel_app_startup(GApplication* app)
     g_action_map_add_action_entries(G_ACTION_MAP(app),app_action_entries,G_N_ELEMENTS(app_action_entries),app);
 }
 
-static void panel_app_shutdown(GApplication* app)
+static void panel_app_shutdown(GApplication* gapp)
 {
         /* destroy all panels */
-    PANEL_APP(app)->priv = PANEL_APP_GET_PRIVATE(app);
-    g_object_unref(PANEL_APP(app)->priv->config);
-    g_object_unref(PANEL_APP(app)->priv->config_file);
+    PanelApp* app = PANEL_APP(gapp);
+    app->priv = PANEL_APP_GET_PRIVATE(app);
+    g_object_unref(app->priv->config);
+    g_object_unref(app->priv->config_file);
     _unload_modules();
     fm_gtk_finalize();
-    G_APPLICATION_CLASS (panel_app_parent_class)->shutdown (app);
+    if (app->priv->custom_css)
+        g_free(app->priv->custom_css);
+    if (app->priv->logout_cmd)
+        g_free(app->priv->logout_cmd);
+    if (app->priv->terminal_cmd)
+        g_free(app->priv->terminal_cmd);
+    if (app->priv->shutdown_cmd)
+        g_free(app->priv->shutdown_cmd);
+    g_free(app->priv->profile);
+    G_APPLICATION_CLASS (panel_app_parent_class)->shutdown (gapp);
 }
 
 void panel_app_activate(GApplication* app)

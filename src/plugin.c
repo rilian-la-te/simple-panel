@@ -37,7 +37,7 @@
 //#define DEBUG
 #include "dbg.h"
 
-static void plugin_class_unref(PluginClass * pc);
+//static void plugin_class_unref(PluginClass * pc);
 
 GQuark lxpanel_plugin_qinit;
 GQuark lxpanel_plugin_qconf;

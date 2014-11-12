@@ -874,7 +874,7 @@ void start_panels_from_dir(GtkApplication* app,const char *panel_dir)
         char* panel_config = g_build_filename( panel_dir, name, NULL );
         if (strchr(panel_config, '~') == NULL)    /* Skip editor backup files in case user has hand edited in this directory */
         {
-            SimplePanel* panel = panel_new(app,panel_config, name );
+            SimplePanel* panel = panel_load(app,panel_config, name );
             if( panel )
                 gtk_application_add_window(app,GTK_WINDOW(panel));
         }

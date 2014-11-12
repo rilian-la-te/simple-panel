@@ -21,6 +21,7 @@
 
 #include "plugin.h"
 #include "conf.h"
+#include "conf-gsettings.h"
 
 #include <gmodule.h>
 
@@ -69,6 +70,7 @@ typedef enum {
 #define PANEL_FONT_DEFAULT          10	/* Default height of horizontal panel */
 #define PANEL_ICON_HIGHLIGHT          0x202020	/* Constant to pass to icon loader */
 #define PANEL_AUTOHIDE_SIZE           2     /* Default autohide size */
+#define GSETTINGS_PREFIX              "conf"
 
 /* to check if we are in LXDE */
 extern gboolean is_in_lxde;
@@ -121,6 +123,8 @@ struct _Panel {
     char* background_file;
 
     PanelConf * config;                 /* Panel configuration data */
+
+    PanelGSettings* settings; /* Panel configuration data */
 
     GtkWidget* plugin_pref_dialog;	/* Plugin preference dialog */
     GtkWidget* pref_dialog;		/* preference dialog */
@@ -181,6 +185,7 @@ void _prepare_modules(void);
 void _unload_modules(void);
 
 GtkWidget *lxpanel_add_plugin(SimplePanel *p, const char *name, config_setting_t *cfg, gint at);
+GtkWidget *simple_panel_add_plugin(SimplePanel *p, const char *name, PluginGSettings* settings, gint* pack_pos);
 GHashTable *lxpanel_get_all_types(void); /* transfer none */
 
 extern GQuark lxpanel_plugin_qinit; /* access to LXPanelPluginInit data */
@@ -232,6 +237,7 @@ extern void panel_set_panel_configuration_changed(Panel *p);
 extern void panel_update_background( Panel* p );
 extern void panel_update_fonts( Panel * p);
 extern SimplePanel* panel_new(GtkApplication *app, const char* config_file, const char* config_name);
+extern SimplePanel* panel_load(GtkApplication *app, const char* config_file, const char* config_name);
 
 /* if current window manager is EWMH conforming. */
 extern gboolean is_ewmh_supported;
@@ -350,13 +356,5 @@ struct _Plugin {
     int border;					/* Border setting for container */
     gpointer priv;				/* Private context for plugin; plugin frees this in its destructor */
 };
-
-/* Plugins management - deprecated style, for backward compatibility */
-extern gboolean plugin_button_press_event(GtkWidget *widget, GdkEventButton *event, Plugin *plugin);
-                                                        /* Handler for "button_press_event" signal with Plugin as parameter */
-extern void plugin_adjust_popup_position(GtkWidget * popup, Plugin * plugin);
-							/* Helper to move popup windows away from the panel */
-extern void plugin_popup_set_position_helper(Plugin * p, GtkWidget * near, GtkWidget * popup, GtkRequisition * popup_req, gint * px, gint * py);
-							/* Helper for position-calculation callback for popup menus */
 
 #endif

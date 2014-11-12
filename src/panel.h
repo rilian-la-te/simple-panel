@@ -20,9 +20,28 @@
 #define __PANEL_H__ 1
 
 #include <gtk/gtk.h>
-#include "app.h"
 
 G_BEGIN_DECLS
+
+#define PANEL_PROP_EDGE              "edge"
+#define PANEL_PROP_ALIGNMENT         "alignment"
+#define PANEL_PROP_HEIGHT            "height"
+#define PANEL_PROP_WIDTH             "width"
+#define PANEL_PROP_SIZE_TYPE         "size-type"
+#define PANEL_PROP_AUTOHIDE          "auto-hide"
+#define PANEL_PROP_AUTOHIDE_SIZE     "auto-hide-size"
+#define PANEL_PROP_STRUT             "strut"
+#define PANEL_PROP_DOCK              "dock"
+#define PANEL_PROP_MONITOR           "monitor"
+#define PANEL_PROP_ICON_SIZE         "icon-size"
+#define PANEL_PROP_MARGIN            "margin"
+#define PANEL_PROP_ENABLE_FONT_SIZE  "enable-font-size"
+#define PANEL_PROP_FONT_SIZE         "font-size"
+#define PANEL_PROP_ENABLE_FONT_COLOR "enable-font-color"
+#define PANEL_PROP_FONT_COLOR        "font-color"
+#define PANEL_PROP_BACKGROUND_COLOR  "background-color"
+#define PANEL_PROP_BACKGROUND_FILE   "background-file"
+#define PANEL_PROP_BACKGROUND_TYPE   "background-type"
 
 #define LX_TYPE_PANEL                  (lxpanel_get_type())
 #define LXPANEL(obj)                   (G_TYPE_CHECK_INSTANCE_CAST((obj), \

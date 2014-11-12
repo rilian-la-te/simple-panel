@@ -1154,6 +1154,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
     GSimpleActionGroup* configurator = g_simple_action_group_new();
     g_action_map_add_action_entries(G_ACTION_MAP(configurator),entries,G_N_ELEMENTS(entries),panel);
     gtk_widget_insert_action_group(GTK_WIDGET(panel),"configurator",G_ACTION_GROUP(configurator));
+    gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"configurator",G_ACTION_GROUP(configurator));
     panel_adjust_geometry_terminology(p);
     gtk_widget_show(GTK_WIDGET(p->pref_dialog));

@@ -42,12 +42,12 @@
       <_summary>Panel icon size</_summary>
       <_description>Size of icons on the panel in pixels. Minimum is 16px, maximum is 200px.</_description>
     </key>
-    <key name="as-dock" type="b">
+    <key name="dock" type="b">
       <default>true</default>
       <_summary>As dock</_summary>
       <_description>If true, window managers will counts panel as dock.</_description>
     </key>
-    <key name="use-strut" type="b">
+    <key name="strut" type="b">
       <default>true</default>
       <_summary>Do not overlap panel by other windows</_summary>
       <_description>If true, the panel will not overlapped by another windows like maximized ones.</_description>
@@ -57,54 +57,48 @@
       <_summary>Margin from side</_summary>
       <_description>If alignment is not center, margin determines number of free pixels before panel.</_description>
     </key>
-    <key name="autohide" type="b">
+    <key name="auto-hide" type="b">
       <default>false</default>
       <_summary>Automatically hide panel into corner</_summary>
       <_description>If true, the panel is automatically hidden into a corner of the screen when the pointer leaves the panel area. Moving the pointer to that corner again will cause the panel to re-appear.</_description>
     </key>
-    <key name="autohide-size" type="i">
+    <key name="auto-hide-size" type="i">
 	  <range min="0" max="10"/>
       <default>1</default>
       <_summary>Visible pixels when hidden</_summary>
       <_description>Specifies the number of pixels visible when the panel is automatically hidden into a corner. This key is only relevant if the autohide key is true.</_description>
     </key>
-    <child name="background" schema="org.simple.panel.toplevel.background"/>
-    <child name="fonts" schema="org.simple.panel.toplevel.fonts"/>
-  </schema>
-  <schema id="org.simple.panel.toplevel.background">
-    <key name="type" enum="org.simple.panel.PanelBackgroundType">
+    <key name="background-type" enum="org.simple.panel.PanelBackgroundType">
       <default>'gtk'</default>
       <_summary>Background type</_summary>
       <_description>Which type of background should be used for this panel. Possible values are "gtk" - the default GTK+ widget background will be used, "gnome" - the default Gnome Panel background will be used, "color" - the color key will be used as background color or "image" - the image specified by the image key will be used as background.</_description>
     </key>
-    <key name="color" type="s">
+    <key name="background-color" type="s">
       <default>'rgb(255,255,255)'</default>
       <_summary>Background color</_summary>
       <_description>Specifies the background color for the panel in rgba(red,green,blue,alpha) format.</_description>
     </key>
-    <key name="image" type="s">
+    <key name="background-file" type="s">
       <default>''</default>
       <_summary>Background image</_summary>
       <_description>Specifies the file to be used for the background image. If the image contains an alpha channel it will be composited onto the desktop background image.</_description>
     </key>
-  </schema>
-  <schema id="org.simple.panel.toplevel.fonts">
-    <key name="custom-size" type="b">
+    <key name="enable-font-size" type="b">
       <default>false</default>
       <_summary>Use custom font size</_summary>
       <_description>If true, the panel use custom font size for all items.</_description>
     </key>
-    <key name="custom-color" type="b">
+    <key name="enable-font-color" type="b">
       <default>false</default>
       <_summary>Use custom font color</_summary>
       <_description>If true, the panel use custom font color for all items.</_description>
     </key>
-    <key name="color" type="s">
+    <key name="font-color" type="s">
       <default>'rgb(255,255,255)'</default>
       <_summary>Background color</_summary>
       <_description>Specifies the background color for the panel in rgba(red,green,blue,alpha) format.</_description>
     </key>
-    <key name="size" type="i">
+    <key name="font-size" type="i">
 	  <range min="2" max="96"/>
       <default>10</default>
       <_summary>Font size</_summary>

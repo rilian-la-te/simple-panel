@@ -23,6 +23,7 @@
 
 #include "panel.h"
 #include "conf.h"
+#include "conf-gsettings.h"
 
 G_BEGIN_DECLS
 
@@ -94,6 +95,7 @@ typedef struct {
     char *name;                 /* name to represent in lists */
     char *description;          /* tooltip text */
     GtkWidget *(*new_instance)(SimplePanel *panel, config_setting_t *settings);
+    GtkWidget *(*new_instance_gsettings)(SimplePanel *panel, PluginGSettings* settings);
     GtkWidget *(*config)(SimplePanel *panel, GtkWidget *instance);
     void (*reconfigure)(SimplePanel *panel, GtkWidget *instance);
     gboolean (*button_press_event)(GtkWidget *widget, GdkEventButton *event, SimplePanel *panel);

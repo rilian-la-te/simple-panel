@@ -90,6 +90,7 @@ static void activate_panel_settings(GSimpleAction* action, GVariant* param, gpoi
 static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
 void simple_panel_config_save( SimplePanel* panel );
+PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel );
 
 G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_APPLICATION_WINDOW)
 
@@ -112,6 +113,8 @@ static void lxpanel_finalize(GObject *object)
     if( p->config_changed )
         simple_panel_config_save( self );
     config_destroy(p->config);
+    if (p->settings)
+        panel_gsettings_free(p->settings);
 
     g_free( p->background_file );
 
@@ -522,7 +525,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_EDGE,
                 g_param_spec_enum(
-                    "edge",
+                    PANEL_PROP_EDGE,
                     "Edge",
                     "Edge of the screen where panel attached",
                     gtk_position_type_get_type(),
@@ -542,7 +545,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_HEIGHT,
                 g_param_spec_int(
-                    "height",
+                    PANEL_PROP_HEIGHT,
                     "Height",
                     "Height of this panel",
                     PANEL_HEIGHT_MIN,
@@ -553,7 +556,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_WIDTH,
                 g_param_spec_int(
-                    "width",
+                    PANEL_PROP_WIDTH,
                     "Width",
                     "Width of this panel (in given size type)",
                     0,
@@ -564,7 +567,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_SIZE_TYPE,
                 g_param_spec_enum(
-                    "size-type",
+                    PANEL_PROP_SIZE_TYPE,
                     "Size Type",
                     "Type of panel size counting",
                     PANEL_SIZE_TYPE,
@@ -574,7 +577,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_ALIGNMENT,
                 g_param_spec_enum(
-                    "alignment",
+                    PANEL_PROP_ALIGNMENT,
                     "Alignment",
                     "Panel alignment side",
                     PANEL_ALLIGN_TYPE,
@@ -584,7 +587,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_MONITOR,
                 g_param_spec_int (
-                    "monitor",
+                    PANEL_PROP_MONITOR,
                     "Xinerama monitor",
                     "The monitor (in terms of Xinerama) which the panel is on",
                     0,
@@ -595,7 +598,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_AUTOHIDE,
                 g_param_spec_boolean (
-                    "auto-hide",
+                    PANEL_PROP_AUTOHIDE,
                     "Auto hide",
                     "Automatically hide the panel when the mouse leaves the panel",
                     FALSE,
@@ -604,7 +607,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_AUTOHIDE_SIZE,
                 g_param_spec_int (
-                    "auto-hide-size",
+                    PANEL_PROP_AUTOHIDE_SIZE,
                     "Auto-hide size",
                     "The number of pixels visible when the panel has been automatically hidden",
                     0,
@@ -615,7 +618,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_BACKGROUNDTYPE,
                 g_param_spec_enum(
-                    "background-type",
+                    PANEL_PROP_BACKGROUND_TYPE,
                     "Background Type",
                     "Type of panel background",
                     PANEL_BACKGROUND_TYPE,
@@ -625,7 +628,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_ENABLEFONTCOLOR,
                 g_param_spec_boolean(
-                    "enable-font-color",
+                    PANEL_PROP_ENABLE_FONT_COLOR,
                     "Enable font color",
                     "Enable custom font color",
                     FALSE,
@@ -634,7 +637,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_ENABLEFONTSIZE,
                 g_param_spec_boolean(
-                    "enable-font-size",
+                    PANEL_PROP_ENABLE_FONT_SIZE,
                     "Enable font size",
                     "Enable custom font size",
                     FALSE,
@@ -643,7 +646,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_ICON_SIZE,
                 g_param_spec_int(
-                    "icon-size",
+                    PANEL_PROP_ICON_SIZE,
                     "Icon size",
                     "Size of panel icons",
                     PANEL_HEIGHT_MIN,
@@ -654,7 +657,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_BACKGROUNDFILE,
                 g_param_spec_string (
-                    "background-file",
+                    PANEL_PROP_BACKGROUND_FILE,
                     "Background file",
                     "Background file of this panel",
                     NULL,
@@ -663,7 +666,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_TINTCOLOR,
                 g_param_spec_string (
-                    "background-color",
+                    PANEL_PROP_BACKGROUND_COLOR,
                     "Background color",
                     "Background color of this panel",
                     "white",
@@ -672,7 +675,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_FONTCOLOR,
                 g_param_spec_string (
-                    "font-color",
+                    PANEL_PROP_FONT_COLOR,
                     "Font color",
                     "Font color color of this panel",
                     "black",
@@ -681,7 +684,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_FONTSIZE,
                 g_param_spec_int(
-                    "font-size",
+                    PANEL_PROP_FONT_SIZE,
                     "Font size",
                     "Size of panel fonts",
                     PANEL_FONT_MIN,
@@ -692,7 +695,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_STRUT,
                 g_param_spec_boolean (
-                    "strut",
+                    PANEL_PROP_STRUT,
                     "Set strut",
                     "Set strut to crop it from maximized windows",
                     TRUE,
@@ -701,8 +704,8 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                 gobject_class,
                 PROP_DOCK,
                 g_param_spec_boolean (
-                    "dock",
-                    "Dock",
+                    PANEL_PROP_DOCK,
+                    "As dock",
                     "Make window managers treat panel as dock",
                     TRUE,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
@@ -727,6 +730,13 @@ static SimplePanel* panel_allocate(GtkApplication* app)
 {
     return g_object_new(LX_TYPE_PANEL, NULL);
 }
+
+/* TODO: Make constructor from various functions like panel_new */
+///* Allocate and initialize new Panel structure. */
+//static SimplePanel* panel_constructor(GtkApplication* app)
+//{
+//    return g_object_new(LX_TYPE_PANEL, NULL);
+//}
 
 /* Normalize panel configuration after load from file or reconfiguration. */
 static void panel_normalize_configuration(Panel* p)
@@ -1255,12 +1265,12 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
 
 found_edge:
     p->name = gen_panel_name(p->edge, p->monitor);
-
-    /* create new config with first group "Global" */
-    global = config_group_add_subgroup(config_root_setting(p->config), "Global");
-    config_group_set_string(global, "edge", num2str(edge_pair, p->edge, "none"));
-    config_group_set_int(global, "monitor", p->monitor);
+    p->settings = simple_panel_create_gsettings(new_panel);
     panel_add_actions(new_panel);
+    /* create new config with first group "Global" */
+//    global = config_group_add_subgroup(config_root_setting(p->config), "Global");
+//    config_group_set_string(global, PANEL_PROP_EDGE, num2str(edge_pair, p->edge, "none"));
+//    config_group_set_int(global, PANEL_PROP_MONITOR, p->monitor);
     panel_configure(new_panel, 0);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
@@ -1529,7 +1539,7 @@ panel_start_gui(SimplePanel *panel)
     RET();
 }
 
-/* Exchange the "width" and "height" terminology for vertical and horizontal panels. */
+/* Exchange the PANEL_PROP_WIDTH and PANEL_PROP_HEIGHT terminology for vertical and horizontal panels. */
 void panel_adjust_geometry_terminology(Panel * p)
 {
     if ((p->alignment_left_label != NULL) && (p->alignment_right_label != NULL))
@@ -1630,16 +1640,16 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
         g_warning( "lxpanel: Global section not found");
         RET(0);
     }
-    if (config_setting_lookup_string(cfg, "edge", &str))
+    if (config_setting_lookup_string(cfg, PANEL_PROP_EDGE, &str))
         p->edge = str2num(edge_pair, str, PANEL_EDGE_BOTTOM);
     if (config_setting_lookup_string(cfg, "allign", &str))
         p->allign = str2num(allign_pair, str, PANEL_ALLIGN_NONE);
-    config_setting_lookup_int(cfg, "monitor", &p->monitor);
-    config_setting_lookup_int(cfg, "margin", &p->margin);
+    config_setting_lookup_int(cfg, PANEL_PROP_MONITOR, &p->monitor);
+    config_setting_lookup_int(cfg, PANEL_PROP_MARGIN, &p->margin);
     if (config_setting_lookup_string(cfg, "widthtype", &str))
         p->widthtype = str2num(strut_pair, str, PANEL_SIZE_FILL);
-    config_setting_lookup_int(cfg, "width", &p->width);
-    config_setting_lookup_int(cfg, "height", &p->height);
+    config_setting_lookup_int(cfg, PANEL_PROP_WIDTH, &p->width);
+    config_setting_lookup_int(cfg, PANEL_PROP_HEIGHT, &p->height);
 //    if (config_setting_lookup_int(cfg, "spacing", &i) && i > 0)
 //        p->spacing = i;
     if (config_setting_lookup_int(cfg, "setdocktype", &i))
@@ -1698,6 +1708,17 @@ void simple_panel_config_save( SimplePanel* panel )
     p->config_changed = 0;
 }
 
+PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
+{
+    Panel* p = panel->priv;
+    gchar *fname;
+    gchar *config_name;
+    config_name = g_strdup_printf("%s.%s",p->name,GSETTINGS_PREFIX);
+
+    fname = _user_config_file_name("panels", config_name);
+    return panel_gsettings_create(fname);
+}
+
 static int
 panel_parse_plugin(SimplePanel *p, config_setting_t *cfg)
 {
@@ -1726,26 +1747,25 @@ static void panel_add_actions( SimplePanel* p)
         {"panel-settings", activate_panel_settings, "i", NULL, NULL},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(p),win_action_entries,G_N_ELEMENTS(win_action_entries),p);
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"edge");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"alignment");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"height");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"width");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"size-type");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"auto-hide");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"auto-hide-size");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"strut");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"dock");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"monitor");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"icon-size");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"margin");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"monitor");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"enable-font-size");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"font-size");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"enable-font-color");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"font-color");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"background-color");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"background-file");
-    simple_panel_add_prop_as_action(G_ACTION_MAP(p),"background-type");
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_EDGE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ALIGNMENT);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_HEIGHT);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_WIDTH);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_SIZE_TYPE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_AUTOHIDE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_AUTOHIDE_SIZE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_STRUT);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_DOCK);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ICON_SIZE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_MARGIN);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_MONITOR);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_SIZE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_FONT_SIZE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_COLOR);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_FONT_COLOR);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_COLOR);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_FILE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE);
 }
 
 static int panel_start( SimplePanel *p )
@@ -1757,11 +1777,13 @@ static int panel_start( SimplePanel *p )
     ENTER;
 
     list = config_setting_get_member(config_root_setting(p->priv->config), "");
-    if (!list || !panel_parse_global(p->priv, config_setting_get_elem(list, 0)))
-        RET(0);
+//    if (!list || !panel_parse_global(p->priv, config_setting_get_elem(list, 0)))
+//        RET(0);
+    if (!list)
+        return 0;
 
-    panel_start_gui(p);
     panel_add_actions(p);
+    panel_start_gui(p);
 
     for (i = 1; (s = config_setting_get_elem(list, i)) != NULL; )
         if (strcmp(config_setting_get_name(s), "Plugin") == 0 &&
@@ -1779,6 +1801,32 @@ static int panel_start( SimplePanel *p )
 void panel_destroy(Panel *p)
 {
     gtk_widget_destroy(GTK_WIDGET(p->topgwin));
+}
+
+SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char* config_name)
+{
+    SimplePanel* panel = NULL;
+
+    if (G_LIKELY(config_file))
+    {
+        panel = panel_allocate(app);
+        panel->priv->name = g_strdup(config_name);
+        panel->priv->app = app;
+        gchar* settings_file = g_strdup_printf("%s.%s",config_file,GSETTINGS_PREFIX);
+        win_grp=app;
+        g_object_get(G_OBJECT(panel->priv->app),"profile",&cprofile,NULL);
+        g_debug("starting panel from file %s",config_file);
+        panel->priv->settings = panel_gsettings_create(settings_file);
+        if (!config_read_file(panel->priv->config, config_file) ||
+            !panel_start(panel))
+        {
+            g_warning( "lxpanel: can't start panel");
+            gtk_widget_destroy(GTK_WIDGET(panel));
+            panel = NULL;
+        }
+        g_free(settings_file);
+    }
+    return panel;
 }
 
 SimplePanel* panel_new(GtkApplication* app,const char* config_file, const char* config_name)
