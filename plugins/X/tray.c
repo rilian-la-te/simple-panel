@@ -431,6 +431,7 @@ static void trayclient_request_dock(TrayPlugin * tr, XClientMessageEvent * xeven
     tc->socket = gtk_socket_new();
 
     /* Add the socket to the icon grid. */
+    gtk_widget_set_size_request(tc->socket,22,22);
     gtk_container_add(GTK_CONTAINER(tr->plugin), tc->socket);
     gtk_widget_show(tc->socket);
 #if GTK_CHECK_VERSION (3, 0, 0)

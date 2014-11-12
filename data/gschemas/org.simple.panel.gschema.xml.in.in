@@ -1,7 +1,12 @@
 <schemalist gettext-domain="@GETTEXT_PACKAGE@">
   <schema id="org.simple.panel" path="/org/simple/panel/">
-    <key name="widget-style" enum="org.simple.panel.PanelWidgetsStyle">
-      <default>'normal'</default>
+    <key name="is-dark" type="b">
+      <default>false</default>
+      <_summary>Use dark theme for panel.</_summary>
+      <_description>If true, dark theme variant will be used.</_description>
+    </key>
+    <key name="is-custom" type="b">
+      <default>false</default>
       <_summary>Use custom CSS file for theming a panel</_summary>
       <_description>If true, custom CSS file will be loaded from css-file key.</_description>
     </key>

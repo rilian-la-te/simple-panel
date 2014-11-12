@@ -37,11 +37,6 @@ AC_SUBST(PACKAGE_LIBS)
 AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
 GLIB_GSETTINGS
 
-wnck=libwnck-3.0
-PKG_CHECK_MODULES(WNCK, [$wnck])
-AC_SUBST(WNCK_CFLAGS)
-AC_SUBST(WNCK_LIBS)
-
 ###########################
 # Indicator Info
 ###########################
@@ -199,6 +194,7 @@ plugin_thermal=
 plugin_cpufreq=
 plugin_monitors=
 plugin_indicator=
+plugin_appmenu=
 
 AC_MSG_CHECKING([which plugins should be built dynamically])
 AC_ARG_WITH(plugins,
@@ -218,7 +214,7 @@ if test x"$plugins" != xall -a x"$plugins" != xnone; then
     fi
 fi
 
-ALL_PLUGINS_LIST="netstatus netstat volume volumealsa cpu deskno batt kbled xkb thermal cpufreq monitors indicator weather"
+ALL_PLUGINS_LIST="netstatus netstat volume volumealsa cpu deskno batt kbled xkb thermal cpufreq monitors indicator appmenu weather"
 AC_SUBST(ALL_PLUGINS_LIST)
 
 AC_DEFUN([check_plugin_name],[
@@ -272,21 +268,41 @@ fi
 dnl Exclude indicator support when there is no support.
 if test x"$indicator_support" = "xno"; then
     plugin_indicator=
+	plugin_appmenu=
 fi
 
-pkg_modules="x11"
-PKG_CHECK_MODULES(X11, [$pkg_modules],
+wnck="libwnck-3.0"
+wnck_support=
+x11_modules="x11"
+PKG_CHECK_MODULES(X11, [$x11_modules],
 X_plugins_support=yes, X_plugins_support=no)
+PKG_CHECK_MODULES(WNCK, [$wnck], wnck_support=yes, wnck_support=no)
 if test x"$X_plugins_support" = "xyes"; then
     AC_SUBST(X11_LIBS)
-    X_PLUGINS_LIST="pager.la wincmd.la launchtaskbar.la tray.la"
-    AC_SUBST(X_PLUGINS_LIST)
+	x11_modules="x11"
 fi
 if test x"$X_plugins_support" = "xno"; then
     AC_WARN([No XLib found.  All X.Org plugins are not built.])
+	wnck_support="no"
     plugin_deskno=
     plugin_xkb=
     plugin_kbled=
+fi
+
+if test x"$wnck_support" = "xyes"; then
+	AC_SUBST(WNCK_CFLAGS)
+	AC_SUBST(WNCK_LIBS)
+    X_PLUGINS_LIST="pager.la wincmd.la launchtaskbar.la tray.la"
+    AC_SUBST(X_PLUGINS_LIST)
+fi
+if test x"$wnck_support" = "xno"; then
+	if test x"$X_plugins_support" = "xyes"; then
+	    X_PLUGINS_LIST="wincmd.la tray.la"
+    	AC_SUBST(X_PLUGINS_LIST)
+	fi
+    AC_WARN([No libwnck-3.0 found.  All wnck-related plugins are not built.])
+    plugin_deskno=
+    plugin_xkb=
 fi
 
 AC_MSG_RESULT($x_plugins)
@@ -305,7 +321,8 @@ PLUGINS_LIST="\
     $plugin_cpufreq \
     $plugin_monitors \
     $plugin_indicator \
-    $plugin_weather"
+    $plugin_weather \
+	$plugin_appmenu"
 
 AC_SUBST(PLUGINS_LIST)
 
@@ -359,7 +376,7 @@ do
     echo $lang >> $srcdir/po/LINGUAS
 done
 
-GETTEXT_PACKAGE=lxpanel
+GETTEXT_PACKAGE=simple-panel
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package.])
 
@@ -409,7 +426,7 @@ AC_CONFIG_FILES([
 AC_OUTPUT
 
 echo
-echo lxpanel ......................... : Version $VERSION
+echo simple-panel .................... : Version $VERSION
 echo
 echo Prefix........................... : $prefix
 echo System config directory.......... : `eval "echo $sysconfdir"`
@@ -417,8 +434,11 @@ echo
 
 if test x$plugins_loading = xyes; then
 echo Building dynamic plugins:
+    if test x"$wnck_support" == "xyes"; then
+        AC_MSG_RESULT([    libwnck plugins support (pager, taskbar)])
+	fi
     if test x"$X_plugins_support" == "xyes"; then
-        AC_MSG_RESULT([    X - Xorg plugins support (pager, taskbar, tray, wincmd)])
+        AC_MSG_RESULT([    X - Xorg plugins support (tray, wincmd)])
     fi
     if test x"$plugin_netstatus" != x; then
         AC_MSG_RESULT([    netstatus - Monitor networking status])
@@ -458,6 +478,9 @@ echo Building dynamic plugins:
     fi
     if test x"$plugin_indicator" != x; then
         AC_MSG_RESULT([    indicator - Indicator support])
+    fi
+    if test x"$plugin_appmenu" != x; then
+        AC_MSG_RESULT([    appmenu - Unity Appmenu support])
     fi
     if test x"$plugin_weather" != x; then
         AC_MSG_RESULT([    weather - Weather conditions and forecast])

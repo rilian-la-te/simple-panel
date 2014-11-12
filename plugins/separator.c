@@ -45,7 +45,7 @@ static void separator_reconfigure(SimplePanel *panel, GtkWidget *instance)
 {
     /* Determine if the orientation changed in a way that requires action. */
     GtkWidget * sep = gtk_bin_get_child(GTK_BIN(instance));
-    gtk_orientable_set_orientation((GtkOrientable*)sep,panel_get_orientation(panel));
+    gtk_orientable_set_orientation(GTK_ORIENTABLE(sep),panel_get_orientation(panel));
 }
 
 /* Plugin descriptor. */

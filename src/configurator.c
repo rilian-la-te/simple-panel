@@ -1145,10 +1145,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
     gtk_button_set_always_show_image(GTK_BUTTON(w3),TRUE);
     gtk_button_set_label(GTK_BUTTON(w3),_("Application Widget Style"));
     menu = g_menu_new();
-    g_menu_append(menu,_("Normal"),"app.widget-style('normal')");
-    g_menu_append(menu,_("Dark"),"app.widget-style('dark')");
-    g_menu_append(menu,_("Custom CSS"),"app.widget-style('css')");
-    g_menu_append(menu,_("Dark & Custom CSS"),"app.widget-style('css-dark')");
+    g_menu_append(menu,_("Use dark theme"),"app.is-dark");
+    g_menu_append(menu,_("Use custom CSS"),"app.is-custom");
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
     g_object_unref(menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);

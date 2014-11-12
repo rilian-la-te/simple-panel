@@ -55,6 +55,7 @@ EXTRA_LTLIBRARIES = \
 	cpufreq.la \
 	deskno.la \
 	indicator.la \
+	appmenu.la \
 	kbled.la \
 	monitors.la \
 	netstat.la \
@@ -96,6 +97,27 @@ indicator_la_CFLAGS = \
 	-DINDICATOR_ICONS_DIR=\""$(INDICATORICONSDIR)"\" \
 	$(APPLET_CFLAGS)
 indicator_la_LIBADD = $(APPLET_LIBS)
+
+# appmenu
+appmenu_la_SOURCES = indicator/appmenu.c
+appmenu_la_CFLAGS = \
+	-DINDICATOR_DIR=\""$(INDICATORDIR)"\" \
+	-DINDICATOR_ICONS_DIR=\""$(INDICATORICONSDIR)"\" \
+	$(APPLET_CFLAGS)
+appmenu_la_LIBADD = $(APPLET_LIBS)
+
+# gmenu
+#gmenu_la_SOURCES = \
+#	gmenu/gdk-get-func.h \
+#	gmenu/gdk-get-func.c \
+#	gmenu/MwmUtil.h \
+#	gmenu/indicator-appmenu.c \
+#	gmenu/window-menu.c \
+#	gmenu/window-menu.h \
+#	gmenu/window-menu-model.c \
+#	gmenu/window-menu-model.h
+#gmenu_la_CFLAGS = $(BAMF_CFLAGS)
+#gmenu_la_LIBADD = $(X11_LIBS) $(BAMF_LIBS)
 
 # kbled
 kbled_la_SOURCES = kbled/kbled.c

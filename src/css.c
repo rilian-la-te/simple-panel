@@ -157,7 +157,7 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
     active_color.green=color.green;
     active_color.blue=color.blue;
     active_color.alpha =0.8;
-    gchar* edge;
+    const gchar* edge;
     GtkPositionType direction = panel_get_edge(panel);
     if (direction==GTK_POS_TOP)
         edge="0px 0px 2px 0px";
@@ -187,6 +187,5 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
                                "border-width: %s;"
                                "border-color: %s;"
                                "}\n",edge,gdk_rgba_to_string(&active_color),edge,gdk_rgba_to_string(&color));
-    g_object_weak_ref(G_OBJECT(widget), (GWeakNotify)g_free, edge);
     return returnie;
 }

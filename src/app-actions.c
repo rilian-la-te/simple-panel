@@ -124,6 +124,18 @@ void activate_shutdown(GSimpleAction* simple, GVariant* param, gpointer data)
         fm_show_error(NULL, NULL, _("Shutdown command is not set"));
 }
 
+void activate_terminal(GSimpleAction* simple, GVariant* param, gpointer data)
+{
+    PanelApp* app = PANEL_APP(data);
+    gchar** argv;
+    const gchar* dir;
+    GPid pid;
+    dir = g_variant_get_string(param,NULL);
+    g_shell_parse_argv(app->priv->terminal_cmd,NULL,&argv,NULL);
+    g_spawn_async(dir,argv,NULL,G_SPAWN_SEARCH_PATH,NULL,NULL,&pid,NULL);
+    g_strfreev(argv);
+}
+
 GSettings* load_global_config_gsettings(PanelApp* app, GSettingsBackend** config)
 {
     char* file = NULL;
@@ -160,7 +172,8 @@ GSettings* load_global_config_gsettings(PanelApp* app, GSettingsBackend** config
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"shutdown-command");
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"terminal-command");
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"css");
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"widget-style");
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"is-dark");
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"is-custom");
     g_free(user_file);
     *config=b;
     return settings;
@@ -168,10 +181,9 @@ GSettings* load_global_config_gsettings(PanelApp* app, GSettingsBackend** config
 
 void apply_styling(PanelApp* app)
 {
-    gboolean is_dark = (app->priv->widgets_style%2 == 1);
     if (gtk_settings_get_default() != NULL)
-        gtk_settings_set_long_property(gtk_settings_get_default(),"gtk-application-prefer-dark-theme",is_dark,NULL);
-    if (app->priv->widgets_style >= PANEL_WIDGETS_CSS)
+        g_object_set(gtk_settings_get_default(),"gtk-application-prefer-dark-theme",app->priv->is_dark,NULL);
+    if (app->priv->use_css)
     {
         gchar* msg;
         msg=css_apply_from_file_to_app(app->priv->custom_css);

@@ -83,9 +83,6 @@ GQuark SYS_MENU_ITEM_ID = 0;
 /* FIXME: this is defined in misc.c and should be replaced later */
 GtkWidget *_gtk_image_new_from_file_scaled(const gchar *file, gint width,
                                            gint height, gboolean keep_ratio);
-/* FIXME: those are defined on panel main code */
-void restart(void);
-void gtk_run(void);
 
 static void on_data_get(FmDndSrc *ds, GtkWidget *mi)
 {

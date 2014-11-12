@@ -111,7 +111,6 @@ struct _Panel {
     guint usefontcolor : 1;
     guint usefontsize : 1;
     guint fontsize;
-//    guint spacing;
 
     guint autohide : 1;
     guint visible : 1;
@@ -136,8 +135,6 @@ struct _Panel {
     guint ah_state : 3;
     guint background_update_queued;
     guint mouse_timeout;
-    //gint dyn_space;                     /* Space for expandable plugins */
-    //guint calculate_size_idle;          /* The idle handler for dyn_space calc */
 };
 
 typedef struct {

@@ -49,7 +49,8 @@
 enum
 {
     PROP_NONE,
-    PROP_WIDGET_STYLE,
+    PROP_DARK,
+    PROP_USE_CSS,
     PROP_CSS,
     PROP_LOGOUT,
     PROP_SHUTDOWN,
@@ -69,6 +70,7 @@ static const gchar* panel_commands = "run menu config exit ";
 
 const GActionEntry app_action_entries[] =
 {
+    {"terminal", activate_terminal, "s", NULL, NULL},
     {"about", activate_about, NULL, NULL, NULL},
     {"run", activate_run, NULL, NULL, NULL},
     {"logout", activate_logout, NULL, NULL, NULL},
@@ -229,8 +231,12 @@ static void panel_app_set_property(GObject      *object,
 
     switch (prop_id)
     {
-    case PROP_WIDGET_STYLE:
-        app->priv->widgets_style = g_value_get_enum(value);
+    case PROP_DARK:
+        app->priv->is_dark = g_value_get_boolean(value);
+        apply_styling(app);
+        break;
+    case PROP_USE_CSS:
+        app->priv->use_css = g_value_get_boolean(value);
         apply_styling(app);
         break;
     case PROP_LOGOUT:
@@ -276,8 +282,11 @@ static void panel_app_get_property(GObject      *object,
 
     switch (prop_id)
     {
-    case PROP_WIDGET_STYLE:
-        g_value_set_enum(value,app->priv->widgets_style);
+    case PROP_DARK:
+        g_value_set_boolean(value,app->priv->is_dark);
+        break;
+    case PROP_USE_CSS:
+        g_value_set_boolean(value,app->priv->use_css);
         break;
     case PROP_LOGOUT:
         g_value_set_string(value,app->priv->logout_cmd);
@@ -442,12 +451,20 @@ void panel_app_class_init(PanelAppClass *klass)
                     G_PARAM_READWRITE));
     g_object_class_install_property(
                 gobject_class,
-                PROP_WIDGET_STYLE,
-                g_param_spec_enum(
-                    "widget-style",
-                    "Widget style",
-                    "Widget style used by application. May be normal, dark and custom",
-                    PANEL_WIDGETS_STYLE,
-                    PANEL_WIDGETS_NORMAL,
+                PROP_DARK,
+                g_param_spec_boolean(
+                    "is-dark",
+                    "Dark theme",
+                    "TRUE if panel uses dark theme",
+                    FALSE,
+                    G_PARAM_READWRITE));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_USE_CSS,
+                g_param_spec_boolean(
+                    "is-custom",
+                    "Custom CSS",
+                    "TRUE if custom CSS file is used",
+                    FALSE,
                     G_PARAM_READWRITE));
 }
