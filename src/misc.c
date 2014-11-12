@@ -49,7 +49,6 @@ static void _gtk_image_set_from_file_scaled(GtkWidget *img, ImgData *data);
 static GtkWidget *_gtk_image_new_for_icon(FmIcon *icon, gint size);
 
 pair allign_pair[] = {
-    { PANEL_ALLIGN_NONE, "none" },
     { PANEL_ALLIGN_LEFT, "left" },
     { PANEL_ALLIGN_RIGHT, "right" },
     { PANEL_ALLIGN_CENTER, "center"},

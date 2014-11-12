@@ -434,6 +434,7 @@ static void simple_panel_get_property(GObject      *object,
         break;
     case PROP_ORIENTATION:
         g_value_set_enum(value,toplevel->priv->orientation);
+        break;
     case PROP_HEIGHT:
         g_value_set_int (value, toplevel->priv->height);
         break;
@@ -528,7 +529,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     PANEL_PROP_EDGE,
                     "Edge",
                     "Edge of the screen where panel attached",
-                    gtk_position_type_get_type(),
+                    PANEL_EDGE_TYPE,
                     PANEL_EDGE_TOP,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(
@@ -581,7 +582,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Alignment",
                     "Panel alignment side",
                     PANEL_ALLIGN_TYPE,
-                    PANEL_ALLIGN_NONE,
+                    PANEL_ALLIGN_CENTER,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property (
                 gobject_class,
@@ -1589,7 +1590,6 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     GtkOrientation previous_orientation = p->orientation;
     p->orientation = (p->edge == PANEL_EDGE_TOP || p->edge == PANEL_EDGE_BOTTOM)
         ? GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
-
     /* either first run or orientation was changed */
     if (!p->initialized || previous_orientation != p->orientation)
     {
@@ -1643,7 +1643,7 @@ panel_parse_global(Panel *p, config_setting_t *cfg)
     if (config_setting_lookup_string(cfg, PANEL_PROP_EDGE, &str))
         p->edge = str2num(edge_pair, str, PANEL_EDGE_BOTTOM);
     if (config_setting_lookup_string(cfg, "allign", &str))
-        p->allign = str2num(allign_pair, str, PANEL_ALLIGN_NONE);
+        p->allign = str2num(allign_pair, str, PANEL_ALLIGN_CENTER);
     config_setting_lookup_int(cfg, PANEL_PROP_MONITOR, &p->monitor);
     config_setting_lookup_int(cfg, PANEL_PROP_MARGIN, &p->margin);
     if (config_setting_lookup_string(cfg, "widthtype", &str))
@@ -1785,7 +1785,7 @@ static int panel_start( SimplePanel *p )
     panel_add_actions(p);
     panel_start_gui(p);
 
-    for (i = 1; (s = config_setting_get_elem(list, i)) != NULL; )
+    for (i = 0; (s = config_setting_get_elem(list, i)) != NULL; )
         if (strcmp(config_setting_get_name(s), "Plugin") == 0 &&
             panel_parse_plugin(p, s)) /* success on plugin start */
             i++;

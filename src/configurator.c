@@ -694,7 +694,9 @@ static void custom_css_file_helper(GtkFileChooser * file_chooser, SimplePanel * 
     char * file = g_strdup(gtk_file_chooser_get_filename(file_chooser));
     if (file != NULL)
     {
-        g_object_set(G_OBJECT(p->priv->app),"css",file,NULL);
+        GVariant* v = g_variant_new_string(file);
+        g_action_group_activate_action(G_ACTION_GROUP(p->priv->app),"css",v);
+        g_free(file);
     }
 }
 
@@ -736,9 +738,9 @@ void panel_configure( SimplePanel* panel, int sel_page )
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
     gtk_button_set_label(GTK_BUTTON(w3),_("Panel Edge"));
     menu = g_menu_new();
-    g_menu_append(menu,_("Top"),"win"PANEL_PROP_EDGE"('top')");
+    g_menu_append(menu,_("Top"),"win."PANEL_PROP_EDGE"('top')");
     g_menu_append(menu,_("Bottom"),"win."PANEL_PROP_EDGE"('bottom')");
-    g_menu_append(menu,_("Left"),"win"PANEL_PROP_EDGE"('left')");
+    g_menu_append(menu,_("Left"),"win."PANEL_PROP_EDGE"('left')");
     g_menu_append(menu,_("Right"),"win."PANEL_PROP_EDGE"('right')");
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
     g_object_unref(menu);
