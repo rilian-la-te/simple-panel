@@ -319,7 +319,6 @@ static gboolean start_all_panels(PanelApp* app)
 
     /* try user panels */
     panel_dir = _user_config_file_name(app,"panels", NULL);
-    g_print("%s,%s\n",panel_dir,app->priv->profile);
     start_panels_from_dir(GTK_APPLICATION(app),panel_dir);
     g_free(panel_dir);
     if (gtk_application_get_windows(GTK_APPLICATION(app)) != NULL)
