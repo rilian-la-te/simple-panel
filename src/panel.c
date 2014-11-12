@@ -1540,22 +1540,22 @@ panel_start_gui(SimplePanel *panel)
 }
 
 /* Exchange the PANEL_PROP_WIDTH and PANEL_PROP_HEIGHT terminology for vertical and horizontal panels. */
-void panel_adjust_geometry_terminology(Panel * p)
-{
-    if ((p->alignment_left_label != NULL) && (p->alignment_right_label != NULL))
-    {
-        if ((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM))
-        {
-            gtk_button_set_label(GTK_BUTTON(p->alignment_left_label), _("Left"));
-            gtk_button_set_label(GTK_BUTTON(p->alignment_right_label), _("Right"));
-        }
-        else
-        {
-            gtk_button_set_label(GTK_BUTTON(p->alignment_left_label), _("Top"));
-            gtk_button_set_label(GTK_BUTTON(p->alignment_right_label), _("Bottom"));
-        }
-    }
-}
+//void panel_adjust_geometry_terminology(Panel * p)
+//{
+//    if ((p->alignment_left_label != NULL) && (p->alignment_right_label != NULL))
+//    {
+//        if ((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM))
+//        {
+//            gtk_button_set_label(GTK_BUTTON(p->alignment_left_label), _("Left"));
+//            gtk_button_set_label(GTK_BUTTON(p->alignment_right_label), _("Right"));
+//        }
+//        else
+//        {
+//            gtk_button_set_label(GTK_BUTTON(p->alignment_left_label), _("Top"));
+//            gtk_button_set_label(GTK_BUTTON(p->alignment_right_label), _("Bottom"));
+//        }
+//    }
+//}
 
 /* Draw text into a label, with the user preference color and optionally bold. */
 void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,

@@ -68,12 +68,7 @@ static void modify_plugin( GtkTreeView* view );
 static gboolean on_entry_focus_out_old( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean on_entry_focus_out( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean _on_entry_focus_out_do_work(GtkWidget* edit, gpointer user_data);
-static void change_set_edge(GSimpleAction* act, GVariant* param, gpointer data);
 extern void update_panel_geometry(SimplePanel* p);
-
-static const GActionEntry entries[] = {
-    {"set-edge",NULL,"s","string \"none\"",change_set_edge},
-};
 
 static void
 response_event(GtkDialog *widget, gint arg1, Panel* panel )
@@ -112,101 +107,29 @@ gboolean panel_edge_available(Panel* p, int edge, gint monitor)
     return TRUE;
 }
 
-static void change_set_edge(GSimpleAction* act, GVariant* param, gpointer data)
-{
-    SimplePanel* panel = (SimplePanel*) data;
-    Panel *p = panel->priv;
-    gsize len;
-    int edge = str2num(edge_pair,g_variant_get_string(param,&len),PANEL_EDGE_TOP);
-    g_variant_unref(param);
-
-    p->edge = edge;
-    g_simple_action_set_state(act,param);
-    update_panel_geometry(panel);
-    _panel_set_panel_configuration_changed(panel);
-    UPDATE_GLOBAL_STRING(p, "edge", num2str(edge_pair, edge, "none"));
-}
-
-static void change_set_alignment(GSimpleAction* act, GVariant* param, gpointer data)
-{
-    SimplePanel* panel = (SimplePanel*) data;
-    Panel *p = panel->priv;
-    gsize len;
-    int alignment = str2num(allign_pair,g_variant_get_string(param,&len),PANEL_ALLIGN_NONE);
-    g_variant_unref(param);
-}
 
 static void set_monitor(GtkSpinButton *widget, SimplePanel *panel)
 {
     Panel *p = panel->priv;
 
-    p->monitor = gtk_spin_button_get_value_as_int(widget) - 1;
-    update_panel_geometry(panel);
-    _panel_set_panel_configuration_changed(panel);
-    UPDATE_GLOBAL_INT(p, "monitor", p->monitor);
+    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_MONITOR,(gtk_spin_button_get_value_as_int(widget) - 1));
 }
 
-static void set_alignment(SimplePanel* panel, int align)
-{
-    Panel *p = panel->priv;
-
-    if (p->margin_control)
-        gtk_widget_set_sensitive(p->margin_control, (align != PANEL_ALLIGN_CENTER));
-    p->allign = align;
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_STRING(p, "allign", num2str(allign_pair, align, "none"));
-}
-
-static void align_left_toggle(GtkToggleButton *widget, SimplePanel *p)
-{
-    GtkButton* b = (GtkButton*)g_object_get_data(G_OBJECT(widget), "alignment-button" );
-    if (gtk_toggle_button_get_active(widget))
-    {
-        gtk_button_set_label(b,gtk_button_get_label(GTK_BUTTON(widget)));
-        set_alignment(p, PANEL_ALLIGN_LEFT);
-    }
-}
-
-static void align_center_toggle(GtkToggleButton *widget, SimplePanel *p)
-{
-    GtkButton* b = (GtkButton*)g_object_get_data(G_OBJECT(widget), "alignment-button" );
-    if (gtk_toggle_button_get_active(widget))
-    {
-        gtk_button_set_label(b,gtk_button_get_label(GTK_BUTTON(widget)));
-        set_alignment(p, PANEL_ALLIGN_CENTER);
-    }
-}
-
-static void align_right_toggle(GtkToggleButton *widget, SimplePanel *p)
-{
-    GtkButton* b = (GtkButton*)g_object_get_data(G_OBJECT(widget), "alignment-button" );
-    if (gtk_toggle_button_get_active(widget))
-    {
-        gtk_button_set_label(b,gtk_button_get_label(GTK_BUTTON(widget)));
-        set_alignment(p, PANEL_ALLIGN_RIGHT);
-    }
-}
 
 static void
 set_margin(GtkSpinButton* spin, SimplePanel* panel)
 {
-    Panel *p = panel->priv;
-    p->margin = gtk_spin_button_get_value(spin);
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_INT(p, "margin", p->margin);
+    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_MARGIN,gtk_spin_button_get_value(spin));
 }
 
 static void
 set_width(GtkScaleButton* spin, SimplePanel* panel)
 {
     Panel *p = panel->priv;
-
-    p->width = (int)gtk_scale_button_get_value(spin);
+    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,gtk_scale_button_get_value(spin));
     gchar* str = g_strdup_printf("%d",p->width);
     gtk_button_set_label(GTK_BUTTON(spin),str);
     g_free(str);
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_INT(p, "width", p->width);
 }
 
 static void
@@ -214,12 +137,10 @@ set_height(GtkScaleButton* spin, SimplePanel* panel)
 {
     Panel *p = panel->priv;
 
-    p->height = (int)gtk_scale_button_get_value(spin);
+    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_HEIGHT,gtk_scale_button_get_value(spin));
     gchar* str = g_strdup_printf("%d",p->height);
     gtk_button_set_label(GTK_BUTTON(spin),str);
     g_free(str);
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_INT(p, "height", p->height);
 }
 
 static void set_strut_type( GtkWidget *item, SimplePanel* panel )
@@ -260,9 +181,7 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
         break;
     default: ;
     }
-
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_STRING(p, "widthtype", num2str(strut_pair, widthtype, "none"));
+    g_settings_set_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_SIZE_TYPE,widthtype);
 }
 
 /* FIXME: heighttype and spacing and RoundCorners */
@@ -276,17 +195,7 @@ static void set_background_type(GtkWidget* item, SimplePanel* panel)
     if (p->background == type) /* not changed */
         return;
 
-    p->background = type;
-    GtkWidget* color = (GtkWidget*)g_object_get_data(G_OBJECT(item), "tint_clr" );
-    GtkWidget* image = (GtkWidget*)g_object_get_data(G_OBJECT(item), "img_file" );
-    GtkWidget* button = (GtkWidget*)g_object_get_data(G_OBJECT(item), "settings-button" );
-    gtk_widget_set_visible(color,p->background == PANEL_BACKGROUND_CUSTOM_COLOR);
-    gtk_widget_set_visible(image,p->background == PANEL_BACKGROUND_CUSTOM_IMAGE);
-    gtk_widget_set_sensitive(button,((p->background == PANEL_BACKGROUND_CUSTOM_COLOR)
-                                     || (p->background == PANEL_BACKGROUND_CUSTOM_IMAGE)));
-    panel_update_background(p);
-    _panel_set_panel_configuration_changed(panel);
-    UPDATE_GLOBAL_STRING(p, "background", num2str(background_pair, type, "gtk-normal"));
+    g_settings_set_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE,type);
 }
 
 static void background_file_helper(Panel * p, GtkWidget * toggle, GtkFileChooser * file_chooser)
@@ -294,10 +203,8 @@ static void background_file_helper(Panel * p, GtkWidget * toggle, GtkFileChooser
     char * file = g_strdup(gtk_file_chooser_get_filename(file_chooser));
     if (file != NULL)
     {
-        g_free(p->background_file);
-        p->background_file = file;
-        UPDATE_GLOBAL_STRING(p, "backgroundfile", p->background_file);
-        panel_update_background(p);
+        g_settings_set_string(p->settings->toplevel_settings,PANEL_PROP_BACKGROUND_FILE,file);
+        g_free(file);
     }
 }
 
@@ -311,9 +218,9 @@ static void
 on_font_color_set( GtkColorChooser* clr,  Panel* p )
 {
     gtk_color_chooser_get_rgba( clr, &p->gfontcolor );
-    panel_update_fonts (p);
-    panel_set_panel_configuration_changed(p);
-    UPDATE_GLOBAL_STRING(p, "fontcolor", gdk_rgba_to_string(&p->gfontcolor));
+    char* color = gdk_rgba_to_string(&p->gfontcolor);
+    g_settings_set_string(p->settings->toplevel_settings,PANEL_PROP_FONT_COLOR,color);
+    g_free(color);
 }
 
 static void
@@ -321,102 +228,33 @@ on_tint_color_set( GtkColorChooser* clr,  Panel* p )
 {
     gtk_color_chooser_set_use_alpha(clr,TRUE);
     gtk_color_chooser_get_rgba( clr, &p->gtintcolor );
-    panel_update_background( p );
-    UPDATE_GLOBAL_STRING(p, "tintcolor", gdk_rgba_to_string(&p->gtintcolor));
-}
-
-static void
-on_use_font_color_toggled( GtkToggleButton* btn,   Panel* p )
-{
-    GtkWidget* clr = (GtkWidget*)g_object_get_data( G_OBJECT(btn), "clr" );
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn)))
-        gtk_widget_set_sensitive( clr, TRUE );
-    else
-        gtk_widget_set_sensitive( clr, FALSE );
-    p->usefontcolor = gtk_toggle_button_get_active( btn );
-    panel_update_fonts (p);
-    panel_set_panel_configuration_changed(p);
-    UPDATE_GLOBAL_INT(p, "usefontcolor", p->usefontcolor);
+    char* color = gdk_rgba_to_string(&p->gtintcolor);
+    g_settings_set_string(p->settings->toplevel_settings,PANEL_PROP_BACKGROUND_COLOR,color);
+    g_free(color);
 }
 
 static void
 on_font_size_set( GtkSpinButton* spin, Panel* p )
 {
-    p->fontsize = (int)gtk_spin_button_get_value(spin);
-    panel_update_fonts (p);
-    panel_set_panel_configuration_changed(p);
-    UPDATE_GLOBAL_INT(p, "fontsize", p->fontsize);
-}
-
-static void
-on_use_font_size_toggled( GtkToggleButton* btn,   Panel* p )
-{
-    GtkWidget* clr = (GtkWidget*)g_object_get_data( G_OBJECT(btn), "clr" );
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn)))
-        gtk_widget_set_sensitive( clr, TRUE );
-    else
-        gtk_widget_set_sensitive( clr, FALSE );
-    p->usefontsize = gtk_toggle_button_get_active( btn );
-    panel_update_fonts (p);
-    panel_set_panel_configuration_changed(p);
-    UPDATE_GLOBAL_INT(p, "usefontsize", p->usefontsize);
-}
-
-
-static void
-set_dock_type(GtkToggleButton* toggle, SimplePanel* panel)
-{
-    Panel *p = panel->priv;
-
-    p->setdocktype = gtk_toggle_button_get_active(toggle) ? 1 : 0;
-    panel_set_dock_type( panel );
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_INT(p, "setdocktype", p->setdocktype);
-}
-
-static void
-set_strut(GtkToggleButton* toggle, SimplePanel* panel)
-{
-    Panel *p = panel->priv;
-
-    p->setstrut = gtk_toggle_button_get_active(toggle) ? 1 : 0;
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_INT(p, "setpartialstrut", p->setstrut);
-}
-
-static void
-set_autohide(GtkToggleButton* toggle, SimplePanel* panel)
-{
-    Panel *p = panel->priv;
-
-    p->autohide = gtk_toggle_button_get_active(toggle) ? 1 : 0;
-    p->visible = p->autohide ? FALSE : TRUE;
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_INT(p, "autohide", p->autohide);
+    g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_FONT_SIZE,gtk_spin_button_get_value_as_int(spin));
 }
 
 static void
 set_height_when_minimized(GtkScaleButton* spin, SimplePanel* panel)
 {
-    Panel *p = panel->priv;
-
-    p->height_when_hidden = (int)gtk_scale_button_get_value(spin);
-    gchar* str = g_strdup_printf("%d",p->height_when_hidden);
+    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_AUTOHIDE_SIZE,(int)gtk_scale_button_get_value(spin));
+    gchar* str = g_strdup_printf("%d",panel->priv->height_when_hidden);
     gtk_button_set_label(GTK_BUTTON(spin),str);
     g_free(str);
-    update_panel_geometry(panel);
-    UPDATE_GLOBAL_INT(p, "heightwhenhidden", p->height_when_hidden);
 }
 
 static void
 set_icon_size( GtkScaleButton* spin,  Panel* p  )
 {
-    p->icon_size = (int)gtk_scale_button_get_value(spin);
+    g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_ICON_SIZE,(int)gtk_scale_button_get_value(spin));
     gchar* str = g_strdup_printf("%d",p->icon_size);
     gtk_button_set_label(GTK_BUTTON(spin),str);
     g_free(str);
-    panel_set_panel_configuration_changed(p);
-    UPDATE_GLOBAL_INT(p, "iconsize", p->icon_size);
 }
 
 static void
@@ -874,7 +712,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     if( p->pref_dialog )
     {
-        panel_adjust_geometry_terminology(p);
+//        panel_adjust_geometry_terminology(p);
         gtk_window_present(GTK_WINDOW(p->pref_dialog));
         return;
     }
@@ -889,7 +727,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
     p->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "panel_pref" );
     gtk_window_set_transient_for(GTK_WINDOW(p->pref_dialog), GTK_WINDOW(panel));
     gtk_application_add_window(p->app,GTK_WINDOW(p->pref_dialog));
-//    gtk_window_set_attached_to(GTK_WINDOW(p->pref_dialog), GTK_WIDGET(panel));
     g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), p);
     g_object_add_weak_pointer( G_OBJECT(p->pref_dialog), (gpointer) &p->pref_dialog );
     gtk_window_set_position( GTK_WINDOW(p->pref_dialog), GTK_WIN_POS_CENTER );
@@ -899,10 +736,10 @@ void panel_configure( SimplePanel* panel, int sel_page )
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
     gtk_button_set_label(GTK_BUTTON(w3),_("Panel Edge"));
     menu = g_menu_new();
-    g_menu_append(menu,_("Top"),"win.edge('top')");
-    g_menu_append(menu,_("Bottom"),"win.edge('bottom')");
-    g_menu_append(menu,_("Left"),"win.edge('left')");
-    g_menu_append(menu,_("Right"),"win.edge('right')");
+    g_menu_append(menu,_("Top"),"win"PANEL_PROP_EDGE"('top')");
+    g_menu_append(menu,_("Bottom"),"win."PANEL_PROP_EDGE"('bottom')");
+    g_menu_append(menu,_("Left"),"win"PANEL_PROP_EDGE"('left')");
+    g_menu_append(menu,_("Right"),"win."PANEL_PROP_EDGE"('right')");
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
     g_object_unref(menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
@@ -920,33 +757,18 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* alignment */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment-button");
-    w2 = (GtkWidget*)gtk_builder_get_object( builder, "alignment-box");
-    popover = gtk_popover_new(NULL);
-    gtk_container_add(GTK_CONTAINER(popover),w2);
-    gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
-    p->alignment_left_label = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_left" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_LEFT));
-    g_object_set_data(G_OBJECT(w), "alignment-button", w3);
-    g_signal_connect(w, "toggled", G_CALLBACK(align_left_toggle), panel);
-    if ((p->allign == PANEL_ALLIGN_LEFT))
-        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-    w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_center" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_CENTER));
-    g_object_set_data(G_OBJECT(w), "alignment-button", w3);
-    g_signal_connect(w, "toggled", G_CALLBACK(align_center_toggle), panel);
-    if ((p->allign == PANEL_ALLIGN_CENTER))
-        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
-    p->alignment_right_label = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment_right" );
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (p->allign == PANEL_ALLIGN_RIGHT));
-    g_object_set_data(G_OBJECT(w), "alignment-button", w3);
-    g_signal_connect(w, "toggled", G_CALLBACK(align_right_toggle), panel);
-    if ((p->allign == PANEL_ALLIGN_RIGHT))
-        gtk_button_set_label(GTK_BUTTON(w3),gtk_button_get_label(GTK_BUTTON(w)));
+    gtk_button_set_label(GTK_BUTTON(w3),_("Panel Alignment"));
+    menu = g_menu_new();
+    g_menu_append(menu,_("Start"),"win."PANEL_PROP_ALIGNMENT"('left')");
+    g_menu_append(menu,_("Center"),"win."PANEL_PROP_ALIGNMENT"('center')");
+    g_menu_append(menu,_("End"),"win."PANEL_PROP_ALIGNMENT"('right')");
+    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
+    g_object_unref(menu);
+    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
 
     /* margin */
     p->margin_control = w = (GtkWidget*)gtk_builder_get_object( builder, "margin" );
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(w), p->margin);
-    gtk_widget_set_sensitive(p->margin_control, (p->allign != PANEL_ALLIGN_CENTER));
     g_signal_connect( w, "value-changed",
                       G_CALLBACK(set_margin), panel);
 
@@ -988,9 +810,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
         treated in some special way.
     */
     w = (GtkWidget*)gtk_builder_get_object( builder, "as_dock" );
-    update_toggle_button( w, p->setdocktype );
-    g_signal_connect( w, "toggled",
-                      G_CALLBACK(set_dock_type), panel );
+    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w),"win."PANEL_PROP_DOCK);
 
     /* Explaination from Ruediger Arp <ruediger@gmx.net>:
         "Set Strut": Reserve panel's space so that it will not be
@@ -1002,14 +822,11 @@ void panel_configure( SimplePanel* panel, int sel_page )
         GNOME Panel acts this way, too.
     */
     w = (GtkWidget*)gtk_builder_get_object( builder, "reserve_space" );
-    update_toggle_button( w, p->setstrut );
-    g_signal_connect( w, "toggled",
-                      G_CALLBACK(set_strut), panel );
+    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w),"win."PANEL_PROP_STRUT);
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "autohide" );
-    update_toggle_button( w, p->autohide );
-    g_signal_connect( w, "toggled",
-                      G_CALLBACK(set_autohide), panel );
+    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w),"win."PANEL_PROP_AUTOHIDE);
+
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "scale-minimized" );
     simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(w), p->height_when_hidden);
@@ -1022,25 +839,13 @@ void panel_configure( SimplePanel* panel, int sel_page )
         GtkIconInfo* info;
         tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
         gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
-        if (p->background != PANEL_BACKGROUND_CUSTOM_COLOR )
-            gtk_widget_set_visible(w, FALSE );
         g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
         type_list = (GtkWidget*)gtk_builder_get_object( builder, "background-type-combo" );
         update_opt_menu( type_list, p->background);
 
-        w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "background-settings-button");
-        w2 = (GtkWidget*)gtk_builder_get_object( builder, "background-box");
-        popover = gtk_popover_new(NULL);
-        gtk_container_add(GTK_CONTAINER(popover),w2);
-        gtk_menu_button_set_popover(GTK_MENU_BUTTON(w),popover);
-        gtk_widget_set_sensitive(w3,((p->background == PANEL_BACKGROUND_CUSTOM_COLOR)
-                                         || (p->background == PANEL_BACKGROUND_CUSTOM_IMAGE)));
-        gtk_button_set_image(GTK_BUTTON(w3),gtk_image_new_from_icon_name("preferences-desktop-theme",GTK_ICON_SIZE_MENU));
-        g_object_set_data(G_OBJECT(type_list), "tint_clr", tint_clr);
 
         w = (GtkWidget*)gtk_builder_get_object( builder, "img_file" );
         g_object_set_data(G_OBJECT(type_list), "img_file", w);
-        g_object_set_data(G_OBJECT(type_list), "settings-button", w3);
         g_signal_connect( type_list, "changed",
                          G_CALLBACK(set_background_type), panel);
         if (p->background_file != NULL)
@@ -1050,9 +855,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), gtk_icon_info_get_filename(info));
             g_object_unref(info);
         }
-
-        if (p->background != PANEL_BACKGROUND_CUSTOM_IMAGE)
-            gtk_widget_set_visible(w, FALSE);
         g_object_set_data( G_OBJECT(w), "bg_image", type_list );
         g_signal_connect( w, "file-set", G_CALLBACK (background_changed), p);
     }
@@ -1062,11 +864,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
     g_signal_connect( w, "color-set", G_CALLBACK( on_font_color_set ), p );
 
     w2 = (GtkWidget*)gtk_builder_get_object( builder, "use_font_clr" );
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(w2), p->usefontcolor );
-    g_object_set_data( G_OBJECT(w2), "clr", w );
-    g_signal_connect(w2, "toggled", G_CALLBACK(on_use_font_color_toggled), p);
-    if( ! p->usefontcolor )
-        gtk_widget_set_sensitive( w, FALSE );
+    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w2),"win."PANEL_PROP_ENABLE_FONT_COLOR);
 
     /* font size */
     w = (GtkWidget*)gtk_builder_get_object( builder, "font_size" );
@@ -1075,11 +873,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
                       G_CALLBACK(on_font_size_set), p);
 
     w2 = (GtkWidget*)gtk_builder_get_object( builder, "use_font_size" );
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(w2), p->usefontsize );
-    g_object_set_data( G_OBJECT(w2), "clr", w );
-    g_signal_connect(w2, "toggled", G_CALLBACK(on_use_font_size_toggled), p);
-    if( ! p->usefontsize )
-        gtk_widget_set_sensitive( w, FALSE );
+    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w2),"win."PANEL_PROP_ENABLE_FONT_SIZE);
 
     /* plugin list */
     {
@@ -1134,7 +928,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
     char* custom_css;
     w = (GtkWidget*)gtk_builder_get_object( builder, "css-chooser" );
     g_object_set_data(G_OBJECT(w3), "css-chooser", w);
-    g_object_get(G_OBJECT(panel->priv->app),"css",custom_css,NULL);
+    g_object_get(G_OBJECT(panel->priv->app),"css",&custom_css,NULL);
     if (custom_css != NULL)
         gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), custom_css);
     g_free(custom_css);
@@ -1152,11 +946,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
     g_object_unref(builder);
     GSimpleActionGroup* configurator = g_simple_action_group_new();
-    g_action_map_add_action_entries(G_ACTION_MAP(configurator),entries,G_N_ELEMENTS(entries),panel);
-    gtk_widget_insert_action_group(GTK_WIDGET(panel),"configurator",G_ACTION_GROUP(configurator));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));
-    gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"configurator",G_ACTION_GROUP(configurator));
-    panel_adjust_geometry_terminology(p);
+//    panel_adjust_geometry_terminology(p);
     gtk_widget_show(GTK_WIDGET(p->pref_dialog));
 }
 
