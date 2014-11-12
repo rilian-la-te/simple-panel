@@ -108,19 +108,6 @@ static void panel_app_startup(GApplication* app)
 
     /* add actions for all panels */
     g_action_map_add_action_entries(G_ACTION_MAP(app),app_action_entries,G_N_ELEMENTS(app_action_entries),app);
-
-    /*load config*/
-    _ensure_user_config_dirs(PANEL_APP(app));
-    PANEL_APP(app)->priv->config = load_global_config_gsettings(PANEL_APP(app),&(PANEL_APP(app)->priv->config_file));
-    gdk_window_set_events(gdk_get_default_root_window(), GDK_STRUCTURE_MASK |
-            GDK_SUBSTRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK);
-    init_plugin_class_list();
-    if( G_UNLIKELY( ! start_all_panels(PANEL_APP(app)) ) )
-        g_warning( "Config files are not found.\n" );
-    else
-    {
-        apply_styling(PANEL_APP(app));
-    }
 }
 
 static void panel_app_shutdown(GApplication* app)
@@ -136,6 +123,24 @@ static void panel_app_shutdown(GApplication* app)
 
 void panel_app_activate(GApplication* app)
 {
+    static gboolean is_started;
+
+    if (!is_started)
+    {
+        /*load config*/
+        _ensure_user_config_dirs(PANEL_APP(app));
+        PANEL_APP(app)->priv->config = load_global_config_gsettings(PANEL_APP(app),&(PANEL_APP(app)->priv->config_file));
+        gdk_window_set_events(gdk_get_default_root_window(), GDK_STRUCTURE_MASK |
+                GDK_SUBSTRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK);
+        init_plugin_class_list();
+        if( G_UNLIKELY( ! start_all_panels(PANEL_APP(app)) ) )
+            g_warning( "Config files are not found.\n" );
+        else
+        {
+            is_started = TRUE;
+            apply_styling(PANEL_APP(app));
+        }
+    }
     if (ccommand!=NULL)
     {
         if (!g_strcmp0(ccommand,"menu"))
@@ -193,9 +198,7 @@ int panel_app_command_line(GApplication* application,GApplicationCommandLine* co
     GVariantDict *options;
     options = g_application_command_line_get_options_dict(commandline);
     if (g_variant_dict_lookup (options, "profile", "&s", &profile_name))
-    {
-        g_object_set(G_OBJECT(application),"profile",&profile_name,NULL);
-    }
+        g_object_set(G_OBJECT(application),"profile",profile_name,NULL);
     if (g_variant_dict_lookup (options, "command", "&s", &command))
     {
         if (g_strrstr(panel_commands,command))
@@ -316,6 +319,7 @@ static gboolean start_all_panels(PanelApp* app)
 
     /* try user panels */
     panel_dir = _user_config_file_name(app,"panels", NULL);
+    g_print("%s,%s\n",panel_dir,app->priv->profile);
     start_panels_from_dir(GTK_APPLICATION(app),panel_dir);
     g_free(panel_dir);
     if (gtk_application_get_windows(GTK_APPLICATION(app)) != NULL)
