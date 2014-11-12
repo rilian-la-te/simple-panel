@@ -1395,10 +1395,10 @@ void update_panel_geometry( SimplePanel* p )
 {
     /* Guard against being called early in panel creation. */
     _calculate_position(p);
-    gtk_widget_hide(GTK_WIDGET(p));
+//    gtk_widget_hide(GTK_WIDGET(p)); /*Glitch for all WMs except metacity and mutter*/
     gtk_widget_set_size_request(GTK_WIDGET(p), p->priv->aw, p->priv->ah);
     gtk_window_move(GTK_WINDOW(p),p->priv->ax,p->priv->ay);
-    gtk_widget_show(GTK_WIDGET(p));
+//    gtk_widget_show(GTK_WIDGET(p));
     _panel_queue_update_background(p);
     _panel_establish_autohide(p);
     _panel_set_wm_strut(p);

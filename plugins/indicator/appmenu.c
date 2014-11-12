@@ -38,17 +38,6 @@ TODO : vertical support (r354)
 
 static gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},
-  {"libapplication.so", NULL},
-  {"libapplication.so", "gst-keyboard-xkb"},
-  {"libmessaging.so", NULL},
-  {"libpower.so", NULL},
-  {"libapplication.so", "bluetooth-manager"},
-  {"libnetwork.so", NULL},
-  {"libnetworkmenu.so", NULL},
-  {"libapplication.so", "nm-applet"},
-  {"libsoundmenu.so", NULL},
-  {"libdatetime.so", NULL},
-  {"libsession.so", NULL},
   {NULL, NULL}
 };
 
@@ -76,14 +65,7 @@ typedef struct {
 
     GtkWidget * menubar;		/* Displayed menubar */
 
-    gboolean applications;      /* Support for differents indicators */
-    gboolean datetime;
-    gboolean me;
-    gboolean messages;
-    gboolean network;
-    gboolean session;
-    gboolean sound;
-    /* gboolean appmenu; */
+    gboolean appmenu;
 
 
 } IndicatorPlugin;
@@ -412,8 +394,7 @@ entry_moved_find_cb (GtkWidget * widget, gpointer userdata)
 }
 
 /* Gets called when an entry for an object was moved. */
-static void
-entry_moved (IndicatorObject * io, IndicatorObjectEntry * entry,
+static void entry_moved (IndicatorObject * io, IndicatorObjectEntry * entry,
              gint old G_GNUC_UNUSED, gint new G_GNUC_UNUSED, gpointer user_data)
 {
     GtkWidget * menubar = GTK_WIDGET(user_data);
@@ -606,17 +587,17 @@ menubar_scroll (GtkWidget      *widget G_GNUC_UNUSED,
 
 }
 
-static gboolean
-menubar_on_expose (GtkWidget * widget,
-                    GdkEventExpose *event G_GNUC_UNUSED,
-                    GtkWidget * menubar)
-{
-    if (GTK_WIDGET_HAS_FOCUS(menubar))
-        gtk_paint_focus(widget->style, widget->window, GTK_WIDGET_STATE(menubar),
-                        NULL, widget, "menubar-applet", 0, 0, -1, -1);
+//static gboolean
+//menubar_on_expose (GtkWidget * widget,
+//                    GdkEventExpose *event G_GNUC_UNUSED,
+//                    GtkWidget * menubar)
+//{
+//    if (GTK_WIDGET_HAS_FOCUS(menubar))
+//        gtk_paint_focus(widget->style, widget->window, GTK_WIDGET_STATE(menubar),
+//                        NULL, widget, "menubar-applet", 0, 0, -1, -1);
 
-    return FALSE;
-}
+//    return FALSE;
+//}
 
 static void indicator_load_modules(SimplePanel *panel, GtkWidget *p)
 {
@@ -636,49 +617,12 @@ static void indicator_load_modules(SimplePanel *panel, GtkWidget *p)
         const gchar *name;
         while ((name = g_dir_read_name(dir)) != NULL)
         {
-
-            if (g_strcmp0(name, "libsession.so")== 0) {
-                if (indicator->session == 1){
-                    load_module(name, indicator->menubar);
-                    indicators_loaded++;
-                }
-            }
-            else if (g_strcmp0(name, "libapplication.so")== 0) {
-                if (indicator->applications == 1){
-                    load_module(name, indicator->menubar);
-                    indicators_loaded++;
-                }
-            }
-            else if (g_strcmp0(name, "libdatetime.so")== 0) {
-                if (indicator->datetime == 1) {
-                    load_module(name, indicator->menubar);
-                    indicators_loaded++;
-                }
-            }
-            else if (g_strcmp0(name, "libmessaging.so")== 0) {
-                if (indicator->messages == 1) {
-                    load_module(name, indicator->menubar);
-                    indicators_loaded++;
-                }
-            }
-            else if (g_strcmp0(name, "libnetworkmenu.so")== 0) {
-                if (indicator->network == 1) {
-                    load_module(name, indicator->menubar);
-                    indicators_loaded++;
-                }
-            }
-            else if (g_strcmp0(name, "libsoundmenu.so")== 0) {
-                if (indicator->sound == 1) {
-                    load_module(name, indicator->menubar);
-                    indicators_loaded++;
-                }
-            }
-            /* else if (g_strcmp0(name, "libappmenu.so") == 0) {
+             if (g_strcmp0(name, "libappmenu.so") == 0) {
                 if (indicator->appmenu == 1) {
                     load_module(name, indicator->menubar);
                     indicators_loaded++;
                 }
-            }*/
+            }
         }
         g_dir_close (dir);
     }
@@ -691,8 +635,6 @@ static void indicator_load_modules(SimplePanel *panel, GtkWidget *p)
     else
     {
         gtk_container_add(GTK_CONTAINER(p), indicator->menubar);
-        /* Set background to default. */
-        gtk_widget_set_style(indicator->menubar, panel_get_defstyle(panel));
     }
 
     /* Update the display, show the widget, and return. */
@@ -712,61 +654,43 @@ static GtkWidget *indicator_constructor(SimplePanel *panel, config_setting_t *se
     indicator->settings = settings;
 
     /* Default support for indicators */
-    indicator->applications = TRUE;
-    indicator->datetime     = FALSE;
-    indicator->messages     = FALSE;
-    indicator->network      = FALSE;
-    indicator->session      = FALSE;
-    indicator->sound        = FALSE;
-    /* indicator->appmenu      = FALSE; */
+    indicator->appmenu      = FALSE;
 
     /* Load parameters from the configuration file. */
-    if (config_setting_lookup_int(settings, "applications", &tmp_int))
-        indicator->applications = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "datetime", &tmp_int))
-        indicator->datetime = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "messages", &tmp_int))
-        indicator->messages = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "network", &tmp_int))
-        indicator->network = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "session", &tmp_int))
-        indicator->session = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "sound", &tmp_int))
-        indicator->sound = tmp_int != 0;
-    /* if (config_setting_lookup_int(settings, "appmenu", &tmp_int))
-        indicator->appmenu = tmp_int != 0;*/
+     if (config_setting_lookup_int(settings, "appmenu", &tmp_int))
+        indicator->appmenu = tmp_int != 0;
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     p = gtk_event_box_new();
     lxpanel_plugin_set_data(p, indicator, g_free);
 
-    gtk_rc_parse_string (
-        "style \"indicator-applet-style\"\n"
-        "{\n"
-        "    GtkMenuBar::shadow-type = none\n"
-        "    GtkMenuBar::internal-padding = 0\n"
-        "    GtkWidget::focus-line-width = 0\n"
-        "    GtkWidget::focus-padding = 0\n"
-        "}\n"
-        "style \"indicator-applet-menubar-style\"\n"
-        "{\n"
-        "    GtkMenuBar::shadow-type = none\n"
-        "    GtkMenuBar::internal-padding = 0\n"
-        "    GtkWidget::focus-line-width = 0\n"
-        "    GtkWidget::focus-padding = 0\n"
-        "    GtkMenuItem::horizontal-padding = 0\n"
-        "}\n"
-        "style \"indicator-applet-menuitem-style\"\n"
-        "{\n"
-        "    GtkWidget::focus-line-width = 0\n"
-        "    GtkWidget::focus-padding = 0\n"
-        "    GtkMenuItem::horizontal-padding = 0\n"
-        "}\n"
-        "widget \"*.fast-user-switch-applet\" style \"indicator-applet-style\""
-        "widget \"*.fast-user-switch-menuitem\" style \"indicator-applet-menuitem-style\""
-        "widget \"*.fast-user-switch-menubar\" style \"indicator-applet-menubar-style\"");
+//    gtk_rc_parse_string (
+//        "style \"indicator-applet-style\"\n"
+//        "{\n"
+//        "    GtkMenuBar::shadow-type = none\n"
+//        "    GtkMenuBar::internal-padding = 0\n"
+//        "    GtkWidget::focus-line-width = 0\n"
+//        "    GtkWidget::focus-padding = 0\n"
+//        "}\n"
+//        "style \"indicator-applet-menubar-style\"\n"
+//        "{\n"
+//        "    GtkMenuBar::shadow-type = none\n"
+//        "    GtkMenuBar::internal-padding = 0\n"
+//        "    GtkWidget::focus-line-width = 0\n"
+//        "    GtkWidget::focus-padding = 0\n"
+//        "    GtkMenuItem::horizontal-padding = 0\n"
+//        "}\n"
+//        "style \"indicator-applet-menuitem-style\"\n"
+//        "{\n"
+//        "    GtkWidget::focus-line-width = 0\n"
+//        "    GtkWidget::focus-padding = 0\n"
+//        "    GtkMenuItem::horizontal-padding = 0\n"
+//        "}\n"
+//        "widget \"*.fast-user-switch-applet\" style \"indicator-applet-style\""
+//        "widget \"*.fast-user-switch-menuitem\" style \"indicator-applet-menuitem-style\""
+//        "widget \"*.fast-user-switch-menubar\" style \"indicator-applet-menubar-style\"");
 
-    gtk_widget_set_name(p, "fast-user-switch-applet");
+//    gtk_widget_set_name(p, "fast-user-switch-applet");
 
     /* Connect signals for container */
     g_log_set_default_handler(log_to_file, NULL);
@@ -785,7 +709,7 @@ static GtkWidget *indicator_constructor(SimplePanel *panel, config_setting_t *se
     /* Connect signals. */
     g_signal_connect(indicator->menubar, "button-press-event", G_CALLBACK(menubar_press), NULL);
     g_signal_connect(indicator->menubar, "scroll-event", G_CALLBACK (menubar_scroll), NULL);
-    g_signal_connect_after(indicator->menubar, "expose-event", G_CALLBACK(menubar_on_expose), indicator->menubar);
+//    g_signal_connect_after(indicator->menubar, "expose-event", G_CALLBACK(menubar_on_expose), indicator->menubar);
 
     gtk_container_set_border_width(GTK_CONTAINER(indicator->menubar), 0);
 
@@ -840,12 +764,7 @@ static gboolean indicator_apply_configuration(gpointer user_data)
     /* load 'em */
     indicator_load_modules(indicator->panel, user_data);
 
-    config_group_set_int(indicator->settings, "applications", indicator->applications);
-    config_group_set_int(indicator->settings, "datetime", indicator->datetime);
-    config_group_set_int(indicator->settings, "messages", indicator->messages);
-    config_group_set_int(indicator->settings, "network", indicator->network);
-    config_group_set_int(indicator->settings, "session", indicator->session);
-    config_group_set_int(indicator->settings, "sound", indicator->sound);
+    config_group_set_int(indicator->settings, "appmenu", indicator->appmenu);
     /* Apply settings. */
 /*
     if (p->panel->orientation == ORIENT_HORIZ)
@@ -862,13 +781,7 @@ static GtkWidget *indicator_configure(SimplePanel *panel, GtkWidget *p)
     IndicatorPlugin * indicator = lxpanel_plugin_get_data(p);
     GtkWidget * dlg = lxpanel_generic_config_dlg(_("Indicator applets"),
         panel, indicator_apply_configuration, p,
-        _("Indicator Applications"), &indicator->applications, CONF_TYPE_BOOL,
-        _("Clock Indicator"), &indicator->datetime, CONF_TYPE_BOOL,
-        _("Messaging Menu"), &indicator->messages, CONF_TYPE_BOOL,
-        _("Network Menu"), &indicator->network, CONF_TYPE_BOOL,
-        _("Session Menu"), &indicator->session, CONF_TYPE_BOOL,
-        _("Sound Menu"), &indicator->sound, CONF_TYPE_BOOL,
-        /* _("Applications menus"), &indicator->appmenu, CONF_TYPE_BOOL,*/
+        _("Applications menus"), &indicator->appmenu, CONF_TYPE_BOOL,
         NULL);
     gtk_widget_set_size_request(GTK_WIDGET(dlg), 300, -1);
     return dlg;
@@ -878,8 +791,8 @@ FM_DEFINE_MODULE(lxpanel_gtk, indicator)
 
 /* Plugin descriptor. */
 SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
-    .name = N_("Indicator applets"),
-    .description = N_("Add indicator applets to the panel"),
+    .name = N_("Appmenu applet"),
+    .description = N_("Show appmenu indicator on the panel"),
 
     .new_instance = indicator_constructor,
     .config = indicator_configure,
