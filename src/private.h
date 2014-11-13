@@ -198,7 +198,7 @@ gboolean _class_is_present(const SimplePanelPluginInit *init);
 
 void _panel_show_config_dialog(SimplePanel *panel, GtkWidget *p, GtkWidget *dlg);
 
-void _calculate_position(SimplePanel *panel);
+void _calculate_position(SimplePanel *panel, GdkRectangle *rect);
 
 void _panel_determine_background_pixmap(SimplePanel * p, GtkWidget * widget);
 void _panel_establish_autohide(SimplePanel *p);
@@ -233,8 +233,7 @@ extern gboolean panel_image_set_icon_theme(Panel * p, GtkWidget * image, const g
 extern void panel_set_wm_strut(Panel *p);
 extern void panel_set_dock_type(SimplePanel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
-extern void panel_update_background( Panel* p );
-extern void panel_update_fonts( Panel * p);
+extern void panel_update_background( SimplePanel* p );
 extern SimplePanel* panel_new(GtkApplication *app, const char* config_file, const char* config_name);
 extern SimplePanel* panel_load(GtkApplication *app, const char* config_file, const char* config_name);
 
@@ -265,7 +264,7 @@ typedef struct {
     gchar *t[3];
 } line;
 
-void calculate_position(Panel *np);
+void calculate_position(SimplePanel *np);
 
 extern int lxpanel_get_line(char **fp, line *s);
 extern int lxpanel_put_line(FILE* fp, const char* format, ...);

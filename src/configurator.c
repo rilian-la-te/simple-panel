@@ -68,7 +68,6 @@ static void modify_plugin( GtkTreeView* view );
 static gboolean on_entry_focus_out_old( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean on_entry_focus_out( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean _on_entry_focus_out_do_work(GtkWidget* edit, gpointer user_data);
-extern void update_panel_geometry(SimplePanel* p);
 
 static void
 response_event(GtkDialog *widget, gint arg1, Panel* panel )
@@ -426,7 +425,7 @@ static void on_add_plugin_row_activated( GtkTreeView *view,
                 gtk_tree_view_scroll_to_cell( _view, tree_path, NULL, FALSE, 0, 0 );
                 gtk_tree_path_free( tree_path );
             }
-            panel_update_background(p->priv);
+            panel_update_background(p);
         }
         else /* free unused setting */
             config_setting_destroy(cfg);
