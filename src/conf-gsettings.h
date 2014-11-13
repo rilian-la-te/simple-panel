@@ -25,6 +25,15 @@
 #define DEFAULT_TOPLEVEL_PATH "/org/simple/panel/toplevel/"
 #define DEFAULT_ROOT_NAME "toplevel-settings"
 
+#define DEFAULT_PLUGIN_NAME_KEY "plugin-type"
+#define DEFAULT_PLUGIN_SCHEMA_KEY "has-schema"
+#define DEFAULT_PLUGIN_KEY_EXPAND "is-expanded"
+#define DEFAULT_PLUGIN_KEY_CAN_EXPAND "can-expand"
+#define DEFAULT_PLUGIN_KEY_PADDING "padding"
+#define DEFAULT_PLUGIN_KEY_BORDER "border"
+#define DEFAULT_PLUGIN_KEY_POSITION "position"
+
+
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -34,7 +43,6 @@ G_BEGIN_DECLS
 
 struct _PanelGSettings
 {
-    GObject parent;
     GSettingsBackend* config_file_backend;
     gchar* config_file_name;
     GSettings* toplevel_settings;
@@ -45,11 +53,10 @@ struct _PanelGSettings
 
 struct _PluginGSettings
 {
-    GObject parent;
     GSettings* config_settings;
     GSettings* default_settings;
     gchar* config_path_appender;
-    gint plugin_number;
+    gint64 plugin_number;
 };
 
 
@@ -57,12 +64,16 @@ struct _PluginGSettings
 typedef struct _PanelGSettings PanelGSettings;
 typedef struct _PluginGSettings PluginGSettings;
 
-void panel_gsettings_add_plugin_settings(PanelGSettings* settings, const gchar* plugin_name, gint plugin_number);
-void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint plugin_number);
+void panel_gsettings_add_plugin_settings(PanelGSettings* settings,
+                                         const gchar* plugin_name,
+                                         gint64 plugin_number,
+                                         gboolean has_schema);
+void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint64 plugin_number);
 PanelGSettings*  panel_gsettings_create(const gchar* filename);
 void panel_gsettings_free(PanelGSettings* settings);
 void panel_gsettings_remove_config_file (PanelGSettings* settings);
-
+gboolean panel_gsettings_init_plugin_list(PanelGSettings* settings);
+gint64 panel_gsettings_find_free_num (PanelGSettings* settings);
 
 G_END_DECLS
 

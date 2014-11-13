@@ -21,8 +21,13 @@
 
 #include <libfm/fm.h>
 
+#define GSETTINGS_PLUGIN_TEST
+#undef GSETTINGS_PLUGIN_TEST
+
 #include "panel.h"
+#ifndef GSETTINGS_PLUGIN_TEST
 #include "conf.h"
+#endif
 #include "conf-gsettings.h"
 
 G_BEGIN_DECLS
@@ -94,8 +99,11 @@ typedef struct {
     void (*finalize)(void);     /* optional finalize */
     char *name;                 /* name to represent in lists */
     char *description;          /* tooltip text */
+#ifdef GSETTINGS_PLUGIN_TEST
+    GtkWidget *(*new_instance)(SimplePanel *panel, GSettings* settings);
+#else
     GtkWidget *(*new_instance)(SimplePanel *panel, config_setting_t *settings);
-    GtkWidget *(*new_instance_gsettings)(SimplePanel *panel, PluginGSettings* settings);
+#endif
     GtkWidget *(*config)(SimplePanel *panel, GtkWidget *instance);
     void (*reconfigure)(SimplePanel *panel, GtkWidget *instance);
     gboolean (*button_press_event)(GtkWidget *widget, GdkEventButton *event, SimplePanel *panel);
@@ -111,6 +119,9 @@ typedef struct {
     int expand_available : 1;   /* True if "stretch" option is available */
     int expand_default : 1;     /* True if "stretch" option is default */
     int superseded : 1;         /* True if plugin was superseded by another */
+#ifdef GSETTINGS_PLUGIN_TEST
+    int has_config : 1;         /* True if plugin has configuration*/
+#endif
 } SimplePanelPluginInit; /* constant data */
 
 /*

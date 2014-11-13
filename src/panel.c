@@ -1220,7 +1220,6 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     GdkScreen *screen;
     SimplePanel *new_panel = panel_allocate(panel->priv->app);
     Panel *p = new_panel->priv;
-    config_setting_t *global;
     p->app = panel->priv->app;
     g_object_get(G_OBJECT(new_panel->priv->app),"profile",&cprofile,NULL);
 
@@ -1250,10 +1249,6 @@ found_edge:
     p->name = gen_panel_name(p->edge, p->monitor);
     p->settings = simple_panel_create_gsettings(new_panel);
     panel_add_actions(new_panel);
-    /* create new config with first group "Global" */
-//    global = config_group_add_subgroup(config_root_setting(p->config), "Global");
-//    config_group_set_string(global, PANEL_PROP_EDGE, num2str(edge_pair, p->edge, "none"));
-//    config_group_set_int(global, PANEL_PROP_MONITOR, p->monitor);
     panel_configure(new_panel, 0);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
@@ -1608,6 +1603,7 @@ PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
     return panel_gsettings_create(fname);
 }
 
+#ifndef GSETTINGS_PLUGIN_TEST
 static int
 panel_parse_plugin(SimplePanel *p, config_setting_t *cfg)
 {
@@ -1626,6 +1622,7 @@ panel_parse_plugin(SimplePanel *p, config_setting_t *cfg)
 error:
     RET(0);
 }
+#endif
 
 static void panel_add_actions( SimplePanel* p)
 {
@@ -1659,7 +1656,12 @@ static void panel_add_actions( SimplePanel* p)
 
 static int panel_start( SimplePanel *p )
 {
+#ifndef GSETTINGS_PLUGIN_TEST
     config_setting_t *list, *s;
+#else
+    GSList* l;
+    gint64 position;
+#endif
     int i;
 
     /* parse global section */
@@ -1674,13 +1676,21 @@ static int panel_start( SimplePanel *p )
     panel_add_actions(p);
     panel_start_gui(p);
 
+#ifndef GSETTINGS_PLUGIN_TEST
     for (i = 0; (s = config_setting_get_elem(list, i)) != NULL; )
         if (strcmp(config_setting_get_name(s), "Plugin") == 0 &&
             panel_parse_plugin(p, s)) /* success on plugin start */
             i++;
         else /* remove invalid data from config */
             config_setting_remove_elem(list, i);
-
+#else
+    panel_gsettings_init_plugin_list(p->priv->settings);
+    for (l = p->priv->settings->all_settings;l! = NULL; l = l->next)
+    {
+        position = g_settings_get_uint((PluginGSettings*)l->data->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
+        simple_panel_add_plugin(p,l->data,position);
+    }
+#endif
     /* update backgrond of panel and all plugins */
     panel_update_background(p);
     _panel_update_fonts(p);
