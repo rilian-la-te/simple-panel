@@ -214,26 +214,38 @@ PanelGSettings*  panel_gsettings_create_custom
     return new_settings;
 }
 
-void panel_gsettings_free(PanelGSettings* settings)
+void panel_gsettings_free(PanelGSettings* settings, gboolean remove)
 {
     g_slist_free_full(settings->all_settings,(GDestroyNotify)plugin_gsettings_remove);
-    g_object_unref(settings->toplevel_settings);
-    g_object_unref(settings->config_file_backend);
-    g_free(settings->root_name);
-    g_free(settings->config_file_name);
-    g_free(settings->root_path);
-}
-
-void panel_gsettings_remove_config_file (PanelGSettings* settings)
-{
-    g_slist_free_full(settings->all_settings,(GDestroyNotify)plugin_gsettings_remove);
-    g_object_unref(settings->toplevel_settings);
-    g_object_unref(settings->config_file_backend);
-    g_free(settings->root_name);
-    g_free(settings->root_path);
-    GFile* f;
-    f= g_file_new_for_path(settings->config_file_name);
-    g_file_delete(f,NULL,NULL);
-    g_object_unref(f);
-    g_free(settings->config_file_name);
+    if (settings->toplevel_settings)
+    {
+        g_object_unref(settings->toplevel_settings);
+        settings->toplevel_settings = NULL;
+        g_object_unref(settings->config_file_backend);
+        settings->config_file_backend = NULL;
+    }
+    if (settings->root_name)
+    {
+        g_free(settings->root_name);
+        settings->root_name = NULL;
+    }
+    if (remove)
+    {
+        GFile* f;
+        f= g_file_new_for_path(settings->config_file_name);
+        g_file_delete(f,NULL,NULL);
+        g_object_unref(f);
+    }
+    if (settings->root_path)
+    {
+        g_free(settings->root_path);
+        settings->root_path = NULL;
+    }
+    if (settings->config_file_name)
+    {
+        g_free(settings->config_file_name);
+        settings->config_file_name = NULL;
+        g_free(settings);
+    }
+    settings = NULL;
 }

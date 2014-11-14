@@ -96,8 +96,8 @@ static gboolean edge_selector(Panel* p, int edge)
 /* If there is a panel on this edge and it is not the panel being configured, set the edge unavailable. */
 gboolean panel_edge_available(Panel* p, int edge, gint monitor)
 {
-    GSList* l;
-    for (l = all_panels; l != NULL; l = l->next)
+    GList* l;
+    for (l = gtk_application_get_windows(p->app); l != NULL; l = l->next)
         {
         SimplePanel* pl = (SimplePanel*) l->data;
         if ((pl->priv != p) && (pl->priv->edge == edge) && (pl->priv->monitor == monitor))

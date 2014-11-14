@@ -112,7 +112,7 @@ static void lxpanel_finalize(GObject *object)
     if( p->config_changed )
         simple_panel_config_save( self );
     if (p->settings)
-        panel_gsettings_free(p->settings);
+        panel_gsettings_free(p->settings,FALSE);
 
     g_free( p->background_file );
 
@@ -137,7 +137,8 @@ static void lxpanel_destroy(GtkWidget *object)
     if (p->plugin_pref_dialog != NULL)
         /* just close the dialog, it will do all required cleanup */
         gtk_dialog_response(GTK_DIALOG(p->plugin_pref_dialog), GTK_RESPONSE_CLOSE);
-
+    if (p->settings)
+        panel_gsettings_free(p->settings,FALSE);
     if (p->initialized)
     {
         gtk_application_remove_window(GTK_APPLICATION(win_grp), GTK_WINDOW(self));
@@ -317,6 +318,9 @@ static void simple_panel_set_property(GObject      *object,
         break;
     case PROP_EDGE:
         toplevel->priv->edge = g_value_get_enum (value);
+        toplevel->priv->orientation = (PANEL_EDGE_TOP || PANEL_EDGE_BOTTOM)
+                ? GTK_ORIENTATION_HORIZONTAL
+                : GTK_ORIENTATION_VERTICAL;
         configuration = TRUE;
         geometry = TRUE;
         break;
@@ -1226,7 +1230,8 @@ static char* gen_panel_name( int edge, gint monitor)
 static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer data)
 {
     SimplePanel* panel = (SimplePanel*) data;
-    gint m, e, monitors;
+    gint m, monitors;
+    PanelEdgeType e;
     GdkScreen *screen;
     SimplePanel *new_panel = panel_allocate(panel->priv->app);
     Panel *p = new_panel->priv;
@@ -1240,7 +1245,7 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     for(m=0; m<monitors; ++m)
     {
         /* try each of the four edges */
-        for(e=1; e<5; ++e)
+        for(e=PANEL_EDGE_TOP; e<=PANEL_EDGE_RIGHT; ++e)
         {
             if(panel_edge_available(p,e,m)) {
                 p->edge = e;
@@ -1258,11 +1263,11 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
 found_edge:
     p->name = gen_panel_name(p->edge, p->monitor);
     p->settings = simple_panel_create_gsettings(new_panel);
-    panel_add_actions(new_panel);
     g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
     g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
-    panel_configure(new_panel, 0);
     panel_normalize_configuration(p);
+    panel_add_actions(new_panel);
+    panel_configure(new_panel, 0);
     panel_start_gui(new_panel);
     gtk_widget_show_all(GTK_WIDGET(new_panel));
     gtk_widget_queue_draw(GTK_WIDGET(new_panel));
@@ -1291,7 +1296,7 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
 
         /* delete the config file of this panel */
         fname = _user_config_file_name("panels", panel->priv->name);
-        panel_gsettings_remove_config_file(panel->priv->settings);
+        panel_gsettings_free(panel->priv->settings,TRUE);
         g_unlink( fname );
         g_free(fname);
         panel->priv->config_changed = 0;
@@ -1551,8 +1556,11 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     /* either first run or orientation was changed */
     if (!p->initialized || previous_orientation != p->orientation)
     {
-        if (p->initialized)
-            p->height = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? PANEL_HEIGHT_DEFAULT : PANEL_WIDTH_DEFAULT);
+        g_settings_set_int(p->settings->toplevel_settings,
+                               PANEL_PROP_HEIGHT,
+                               ((p->orientation == GTK_ORIENTATION_HORIZONTAL)
+                                ? PANEL_HEIGHT_DEFAULT
+                                : PANEL_WIDTH_DEFAULT));
         if (p->height_control != NULL)
             simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->height_control), p->height);
         if ((p->widthtype == PANEL_SIZE_PIXEL) && (p->width_control != NULL))

@@ -69,8 +69,7 @@ PluginGSettings *panel_gsettings_add_plugin_settings(PanelGSettings* settings,
                                          gint64 plugin_number);
 void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint64 plugin_number);
 PanelGSettings*  panel_gsettings_create(const gchar* filename);
-void panel_gsettings_free(PanelGSettings* settings);
-void panel_gsettings_remove_config_file (PanelGSettings* settings);
+void panel_gsettings_free(PanelGSettings* settings, gboolean remove);
 gboolean panel_gsettings_init_plugin_list(PanelGSettings* settings);
 gint64 panel_gsettings_find_free_num (PanelGSettings* settings);
 void plugin_gsettings_config_init(PanelGSettings* panel, PluginGSettings* settings, gboolean has_schema);
