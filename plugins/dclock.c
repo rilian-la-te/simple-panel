@@ -34,11 +34,22 @@
 #define DEFAULT_TIP_FORMAT    "%A %x"
 #define DEFAULT_CLOCK_FORMAT  "%R"
 
+#define DCLOCK_KEY_CLOCK_FORMAT     "clock-format"
+#define DCLOCK_KEY_TOOLTIP_FORMAT     "tooltip-format"
+#define DCLOCK_KEY_CENTER_TEXT     "center-text"
+#define DCLOCK_KEY_ACTION     "click-action"
+#define DCLOCK_KEY_ICON_ONLY     "icon-only"
+#define DCLOCK_KEY_BOLD_FONT     "bold-font"
+
 /* Private context for digital clock plugin. */
 typedef struct {
     GtkWidget * plugin;				/* Back pointer to plugin */
     SimplePanel * panel;
+#ifdef GSETTINGS_PLUGIN_TEST
+    GSettings* settings;
+#else
     config_setting_t *settings;
+#endif
     GtkWidget * clock_label;			/* Label containing clock value */
     GtkWidget * clock_icon;			/* Icon when icon_only */
     GtkWidget * calendar_window;		/* Calendar window, if it is being displayed */
@@ -85,14 +96,7 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
     GtkWidget * win = gtk_window_new(GTK_WINDOW_POPUP);
 //    gtk_style_context_remove_class(gtk_widget_get_style_context(win),GTK_STYLE_CLASS_BACKGROUND);
     gtk_window_set_default_size(GTK_WINDOW(win), 180, 180);
-//    gtk_window_set_decorated(GTK_WINDOW(win), FALSE);
-//    gtk_window_set_resizable(GTK_WINDOW(win), FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(win), 5);
-//    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(win), TRUE);
-//    gtk_window_set_skip_pager_hint(GTK_WINDOW(win), TRUE);
-//    gtk_window_set_type_hint(GTK_WINDOW(win), GDK_WINDOW_TYPE_HINT_UTILITY);
-//    gtk_window_stick(GTK_WINDOW(win));
-//    GtkWidget* popover = gtk_popover_new(GTK_WIDGET(dc->plugin));
     /* Create a vertical box as a child of the window. */
     GtkWidget * box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(win), GTK_WIDGET(box));
@@ -102,8 +106,6 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
     gtk_calendar_set_display_options(
         GTK_CALENDAR(calendar),
         GTK_CALENDAR_SHOW_WEEK_NUMBERS | GTK_CALENDAR_SHOW_DAY_NAMES | GTK_CALENDAR_SHOW_HEADING);
-//    gtk_container_add(GTK_CONTAINER(popover),GTK_WIDGET(calendar));
-//    gtk_popover_set_position(GTK_POPOVER(popover),panel_get_popup_direction(dc->panel));
     gtk_box_pack_start(GTK_BOX(box), calendar, TRUE, TRUE, 0);
 
     /* Connect signals. */
@@ -111,7 +113,6 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
 
     /* Return the widget. */
     return win;
-//    return popover;
 }
 
 /* Handler for "button-press-event" event from main widget. */
@@ -120,7 +121,7 @@ static gboolean dclock_button_press_event(GtkWidget * widget, GdkEventButton * e
     DClockPlugin * dc = lxpanel_plugin_get_data(widget);
 
     /* If an action is set, execute it. */
-    if (dc->action != NULL)
+    if (dc->action != NULL || (strlen(dc->action)>0))
         fm_launch_command_simple(NULL, NULL, 0, dc->action, NULL);
 
     /* If no action is set, toggle the presentation of the calendar. */
@@ -288,7 +289,11 @@ static gboolean dclock_update_display(DClockPlugin * dc)
 }
 
 /* Plugin constructor. */
+#ifdef GSETTINGS_PLUGIN_TEST
+static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
+#else
 static GtkWidget *dclock_constructor(SimplePanel *panel, config_setting_t *settings)
+#endif
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     DClockPlugin * dc = g_new0(DClockPlugin, 1);
@@ -296,6 +301,14 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, config_setting_t *setti
     const char *str;
     int tmp_int;
 
+#ifdef GSETTINGS_PLUGIN_TEST
+    dc->clock_format = g_settings_get_string(settings,DCLOCK_KEY_CLOCK_FORMAT);
+    dc->tooltip_format = g_settings_get_string(settings,DCLOCK_KEY_TOOLTIP_FORMAT);
+    dc->action = g_settings_get_string(settings,DCLOCK_KEY_ACTION);
+    dc->center_text = g_settings_get_boolean(settings,DCLOCK_KEY_CENTER_TEXT);
+    dc->icon_only = g_settings_get_boolean(settings,DCLOCK_KEY_ICON_ONLY);
+    dc->bold = g_settings_get_boolean(settings,DCLOCK_KEY_BOLD_FONT);
+#else
     /* Load parameters from the configuration file. */
     if (config_setting_lookup_string(settings, "ClockFmt", &str))
         dc->clock_format = g_strdup(str);
@@ -309,6 +322,7 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, config_setting_t *setti
         dc->icon_only = tmp_int != 0;
     if (config_setting_lookup_int(settings, "CenterText", &tmp_int))
         dc->center_text = tmp_int != 0;
+#endif
 
     /* Save construction pointers */
     dc->panel = panel;
@@ -416,12 +430,21 @@ static gboolean dclock_apply_configuration(gpointer user_data)
     }
 
     /* Save configuration */
+#ifdef GSETTINGS_PLUGIN_TEST
+    g_settings_set_string(dc->settings, DCLOCK_KEY_CLOCK_FORMAT, dc->clock_format);
+    g_settings_set_string(dc->settings, DCLOCK_KEY_TOOLTIP_FORMAT, dc->tooltip_format);
+    g_settings_set_string(dc->settings, DCLOCK_KEY_ACTION, dc->action);
+    g_settings_set_int(dc->settings, DCLOCK_KEY_BOLD_FONT, dc->bold);
+    g_settings_set_int(dc->settings, DCLOCK_KEY_ICON_ONLY, dc->icon_only);
+    g_settings_set_int(dc->settings, DCLOCK_KEY_CENTER_TEXT, dc->center_text);
+#else
     config_group_set_string(dc->settings, "ClockFmt", dc->clock_format);
     config_group_set_string(dc->settings, "TooltipFmt", dc->tooltip_format);
     config_group_set_string(dc->settings, "Action", dc->action);
     config_group_set_int(dc->settings, "BoldFont", dc->bold);
     config_group_set_int(dc->settings, "IconOnly", dc->icon_only);
     config_group_set_int(dc->settings, "CenterText", dc->center_text);
+#endif
     return FALSE;
 }
 
@@ -454,6 +477,7 @@ SimplePanelPluginInit lxpanel_static_plugin_dclock = {
 
     .new_instance = dclock_constructor,
     .config = dclock_configure,
+    .has_config = TRUE,
     .reconfigure = dclock_reconfigure,
     .button_press_event = dclock_button_press_event
 };

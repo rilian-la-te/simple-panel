@@ -292,7 +292,7 @@ fi
 if test x"$wnck_support" = "xyes"; then
 	AC_SUBST(WNCK_CFLAGS)
 	AC_SUBST(WNCK_LIBS)
-    X_PLUGINS_LIST="pager.la wincmd.la launchtaskbar.la tray.la"
+    X_PLUGINS_LIST="pager.la wincmd.la tray.la"
     AC_SUBST(X_PLUGINS_LIST)
 fi
 if test x"$wnck_support" = "xno"; then

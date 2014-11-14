@@ -21,7 +21,11 @@
 #include <glib/gi18n.h>
 
 /* Plugin constructor. */
+#ifdef GSETTINGS_PLUGIN_TEST
+static GtkWidget *separator_constructor(SimplePanel *panel, GSettings *settings)
+#else
 static GtkWidget *separator_constructor(SimplePanel *panel, config_setting_t *settings)
+#endif
 {
     GtkWidget *instance, *sep;
 

@@ -23,28 +23,39 @@
 #include "x-misc.h"
 #include "plugin.h"
 
+#define WINCMD_KEY_LEFT "left-button-command"
+#define WINCMD_KEY_MIDDLE "middle-button-command"
+#define WINCMD_KEY_TOGGLE "toggle-iconify-and-shade"
+#define WINCMD_KEY_IMAGE "image"
+
 /* Commands that can be issued. */
 typedef enum {
     WC_NONE,
     WC_ICONIFY,
     WC_SHADE
-} WindowCommand;
+} WcCommand;
 
 /* Private context for window command plugin. */
 typedef struct {
+#ifdef GSETTINGS_PLUGIN_TEST
+    GSettings* settings;
+#else
     config_setting_t *settings;			/* Settings array */
+#endif
     char * image;				/* Main icon */
-    WindowCommand button_1_command;		/* Command for mouse button 1 */
-    WindowCommand button_2_command;		/* Command for mouse button 2 */
+    WcCommand button_1_command;		/* Command for mouse button 1 */
+    WcCommand button_2_command;		/* Command for mouse button 2 */
     gboolean toggle_preference;			/* User preference: toggle iconify/shade and map */
     gboolean toggle_state;			/* State of toggle */
 } WinCmdPlugin;
 
+#ifndef GSETTINGS_PLUGIN_TEST
 static const char *wincmd_names[] = {
     "none",
     "iconify",
     "shade"
 };
+#endif
 
 static void wincmd_destructor(gpointer user_data);
 
@@ -58,7 +69,7 @@ static void wincmd_adjust_toggle_state(WinCmdPlugin * wc)
 }
 
 /* Execute a window command. */
-static void wincmd_execute(WinCmdPlugin * wc, WindowCommand command)
+static void wincmd_execute(WinCmdPlugin * wc, WcCommand command)
 {
     /* Get the list of all windows. */
     int client_count;
@@ -142,7 +153,11 @@ static gboolean wincmd_button_clicked(GtkWidget * widget, GdkEventButton * event
 }
 
 /* Plugin constructor. */
+#ifdef GSETTINGS_PLUGIN_TEST
+static GtkWidget *wincmd_constructor(SimplePanel *panel, GSettings *settings)
+#else
 static GtkWidget *wincmd_constructor(SimplePanel *panel, config_setting_t *settings)
+#endif
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     resolve_atoms();
@@ -151,6 +166,12 @@ static GtkWidget *wincmd_constructor(SimplePanel *panel, config_setting_t *setti
     const char *str;
     int tmp_int;
 
+#ifdef GSETTINGS_PLUGIN_TEST
+    wc->button_1_command = g_settings_get_enum(settings,WINCMD_KEY_LEFT);
+    wc->button_2_command = g_settings_get_enum(settings,WINCMD_KEY_MIDDLE);
+    wc->toggle_preference = g_settings_get_boolean(settings,WINCMD_KEY_TOGGLE);
+    wc->image = g_settings_get_string(settings, WINCMD_KEY_IMAGE);
+#else
     /* Initialize to defaults. */
     wc->button_1_command = WC_ICONIFY;
     wc->button_2_command = WC_SHADE;
@@ -179,6 +200,7 @@ static GtkWidget *wincmd_constructor(SimplePanel *panel, config_setting_t *setti
     /* Default the image if unspecified. */
     if (wc->image == NULL)
         wc->image = g_strdup("window-manager");
+#endif
 
     /* Save construction pointers */
     wc->settings = settings;
@@ -208,12 +230,19 @@ static gboolean wincmd_apply_configuration(gpointer user_data)
     WinCmdPlugin * wc = lxpanel_plugin_get_data(p);
 
     /* Just save settings */
+#ifdef GSETTINGS_PLUGIN_TEST
+    g_settings_set_enum(wc->settings,WINCMD_KEY_LEFT,wc->button_1_command);
+    g_settings_set_enum(wc->settings,WINCMD_KEY_MIDDLE,wc->button_2_command);
+    g_settings_set_boolean(wc->settings,WINCMD_KEY_IMAGE,wc->toggle_preference);
+    g_settings_set_string(wc->settings,WINCMD_KEY_TOGGLE,wc->image);
+#else
     config_group_set_string(wc->settings, "image", wc->image);
     config_group_set_string(wc->settings, "Button1",
                             wincmd_names[wc->button_1_command]);
     config_group_set_string(wc->settings, "Button2",
                             wincmd_names[wc->button_2_command]);
     config_group_set_int(wc->settings, "Toggle", wc->toggle_preference);
+#endif
     return FALSE;
 }
 
@@ -246,6 +275,7 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
 
     .new_instance = wincmd_constructor,
     .config = wincmd_configure,
+    .has_config = TRUE,
     .reconfigure = wincmd_panel_reconfigure,
     .button_press_event = wincmd_button_clicked
 };

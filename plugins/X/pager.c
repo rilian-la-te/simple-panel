@@ -59,7 +59,11 @@ static void on_size_allocate(GtkWidget *p, GdkRectangle *allocation, SimplePanel
     on_realize(p, panel);
 }
 
+#ifdef GSETTINGS_PLUGIN_TEST
+static GtkWidget *pager_constructor(SimplePanel *panel, GSettings *settings)
+#else
 static GtkWidget *pager_constructor(SimplePanel *panel, config_setting_t *settings)
+#endif
 {
     GtkWidget *p, *w;
 

@@ -365,12 +365,13 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
     gboolean has_config = FALSE;
 
     CHECK_MODULES();
-    init = _find_plugin(name);
+    init = _find_plugin(settings->config_path_appender);
     if (init == NULL)
         return NULL;
     /* prepare widget settings */
     if (init->has_config)
         has_config = init->has_config;
+    plugin_gsettings_config_init(p->priv->settings,settings,has_config);
     if(init->expand_available)
         g_settings_set_boolean(settings->default_settings,DEFAULT_PLUGIN_KEY_CAN_EXPAND,TRUE);
     else
@@ -396,21 +397,20 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
     {
         g_error("simple-panel: Plugin \"%s\" is invalid",init->name);
     }
-    gtk_widget_set_name(widget, name);
+    gtk_widget_set_name(widget, settings->config_path_appender);
     gtk_box_pack_start(GTK_BOX(p->priv->box), widget, expand, TRUE, padding);
     g_settings_set_uint(settings->default_settings,DEFAULT_PLUGIN_KEY_POSITION,pack_pos);
     gtk_box_reorder_child(GTK_BOX(p->priv->box),widget,pack_pos);
     gtk_container_set_border_width(GTK_CONTAINER(widget), border);
     g_signal_connect(widget, "size-allocate", G_CALLBACK(on_size_allocate), p);
     gtk_widget_show(widget);
-    g_object_set_qdata(G_OBJECT(widget), lxpanel_plugin_qconf, cfg);
+    g_object_set_qdata(G_OBJECT(widget), lxpanel_plugin_qconf, settings);
     g_object_set_qdata(G_OBJECT(widget), lxpanel_plugin_qinit, (gpointer)init);
     g_object_set_qdata_full(G_OBJECT(widget), lxpanel_plugin_qsize,
                             g_new0(GdkRectangle, 1), g_free);
     return widget;
 }
-#endif
-
+#else
 GtkWidget *lxpanel_add_plugin(SimplePanel *p, const char *name, config_setting_t *cfg, gint at)
 {
     const SimplePanelPluginInit *init;
@@ -471,7 +471,7 @@ GtkWidget *lxpanel_add_plugin(SimplePanel *p, const char *name, config_setting_t
                             g_new0(GdkRectangle, 1), g_free);
     return widget;
 }
-
+#endif
 /* transfer none - note that not all fields are valid there */
 GHashTable *lxpanel_get_all_types(void)
 {

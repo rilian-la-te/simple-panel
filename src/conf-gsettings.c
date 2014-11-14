@@ -33,7 +33,8 @@ PanelGSettings*  panel_gsettings_create_custom
 void plugin_gsettings_remove (PluginGSettings* settings)
 {
     g_free(settings->config_path_appender);
-    g_object_unref(settings->config_settings);
+    if (settings->config_settings)
+        g_object_unref(settings->config_settings);
     g_object_unref(settings->default_settings);
     g_free(settings);
 }
@@ -106,7 +107,8 @@ gboolean panel_gsettings_init_plugin_list(PanelGSettings* settings)
             continue;
         }
         gint64 plugin_number = g_ascii_strtoll(panel_config_groups[i],NULL,10);
-        panel_gsettings_add_plugin_settings(settings,plugin_name,plugin_number,has_schema);
+        PluginGSettings* s = panel_gsettings_add_plugin_settings(settings,plugin_name,plugin_number);
+        plugin_gsettings_config_init(settings,s,has_schema);
         g_free(plugin_name);
     }
     g_strfreev(panel_config_groups);
@@ -114,26 +116,37 @@ gboolean panel_gsettings_init_plugin_list(PanelGSettings* settings)
     return TRUE;
 }
 
-void panel_gsettings_add_plugin_settings(PanelGSettings* settings,
+PluginGSettings* panel_gsettings_add_plugin_settings(PanelGSettings* settings,
                                          const gchar* plugin_name,
-                                         gint64 plugin_number,
-                                         gboolean has_schema)
+                                         gint64 plugin_number)
 {
     PluginGSettings* new_settings = g_new0(PluginGSettings,1);
     new_settings->plugin_number = plugin_number;
-    new_settings->config_path_appender=g_strdup_printf("%li",plugin_number);
+    new_settings->config_path_appender=g_strdup_printf("%s",plugin_name);
     char* path = g_strdup_printf("%s%li/",settings->root_path,plugin_number);
-    char* id = g_strdup_printf("%s.%s",settings->root_path,plugin_name);
-    if (has_schema)
-        new_settings->config_settings = g_settings_new_with_backend_and_path(
-                    id,
-                    settings->config_file_backend,
-                    path);
     new_settings->default_settings = g_settings_new_with_backend_and_path(
                 DEFAULT_PLUGIN_SETTINGS_ID,
                 settings->config_file_backend,
                 path);
     settings->all_settings = g_slist_append(settings->all_settings,new_settings);
+    g_free(path);
+    return new_settings;
+}
+
+void plugin_gsettings_config_init(PanelGSettings* panel, PluginGSettings* settings, gboolean has_schema)
+{
+    g_settings_set_boolean(settings->default_settings,DEFAULT_PLUGIN_SCHEMA_KEY,has_schema);
+    if (has_schema)
+    {
+        char* id = g_strdup_printf("%s.%s",panel->root_path,settings->config_path_appender);
+        char* path = g_strdup_printf("%s%li/",panel->root_path,settings->plugin_number);
+        settings->config_settings = g_settings_new_with_backend_and_path(
+                    id,
+                    panel->config_file_backend,
+                    path);
+        g_free(path);
+        g_free(id);
+    }
 }
 
 void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint64 plugin_number)

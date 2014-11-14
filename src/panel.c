@@ -111,7 +111,9 @@ static void lxpanel_finalize(GObject *object)
 
     if( p->config_changed )
         simple_panel_config_save( self );
+#ifndef GSETTINGS_PLUGIN_TEST
     config_destroy(p->config);
+#endif
     if (p->settings)
         panel_gsettings_free(p->settings);
 
@@ -735,7 +737,9 @@ static void lxpanel_init(PanelWindow *self)
     self->priv = p;
     p->topgwin = self;
     p->icon_theme = gtk_icon_theme_get_default();
+#ifndef GSETTINGS_PLUGIN_TEST
     p->config = config_new();
+#endif
 	GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(self));
 	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
 	gtk_widget_set_visual(GTK_WIDGET(self), visual);
@@ -1586,6 +1590,7 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
 
 void simple_panel_config_save( SimplePanel* panel )
 {
+#ifndef GSETTINGS_PLUGIN_TEST
     Panel* p = panel->priv;
     gchar *fname;
 
@@ -1598,9 +1603,9 @@ void simple_panel_config_save( SimplePanel* panel )
         return;
     }
     g_free( fname );
-
+#endif
     /* save the global config file */
-    p->config_changed = 0;
+    panel->priv->config_changed = 0;
 }
 
 PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
@@ -1678,11 +1683,13 @@ static int panel_start( SimplePanel *p )
     /* parse global section */
     ENTER;
 
+#ifndef GSETTINGS_PLUGIN_TEST
     list = config_setting_get_member(config_root_setting(p->priv->config), "");
 //    if (!list || !panel_parse_global(p->priv, config_setting_get_elem(list, 0)))
 //        RET(0);
     if (!list)
         return 0;
+#endif
 
     panel_add_actions(p);
     panel_start_gui(p);
@@ -1696,9 +1703,9 @@ static int panel_start( SimplePanel *p )
             config_setting_remove_elem(list, i);
 #else
     panel_gsettings_init_plugin_list(p->priv->settings);
-    for (l = p->priv->settings->all_settings;l! = NULL; l = l->next)
+    for (l = p->priv->settings->all_settings; l != NULL; l = l->next)
     {
-        position = g_settings_get_uint((PluginGSettings*)l->data->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
+        position = g_settings_get_uint(((PluginGSettings*)l->data)->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
         simple_panel_add_plugin(p,l->data,position);
     }
 #endif
@@ -1727,8 +1734,12 @@ SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char*
         g_object_get(G_OBJECT(panel->priv->app),"profile",&cprofile,NULL);
         g_debug("starting panel from file %s",config_file);
         panel->priv->settings = panel_gsettings_create(settings_file);
+#ifdef GSETTINGS_PLUGIN_TEST
+        if (!panel_start(panel))
+#else
         if (!config_read_file(panel->priv->config, config_file) ||
             !panel_start(panel))
+#endif
         {
             g_warning( "lxpanel: can't start panel");
             gtk_widget_destroy(GTK_WIDGET(panel));
@@ -1738,7 +1749,7 @@ SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char*
     }
     return panel;
 }
-
+#ifndef GSETTINGS_PLUGIN_TEST
 SimplePanel* panel_new(GtkApplication* app,const char* config_file, const char* config_name)
 {
     SimplePanel* panel = NULL;
@@ -1761,7 +1772,7 @@ SimplePanel* panel_new(GtkApplication* app,const char* config_file, const char* 
     }
     return panel;
 }
-
+#endif
 GtkOrientation panel_get_orientation(SimplePanel *panel)
 {
     return panel->priv->orientation;

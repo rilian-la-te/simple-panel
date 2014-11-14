@@ -64,16 +64,16 @@ struct _PluginGSettings
 typedef struct _PanelGSettings PanelGSettings;
 typedef struct _PluginGSettings PluginGSettings;
 
-void panel_gsettings_add_plugin_settings(PanelGSettings* settings,
+PluginGSettings *panel_gsettings_add_plugin_settings(PanelGSettings* settings,
                                          const gchar* plugin_name,
-                                         gint64 plugin_number,
-                                         gboolean has_schema);
+                                         gint64 plugin_number);
 void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint64 plugin_number);
 PanelGSettings*  panel_gsettings_create(const gchar* filename);
 void panel_gsettings_free(PanelGSettings* settings);
 void panel_gsettings_remove_config_file (PanelGSettings* settings);
 gboolean panel_gsettings_init_plugin_list(PanelGSettings* settings);
 gint64 panel_gsettings_find_free_num (PanelGSettings* settings);
+void plugin_gsettings_config_init(PanelGSettings* panel, PluginGSettings* settings, gboolean has_schema);
 
 G_END_DECLS
 
