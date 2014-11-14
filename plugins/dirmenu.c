@@ -40,11 +40,7 @@ typedef struct _directory_name {
 /* Private context for directory menu plugin. */
 typedef struct {
     SimplePanel * panel; /* The panel and settings are required to apply config */
-#ifdef GSETTINGS_PLUGIN_TEST
     GSettings* settings;
-#else
-    config_setting_t * settings;
-#endif
     char * image;			/* Icon for top level widget */
     char * path;			/* Top level path for widget */
     char * name;			/* User's label for widget */
@@ -258,11 +254,7 @@ static gboolean dirmenu_button_press_event(GtkWidget * widget, GdkEventButton * 
 }
 
 /* Plugin constructor. */
-#ifdef GSETTINGS_PLUGIN_TEST
 static GtkWidget *dirmenu_constructor(SimplePanel *panel, GSettings *settings)
-#else
-static GtkWidget *dirmenu_constructor(SimplePanel *panel, config_setting_t *settings)
-#endif
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     DirMenuPlugin * dm = g_new0(DirMenuPlugin, 1);
@@ -270,20 +262,9 @@ static GtkWidget *dirmenu_constructor(SimplePanel *panel, config_setting_t *sett
     const char *str;
 
     /* Load parameters from the configuration file. */
-#ifdef GSETTINGS_PLUGIN_TEST
     dm->image = g_settings_get_string(settings,DIRMENU_KEY_ICON);
     dm->name = g_settings_get_string(settings,DIRMENU_KEY_NAME);
     dm->path = expand_tilda(g_settings_get_string(settings,DIRMENU_KEY_PATH));
-#else
-    if (config_setting_lookup_string(settings, "image", &str))
-        dm->image = g_strdup(str);
-    if (config_setting_lookup_string(settings, "path", &str))
-        dm->path = expand_tilda(str);
-    else
-        dm->path = g_strdup(fm_get_home_dir());
-    if (config_setting_lookup_string(settings, "name", &str))
-        dm->name = g_strdup(str);
-#endif
     /* Save construction pointers */
     dm->panel = panel;
     dm->settings = settings;
@@ -351,15 +332,9 @@ static gboolean dirmenu_apply_configuration(gpointer user_data)
     }
 
     /* Save configuration */
-#ifdef GSETTINGS_PLUGIN_TEST
     g_settings_set_string(dm->settings,DIRMENU_KEY_PATH,dm->path);
     g_settings_set_string(dm->settings,DIRMENU_KEY_NAME,dm->name);
     g_settings_set_string(dm->settings,DIRMENU_KEY_ICON,dm->image);
-#else
-    config_group_set_string(dm->settings, "path", dm->path);
-    config_group_set_string(dm->settings, "name", dm->name);
-    config_group_set_string(dm->settings, "image", dm->image);
-#endif
     lxpanel_button_set_icon(p, ((dm->image != NULL) ? dm->image : "file-manager"),
                             panel_get_icon_size(dm->panel));
 

@@ -37,25 +37,13 @@ typedef enum {
 
 /* Private context for window command plugin. */
 typedef struct {
-#ifdef GSETTINGS_PLUGIN_TEST
     GSettings* settings;
-#else
-    config_setting_t *settings;			/* Settings array */
-#endif
     char * image;				/* Main icon */
     WcCommand button_1_command;		/* Command for mouse button 1 */
     WcCommand button_2_command;		/* Command for mouse button 2 */
     gboolean toggle_preference;			/* User preference: toggle iconify/shade and map */
     gboolean toggle_state;			/* State of toggle */
 } WinCmdPlugin;
-
-#ifndef GSETTINGS_PLUGIN_TEST
-static const char *wincmd_names[] = {
-    "none",
-    "iconify",
-    "shade"
-};
-#endif
 
 static void wincmd_destructor(gpointer user_data);
 
@@ -153,54 +141,17 @@ static gboolean wincmd_button_clicked(GtkWidget * widget, GdkEventButton * event
 }
 
 /* Plugin constructor. */
-#ifdef GSETTINGS_PLUGIN_TEST
 static GtkWidget *wincmd_constructor(SimplePanel *panel, GSettings *settings)
-#else
-static GtkWidget *wincmd_constructor(SimplePanel *panel, config_setting_t *settings)
-#endif
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     resolve_atoms();
     WinCmdPlugin * wc = g_new0(WinCmdPlugin, 1);
     GtkWidget * p;
-    const char *str;
-    int tmp_int;
 
-#ifdef GSETTINGS_PLUGIN_TEST
     wc->button_1_command = g_settings_get_enum(settings,WINCMD_KEY_LEFT);
     wc->button_2_command = g_settings_get_enum(settings,WINCMD_KEY_MIDDLE);
     wc->toggle_preference = g_settings_get_boolean(settings,WINCMD_KEY_TOGGLE);
     wc->image = g_settings_get_string(settings, WINCMD_KEY_IMAGE);
-#else
-    /* Initialize to defaults. */
-    wc->button_1_command = WC_ICONIFY;
-    wc->button_2_command = WC_SHADE;
-
-    /* Load parameters from the configuration file. */
-    if (config_setting_lookup_string(settings, "Button1", &str))
-    {
-        if (g_ascii_strcasecmp(str, "shade") == 0)
-            wc->button_1_command = WC_SHADE;
-        else if (g_ascii_strcasecmp(str, "none") == 0)
-            wc->button_1_command = WC_NONE;
-        /* default is WC_ICONIFY */
-    }
-    if (config_setting_lookup_string(settings, "Button2", &str))
-    {
-        if (g_ascii_strcasecmp(str, "iconify") == 0)
-            wc->button_2_command = WC_ICONIFY;
-        else if (g_ascii_strcasecmp(str, "none") == 0)
-            wc->button_2_command = WC_NONE;
-    }
-    if (config_setting_lookup_string(settings, "image", &str))
-        wc->image = expand_tilda(str);
-    if (config_setting_lookup_int(settings, "Toggle", &tmp_int))
-        wc->toggle_preference = tmp_int != 0;
-
-    /* Default the image if unspecified. */
-    if (wc->image == NULL)
-        wc->image = g_strdup("window-manager");
-#endif
 
     /* Save construction pointers */
     wc->settings = settings;
@@ -230,19 +181,10 @@ static gboolean wincmd_apply_configuration(gpointer user_data)
     WinCmdPlugin * wc = lxpanel_plugin_get_data(p);
 
     /* Just save settings */
-#ifdef GSETTINGS_PLUGIN_TEST
     g_settings_set_enum(wc->settings,WINCMD_KEY_LEFT,wc->button_1_command);
     g_settings_set_enum(wc->settings,WINCMD_KEY_MIDDLE,wc->button_2_command);
     g_settings_set_boolean(wc->settings,WINCMD_KEY_IMAGE,wc->toggle_preference);
     g_settings_set_string(wc->settings,WINCMD_KEY_TOGGLE,wc->image);
-#else
-    config_group_set_string(wc->settings, "image", wc->image);
-    config_group_set_string(wc->settings, "Button1",
-                            wincmd_names[wc->button_1_command]);
-    config_group_set_string(wc->settings, "Button2",
-                            wincmd_names[wc->button_2_command]);
-    config_group_set_int(wc->settings, "Toggle", wc->toggle_preference);
-#endif
     return FALSE;
 }
 

@@ -297,7 +297,6 @@ on_plugin_expand_toggled(GtkCellRendererToggle* render, char* path, GtkTreeView*
 
         if (init->expand_available)
         {
-#ifdef GSETTINGS_PLUGIN_TEST
             PluginGSettings *s = g_object_get_qdata(G_OBJECT(pl), lxpanel_plugin_qconf);
             GtkBox *box = GTK_BOX(panel->priv->box);
             /* Only honor "stretch" if allowed by the plugin. */
@@ -309,22 +308,6 @@ on_plugin_expand_toggled(GtkCellRendererToggle* render, char* path, GtkTreeView*
             gtk_box_query_child_packing( box, pl, &old_expand, &fill, &padding, &pack_type );
             gtk_box_set_child_packing( box, pl, expand, fill, padding, pack_type );
             g_settings_set_boolean(s->default_settings,DEFAULT_PLUGIN_KEY_EXPAND,expand);
-#else
-            config_setting_t *s = g_object_get_qdata(G_OBJECT(pl), lxpanel_plugin_qconf);
-            GtkBox *box = GTK_BOX(panel->priv->box);
-            /* Only honor "stretch" if allowed by the plugin. */
-            expand = ! expand;
-            gtk_list_store_set( GTK_LIST_STORE(model), &it, COL_EXPAND, expand, -1 );
-
-            /* Query the old packing of the plugin widget.
-             * Apply the new packing with only "expand" modified. */
-            gtk_box_query_child_packing( box, pl, &old_expand, &fill, &padding, &pack_type );
-            gtk_box_set_child_packing( box, pl, expand, fill, padding, pack_type );
-            if (expand)
-                config_group_set_int(s, "expand", 1);
-            else
-                config_setting_remove(s, "expand");
-#endif
         }
     }
     gtk_tree_path_free( tp );
@@ -412,26 +395,12 @@ static void on_add_plugin_row_activated( GtkTreeView *view,
     {
         char* type = NULL;
         GtkWidget *pl;
-#ifndef GSETTINGS_PLUGIN_TEST
-        config_setting_t *cfg;
-
-        cfg = config_group_add_subgroup(config_root_setting(p->priv->config),
-                                        "Plugin");
-#endif
         gtk_tree_model_get( model, &it, 1, &type, -1 );
-#ifdef GSETTINGS_PLUGIN_TEST
         PluginGSettings* s = panel_gsettings_add_plugin_settings(p->priv->settings,
                                                                  type,
                                                                  panel_gsettings_find_free_num(p->priv->settings));
-        gint position = g_settings_get_int(s->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
-#else
-        config_group_set_string(cfg, "type", type);
-#endif
-#ifdef GSETTINGS_PLUGIN_TEST
+        guint position = -1;
         if ((pl = simple_panel_add_plugin(p, s, position)))
-#else
-        if ((pl = lxpanel_add_plugin(p, type, cfg, -1)))
-#endif
         {
             gboolean expand;
 
@@ -455,11 +424,7 @@ static void on_add_plugin_row_activated( GtkTreeView *view,
             panel_update_background(p);
         }
         else /* free unused setting */
-#ifdef GSETTINGS_PLUGIN_TEST
             panel_gsettings_remove_plugin_settings(p->priv->settings,s->plugin_number);
-#else
-            config_setting_destroy(cfg);
-#endif
         g_free( type );
     }
 }
@@ -551,8 +516,8 @@ static void on_remove_plugin( GtkButton* btn, GtkTreeView* view )
         gtk_list_store_remove( GTK_LIST_STORE(model), &it );
         gtk_tree_selection_select_path( tree_sel, tree_path );
         gtk_tree_path_free( tree_path );
-
-        config_setting_destroy(g_object_get_qdata(G_OBJECT(pl), lxpanel_plugin_qconf));
+        panel_gsettings_remove_plugin_settings(p->priv->settings,
+                                               ((PluginGSettings*)g_object_get_qdata(G_OBJECT(pl), lxpanel_plugin_qconf))->plugin_number);
         /* reset conf pointer because the widget still may be referenced by configurator */
         g_object_set_qdata(G_OBJECT(pl), lxpanel_plugin_qconf, NULL);
         gtk_widget_destroy(pl);
@@ -608,6 +573,18 @@ static int get_widget_index(SimplePanel* p, GtkWidget* pl)
     return data.idx;
 }
 
+static void set_widget_position(GtkWidget* widget, gpointer data)
+{
+    int idx = get_widget_index(LXPANEL(data),widget);
+    PluginGSettings* s = g_object_get_qdata(G_OBJECT(widget), lxpanel_plugin_qconf);
+    g_settings_set_uint(s->default_settings,DEFAULT_PLUGIN_KEY_POSITION,idx);
+}
+
+void update_widget_positions(SimplePanel* p)
+{
+    gtk_container_foreach(GTK_CONTAINER(p->priv->box),set_widget_position,p);
+}
+
 static void on_moveup_plugin(  GtkButton* btn, GtkTreeView* view )
 {
     GtkTreeIter it, prev;
@@ -625,11 +602,8 @@ static void on_moveup_plugin(  GtkButton* btn, GtkTreeView* view )
         if( gtk_tree_selection_iter_is_selected(tree_sel, &it) )
         {
             GtkWidget* pl;
-#ifdef GSETTINGS_PLUGIN_TEST
             PluginGSettings* s;
-#else
-            config_setting_t *s;
-#endif
+
             gtk_tree_model_get( model, &it, COL_DATA, &pl, -1 );
             gtk_list_store_move_before( GTK_LIST_STORE( model ),
                                         &it, &prev );
@@ -637,15 +611,12 @@ static void on_moveup_plugin(  GtkButton* btn, GtkTreeView* view )
             i = get_widget_index(panel, pl);
             s = g_object_get_qdata(G_OBJECT(pl), lxpanel_plugin_qconf);
             /* reorder in config, 0 is Global */
-            i = i < 0 ? i : 0;
-#ifdef GSETTINGS_PLUGIN_TEST
-            g_settings_set_int(s->default_settings,DEFAULT_PLUGIN_KEY_POSITION, i - 1);
-#else
-            config_setting_move_elem(s, config_setting_get_parent(s), i);
-#endif
+            i = i > 0 ? i : 0;
+
             /* reorder in panel */
-            gtk_box_reorder_child(GTK_BOX(panel->priv->box), pl, i);
+            gtk_box_reorder_child(GTK_BOX(panel->priv->box), pl, i - 1);
             simple_panel_config_save(panel);
+            update_widget_positions(panel);
             return;
         }
         prev = it;
@@ -658,11 +629,7 @@ static void on_movedown_plugin(  GtkButton* btn, GtkTreeView* view )
     GtkTreeModel* model;
     GtkTreeSelection* tree_sel = gtk_tree_view_get_selection( view );
     GtkWidget* pl;
-#ifdef GSETTINGS_PLUGIN_TEST
     PluginGSettings *s;
-#else
-    config_setting_t *s;
-#endif
     int i;
 
     SimplePanel* panel = (SimplePanel*) g_object_get_data( G_OBJECT(view), "panel" );
@@ -680,15 +647,10 @@ static void on_movedown_plugin(  GtkButton* btn, GtkTreeView* view )
 
     i = get_widget_index(panel, pl);
     s = g_object_get_qdata(G_OBJECT(pl), lxpanel_plugin_qconf);
-    /* reorder in config, 0 is Global */
-#ifdef GSETTINGS_PLUGIN_TEST
-    g_settings_set_int(s->default_settings,DEFAULT_PLUGIN_KEY_POSITION, i + 1);
-#else
-    config_setting_move_elem(s, config_setting_get_parent(s), i + 1);
-#endif
     /* reorder in panel */
-    gtk_box_reorder_child(GTK_BOX(panel->priv->box), pl, i);
+    gtk_box_reorder_child(GTK_BOX(panel->priv->box), pl, i + 1);
     simple_panel_config_save(panel);
+    update_widget_positions(panel);
 }
 
 static void

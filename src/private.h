@@ -20,9 +20,6 @@
 #define PRIVATE_H
 
 #include "plugin.h"
-#ifndef GSETTINGS_PLUGIN_TEST
-#include "conf.h"
-#endif
 #include "conf-gsettings.h"
 
 #include <gmodule.h>
@@ -122,9 +119,7 @@ struct _Panel {
     int icon_size;			/* Icon size */
 
     char* background_file;
-#ifndef GSETTINGS_PLUGIN_TEST
-    PanelConf * config;                 /* Panel configuration data */
-#endif
+
     PanelGSettings* settings; /* Panel configuration data */
 
     GtkWidget* plugin_pref_dialog;	/* Plugin preference dialog */
@@ -185,12 +180,10 @@ const gchar *num2str(pair *p, int num, const gchar *defval);
 void _prepare_modules(void);
 void _unload_modules(void);
 
-#ifndef GSETTINGS_PLUGIN_TEST
-GtkWidget *lxpanel_add_plugin(SimplePanel *p, const char *name, config_setting_t *cfg, gint at);
-#else
+
 GtkWidget *simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, guint pack_pos);
-#endif
 GHashTable *lxpanel_get_all_types(void); /* transfer none */
+void set_widget_positions(SimplePanel* p);
 
 extern GQuark lxpanel_plugin_qinit; /* access to LXPanelPluginInit data */
 #define PLUGIN_CLASS(_i) ((SimplePanelPluginInit*)g_object_get_qdata(G_OBJECT(_i),lxpanel_plugin_qinit))

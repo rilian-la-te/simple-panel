@@ -23,6 +23,7 @@
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>
 #include <gtk/gtk.h>
+#include <string.h>
 #include "private.h"
 
 #include "conf-gsettings.h"
@@ -39,9 +40,11 @@ void plugin_gsettings_remove (PluginGSettings* settings)
     g_free(settings);
 }
 
-inline static gint64 compare_int64(const gint64* a, const gint64* b)
+inline static guint compare_uint(gconstpointer a, gconstpointer b)
 {
-    return *a-*b;
+    guint inta = GPOINTER_TO_UINT(a);
+    guint intb = GPOINTER_TO_UINT(b);
+    return inta - intb;
 }
 
 gint64 panel_gsettings_find_free_num (PanelGSettings* settings)
@@ -51,24 +54,29 @@ gint64 panel_gsettings_find_free_num (PanelGSettings* settings)
     char** panel_config_groups;
     g_key_file_load_from_file(kf,settings->config_file_name,G_KEY_FILE_KEEP_COMMENTS,NULL);
     panel_config_groups = g_key_file_get_groups(kf,&len);
-    GSList*l, *tmp = NULL;
+    GSList *l = NULL;
+    GSList *tmp = NULL;
     for (i = 0; i < len; i++)
     {
-        if(g_strcmp0(DEFAULT_ROOT_NAME,panel_config_groups[i]))
+        if(!g_strcmp0(DEFAULT_ROOT_NAME,panel_config_groups[i]))
             continue;
-        gint64 plugin_number = g_ascii_strtoll(panel_config_groups[i],NULL,10);
-        l = g_slist_append(l,&plugin_number);
+        guint plugin_number = g_ascii_strtoll(panel_config_groups[i],NULL,10);
+        l = g_slist_insert_sorted(l,GINT_TO_POINTER(plugin_number),(GCompareFunc)compare_uint);
     }
-    if (l=NULL)
+    if (l == NULL)
         return 0;
-    l = g_slist_sort(l,(GCompareFunc)compare_int64);
     for (i = 0,tmp=l; i < len-1; i++)
     {
-        if ((gint64)&tmp->data>i)
+        if (GPOINTER_TO_INT(tmp->data) > i)
+        {
+            g_slist_free(l);
+            g_strfreev(panel_config_groups);
+            g_key_file_free(kf);
             return i;
+        }
         tmp=tmp->next;
     }
-    g_slist_free_full(l,NULL);
+    g_slist_free(l);
     g_strfreev(panel_config_groups);
     g_key_file_free(kf);
     return len;
@@ -81,20 +89,21 @@ gboolean panel_gsettings_init_plugin_list(PanelGSettings* settings)
     GKeyFile* kf = g_key_file_new();
     char** panel_config_groups;
     gsize len,i;
-    GError* error;
+    GError* error = NULL;
     g_key_file_load_from_file(kf,settings->config_file_name,G_KEY_FILE_KEEP_COMMENTS,NULL);
     panel_config_groups = g_key_file_get_groups(kf,&len);
     for (i = 0; i < len; i++)
     {
-        if(g_strcmp0(DEFAULT_ROOT_NAME,panel_config_groups[i]))
+        if(!g_strcmp0(DEFAULT_ROOT_NAME,panel_config_groups[i]))
             continue;
         gchar* plugin_name = g_key_file_get_string(kf,panel_config_groups[i],DEFAULT_PLUGIN_NAME_KEY,&error);
+        plugin_name = g_strstrip(g_strdelimit(plugin_name,"'",' '));
         if (error)
         {
             g_key_file_remove_group(kf,panel_config_groups[i],NULL);
             if (plugin_name)
                 g_free(plugin_name);
-            g_error_free(error);
+            g_clear_error(&error);
             continue;
         }
         gboolean has_schema = g_key_file_get_boolean(kf,panel_config_groups[i],DEFAULT_PLUGIN_SCHEMA_KEY,&error);
@@ -103,7 +112,7 @@ gboolean panel_gsettings_init_plugin_list(PanelGSettings* settings)
             g_key_file_remove_group(kf,panel_config_groups[i],NULL);
             if (plugin_name)
                 g_free(plugin_name);
-            g_error_free(error);
+            g_clear_error(&error);
             continue;
         }
         gint64 plugin_number = g_ascii_strtoll(panel_config_groups[i],NULL,10);
@@ -117,7 +126,7 @@ gboolean panel_gsettings_init_plugin_list(PanelGSettings* settings)
 }
 
 PluginGSettings* panel_gsettings_add_plugin_settings(PanelGSettings* settings,
-                                         const gchar* plugin_name,
+                                         const char* plugin_name,
                                          gint64 plugin_number)
 {
     PluginGSettings* new_settings = g_new0(PluginGSettings,1);
@@ -138,7 +147,7 @@ void plugin_gsettings_config_init(PanelGSettings* panel, PluginGSettings* settin
     g_settings_set_boolean(settings->default_settings,DEFAULT_PLUGIN_SCHEMA_KEY,has_schema);
     if (has_schema)
     {
-        char* id = g_strdup_printf("%s.%s",panel->root_path,settings->config_path_appender);
+        char* id = g_strdup_printf("%s.%s",panel->root_name,settings->config_path_appender);
         char* path = g_strdup_printf("%s%li/",panel->root_path,settings->plugin_number);
         settings->config_settings = g_settings_new_with_backend_and_path(
                     id,
@@ -153,30 +162,28 @@ void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint64 plu
 {
     GSList* l;
     PluginGSettings* removed_settings;
-    gchar* group_name = g_strdup_printf("%li",plugin_number);
+    char* group_name = g_strdup_printf("%li",plugin_number);
     for(l = settings->all_settings; l!=NULL; l=l->next)
     {
         removed_settings = l->data;
-        if (plugin_number = removed_settings->plugin_number)
+        if (plugin_number == removed_settings->plugin_number)
         {
             g_free(removed_settings->config_path_appender);
-            g_object_unref(removed_settings->config_settings);
+            if (removed_settings->config_settings)
+                g_object_unref(removed_settings->config_settings);
             g_object_unref(removed_settings->default_settings);
-            break;
+            GKeyFile* keyfile = g_key_file_new();
+            g_key_file_load_from_file(keyfile,settings->config_file_name,G_KEY_FILE_KEEP_COMMENTS,NULL);
+            if (g_key_file_has_group(keyfile,group_name))
+            {
+                g_key_file_remove_group(keyfile,group_name,NULL);
+                g_key_file_save_to_file(keyfile,settings->config_file_name,NULL);
+            }
+            g_key_file_free(keyfile);
+            g_free(group_name);
+            return;
         }
         removed_settings = NULL;
-    }
-    if (removed_settings)
-    {
-        GKeyFile* keyfile = g_key_file_new();
-        g_key_file_load_from_file(keyfile,settings->config_file_name,G_KEY_FILE_KEEP_COMMENTS,NULL);
-        if (g_key_file_has_group(keyfile,group_name))
-        {
-            g_key_file_remove_group(keyfile,group_name,NULL);
-            g_key_file_save_to_file(keyfile,settings->config_file_name,NULL);
-        }
-        g_key_file_free(keyfile);
-        g_free(group_name);
     }
 }
 
@@ -230,4 +237,3 @@ void panel_gsettings_remove_config_file (PanelGSettings* settings)
     g_object_unref(f);
     g_free(settings->config_file_name);
 }
-

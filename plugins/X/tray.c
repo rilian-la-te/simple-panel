@@ -635,11 +635,7 @@ tray_draw_box (GtkWidget *box,
 #endif
 
 /* Plugin constructor. */
-#ifdef GSETTINGS_PLUGIN_TEST
 static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
-#else
-static GtkWidget *tray_constructor(SimplePanel *panel, config_setting_t *settings)
-#endif
 {
     GtkWidget *p;
     resolve_atoms();

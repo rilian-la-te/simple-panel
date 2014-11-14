@@ -1,5 +1,5 @@
 <schemalist gettext-domain="@GETTEXT_PACKAGE@">
-  <schema id="org.simple.panel.toplevel.plugin" path="/org/simple/panel/toplevel/plugin/">
+  <schema id="org.simple.panel.toplevel.plugin">
     <key name="plugin-type" type="s">
       <default>''</default>
       <_summary>Type of panel plugin.</_summary>
@@ -20,7 +20,7 @@
       <_summary>Availability of plugin expanded state</_summary>
       <_description>If true, plugin can take all available space.</_description>
     </key>
-    <key name="position" type="i">
+    <key name="position" type="u">
       <default>0</default>
       <_summary>Plugin position on the panel</_summary>
       <_description>Plugin position on the panel from start.</_description>

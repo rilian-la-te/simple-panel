@@ -67,7 +67,7 @@ gchar* css_apply_from_file (GtkWidget* widget, gchar* file)
     if (error)
     {
         gchar* returnie=g_strdup(error->message);
-        g_error_free(error);
+        g_clear_error(&error);
         return returnie;
     }
     gtk_style_context_add_provider (context,
@@ -86,7 +86,7 @@ gchar* css_apply_from_file_to_app (gchar* file)
     if (error)
     {
         gchar* returnie=g_strdup(error->message);
-        g_error_free(error);
+        g_clear_error(&error);
         return returnie;
     }
     gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),

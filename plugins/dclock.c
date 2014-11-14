@@ -45,11 +45,7 @@
 typedef struct {
     GtkWidget * plugin;				/* Back pointer to plugin */
     SimplePanel * panel;
-#ifdef GSETTINGS_PLUGIN_TEST
     GSettings* settings;
-#else
-    config_setting_t *settings;
-#endif
     GtkWidget * clock_label;			/* Label containing clock value */
     GtkWidget * clock_icon;			/* Icon when icon_only */
     GtkWidget * calendar_window;		/* Calendar window, if it is being displayed */
@@ -289,40 +285,18 @@ static gboolean dclock_update_display(DClockPlugin * dc)
 }
 
 /* Plugin constructor. */
-#ifdef GSETTINGS_PLUGIN_TEST
 static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
-#else
-static GtkWidget *dclock_constructor(SimplePanel *panel, config_setting_t *settings)
-#endif
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     DClockPlugin * dc = g_new0(DClockPlugin, 1);
     GtkWidget * p;
-    const char *str;
-    int tmp_int;
 
-#ifdef GSETTINGS_PLUGIN_TEST
     dc->clock_format = g_settings_get_string(settings,DCLOCK_KEY_CLOCK_FORMAT);
     dc->tooltip_format = g_settings_get_string(settings,DCLOCK_KEY_TOOLTIP_FORMAT);
     dc->action = g_settings_get_string(settings,DCLOCK_KEY_ACTION);
     dc->center_text = g_settings_get_boolean(settings,DCLOCK_KEY_CENTER_TEXT);
     dc->icon_only = g_settings_get_boolean(settings,DCLOCK_KEY_ICON_ONLY);
     dc->bold = g_settings_get_boolean(settings,DCLOCK_KEY_BOLD_FONT);
-#else
-    /* Load parameters from the configuration file. */
-    if (config_setting_lookup_string(settings, "ClockFmt", &str))
-        dc->clock_format = g_strdup(str);
-    if (config_setting_lookup_string(settings, "TooltipFmt", &str))
-        dc->tooltip_format = g_strdup(str);
-    if (config_setting_lookup_string(settings, "Action", &str))
-        dc->action = g_strdup(str);
-    if (config_setting_lookup_int(settings, "BoldFont", &tmp_int))
-        dc->bold = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "IconOnly", &tmp_int))
-        dc->icon_only = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "CenterText", &tmp_int))
-        dc->center_text = tmp_int != 0;
-#endif
 
     /* Save construction pointers */
     dc->panel = panel;
@@ -430,21 +404,12 @@ static gboolean dclock_apply_configuration(gpointer user_data)
     }
 
     /* Save configuration */
-#ifdef GSETTINGS_PLUGIN_TEST
     g_settings_set_string(dc->settings, DCLOCK_KEY_CLOCK_FORMAT, dc->clock_format);
     g_settings_set_string(dc->settings, DCLOCK_KEY_TOOLTIP_FORMAT, dc->tooltip_format);
     g_settings_set_string(dc->settings, DCLOCK_KEY_ACTION, dc->action);
-    g_settings_set_int(dc->settings, DCLOCK_KEY_BOLD_FONT, dc->bold);
-    g_settings_set_int(dc->settings, DCLOCK_KEY_ICON_ONLY, dc->icon_only);
-    g_settings_set_int(dc->settings, DCLOCK_KEY_CENTER_TEXT, dc->center_text);
-#else
-    config_group_set_string(dc->settings, "ClockFmt", dc->clock_format);
-    config_group_set_string(dc->settings, "TooltipFmt", dc->tooltip_format);
-    config_group_set_string(dc->settings, "Action", dc->action);
-    config_group_set_int(dc->settings, "BoldFont", dc->bold);
-    config_group_set_int(dc->settings, "IconOnly", dc->icon_only);
-    config_group_set_int(dc->settings, "CenterText", dc->center_text);
-#endif
+    g_settings_set_boolean(dc->settings, DCLOCK_KEY_BOLD_FONT, dc->bold);
+    g_settings_set_boolean(dc->settings, DCLOCK_KEY_ICON_ONLY, dc->icon_only);
+    g_settings_set_boolean(dc->settings, DCLOCK_KEY_CENTER_TEXT, dc->center_text);
     return FALSE;
 }
 

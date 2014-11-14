@@ -29,7 +29,6 @@ SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	menu-policy.h \
 	private.h \
 	app.h \
-	conf.h \
 	app-actions.h \
 	app-misc.h
 
@@ -55,7 +54,6 @@ libsimplepanel_la_SOURCES = \
 	icon-grid.c \
 	panel.c \
 	plugin.c \
-	conf.c \
 	conf-gsettings.c \
 	panel-enum-types.c
 

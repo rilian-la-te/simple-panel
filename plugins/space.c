@@ -27,37 +27,22 @@
 /* Private context for space plugin. */
 typedef struct {
     SimplePanel *panel; /* The panel and settings are required to apply config */
-#ifdef GSETTINGS_PLUGIN_TEST
     GSettings* settings;
-#else
-    config_setting_t *settings;
-#endif
     int size;				/* Size of spacer */
 } SpacePlugin;
 
 static gboolean space_apply_configuration(gpointer user_data);
 
 /* Plugin constructor. */
-#ifdef GSETTINGS_PLUGIN_TEST
 static GtkWidget *space_constructor(SimplePanel *panel, GSettings *settings)
-#else
-static GtkWidget *space_constructor(SimplePanel *panel, config_setting_t *settings)
-#endif
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     SpacePlugin * sp = g_new0(SpacePlugin, 1);
     GtkWidget * p;
 
     /* Load parameters from the configuration file. */
-#ifdef GSETTINGS_PLUGIN_TEST
     sp->size = g_settings_get_int(settings,SPACE_KEY_SIZE);
-#else
-    config_setting_lookup_int(settings, "Size", &sp->size);
 
-    /* Default the size parameter. */
-    if (sp->size == 0)
-        sp->size = 2;
-#endif
     /* Save construction pointers */
     sp->panel = panel;
     sp->settings = settings;
@@ -86,11 +71,7 @@ static gboolean space_apply_configuration(gpointer user_data)
     else
         gtk_widget_set_size_request(p, 2, sp->size);
     /* Save config values */
-#ifdef GSETTINGS_PLUGIN_TEST
     g_settings_set_int(sp->settings, SPACE_KEY_SIZE, sp->size);
-#else
-    config_group_set_int(sp->settings, "Size", sp->size);
-#endif
     return FALSE;
 }
 

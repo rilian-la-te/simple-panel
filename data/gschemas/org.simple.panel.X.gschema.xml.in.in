@@ -6,7 +6,7 @@
     <key name="middle-button-command" enum="org.simple.panel.WcCommand">
       <default>'shade'</default>
     </key>
-    <key name="toggle-iconify-shade" type="b">
+    <key name="toggle-iconify-and-shade" type="b">
       <default>false</default>
     </key>
     <key name="image" type="s">

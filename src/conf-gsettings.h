@@ -44,18 +44,18 @@ G_BEGIN_DECLS
 struct _PanelGSettings
 {
     GSettingsBackend* config_file_backend;
-    gchar* config_file_name;
+    char* config_file_name;
     GSettings* toplevel_settings;
     GSList* all_settings;
-    gchar* root_path;
-    gchar* root_name;
+    char* root_path;
+    char* root_name;
 };
 
 struct _PluginGSettings
 {
     GSettings* config_settings;
     GSettings* default_settings;
-    gchar* config_path_appender;
+    char* config_path_appender;
     gint64 plugin_number;
 };
 
@@ -65,7 +65,7 @@ typedef struct _PanelGSettings PanelGSettings;
 typedef struct _PluginGSettings PluginGSettings;
 
 PluginGSettings *panel_gsettings_add_plugin_settings(PanelGSettings* settings,
-                                         const gchar* plugin_name,
+                                         const char* plugin_name,
                                          gint64 plugin_number);
 void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint64 plugin_number);
 PanelGSettings*  panel_gsettings_create(const gchar* filename);
