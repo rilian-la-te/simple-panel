@@ -1,0 +1,16 @@
+<schemalist gettext-domain="@GETTEXT_PACKAGE@">
+  <schema id="org.simple.panel.toplevel.wincmd">
+    <key name="left-button-command" enum="org.simple.panel.WcCommand">
+      <default>'iconify'</default>
+    </key>
+    <key name="middle-button-command" enum="org.simple.panel.WcCommand">
+      <default>'shade'</default>
+    </key>
+    <key name="toggle-iconify-shade" type="b">
+      <default>false</default>
+    </key>
+    <key name="image" type="s">
+      <default>'window-manager'</default>
+    </key>
+  </schema>
+</schemalist>
