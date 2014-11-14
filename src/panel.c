@@ -589,6 +589,17 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     PANEL_ALLIGN_TYPE,
                     PANEL_ALLIGN_CENTER,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+                gobject_class,
+                PROP_MARGIN,
+                g_param_spec_int(
+                    PANEL_PROP_MARGIN,
+                    "Margin",
+                    "If alignment is not centered, margin is used to calculate panel start point",
+                    0,
+                    G_MAXINT,
+                    0,
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property (
                 gobject_class,
                 PROP_MONITOR,
