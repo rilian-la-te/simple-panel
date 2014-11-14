@@ -1259,11 +1259,13 @@ found_edge:
     p->name = gen_panel_name(p->edge, p->monitor);
     p->settings = simple_panel_create_gsettings(new_panel);
     panel_add_actions(new_panel);
+    g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
+    g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
     panel_configure(new_panel, 0);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
     gtk_widget_show_all(GTK_WIDGET(new_panel));
-
+    gtk_widget_queue_draw(GTK_WIDGET(new_panel));
     simple_panel_config_save(new_panel);
     gtk_application_add_window(GTK_APPLICATION(p->app),GTK_WINDOW(new_panel));
     all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
@@ -1289,6 +1291,7 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
 
         /* delete the config file of this panel */
         fname = _user_config_file_name("panels", panel->priv->name);
+        panel_gsettings_remove_config_file(panel->priv->settings);
         g_unlink( fname );
         g_free(fname);
         panel->priv->config_changed = 0;
@@ -1593,11 +1596,11 @@ PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
 {
     Panel* p = panel->priv;
     gchar *fname;
-    gchar *config_name;
-    config_name = g_strdup_printf("%s.%s",p->name,GSETTINGS_PREFIX);
 
-    fname = _user_config_file_name("panels", config_name);
-    return panel_gsettings_create(fname);
+    fname = _user_config_file_name("panels", p->name);
+    PanelGSettings* s =  panel_gsettings_create(fname);
+    g_free(fname);
+    return s;
 }
 
 static void panel_add_actions( SimplePanel* p)
@@ -1651,6 +1654,7 @@ static int panel_start( SimplePanel *p )
     /* update backgrond of panel and all plugins */
     panel_update_background(p);
     _panel_update_fonts(p);
+    gtk_widget_queue_draw(GTK_WIDGET(p));
     return 1;
 }
 
