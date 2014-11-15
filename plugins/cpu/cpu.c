@@ -27,6 +27,7 @@
 #include <sys/sysinfo.h>
 #include <stdlib.h>
 #include <glib/gi18n.h>
+#include <gtk/gtk.h>
 
 #include "plugin.h"
 
@@ -207,29 +208,27 @@ static gboolean configure_event(GtkWidget * widget, GdkEventConfigure * event, C
     return TRUE;
 }
 
-///* Handler for expose_event on drawing area. */
-//static gboolean expose_event(GtkWidget * widget, GdkEventExpose * event, CPUPlugin * c)
-//{
-//    /* Draw the requested part of the pixmap onto the drawing area.
-//     * Translate it in both x and y by the border size. */
-//    if (c->pixmap != NULL)
-//    {
-//        cairo_t * cr = gdk_cairo_create(gtk_widget_get_window(widget));
-//        GtkStyle * style = gtk_widget_get_style(c->da);
-//        gdk_cairo_region(cr, event->region);
-//        cairo_clip(cr);
-////        gdk_cairo_set_source_color(cr, &style->black);
-//        cairo_set_source_surface(cr, c->pixmap,
-//              BORDER_SIZE, BORDER_SIZE);
-//        cairo_paint(cr);
-//        /* check_cairo_status(cr); */
-//        cairo_destroy(cr);
-//    }
-//    return FALSE;
-//}
+/* Handler for expose_event on drawing area. */
+static gboolean draw_event(GtkWidget * widget, GdkEventExpose * event, CPUPlugin * c)
+{
+    /* Draw the requested part of the pixmap onto the drawing area.
+     * Translate it in both x and y by the border size. */
+    if (c->pixmap != NULL)
+    {
+        cairo_t * cr = gdk_cairo_create(gtk_widget_get_window(widget));
+        gdk_cairo_region(cr, event->region);
+        cairo_clip(cr);
+        cairo_set_source_surface(cr, c->pixmap,
+              BORDER_SIZE, BORDER_SIZE);
+        cairo_paint(cr);
+        /* check_cairo_status(cr); */
+        cairo_destroy(cr);
+    }
+    return FALSE;
+}
 
 /* Plugin constructor. */
-static GtkWidget *cpu_constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget *cpu_constructor(SimplePanel *panel, GSettings *settings)
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     CPUPlugin * c = g_new0(CPUPlugin, 1);
@@ -250,10 +249,11 @@ static GtkWidget *cpu_constructor(SimplePanel *panel, config_setting_t *settings
     /* Clone a graphics context and set "green" as its foreground color.
      * We will use this to draw the graph. */
 //    gdk_color_parse("green",  &c->foreground_color);
-
+      const gchar* css = ".-cpu-plugin {\n color: green; \n}\n";
+      css_apply_with_class(GTK_WIDGET(c),css,"-cpu-plugin",FALSE);
     /* Connect signals. */
     g_signal_connect(G_OBJECT(c->da), "configure-event", G_CALLBACK(configure_event), (gpointer) c);
-//    g_signal_connect(G_OBJECT(c->da), "expose-event", G_CALLBACK(expose_event), (gpointer) c);
+    g_signal_connect(G_OBJECT(c->da), "draw", G_CALLBACK(draw_event), (gpointer) c);
 
     /* Show the widget.  Connect a timer to refresh the statistics. */
     gtk_widget_show(c->da);
@@ -282,4 +282,5 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("CPU Usage Monitor"),
     .description = N_("Display CPU usage"),
     .new_instance = cpu_constructor,
+    .has_config = FALSE
 };

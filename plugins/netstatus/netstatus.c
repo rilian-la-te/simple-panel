@@ -29,8 +29,11 @@
 #include "netstatus-icon.h"
 #include "netstatus-dialog.h"
 
+#define NETSTATUS_KEY_INTERFACE "interface"
+#define NETSTATUS_KEY_CONFTOOL "config-tool"
+
 typedef struct {
-    config_setting_t *settings;
+    GSettings *settings;
     char *iface;
     char *config_tool;
     GtkWidget *dlg;
@@ -102,24 +105,19 @@ static gboolean on_button_press( GtkWidget* widget, GdkEventButton* evt, SimpleP
 }
 
 static GtkWidget *
-netstatus_constructor(SimplePanel *panel, config_setting_t *settings)
+netstatus_constructor(SimplePanel *panel, GSettings *settings)
 {
     netstatus *ns;
     NetstatusIface* iface;
     GtkWidget *p;
-    const char *tmp;
 
     ENTER;
     ns = g_new0(netstatus, 1);
     ns->settings = settings;
     g_return_val_if_fail(ns != NULL, NULL);
 
-    if (!config_setting_lookup_string(settings, "iface", &tmp))
-        tmp = "eth0";
-    ns->iface = g_strdup(tmp);
-    if (!config_setting_lookup_string(settings, "configtool", &tmp))
-        tmp = "network-admin --configure %i";
-    ns->config_tool = g_strdup(tmp);
+    ns->iface = g_settings_get_string(settings,NETSTATUS_KEY_INTERFACE);
+    ns->config_tool = g_settings_get_string(settings,NETSTATUS_KEY_CONFTOOL);
 
     iface = netstatus_iface_new(ns->iface);
     p = netstatus_icon_new( iface );
@@ -140,8 +138,8 @@ static gboolean apply_config(gpointer user_data)
     iface = netstatus_iface_new(ns->iface);
     netstatus_icon_set_iface((NetstatusIcon *)p, iface);
     g_object_unref(iface);
-    config_group_set_string(ns->settings, "iface", ns->iface);
-    config_group_set_string(ns->settings, "configtool", ns->config_tool);
+    g_settings_set_string(ns->settings, NETSTATUS_KEY_INTERFACE, ns->iface);
+    g_settings_set_string(ns->settings, NETSTATUS_KEY_CONFTOOL, ns->config_tool);
     return FALSE;
 }
 
@@ -166,5 +164,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
 
     .new_instance = netstatus_constructor,
     .config = netstatus_config,
-    .button_press_event = on_button_press
+    .button_press_event = on_button_press,
+    .has_config = TRUE
 };

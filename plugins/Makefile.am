@@ -22,10 +22,10 @@ libbuiltin_plugins_a_CFLAGS = \
 	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
 
-#if ENABLE_MENU_CACHE
-#MENU_SOURCES = \
-#        menu.c
-#endif
+if ENABLE_MENU_CACHE
+MENU_SOURCES = \
+        menu.c
+endif
 
 PLUGINS_SOURCES = \
 	dclock.c \

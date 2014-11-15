@@ -36,7 +36,7 @@ typedef struct
 {
   gint iMyId_;
   GtkWidget *pWeather_;
-  config_setting_t *pConfig_;
+  GSettings *pConfig_;
 } WeatherPluginPrivate;
 
 
@@ -73,7 +73,7 @@ weather_destructor(gpointer pData)
  * @return Pointer to a new weather widget.
  */
 static GtkWidget *
-weather_constructor(SimplePanel *pPanel, config_setting_t *pConfig)
+weather_constructor(SimplePanel *pPanel, GSettings *pConfig)
 {
   WeatherPluginPrivate * pPriv = g_new0(WeatherPluginPrivate, 1);
 
@@ -110,90 +110,15 @@ weather_constructor(SimplePanel *pPanel, config_setting_t *pConfig)
 
   /* use config settings */
   LocationInfo * pLocation = g_new0(LocationInfo, 1);
-  const char *pczDummy = NULL;
-  int iDummyVal = 0;
 
-  if (config_setting_lookup_string(pConfig, "alias", &pczDummy))
-    {
-      pLocation->pcAlias_ = g_strndup(pczDummy, (pczDummy) ? strlen(pczDummy) : 0);
-    }
-  else if (config_setting_lookup_int(pConfig, "alias", &iDummyVal))
-    {
-      pLocation->pcAlias_ = g_strdup_printf("%d", iDummyVal);
-    }
-  else
-    {
-      LXW_LOG(LXW_ERROR, "Weather: could not lookup alias in config.");
-    }
-
-  if (config_setting_lookup_string(pConfig, "city", &pczDummy))
-    {
-      pLocation->pcCity_ = g_strndup(pczDummy, (pczDummy) ? strlen(pczDummy) : 0);
-    }
-  else
-    {
-      LXW_LOG(LXW_ERROR, "Weather: could not lookup city in config.");
-    }
-
-  if (config_setting_lookup_string(pConfig, "state", &pczDummy))
-    {
-      pLocation->pcState_ = g_strndup(pczDummy, (pczDummy) ? strlen(pczDummy) : 0);
-    }
-  else
-    {
-      LXW_LOG(LXW_ERROR, "Weather: could not lookup state in config.");
-    }
-
-  if (config_setting_lookup_string(pConfig, "country", &pczDummy))
-    {
-      pLocation->pcCountry_ = g_strndup(pczDummy, (pczDummy) ? strlen(pczDummy) : 0);
-    }
-  else
-    {
-      LXW_LOG(LXW_ERROR, "Weather: could not lookup country in config.");
-    }
-
-  if (config_setting_lookup_string(pConfig, "woeid", &pczDummy))
-    {
-      pLocation->pcWOEID_ = g_strndup(pczDummy, (pczDummy) ? strlen(pczDummy) : 0);
-    }
-  else if (config_setting_lookup_int(pConfig, "woeid", &iDummyVal))
-    {
-      pLocation->pcWOEID_ = g_strdup_printf("%d", iDummyVal);
-    }
-  else
-    {
-      LXW_LOG(LXW_ERROR, "Weather: could not lookup woeid in config.");
-    }
-
-  if (config_setting_lookup_string(pConfig, "units", &pczDummy))
-    {
-      pLocation->cUnits_ = pczDummy[0];
-    }
-  else
-    {
-      LXW_LOG(LXW_ERROR, "Weather: could not lookup units in config.");
-    }
-
-  if (config_setting_lookup_int(pConfig, "interval", &iDummyVal))
-    {
-      pLocation->uiInterval_ = (guint)iDummyVal;
-    }
-  else
-    {
-      LXW_LOG(LXW_ERROR, "Weather: could not lookup interval in config.");
-    }
-
-  iDummyVal = 0;
-  if (config_setting_lookup_int(pConfig, "enabled", &iDummyVal))
-    {
-      pLocation->bEnabled_ = (gint)iDummyVal;
-    }
-  else
-    {
-      LXW_LOG(LXW_ERROR, "Weather: could not lookup enabled flag in config.");
-    }
-
+  pLocation->pcAlias_ = g_settings_get_string(pConfig, "alias");
+  pLocation->pcCity_ = g_settings_get_string(pConfig, "city");
+  pLocation->pcState_ = g_settings_get_string(pConfig, "state");
+  pLocation->pcCountry_ = g_settings_get_string(pConfig, "country");
+  pLocation->pcWOEID_ = g_settings_get_string(pConfig, "woeid");
+  pLocation->cUnits_ = g_settings_get_string(pConfig, "units")[1];
+  pLocation->uiInterval_ = g_settings_get_uint(pConfig, "interval");
+  pLocation->bEnabled_ = g_settings_get_boolean(pConfig, "enabled");
   if (pLocation->pcAlias_ && pLocation->pcWOEID_)
     {
       GValue locationValue = G_VALUE_INIT;
@@ -238,20 +163,20 @@ void weather_save_configuration(GtkWidget * pWeather, LocationInfo * pLocation)
   if (pLocation)
     {
       /* save configuration */
-      config_group_set_string(pPriv->pConfig_, "alias", pLocation->pcAlias_);
-      config_group_set_string(pPriv->pConfig_, "city", pLocation->pcCity_);
-      config_group_set_string(pPriv->pConfig_, "state", pLocation->pcState_);
-      config_group_set_string(pPriv->pConfig_, "country", pLocation->pcCountry_);
-      config_group_set_string(pPriv->pConfig_, "woeid", pLocation->pcWOEID_);
+      g_settings_set_string(pPriv->pConfig_, "alias", pLocation->pcAlias_);
+      g_settings_set_string(pPriv->pConfig_, "city", pLocation->pcCity_);
+      g_settings_set_string(pPriv->pConfig_, "state", pLocation->pcState_);
+      g_settings_set_string(pPriv->pConfig_, "country", pLocation->pcCountry_);
+      g_settings_set_string(pPriv->pConfig_, "woeid", pLocation->pcWOEID_);
 
       char units[2] = {0};
       if (snprintf(units, 2, "%c", pLocation->cUnits_) > 0)
         {
-          config_group_set_string(pPriv->pConfig_, "units", units);
+          g_settings_set_string(pPriv->pConfig_, "units", units);
         }
 
-      config_group_set_int(pPriv->pConfig_, "interval", (int) pLocation->uiInterval_);
-      config_group_set_int(pPriv->pConfig_, "enabled", (int) pLocation->bEnabled_);
+      g_settings_set_int(pPriv->pConfig_, "interval", (int) pLocation->uiInterval_);
+      g_settings_set_boolean(pPriv->pConfig_, "enabled", (int) pLocation->bEnabled_);
     }
 
 }
@@ -312,5 +237,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk =
     // API functions
     .new_instance = weather_constructor,
     .config = weather_configure,
-    .reconfigure = weather_configuration_changed
+    .reconfigure = weather_configuration_changed,
+    .has_config = TRUE
   };

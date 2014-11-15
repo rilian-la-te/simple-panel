@@ -39,6 +39,11 @@
 
 //static void plugin_class_unref(PluginClass * pc);
 
+/* The same for new plugins type - they will be not unloaded by FmModule */
+#define REGISTER_STATIC_MODULE(pc) do { \
+    extern SimplePanelPluginInit lxpanel_static_plugin_##pc; \
+    lxpanel_register_plugin_type(#pc, &lxpanel_static_plugin_##pc); } while (0)
+
 GQuark lxpanel_plugin_qinit;
 GQuark lxpanel_plugin_qconf;
 GQuark lxpanel_plugin_qdata;
@@ -409,6 +414,32 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
     g_object_set_qdata_full(G_OBJECT(widget), lxpanel_plugin_qsize,
                             g_new0(GdkRectangle, 1), g_free);
     return widget;
+}
+
+/* Initialize the static plugins. */
+void init_plugin_class_list(void)
+{
+#ifdef STATIC_SEPARATOR
+    REGISTER_STATIC_MODULE(separator);
+#endif
+
+#ifdef STATIC_DCLOCK
+    REGISTER_STATIC_MODULE(dclock);
+#endif
+
+#ifdef STATIC_DIRMENU
+    REGISTER_STATIC_MODULE(dirmenu);
+#endif
+
+#ifndef DISABLE_MENU
+#ifdef STATIC_MENU
+    REGISTER_STATIC_MODULE(menu);
+#endif
+#endif
+
+#ifdef STATIC_SPACE
+    REGISTER_STATIC_MODULE(space);
+#endif
 }
 
 /* transfer none - note that not all fields are valid there */

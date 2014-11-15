@@ -29,14 +29,14 @@
 typedef enum {
     DISP_TYPE_IMAGE=0,
     DISP_TYPE_TEXT=1,
-    DISP_TYPE_IMAGE_CUST=2
-} DisplayType;
+    DISP_TYPE_IMAGE_CUSTOM=2
+} DispType;
 
 typedef struct {
 
     /* Plugin interface. */
     SimplePanel      *panel;                       /* Back pointer to Panel */
-    config_setting_t *settings;                /* Plugin settings */
+    GSettings *settings;                /* Plugin settings */
     GtkWidget    *p_plugin;                    /* Back pointer to Plugin */
     GtkWidget    *p_label;                     /* Label containing country name */
     GtkWidget    *p_image;                     /* Image containing country flag */

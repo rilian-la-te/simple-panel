@@ -35,10 +35,13 @@
 
 #include "plugin.h"
 
+
+#define DESKNO_KEY_LABELS "wm-labels"
+#define DESKNO_KEY_BOLD "bold-font"
 /* Private context for desktop number plugin. */
 typedef struct {
     SimplePanel * panel;			/* Back pointer to Panel */
-    config_setting_t *settings;
+    GSettings *settings;
     GtkWidget * label;			/* The label */
     int number_of_desktops;		/* Number of desktops */
     char * * desktop_labels;		/* Vector of desktop labels */
@@ -81,12 +84,11 @@ static gboolean deskno_button_press_event(GtkWidget * widget, GdkEventButton * e
 }
 
 /* Plugin constructor. */
-static GtkWidget *deskno_constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget *deskno_constructor(SimplePanel *panel, GSettings *settings)
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     DesknoPlugin * dc = g_new0(DesknoPlugin, 1);
     GtkWidget *p;
-    int tmp_int;
 
     g_return_val_if_fail(dc != NULL, 0);
     dc->panel = panel;
@@ -96,10 +98,8 @@ static GtkWidget *deskno_constructor(SimplePanel *panel, config_setting_t *setti
     dc->wm_labels = TRUE;
 
     /* Load parameters from the configuration file. */
-    if (config_setting_lookup_int(settings, "BoldFont", &tmp_int))
-        dc->bold = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "WMLabels", &tmp_int))
-        dc->wm_labels = tmp_int != 0;
+    dc->bold = g_settings_get_boolean(settings,DESKNO_KEY_BOLD);
+    dc->wm_labels = g_settings_get_boolean(settings,DESKNO_KEY_LABELS);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     p = gtk_event_box_new();
@@ -141,8 +141,8 @@ static gboolean deskno_apply_configuration(gpointer user_data)
 {
     DesknoPlugin * dc = lxpanel_plugin_get_data(user_data);
     deskno_name_update(wnck_screen_get_default(),wnck_screen_get_active_workspace(wnck_screen_get_default()),(gpointer*) dc);
-    config_group_set_int(dc->settings, "BoldFont", dc->bold);
-    config_group_set_int(dc->settings, "WMLabels", dc->wm_labels);
+    g_settings_set_boolean(dc->settings, DESKNO_KEY_BOLD, dc->bold);
+    g_settings_set_boolean(dc->settings, DESKNO_KEY_LABELS, dc->wm_labels);
     return FALSE;
 }
 
@@ -176,5 +176,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .new_instance = deskno_constructor,
     .config = deskno_configure,
     .reconfigure = deskno_panel_configuration_changed,
-    .button_press_event = deskno_button_press_event
+    .button_press_event = deskno_button_press_event,
+    .has_config = TRUE
 };

@@ -21,14 +21,16 @@ gsettings_ENUM_NAMESPACE = org.simple.panel
 gsettings_ENUM_FILES = \
         $(top_srcdir)/src/*.h \
         $(top_srcdir)/plugins/*.c \
-        $(top_srcdir)/plugins/X/*.c
+        $(top_srcdir)/plugins/X/*.c \
+        $(top_srcdir)/plugins/xkb/xkb.h
 
 panel_gschemas_in_in = \
         gschemas/org.simple.panel.gschema.xml.in.in \
         gschemas/org.simple.panel.toplevel.gschema.xml.in.in \
         gschemas/org.simple.panel.toplevel.plugin.gschema.xml.in.in \
         gschemas/org.simple.panel.builtin.gschema.xml.in.in \
-        gschemas/org.simple.panel.X.gschema.xml.in.in
+        gschemas/org.simple.panel.X.gschema.xml.in.in \
+        gschemas/org.simple.panel.plugins.gschema.xml.in.in
 
 panel_gschemas_in = $(panel_gschemas_in_in:.xml.in.in=.xml.in)
 gsettings_SCHEMAS = $(panel_gschemas_in:.xml.in=.xml)

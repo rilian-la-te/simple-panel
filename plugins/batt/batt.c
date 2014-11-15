@@ -44,11 +44,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <gdk/gdk.h>
+#include <cairo.h>
+#include <gtk/gtk.h>
 
 #include "dbg.h" /* for ENTER and RET macros */
 #include "batt_sys.h"
 #include "plugin.h" /* all other APIs including panel configuration */
 
+#define BATT_KEY_HIDE "hide-if-no-battery"
+#define BATT_KEY_ALARM_COMMAND "alarm-command"
+#define BATT_KEY_ALARM_TIME "alarm-time"
+#define BATT_KEY_BORDER_WIDTH "border-width"
+#define BATT_KEY_SIZE "size"
+#define BATT_KEY_BACKGROUND "background-color"
+#define BATT_KEY_CH1 "charging-color-1"
+#define BATT_KEY_CH2 "charging-color-2"
+#define BATT_KEY_DIS1 "discharging-color-1"
+#define BATT_KEY_DIS2 "discharging-color-2"
+#define BATT_KEY_EXTENDED "show-extended-info"
 /* The last MAX_SAMPLES samples are averaged when charge rates are evaluated.
    This helps prevent spikes in the "time left" values the user sees. */
 #define MAX_SAMPLES 10
@@ -88,7 +102,7 @@ typedef struct {
     gboolean has_ac_adapter;
     gboolean show_extended_information;
     SimplePanel *panel;
-    config_setting_t *settings;
+    GSettings *settings;
 } lx_battery;
 
 
@@ -412,7 +426,7 @@ static gint draw(GtkWidget *widget, GdkEventExpose *event, lx_battery *lx_b) {
 }
 
 
-static GtkWidget * constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
 {
     ENTER;
 
@@ -469,25 +483,17 @@ static GtkWidget * constructor(SimplePanel *panel, config_setting_t *settings)
 
     lx_b->show_extended_information = FALSE;
 
-    if (config_setting_lookup_int(settings, "HideIfNoBattery", &tmp_int))
-        lx_b->hide_if_no_battery = (tmp_int != 0);
-    if (config_setting_lookup_string(settings, "AlarmCommand", &str))
-        lx_b->alarmCommand = g_strdup(str);
-    if (config_setting_lookup_string(settings, "BackgroundColor", &str))
-        lx_b->backgroundColor = g_strdup(str);
-    if (config_setting_lookup_string(settings, "ChargingColor1", &str))
-        lx_b->chargingColor1 = g_strdup(str);
-    if (config_setting_lookup_string(settings, "ChargingColor2", &str))
-        lx_b->chargingColor2 = g_strdup(str);
-    if (config_setting_lookup_string(settings, "DischargingColor1", &str))
-        lx_b->dischargingColor1 = g_strdup(str);
-    if (config_setting_lookup_string(settings, "DischargingColor2", &str))
-        lx_b->dischargingColor2 = g_strdup(str);
-    if (config_setting_lookup_int(settings, "AlarmTime", &tmp_int))
-        lx_b->alarmTime = MAX(0, tmp_int);
-    if (config_setting_lookup_int(settings, "BorderWidth", &tmp_int))
-        lx_b->requestedBorder = MAX(0, tmp_int);
-    if (config_setting_lookup_int(settings, "Size", &tmp_int)) {
+    lx_b->hide_if_no_battery = g_settings_get_boolean(settings,BATT_KEY_HIDE);
+    lx_b->show_extended_information = g_settings_get_boolean(settings,BATT_KEY_EXTENDED);
+    lx_b->alarmCommand = g_settings_get_string(settings,BATT_KEY_ALARM_COMMAND);
+    lx_b->alarmTime = g_settings_get_uint(settings,BATT_KEY_ALARM_TIME);
+    lx_b->requestedBorder = g_settings_get_uint(settings,BATT_KEY_BORDER_WIDTH);
+    lx_b->thickness = g_settings_get_uint(settings,BATT_KEY_SIZE);
+    lx_b->backgroundColor = g_settings_get_string(settings,BATT_KEY_BACKGROUND);
+    lx_b->chargingColor1 = g_settings_get_string(settings,BATT_KEY_CH1);
+    lx_b->chargingColor2 = g_settings_get_string(settings,BATT_KEY_CH2);
+    lx_b->dischargingColor1 = g_settings_get_string(settings,BATT_KEY_DIS1);
+    lx_b->dischargingColor2 = g_settings_get_string(settings,BATT_KEY_DIS2);
         lx_b->thickness = MAX(1, tmp_int);
         if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL)
             lx_b->width = lx_b->thickness;
@@ -495,27 +501,11 @@ static GtkWidget * constructor(SimplePanel *panel, config_setting_t *settings)
             lx_b->height = lx_b->thickness;
         gtk_widget_set_size_request(lx_b->drawingArea, lx_b->width,
                                     lx_b->height);
-    }
-    if (config_setting_lookup_int(settings, "ShowExtendedInformation", &tmp_int))
-        lx_b->show_extended_information = (tmp_int != 0);
 
     /* Make sure the border value is acceptable */
     lx_b->border = MIN(lx_b->requestedBorder,
                        (MAX(1, MIN(lx_b->length, lx_b->thickness)) - 1) / 2);
 
-    /* Apply more default options */
-    if (! lx_b->alarmCommand)
-        lx_b->alarmCommand = g_strdup("xmessage Battery low");
-    if (! lx_b->backgroundColor)
-        lx_b->backgroundColor = g_strdup("black");
-    if (! lx_b->chargingColor1)
-        lx_b->chargingColor1 = g_strdup("#28f200");
-    if (! lx_b->chargingColor2)
-        lx_b->chargingColor2 = g_strdup("#22cc00");
-    if (! lx_b->dischargingColor1)
-        lx_b->dischargingColor1 = g_strdup("#ffee00");
-    if (! lx_b->dischargingColor2)
-        lx_b->dischargingColor2 = g_strdup("#d9ca00");
 
     gdk_rgba_parse(&lx_b->background,lx_b->backgroundColor);
     gdk_rgba_parse(&lx_b->charging1,lx_b->chargingColor1);
@@ -588,17 +578,17 @@ static gboolean applyConfig(gpointer user_data)
     /* Update colors */
     if (b->backgroundColor &&
             gdk_rgba_parse(&b->background,b->backgroundColor))
-        config_group_set_string(b->settings, "BackgroundColor", b->backgroundColor);
+        g_settings_set_string(b->settings, BATT_KEY_BACKGROUND, b->backgroundColor);
     if (b->chargingColor1 && gdk_rgba_parse(&b->charging1,b->chargingColor1))
-        config_group_set_string(b->settings, "ChargingColor1", b->chargingColor1);
+        g_settings_set_string(b->settings, BATT_KEY_CH1, b->chargingColor1);
     if (b->chargingColor2 && gdk_rgba_parse(&b->charging2,b->chargingColor2))
-        config_group_set_string(b->settings, "ChargingColor2", b->chargingColor2);
+        g_settings_set_string(b->settings, BATT_KEY_CH2, b->chargingColor2);
     if (b->dischargingColor1 &&
             gdk_rgba_parse(&b->discharging1,b->dischargingColor1))
-        config_group_set_string(b->settings, "DischargingColor1", b->dischargingColor1);
+        g_settings_set_string(b->settings, BATT_KEY_DIS1, b->dischargingColor1);
     if (b->dischargingColor2 &&
             gdk_rgba_parse(&b->discharging2,b->dischargingColor2))
-        config_group_set_string(b->settings, "DischargingColor2", b->dischargingColor2);
+        g_settings_set_string(b->settings, BATT_KEY_DIS2, b->dischargingColor2);
 
     /* Make sure the border value is acceptable */
     b->border = MIN(b->requestedBorder,
@@ -621,12 +611,12 @@ static gboolean applyConfig(gpointer user_data)
     set_tooltip_text(b);
 
     /* update settings */
-    config_group_set_int(b->settings, "HideIfNoBattery", b->hide_if_no_battery);
-    config_group_set_string(b->settings, "AlarmCommand", b->alarmCommand);
-    config_group_set_int(b->settings, "AlarmTime", b->alarmTime);
-    config_group_set_int(b->settings, "BorderWidth", b->requestedBorder);
-    config_group_set_int(b->settings, "Size", b->thickness);
-    config_group_set_int(b->settings, "ShowExtendedInformation",
+    g_settings_set_boolean(b->settings, BATT_KEY_HIDE, b->hide_if_no_battery);
+    g_settings_set_string(b->settings, BATT_KEY_ALARM_COMMAND, b->alarmCommand);
+    g_settings_set_uint(b->settings, BATT_KEY_ALARM_TIME, b->alarmTime);
+    g_settings_set_uint(b->settings, BATT_KEY_BORDER_WIDTH, b->requestedBorder);
+    g_settings_set_uint(b->settings, BATT_KEY_SIZE, b->thickness);
+    g_settings_set_boolean(b->settings, BATT_KEY_EXTENDED,
                          b->show_extended_information);
 
     RET(FALSE);
@@ -661,6 +651,7 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
 
     .new_instance = constructor,
     .config      = config,
+    .has_config  = TRUE,
     .reconfigure = orientation,
     .button_press_event = buttonPressEvent
 };

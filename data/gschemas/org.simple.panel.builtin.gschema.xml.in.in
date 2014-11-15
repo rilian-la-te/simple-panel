@@ -6,8 +6,8 @@
     <key name="tooltip-format" type="s">
       <default>'%A %x'</default>
     </key>
-    <key name="click-action" type="s">
-      <default>''</default>
+    <key name="click-action" type="ms">
+      <default>nothing</default>
     </key>
     <key name="icon-only" type="b">
       <default>false</default>
@@ -20,8 +20,8 @@
     </key>
   </schema>
   <schema id="org.simple.panel.toplevel.dirmenu">
-    <key name="name" type="s">
-      <default>''</default>
+    <key name="name" type="ms">
+      <default>nothing</default>
     </key>
     <key name="path" type="s">
       <default>'~'</default>
@@ -33,6 +33,20 @@
   <schema id="org.simple.panel.toplevel.space">
     <key name="size" type="i">
       <default>2</default>
+    </key>
+  </schema>
+  <schema id="org.simple.panel.toplevel.menu">
+    <key name="name" type="s">
+      <default>''</default>
+    </key>
+    <key name="icon" type="s">
+      <default>'start-here'</default>
+    </key>
+    <key name="color" type="s">
+      <default>'rgba(50,50,50,0.37)'</default>
+    </key>
+    <key name="layout" type="a(ssss)">
+      <default>[("system","","",""),("separator","","",""),("item","run","x-applications-executable","command"),("separator","","",""),("item","shutdown","gnome-logout","command"),("item","shutdown","gnome-shutdown","command")]</default>
     </key>
   </schema>
 </schemalist>

@@ -80,6 +80,11 @@
 #define DEFAULT_WIDTH    40                 /* Pixels               */
 #define UPDATE_PERIOD    1                  /* Seconds              */
 #define COLOR_SIZE       8                  /* In chars : #xxxxxx\0 */
+#define MONITORS_KEY_DISPLAY_CPU "display-cpu-monitor"
+#define MONITORS_KEY_DISPLAY_RAM "display-ram-monitor"
+#define MONITORS_KEY_ACTION "click-action"
+#define MONITORS_KEY_CPU_CL "cpu-color"
+#define MONITORS_KEY_RAM_CL "ram-color"
 
 #ifndef ENTER
 #define ENTER fprintf(stderr, "Entering %s\n", __func__);
@@ -122,7 +127,7 @@ typedef void (*tooltip_update_func) (Monitor *);
 /* Our plugin */
 typedef struct {
     SimplePanel *panel;
-    config_setting_t *settings;
+    GSettings *settings;
     Monitor  *monitors[N_MONITORS];          /* Monitors                      */
     int      displayed_monitors[N_MONITORS]; /* Booleans                      */
     char     *action;                        /* What to do on click           */
@@ -603,7 +608,7 @@ monitors_add_monitor (GtkWidget *p, MonitorsPlugin *mp, update_func update,
 }
 
 static GtkWidget *
-monitors_constructor(SimplePanel *panel, config_setting_t *settings)
+monitors_constructor(SimplePanel *panel, GSettings *settings)
 {
     ENTER;
     int i;
@@ -624,16 +629,11 @@ monitors_constructor(SimplePanel *panel, config_setting_t *settings)
     mp->displayed_monitors[CPU_POSITION] = 1;
 
     /* Apply options */
-    config_setting_lookup_int(settings, "DisplayCPU",
-                              &mp->displayed_monitors[CPU_POSITION]);
-    config_setting_lookup_int(settings, "DisplayRAM",
-                              &mp->displayed_monitors[MEM_POSITION]);
-    if (config_setting_lookup_string(settings, "Action", &tmp))
-        mp->action = g_strdup(tmp);
-    if (config_setting_lookup_string(settings, "CPUColor", &tmp))
-        colors[CPU_POSITION] = g_strndup(tmp, COLOR_SIZE-1);
-    if (config_setting_lookup_string(settings, "RAMColor", &tmp))
-        colors[MEM_POSITION] = g_strndup(tmp, COLOR_SIZE-1);
+    mp->displayed_monitors[CPU_POSITION] = g_settings_get_boolean(settings,MONITORS_KEY_DISPLAY_CPU);
+    mp->displayed_monitors[MEM_POSITION] = g_settings_get_boolean(settings,MONITORS_KEY_DISPLAY_RAM);
+    mp->action = g_settings_get_string(settings,MONITORS_KEY_ACTION);
+    colors[CPU_POSITION] = g_settings_get_string(settings,MONITORS_KEY_CPU_CL);
+    colors[MEM_POSITION] = g_settings_get_string(settings,MONITORS_KEY_CPU_CL);
 
     /* Initializing monitors */
     for (i = 0; i < N_MONITORS; i++)
@@ -763,12 +763,12 @@ start:
         mp->displayed_monitors[0] = 1;
         goto start;
     }
-    config_group_set_int(mp->settings, "DisplayCPU", mp->displayed_monitors[CPU_POSITION]);
-    config_group_set_int(mp->settings, "DisplayRAM", mp->displayed_monitors[MEM_POSITION]);
-    config_group_set_string(mp->settings, "Action", mp->action);
-    config_group_set_string(mp->settings, "CPUColor",
+    g_settings_set_boolean(mp->settings, MONITORS_KEY_DISPLAY_CPU, mp->displayed_monitors[CPU_POSITION]);
+    g_settings_set_boolean(mp->settings, MONITORS_KEY_DISPLAY_RAM, mp->displayed_monitors[MEM_POSITION]);
+    g_settings_set_string(mp->settings, MONITORS_KEY_ACTION, mp->action);
+    g_settings_set_string(mp->settings, MONITORS_KEY_CPU_CL,
                             mp->monitors[CPU_POSITION] ? colors[CPU_POSITION] : NULL);
-    config_group_set_string(mp->settings, "RAMColor",
+    g_settings_set_string(mp->settings, MONITORS_KEY_RAM_CL,
                             mp->monitors[MEM_POSITION] ? colors[MEM_POSITION] : NULL);
 
     RET(FALSE);
@@ -782,7 +782,8 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .description = N_("Display monitors (CPU, RAM)"),
     .new_instance = monitors_constructor,
     .config = monitors_config,
-    .button_press_event = monitors_button_press_event
+    .button_press_event = monitors_button_press_event,
+    .has_config = TRUE
 };
 
 /* vim: set sw=4 sts=4 et : */

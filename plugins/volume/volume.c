@@ -229,7 +229,7 @@ static gboolean on_button_press (GtkWidget* widget, GdkEventButton* evt, SimpleP
 	return FALSE;
 }
 
-static GtkWidget *volume_constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget *volume_constructor(SimplePanel *panel, GSettings *settings)
 {
     volume_t *vol;
     GtkWidget *p;
@@ -287,5 +287,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .description = "Display and control volume",
 
     .new_instance = volume_constructor,
-    .button_press_event = on_button_press
+    .button_press_event = on_button_press,
+    .has_config = FALSE
 };

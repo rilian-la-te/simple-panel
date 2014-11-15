@@ -23,6 +23,7 @@
 
 #include "panel.h"
 #include "conf-gsettings.h"
+#include "css.h"
 
 G_BEGIN_DECLS
 

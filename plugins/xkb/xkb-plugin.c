@@ -73,6 +73,17 @@ enum
     NUM_CHANGE_COLUMNS
 };
 
+#define XKB_KEY_PERWIN "layout-per-window"
+#define XKB_KEY_SYSTEM "keep-system-layouts"
+#define XKB_KEY_PERSIST "use-existing-options"
+#define XKB_KEY_IMAGE "display-type"
+#define XKB_KEY_MODEL "keyboard-model"
+#define XKB_KEY_LAYOUTS "keyboard-layouts"
+#define XKB_KEY_LAYOUT_VARIANTS "keyboard-layout-variants"
+#define XKB_KEY_OPTIONS "layout-changing-options"
+#define XKB_KEY_ADVANCED "advanced-options"
+#define XKB_KEY_IMAGE_SIZE "image-size"
+
 static void  xkb_destructor(gpointer user_data);
 static void  xkb_settings_fill_layout_tree_model_with_config(XkbPlugin *p_xkb);
 static void  xkb_update_layouts_n_variants(XkbPlugin *p_xkb);
@@ -117,13 +128,13 @@ void xkb_redraw(XkbPlugin *p_xkb)
     /* Set the image. */
     gboolean valid_image = FALSE;
     int  size = xkb_get_flag_size(p_xkb);
-    if( (p_xkb->display_type == DISP_TYPE_IMAGE) || (p_xkb->display_type == DISP_TYPE_IMAGE_CUST) )
+    if( (p_xkb->display_type == DISP_TYPE_IMAGE) || (p_xkb->display_type == DISP_TYPE_IMAGE_CUSTOM) )
     {
         char * group_name = (char *)xkb_get_current_symbol_name_lowercase(p_xkb);
         if(group_name != NULL)
         {
             gchar *flag_filepath = NULL;
-            gchar *flags_dir = (p_xkb->cust_dir_exists && (p_xkb->display_type == DISP_TYPE_IMAGE_CUST)) ? g_strdup(FLAGSCUSTDIR):g_strdup(FLAGSDIR);
+            gchar *flags_dir = (p_xkb->cust_dir_exists && (p_xkb->display_type == DISP_TYPE_IMAGE_CUSTOM)) ? g_strdup(FLAGSCUSTDIR):g_strdup(FLAGSDIR);
             if(strchr(group_name, '/') != NULL)
             {
                 gchar *layout_mod = g_strdup(group_name);
@@ -220,12 +231,12 @@ static void on_xkb_entry_advanced_opt_icon_press(GtkEntry             *p_entry,
     XkbPlugin *p_xkb = (XkbPlugin *)p_data;
     g_free(p_xkb->kbd_advanced_options);
     p_xkb->kbd_advanced_options = g_strdup(gtk_entry_get_text(p_entry));
-    config_group_set_string(p_xkb->settings, "AdvancedOpt", p_xkb->kbd_advanced_options);
+    g_settings_set_string(p_xkb->settings, XKB_KEY_ADVANCED, p_xkb->kbd_advanced_options);
     xkb_setxkbmap(p_xkb);
 }
 
 /* Plugin constructor. */
-static GtkWidget *xkb_constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget *xkb_constructor(SimplePanel *panel, GSettings *settings)
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     XkbPlugin * p_xkb = g_new0(XkbPlugin, 1);
@@ -250,24 +261,16 @@ static GtkWidget *xkb_constructor(SimplePanel *panel, config_setting_t *settings
     p_xkb->cust_dir_exists = g_file_test(FLAGSCUSTDIR,  G_FILE_TEST_IS_DIR);
 
     /* Load parameters from the configuration file. */
-    config_setting_lookup_int(settings, "DisplayType", &p_xkb->display_type);
-    if (config_setting_lookup_int(settings, "PerWinLayout", &tmp_int))
-        p_xkb->enable_perwin = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "NoResetOpt", &tmp_int))
-        p_xkb->do_not_reset_opt = tmp_int != 0;
-    if (config_setting_lookup_int(settings, "KeepSysLayouts", &tmp_int))
-        p_xkb->keep_system_layouts = tmp_int != 0;
-    if (config_setting_lookup_string(settings, "Model", &tmp))
-        p_xkb->kbd_model = g_strdup(tmp);
-    if (config_setting_lookup_string(settings, "LayoutsList", &tmp))
-        p_xkb->kbd_layouts = g_strdup(tmp);
-    if (config_setting_lookup_string(settings, "VariantsList", &tmp))
-        p_xkb->kbd_variants = g_strdup(tmp);
-    if (config_setting_lookup_string(settings, "ToggleOpt", &tmp))
-        p_xkb->kbd_change_option = g_strdup(tmp);
-    if (config_setting_lookup_string(settings, "AdvancedOpt", &tmp))
-        p_xkb->kbd_advanced_options = g_strdup(tmp);
-    config_setting_lookup_int(settings, "FlagSize", &p_xkb->flag_size);
+    p_xkb->enable_perwin = g_settings_get_boolean(settings,XKB_KEY_PERWIN);
+    p_xkb->display_type = g_settings_get_enum(settings,XKB_KEY_IMAGE);
+    p_xkb->do_not_reset_opt = g_settings_get_boolean(settings,XKB_KEY_PERSIST);
+    p_xkb->keep_system_layouts = g_settings_get_boolean(settings,XKB_KEY_SYSTEM);
+    p_xkb->kbd_model = g_settings_get_string(settings,XKB_KEY_MODEL);
+    p_xkb->kbd_layouts = g_settings_get_string(settings,XKB_KEY_LAYOUTS);
+    p_xkb->kbd_variants = g_settings_get_string(settings,XKB_KEY_LAYOUT_VARIANTS);
+    p_xkb->kbd_change_option = g_settings_get_string(settings,XKB_KEY_OPTIONS);
+    p_xkb->kbd_advanced_options = g_settings_get_string(settings,XKB_KEY_ADVANCED);
+    p_xkb->flag_size = g_settings_get_int(settings,XKB_KEY_IMAGE_SIZE);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     p_xkb->p_plugin = p = gtk_event_box_new();
@@ -306,10 +309,10 @@ static GtkWidget *xkb_constructor(SimplePanel *panel, config_setting_t *settings
         g_free(symbol_name_lowercase);
         p_xkb->kbd_variants = g_strdup(",");
         p_xkb->kbd_change_option = g_strdup("grp:shift_caps_toggle");
-        config_group_set_string(p_xkb->settings, "Model", p_xkb->kbd_model);
-        config_group_set_string(p_xkb->settings, "LayoutsList", p_xkb->kbd_layouts);
-        config_group_set_string(p_xkb->settings, "VariantsList", p_xkb->kbd_variants);
-        config_group_set_string(p_xkb->settings, "ToggleOpt", p_xkb->kbd_change_option);
+        g_settings_set_string(p_xkb->settings, XKB_KEY_MODEL, p_xkb->kbd_model);
+        g_settings_set_string(p_xkb->settings, XKB_KEY_LAYOUTS, p_xkb->kbd_layouts);
+        g_settings_set_string(p_xkb->settings, XKB_KEY_LAYOUT_VARIANTS, p_xkb->kbd_variants);
+        g_settings_set_string(p_xkb->settings, XKB_KEY_OPTIONS, p_xkb->kbd_change_option);
 
         xkb_mechanism_destructor(p_xkb);
     }
@@ -362,7 +365,7 @@ static void on_xkb_checkbutton_per_app_toggled(GtkToggleButton *tb, gpointer p_d
                 g_hash_table_destroy(xkb->p_hash_table_group);
             xkb->p_hash_table_group = g_hash_table_new(g_direct_hash, NULL);
         }
-        config_group_set_int(xkb->settings, "PerWinLayout", xkb->enable_perwin);
+        g_settings_set_boolean(xkb->settings, XKB_KEY_PERWIN, xkb->enable_perwin);
         xkb_redraw(xkb);
     }
 }
@@ -375,7 +378,7 @@ static void on_xkb_checkbutton_no_reset_opt_toggled(GtkToggleButton *tb, gpointe
         /* Fetch the new value and redraw. */
         XkbPlugin * xkb = (XkbPlugin *)p_data;
         xkb->do_not_reset_opt = gtk_toggle_button_get_active(tb);
-        config_group_set_int(xkb->settings, "NoResetOpt", xkb->do_not_reset_opt);
+        g_settings_set_boolean(xkb->settings, XKB_KEY_PERSIST, xkb->do_not_reset_opt);
         xkb_redraw(xkb);
     }
 }
@@ -388,7 +391,7 @@ static void on_xkb_checkbutton_keep_system_layouts_toggled(GtkToggleButton *tb, 
         /* Fetch the new value and redraw. */
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->keep_system_layouts = gtk_toggle_button_get_active(tb);
-        config_group_set_int(p_xkb->settings, "KeepSysLayouts", p_xkb->keep_system_layouts);
+        g_settings_set_int(p_xkb->settings, XKB_KEY_SYSTEM, p_xkb->keep_system_layouts);
         xkb_redraw(p_xkb);
 
         gtk_widget_set_sensitive(p_xkb->p_frame_kbd_model, !p_xkb->keep_system_layouts);
@@ -423,7 +426,7 @@ static void on_radiobutton_flag_size_1_toggled(GtkToggleButton *p_radiobutton, g
     {
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->flag_size = 1;
-        config_group_set_int(p_xkb->settings, "FlagSize", 1);
+        g_settings_set_int(p_xkb->settings, XKB_KEY_IMAGE_SIZE, 1);
         xkb_redraw(p_xkb);
     }
 }
@@ -434,7 +437,7 @@ static void on_radiobutton_flag_size_2_toggled(GtkToggleButton *p_radiobutton, g
     {
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->flag_size = 2;
-        config_group_set_int(p_xkb->settings, "FlagSize", 2);
+        g_settings_set_int(p_xkb->settings, XKB_KEY_IMAGE_SIZE, 2);
         xkb_redraw(p_xkb);
     }
 }
@@ -445,7 +448,7 @@ static void on_radiobutton_flag_size_3_toggled(GtkToggleButton *p_radiobutton, g
     {
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->flag_size = 3;
-        config_group_set_int(p_xkb->settings, "FlagSize", 3);
+        g_settings_set_int(p_xkb->settings, XKB_KEY_IMAGE_SIZE, 3);
         xkb_redraw(p_xkb);
     }
 }
@@ -456,7 +459,7 @@ static void on_radiobutton_flag_size_4_toggled(GtkToggleButton *p_radiobutton, g
     {
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->flag_size = 4;
-        config_group_set_int(p_xkb->settings, "FlagSize", 4);
+        g_settings_set_int(p_xkb->settings, XKB_KEY_IMAGE_SIZE, 4);
         xkb_redraw(p_xkb);
     }
 }
@@ -467,7 +470,7 @@ static void on_radiobutton_flag_size_5_toggled(GtkToggleButton *p_radiobutton, g
     {
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->flag_size = 5;
-        config_group_set_int(p_xkb->settings, "FlagSize", 5);
+        g_settings_set_int(p_xkb->settings, XKB_KEY_IMAGE_SIZE, 5);
         xkb_redraw(p_xkb);
     }
 }
@@ -478,7 +481,7 @@ static void on_radiobutton_flag_size_6_toggled(GtkToggleButton *p_radiobutton, g
     {
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->flag_size = 6;
-        config_group_set_int(p_xkb->settings, "FlagSize", 6);
+        g_settings_set_int(p_xkb->settings, XKB_KEY_IMAGE_SIZE, 6);
         xkb_redraw(p_xkb);
     }
 }
@@ -491,7 +494,7 @@ static void on_radiobutton_disp_type_image_toggled(GtkToggleButton *p_radiobutto
         /* Fetch the new value and redraw. */
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->display_type =  DISP_TYPE_IMAGE;
-        config_group_set_int(p_xkb->settings, "DisplayType", p_xkb->display_type);
+        g_settings_set_enum(p_xkb->settings, XKB_KEY_IMAGE, p_xkb->display_type);
         xkb_redraw(p_xkb);
     }
 }
@@ -503,8 +506,8 @@ static void on_radiobutton_disp_type_image_cust_toggled(GtkToggleButton *p_radio
     {
         /* Fetch the new value and redraw. */
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
-        p_xkb->display_type =  DISP_TYPE_IMAGE_CUST;
-        config_group_set_int(p_xkb->settings, "DisplayType", p_xkb->display_type);
+        p_xkb->display_type =  DISP_TYPE_IMAGE_CUSTOM;
+        g_settings_set_enum(p_xkb->settings, XKB_KEY_IMAGE, p_xkb->display_type);
         xkb_redraw(p_xkb);
     }
 }
@@ -517,7 +520,7 @@ static void on_radiobutton_disp_type_text_toggled(GtkToggleButton *p_radiobutton
         /* Fetch the new value and redraw. */
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->display_type =  DISP_TYPE_TEXT;
-        config_group_set_int(p_xkb->settings, "DisplayType", p_xkb->display_type);
+        g_settings_set_enum(p_xkb->settings, XKB_KEY_IMAGE, p_xkb->display_type);
         xkb_redraw(p_xkb);
     }
 }
@@ -671,7 +674,7 @@ static void on_button_kbd_model_clicked(GtkButton *p_button, gpointer *p_data)
                                &tree_iter_sel, COLUMN_MODEL_ID, &kbd_model_new, -1);
             g_free(p_xkb->kbd_model);
             p_xkb->kbd_model = g_strdup(kbd_model_new);
-            config_group_set_string(p_xkb->settings, "Model", kbd_model_new);
+            g_settings_set_string(p_xkb->settings, XKB_KEY_MODEL, kbd_model_new);
             gtk_button_set_label(GTK_BUTTON(p_xkb->p_button_kbd_model), p_xkb->kbd_model);
             g_free(kbd_model_new);
             xkb_setxkbmap(p_xkb);
@@ -814,7 +817,7 @@ static void on_button_kbd_change_layout_clicked(GtkButton *p_button, gpointer *p
         }
         g_free(p_xkb->kbd_change_option);
         p_xkb->kbd_change_option = g_strdup(p_xkb->p_gstring_change_opt_partial->str);
-        config_group_set_string(p_xkb->settings, "ToggleOpt", p_xkb->kbd_change_option);
+        g_settings_set_string(p_xkb->settings, XKB_KEY_OPTIONS, p_xkb->kbd_change_option);
         g_string_free(p_xkb->p_gstring_change_opt_partial, TRUE/*free also gstring->str*/);
 
         gtk_button_set_label(GTK_BUTTON(p_xkb->p_button_change_layout), p_xkb->kbd_change_option);
@@ -940,7 +943,7 @@ static void on_button_add_layout_clicked(GtkButton *p_button, gpointer *p_data)
             if(strchr(keys_layouts[layout_idx], '(') == NULL)
             {
                 gchar *flag_filepath = NULL;
-                gchar *flags_dir = (p_xkb->cust_dir_exists && (p_xkb->display_type == DISP_TYPE_IMAGE_CUST)) ? g_strdup(FLAGSCUSTDIR):g_strdup(FLAGSDIR);
+                gchar *flags_dir = (p_xkb->cust_dir_exists && (p_xkb->display_type == DISP_TYPE_IMAGE_CUSTOM)) ? g_strdup(FLAGSCUSTDIR):g_strdup(FLAGSDIR);
                 if(strchr(keys_layouts[layout_idx], '/') != NULL)
                 {
                     gchar *layout_mod = g_strdup(keys_layouts[layout_idx]);
@@ -1137,8 +1140,8 @@ static void xkb_update_layouts_n_variants(XkbPlugin *p_xkb)
     xkb_setxkbmap(p_xkb);
     xkb_mechanism_destructor(p_xkb);
     xkb_mechanism_constructor(p_xkb);
-    config_group_set_string(p_xkb->settings, "LayoutsList", p_xkb->kbd_layouts);
-    config_group_set_string(p_xkb->settings, "VariantsList", p_xkb->kbd_variants);
+    g_settings_set_string(p_xkb->settings, XKB_KEY_LAYOUTS, p_xkb->kbd_layouts);
+    g_settings_set_string(p_xkb->settings, XKB_KEY_LAYOUT_VARIANTS, p_xkb->kbd_variants);
     xkb_redraw(p_xkb);
 }
 
@@ -1147,7 +1150,7 @@ static void xkb_add_layout(XkbPlugin *p_xkb, gchar *layout, gchar*variant)
     GtkTreeIter  tree_iter;
     gtk_list_store_append(p_xkb->p_liststore_layout, &tree_iter);
     gchar *flag_filepath = NULL;
-    gchar *flags_dir = (p_xkb->cust_dir_exists && (p_xkb->display_type == DISP_TYPE_IMAGE_CUST)) ? g_strdup(FLAGSCUSTDIR):g_strdup(FLAGSDIR);
+    gchar *flags_dir = (p_xkb->cust_dir_exists && (p_xkb->display_type == DISP_TYPE_IMAGE_CUSTOM)) ? g_strdup(FLAGSCUSTDIR):g_strdup(FLAGSDIR);
     if(strchr(layout, '/') != NULL)
     {
         gchar *layout_mod = g_strdup(layout);
@@ -1212,11 +1215,7 @@ static GtkWidget *xkb_configure(SimplePanel *panel, GtkWidget *p)
     GtkWidget * dlg = gtk_dialog_new_with_buttons(
         _("Keyboard Layout Handler"),
         NULL,
-#if GTK_CHECK_VERSION (3, 0, 0)
         0,
-#else
-        GTK_DIALOG_NO_SEPARATOR,
-#endif
         _("_Close"),
         GTK_RESPONSE_OK,
         NULL);
@@ -1451,9 +1450,9 @@ static GtkWidget *xkb_configure(SimplePanel *panel, GtkWidget *p)
         g_signal_connect(p_radiobutton_disp_type_image_cust, "toggled", G_CALLBACK(on_radiobutton_disp_type_image_cust_toggled), p_xkb);
     g_signal_connect(p_radiobutton_disp_type_text, "toggled", G_CALLBACK(on_radiobutton_disp_type_text_toggled), p_xkb);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(p_radiobutton_disp_type_image), (p_xkb->display_type == DISP_TYPE_IMAGE) ||
-                                                                                   ( (p_xkb->display_type == DISP_TYPE_IMAGE_CUST) && (!p_xkb->cust_dir_exists) ) );
+                                                                                   ( (p_xkb->display_type == DISP_TYPE_IMAGE_CUSTOM) && (!p_xkb->cust_dir_exists) ) );
     if(p_xkb->cust_dir_exists)
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(p_radiobutton_disp_type_image_cust), p_xkb->display_type == DISP_TYPE_IMAGE_CUST);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(p_radiobutton_disp_type_image_cust), p_xkb->display_type == DISP_TYPE_IMAGE_CUSTOM);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(p_radiobutton_disp_type_text), p_xkb->display_type == DISP_TYPE_TEXT);
 
 
@@ -1523,5 +1522,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .new_instance = xkb_constructor,
     .config = xkb_configure,
     .reconfigure = xkb_panel_configuration_changed,
-    .button_press_event = on_xkb_button_press_event
+    .button_press_event = on_xkb_button_press_event,
+    .has_config = TRUE
 };

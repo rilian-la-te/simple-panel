@@ -36,6 +36,7 @@
 #include "wireless.h"
 #include "plugin.h"
 #include "dbg.h"
+#define NETSTAT_KEY_FIX "config-cmd"
 
 /* 1 second */
 #define NETSTAT_IFACE_POLL_DELAY 3000
@@ -427,7 +428,7 @@ static void netstat_destructor(gpointer user_data)
     RET();
 }
 
-static GtkWidget *netstat_constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget *netstat_constructor(SimplePanel *panel, GSettings *settings)
 {
     netstat *ns;
     const char *tmp;
@@ -437,8 +438,7 @@ static GtkWidget *netstat_constructor(SimplePanel *panel, config_setting_t *sett
     ns = g_new0(netstat, 1);
     g_return_val_if_fail(ns != NULL, NULL);
     /* apply config */
-    if (config_setting_lookup_string(settings, "FixCommand", &tmp))
-        ns->fixcmd = g_strdup(tmp);
+    ns->fixcmd = g_settings_get_string(settings,NETSTAT_KEY_FIX);
 
     /* initializing */
     ns->fnetd = malloc(sizeof(FNETD));
@@ -484,6 +484,7 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
 
     .new_instance = netstat_constructor,
     .reconfigure = orientation_changed,
+    .has_config = TRUE
 };
 
 /* vim: set sw=4 sts=4 et : */

@@ -31,7 +31,7 @@
 #include "css.h"
 #include "dbg.h"
 
-void css_apply_with_class (GtkWidget* widget, gchar* css, gchar* klass ,gboolean remove)
+void css_apply_with_class (GtkWidget* widget,const gchar* css, gchar* klass ,gboolean remove)
 {
     GtkStyleContext* context;
     GtkCssProvider  *provider;

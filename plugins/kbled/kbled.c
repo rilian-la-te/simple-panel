@@ -33,6 +33,10 @@
 
 #include "icon-grid.h"
 
+#define KBLED_KEY_NUM "numlock-on"
+#define KBLED_KEY_CAPS "capslock-on"
+#define KBLED_KEY_SCROLL "scrllock-on"
+
 static const char * on_icons_theme[] = {
     "capslock-on",
     "numlock-on",
@@ -63,7 +67,7 @@ static int xkb_error_base = 0;
 /* Private context for keyboard LED plugin. */
 typedef struct {
     SimplePanel * panel;				/* Back pointer to panel */
-    config_setting_t *settings;
+    GSettings *settings;
     GtkWidget *indicator_image[3];		/* Image for each indicator */
     unsigned int current_state;			/* Current LED state, bit encoded */
     gboolean visible[3];			/* True if control is visible (per user configuration) */
@@ -128,7 +132,7 @@ static GdkFilterReturn kbled_event_filter(GdkXEvent * gdkxevent, GdkEvent * even
 }
 
 /* Plugin constructor. */
-static GtkWidget *kbled_constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget *kbled_constructor(SimplePanel *panel, GSettings *settings)
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     KeyboardLEDPlugin * kl = g_new0(KeyboardLEDPlugin, 1);
@@ -139,17 +143,11 @@ static GtkWidget *kbled_constructor(SimplePanel *panel, config_setting_t *settin
 
     kl->panel = panel;
     kl->settings = settings;
-    kl->visible[0] = FALSE;
-    kl->visible[1] = TRUE;
-    kl->visible[2] = TRUE;
 
     /* Load parameters from the configuration file. */
-    if (config_setting_lookup_int(settings, "ShowCapsLock", &i))
-        kl->visible[0] = i != 0;
-    if (config_setting_lookup_int(settings, "ShowNumLock", &i))
-        kl->visible[1] = i != 0;
-    if (config_setting_lookup_int(settings, "ShowScrollLock", &i))
-        kl->visible[2] = i != 0;
+    kl->visible[0] = g_settings_get_boolean(settings,KBLED_KEY_CAPS);
+    kl->visible[1] = g_settings_get_boolean(settings,KBLED_KEY_NUM);
+    kl->visible[2] = g_settings_get_boolean(settings,KBLED_KEY_SCROLL);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     p = panel_icon_grid_new(panel_get_orientation(panel),
@@ -215,9 +213,9 @@ static gboolean kbled_apply_configuration(gpointer user_data)
 
     for (i = 0; i < 3; i++)
         gtk_widget_set_visible(kl->indicator_image[i], kl->visible[i]);
-    config_group_set_int(kl->settings, "ShowCapsLock", kl->visible[0]);
-    config_group_set_int(kl->settings, "ShowNumLock", kl->visible[1]);
-    config_group_set_int(kl->settings, "ShowScrollLock", kl->visible[2]);
+    g_settings_set_boolean(kl->settings, KBLED_KEY_CAPS, kl->visible[0]);
+    g_settings_set_boolean(kl->settings, KBLED_KEY_NUM, kl->visible[1]);
+    g_settings_set_boolean(kl->settings, KBLED_KEY_SCROLL, kl->visible[2]);
     return FALSE;
 }
 
@@ -261,5 +259,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
 
     .new_instance = kbled_constructor,
     .config = kbled_configure,
-    .reconfigure = kbled_panel_configuration_changed
+    .reconfigure = kbled_panel_configuration_changed,
+    .has_config = TRUE
 };

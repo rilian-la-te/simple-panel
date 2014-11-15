@@ -179,6 +179,7 @@ const gchar *num2str(pair *p, int num, const gchar *defval);
 /* Plugins management - new style */
 void _prepare_modules(void);
 void _unload_modules(void);
+void init_plugin_class_list(void);
 
 
 GtkWidget *simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, guint pack_pos);

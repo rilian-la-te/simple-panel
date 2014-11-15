@@ -41,6 +41,11 @@
 
 #include "dbg.h"
 
+#define MENU_KEY_NAME "name"
+#define MENU_KEY_ICON "icon"
+#define MENU_KEY_COLOR "highlight-color"
+#define MENU_KEY_LAYOUT "layout"
+
 /* support for libmenu-cache 0.4.x */
 #ifndef MENU_CACHE_CHECK_VERSION
 # ifdef HAVE_MENU_CACHE_DIR_LIST_CHILDREN
@@ -61,14 +66,15 @@
  */
 
 typedef struct {
-    GtkWidget *menu, *box, *img, *label;
+    GtkWidget *box, *img, *label;
+    GtkWidget* menu;
     char *fname, *caption;
     gulong handler_id;
     int iconsize;
     gboolean has_system_menu;
     guint show_system_menu_idle;
     SimplePanel *panel;
-    config_setting_t *settings;
+    GSettings *settings;
 
     MenuCache* menu_cache;
     guint visibility_flags;
@@ -124,14 +130,9 @@ menu_destructor(gpointer user_data)
     RET();
 }
 
-static void
-spawn_app(GtkWidget *widget, gpointer data)
+static void activate_command(GSimpleAction *action, GVariant *param, gpointer data)
 {
-    ENTER;
-    if (data) {
-        fm_launch_command_simple(NULL, NULL, 0, data, NULL);
-    }
-    RET();
+    fm_launch_command_simple(NULL,NULL,0,g_variant_get_string(param,NULL),NULL);
 }
 
 static void
@@ -229,9 +230,9 @@ static void on_add_menu_item_to_desktop(GtkMenuItem* item, GtkWidget* mi)
 #if 0
 static void on_add_menu_item_to_panel(GtkMenuItem* item, MenuCacheApp* app)
 {
-    /* Find a penel containing launchbar applet.
-     * The launchbar with most buttons will be choosen if
-     * there are several launchbar applets loaded.
+    /* Find a penel containing lTB_Launchbar applet.
+     * The lTB_Launchbar with most buttons will be choosen if
+     * there are several lTB_Launchbar applets loaded.
      */
     GSList* l;
     Plugin* lb = NULL;
@@ -249,7 +250,7 @@ static void on_add_menu_item_to_panel(GtkMenuItem* item, MenuCacheApp* app)
                 /* FIXME: should we let the users choose which launcherbar to add the btn? */
                 break;
 #if 0
-                int n = launchbar_get_n_btns(plugin);
+                int n = lTB_Launchbar_get_n_btns(plugin);
                 if( n > n_btns )
                 {
                     lb = plugin;
@@ -260,9 +261,9 @@ static void on_add_menu_item_to_panel(GtkMenuItem* item, MenuCacheApp* app)
         }
     }
 
-    if( ! lb ) /* launchbar is not currently in use */
+    if( ! lb ) /* lTB_Launchbar is not currently in use */
     {
-        /* FIXME: add a launchbar plugin to the panel which has a menu, too. */
+        /* FIXME: add a lTB_Launchbar plugin to the panel which has a menu, too. */
     }
 
     if( lb )
@@ -645,6 +646,7 @@ static void show_menu( GtkWidget* widget, menup* m, int btn, guint32 time )
                    NULL, NULL,
                    (GtkMenuPositionFunc)menu_pos, widget,
                    btn, time);
+    gtk_menu_detach(GTK_MENU(m->menu));
 }
 
 static gboolean
@@ -688,6 +690,13 @@ make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkW
 {
     char* title = NULL;
 
+    static const GActionEntry entries[] =
+    {
+        {"launch-command", activate_command, "s", NULL, NULL},
+    };
+    GSimpleActionGroup* grp;
+    grp = g_simple_action_group_new();
+    g_action_map_add_action_entries(G_ACTION_MAP(grp),entries,G_N_ELEMENTS(entries),(gpointer)m);
     ENTER;
     m->menu = menu;
 
@@ -723,7 +732,7 @@ make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkW
     g_object_set_data(G_OBJECT(m->img), "plugin", m);
 
     m->ds = fm_dnd_src_new(NULL);
-
+    gtk_widget_insert_action_group(m->box,"menu",G_ACTION_GROUP(grp));
     RET(m->img);
 }
 
@@ -735,7 +744,7 @@ typedef struct {
 } Command;
 
 static Command commands[] = {
-    //{ "configure", N_("Preferences"), configure },
+    //{ "configure", N_("Preferences"), "win.configure(0)" },
     { "run", N_("Run"), "app.run" },
     { "logout", N_("Logout"), "app.logout" },
     { "shutdown", N_("Shutdown"), "app.shutdown" },
@@ -743,25 +752,19 @@ static Command commands[] = {
 };
 
 static GtkWidget *
-read_item(menup *m, config_setting_t *s)
+read_item(menup *m, const gchar* name, const gchar* fname, const gchar* action)
 {
-    const gchar *name, *fname, *action, *str;
     GtkWidget *item;
     Command *cmd_entry = NULL;
-    char *tmp;
+    gchar* tmp;
 
-    ENTER;
-    name = fname = action = NULL;
 
-    config_setting_lookup_string(s, "name", &name);
-    config_setting_lookup_string(s, "image", &fname);
-    config_setting_lookup_string(s, "action", &action);
-    if (config_setting_lookup_string(s, "command", &str))
+    if (!g_ascii_strcasecmp("command", action))
     {
         Command *tmp;
 
         for (tmp = commands; tmp->name; tmp++) {
-            if (!g_ascii_strcasecmp(str, tmp->name)) {
+            if (!g_ascii_strcasecmp(name, tmp->name)) {
                 cmd_entry = tmp;
                 break;
             }
@@ -770,40 +773,39 @@ read_item(menup *m, config_setting_t *s)
     /* menu button */
     if( cmd_entry ) /* built-in commands */
     {
-        item = gtk_image_menu_item_new_with_label( _(cmd_entry->disp_name) );
+        item = gtk_image_menu_item_new_with_label(cmd_entry->disp_name);
         gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(item),cmd_entry->action);
     }
     else if (action)
     {
+        tmp = g_strdup_printf("menu.launch-command(%s)",action);
         item = gtk_image_menu_item_new_with_label(name ? name : "");
-        tmp = g_strdup(action);
+        gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(item),tmp);
         g_object_weak_ref(G_OBJECT(item), (GWeakNotify)g_free, tmp);
-        g_signal_connect(G_OBJECT(item), "activate", (GCallback)spawn_app, tmp);
     }
     else
         goto error;
-    gtk_container_set_border_width(GTK_CONTAINER(item), 0);
     if (fname) {
-        GtkWidget *img;
-
-        /* FIXME: use FmIcon cache and fm_pixbuf_from_icon() API */
+        GIcon *img;
+        GtkWidget* image;
         tmp = expand_tilda(fname);
-        img = _gtk_image_new_from_file_scaled(tmp, m->iconsize, m->iconsize, TRUE);
-        gtk_widget_show(img);
-        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), img);
+        img = g_icon_new_for_string(tmp,NULL);
+        image = gtk_image_new_from_gicon(img,GTK_ICON_SIZE_MENU);
+        gtk_widget_show(image);
+        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),image);
         g_free(tmp);
+        g_object_unref(img);
     }
-    RET(item);
+    return item;
 
  error:
-    RET(NULL);
+    return NULL;
 }
 
 static GtkWidget *
-read_separator(menup *m, config_setting_t *s)
+read_separator(menup *m)
 {
-    ENTER;
-    RET(gtk_separator_menu_item_new());
+    return gtk_separator_menu_item_new();
 }
 
 static void on_reload_menu(MenuCache* cache, gpointer menu_pointer)
@@ -814,7 +816,7 @@ static void on_reload_menu(MenuCache* cache, gpointer menu_pointer)
 }
 
 static void
-read_system_menu(GtkMenu *menu, menup *m, config_setting_t *s)
+read_system_menu(GtkMenu *menu, menup *m)
 {
     if (m->menu_cache == NULL)
     {
@@ -870,42 +872,53 @@ read_include(Plugin *p, char **fp)
 }
 #endif
 
-static GtkWidget *
-read_submenu(menup *m, config_setting_t *s, gboolean as_item)
+static GtkWidget* read_menumodel(menup* m, const gchar* command, const gchar* icon, const gchar* action)
 {
-    GtkWidget *mi, *menu;
+    GtkBuilder* builder;
+    GtkWidget* item, *menuw;
+    builder = gtk_builder_new();
+    gtk_builder_add_from_file(builder,command,NULL);
+    GMenuModel* menu = G_MENU_MODEL(gtk_builder_get_object(builder,action));
+    menuw = gtk_menu_new_from_model(menu);
+    item = gtk_image_menu_item_new_with_label(icon);
+    gtk_widget_show(menuw);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item),menuw);
+    return item;
+}
+
+static GtkWidget *
+read_menu(menup *m, GSettings *s)
+{
+    GtkWidget *w;
+    GtkWidget *menu = NULL;
+    GtkWidget* mi = NULL;
     const gchar *name, *fname, *str;
-    config_setting_t *list = config_setting_add(s, "", PANEL_CONF_TYPE_LIST);
     GdkRGBA color={0.1, 0.1, 0.1, 0.375};
     guint i;
 
     menu = gtk_menu_new ();
-    gtk_container_set_border_width(GTK_CONTAINER(menu), 0);
 
     fname = NULL;
     name = NULL;
-    config_setting_lookup_string(s, "name", &name);
-    config_setting_lookup_string(s, "image", &fname);
-    if (config_setting_lookup_string(s, "tintcolor", &str))
-        gdk_rgba_parse(&color,str);
-
-    for (i = 0; (s = config_setting_get_elem(list, i)) != NULL; i++)
+    name = g_settings_get_string(s, MENU_KEY_NAME);
+    fname = g_settings_get_string(s, MENU_KEY_ICON);
+    char* color_str = g_settings_get_string(s,MENU_KEY_COLOR);
+    gdk_rgba_parse(&color,color_str);
+    g_free(color_str);
+    GVariantIter iter;
+    gchar *item_name, *icon, *command, *action;
+    GVariant* value = g_settings_get_value(s,MENU_KEY_LAYOUT);
+    g_variant_iter_init(&iter,value);
+    while (g_variant_iter_next(&iter,"(ssss)",&item_name,&command,&icon,&action))
     {
-        str = config_setting_get_name(s);
-        if (!g_ascii_strcasecmp(str, "item")) {
-            mi = read_item(m, s);
-        } else if (!g_ascii_strcasecmp(str, "separator")) {
-            mi = read_separator(m, s);
-        } else if (!g_ascii_strcasecmp(str, "system")) {
-            read_system_menu(GTK_MENU(menu), m, s); /* add system menu items */
-            continue;
-        } else if (!g_ascii_strcasecmp(str, "menu")) {
-            mi = read_submenu(m, s, TRUE);
-#if 0
-        } else if (!g_ascii_strcasecmp(str, "include")) {
-            read_include(p, fp);
-            continue;
-#endif
+        if(!g_ascii_strcasecmp(item_name,"item")) {
+            mi = read_item(m,command,icon,action);
+        } else if (!g_ascii_strcasecmp(item_name,"separator")) {
+            mi = read_separator(m);
+        } else if (!g_ascii_strcasecmp(item_name,"system")){
+            read_system_menu(GTK_MENU(menu),m);
+        } else if (!g_ascii_strcasecmp(item_name,"gmenumodel")) {
+            mi = read_menumodel(m,command,icon,action);
         } else {
             g_warning("menu: unknown block %s", str);
             goto error;
@@ -914,28 +927,47 @@ read_submenu(menup *m, config_setting_t *s, gboolean as_item)
             g_warning("menu: can't create menu item");
             goto error;
         }
-        gtk_widget_show(mi);
-        gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
+        g_free(item_name);
+        g_free(command);
+        g_free(icon);
+        g_free(action);
     }
-    if (as_item) {
-        mi = gtk_image_menu_item_new_with_label(name);
-        if (fname) {
-            GtkWidget *img;
-            char *expanded = expand_tilda(fname);
-            /* FIXME: use FmIcon cache and fm_pixbuf_from_icon() API */
-            img = _gtk_image_new_from_file_scaled(expanded, m->iconsize, m->iconsize, TRUE);
-            gtk_widget_show(img);
-            gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(mi), img);
-            g_free(expanded);
-        }
-        gtk_menu_item_set_submenu (GTK_MENU_ITEM (mi), menu);
-    } else {
-        m->fname = fname ? expand_tilda(fname) : g_strdup(DEFAULT_MENU_ICON);
-        m->caption = g_strdup(name);
-        mi = make_button(m, m->fname, name, &color, menu);
-    }
+    g_variant_unref(value);
+    gtk_widget_show(mi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu),mi);
+//    for (i = 0; (s = config_setting_get_elem(list, i)) != NULL; i++)
+//    {
+//        str = config_setting_get_name(s);
+//        if (!g_ascii_strcasecmp(str, "item")) {
+//            mi = read_item(m, s);
+//        } else if (!g_ascii_strcasecmp(str, "separator")) {
+//            mi = read_separator(m, s);
+//        } else if (!g_ascii_strcasecmp(str, "system")) {
+//            read_system_menu(GTK_MENU(menu), m, s); /* add system menu items */
+//            continue;
+//        } else if (!g_ascii_strcasecmp(str, "menu")) {
+//            mi = read_menu(m, s, TRUE);
+//#if 0
+//        } else if (!g_ascii_strcasecmp(str, "include")) {
+//            read_include(p, fp);
+//            continue;
+//#endif
+//        } else {
+//            g_warning("menu: unknown block %s", str);
+//            goto error;
+//        }
+//        if (!mi) {
+//            g_warning("menu: can't create menu item");
+//            goto error;
+//        }
+//        gtk_widget_show(mi);
+//        gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
+//    }
+    m->fname = fname ? expand_tilda(fname) : g_strdup(DEFAULT_MENU_ICON);
+    m->caption = g_strdup(name);
+    w = make_button(m, m->fname, name, &color, menu);
 
-    return mi;
+    return w;
 
 error:
     // FIXME: we need to recursivly destroy all child menus and their items
@@ -944,10 +976,9 @@ error:
 }
 
 static GtkWidget *
-menu_constructor(SimplePanel *panel, config_setting_t *settings)
+menu_constructor(SimplePanel *panel, GSettings *settings)
 {
     menup *m;
-    config_setting_t *s;
     int iw, ih;
 
     m = g_new0(menup, 1);
@@ -965,25 +996,25 @@ menu_constructor(SimplePanel *panel, config_setting_t *settings)
     m->settings = settings;
 
     /* Check if configuration exists */
-    settings = config_setting_add(settings, "", PANEL_CONF_TYPE_LIST);
-    if (config_setting_get_elem(settings, 0) == NULL)
-    {
-        /* create default menu */
-        config_setting_add(settings, "system", PANEL_CONF_TYPE_GROUP);
-        config_setting_add(settings, "separator", PANEL_CONF_TYPE_GROUP);
-        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
-            config_group_set_string(s, "command", "run");
-        config_setting_add(settings, "separator", PANEL_CONF_TYPE_GROUP);
-        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
-            config_group_set_string(s, "command", "logout");
-            config_group_set_string(s, "image", "gnome-logout");
-        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
-            config_group_set_string(s, "command", "shutdown");
-            config_group_set_string(s, "image", "gnome-shutdown");
-        config_group_set_string(m->settings, "image", DEFAULT_MENU_ICON);
-    }
+//    settings = config_setting_add(settings, "", PANEL_CONF_TYPE_LIST);
+//    if (config_setting_get_elem(settings, 0) == NULL)
+//    {
+//        /* create default menu */
+//        config_setting_add(settings, "system", PANEL_CONF_TYPE_GROUP);
+//        config_setting_add(settings, "separator", PANEL_CONF_TYPE_GROUP);
+//        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
+//            config_group_set_string(s, "command", "run");
+//        config_setting_add(settings, "separator", PANEL_CONF_TYPE_GROUP);
+//        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
+//            config_group_set_string(s, "command", "logout");
+//            config_group_set_string(s, "image", "gnome-logout");
+//        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
+//            config_group_set_string(s, "command", "shutdown");
+//            config_group_set_string(s, "image", "gnome-shutdown");
+//        config_group_set_string(m->settings, "image", DEFAULT_MENU_ICON);
+//    }
 
-    if (!read_submenu(m, m->settings, FALSE)) {
+    if (!read_menu(m, m->settings)) {
         g_warning("menu: plugin init failed");
         gtk_widget_destroy(m->box);
         return NULL;
@@ -1000,8 +1031,8 @@ static gboolean apply_config(gpointer user_data)
     if( m->fname ) {
         lxpanel_button_set_icon(m->img, m->fname, panel_get_icon_size(m->panel));
     }
-    config_group_set_string(m->settings, "image", m->fname);
-    config_group_set_string(m->settings, "name", m->caption);
+    g_settings_set_string(m->settings, MENU_KEY_ICON, m->fname);
+    g_settings_set_string(m->settings, MENU_KEY_NAME, m->caption);
     return FALSE;
 }
 
@@ -1010,7 +1041,7 @@ static GtkWidget *menu_config(SimplePanel *panel, GtkWidget *p)
     menup* menu = lxpanel_plugin_get_data(p);
     return lxpanel_generic_config_dlg(_("Menu"), panel, apply_config, p,
                                       _("Icon"), &menu->fname, CONF_TYPE_FILE_ENTRY,
-                                      /* _("Caption"), &menu->caption, CONF_TYPE_STR, */
+                                      _("Caption"), &menu->caption, CONF_TYPE_STR,
                                       NULL);
 }
 
@@ -1027,7 +1058,8 @@ SimplePanelPluginInit lxpanel_static_plugin_menu = {
     .new_instance = menu_constructor,
     .config = menu_config,
     .reconfigure = menu_panel_configuration_changed,
-    .show_system_menu = show_system_menu
+    .show_system_menu = show_system_menu,
+    .has_config = TRUE
 };
 
 /* vim: set sw=4 et sts=4 : */

@@ -44,7 +44,7 @@
 
 typedef struct {
     GtkWidget *main;
-    config_setting_t *settings;
+    GSettings *settings;
     GtkWidget *namew;
     GList *governors;
     GList *cpus;
@@ -336,7 +336,7 @@ static gboolean update_tooltip(gpointer user_data)
     return _update_tooltip(user_data);
 }
 
-static GtkWidget *cpufreq_constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget *cpufreq_constructor(SimplePanel *panel, GSettings *settings)
 {
     cpufreq *cf;
     //GtkWidget *button;
@@ -410,5 +410,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
 
     .new_instance = cpufreq_constructor,
     //.config      = config,
-    .button_press_event = clicked
+    .button_press_event = clicked,
+    .has_config = FALSE
 };

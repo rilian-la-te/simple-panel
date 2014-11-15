@@ -38,7 +38,7 @@ typedef struct {
     /* Graphics. */
     GtkWidget * plugin;				/* Back pointer to the widget */
     SimplePanel * panel;				/* Back pointer to panel */
-    config_setting_t * settings;		/* Plugin settings */
+    GSettings * settings;		/* Plugin settings */
     GtkWidget * tray_icon;			/* Displayed image */
     GtkWidget * popup_window;			/* Top level window for popup */
     GtkWidget * volume_scale;			/* Scale for volume */
@@ -526,7 +526,7 @@ static void volumealsa_build_popup_window(GtkWidget *p)
 }
 
 /* Plugin constructor. */
-static GtkWidget *volumealsa_constructor(SimplePanel *panel, config_setting_t *settings)
+static GtkWidget *volumealsa_constructor(SimplePanel *panel, GSettings *settings)
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     VolumeALSAPlugin * vol = g_new0(VolumeALSAPlugin, 1);
@@ -666,7 +666,8 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .new_instance = volumealsa_constructor,
     .config = volumealsa_configure,
     .reconfigure = volumealsa_panel_configuration_changed,
-    .button_press_event = volumealsa_button_press_event
+    .button_press_event = volumealsa_button_press_event,
+    .has_config = FALSE /* FIXME: make GSettings for select a channel*/
 };
 
 /* vim: set sw=4 et sts=4 : */

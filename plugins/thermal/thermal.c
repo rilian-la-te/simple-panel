@@ -26,6 +26,7 @@
 #include <glib/gi18n.h>
 
 #include <string.h>
+#include <gtk/gtk.h>
 
 #include "plugin.h"
 #include "misc.h"
@@ -45,15 +46,20 @@
 #define MAX_NUM_SENSORS 10
 #define MAX_AUTOMATIC_CRITICAL_TEMP 150 /* in degrees Celsius */
 
-#if !GLIB_CHECK_VERSION(2, 40, 0)
-# define g_info(...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_INFO, __VA_ARGS__)
-#endif
+#define THERMAL_KEY_SENSOR "sensor-location"
+#define THERMAL_KEY_AUTO_SENSOR "use-auto-location"
+#define THERMAL_KEY_NORMAL "normal-color"
+#define THERMAL_KEY_W1_COLOR "warning-color-1"
+#define THERMAL_KEY_W2_COLOR "warning-color-2"
+#define THERMAL_KEY_AUTO_TEMP "auto-temperature-levels"
+#define THERMAL_KEY_W1_TEMP "warning-temperature-1"
+#define THERMAL_KEY_W2_TEMP "warning-temperature-2"
 
 typedef gint (*GetTempFunc)(char const *);
 
 typedef struct thermal {
     SimplePanel *panel;
-    config_setting_t *settings;
+    GSettings* settings;
     GtkWidget *namew;
     GString *tip;
     int warning1;
@@ -436,7 +442,6 @@ static gboolean applyConfig(gpointer p)
 {
     thermal *th = lxpanel_plugin_get_data(p);
     int critical;
-    ENTER;
 
     if (th->str_cl_normal) gdk_rgba_parse(&th->cl_normal,th->str_cl_normal);
     if (th->str_cl_warning1) gdk_rgba_parse(&th->cl_warning1,th->str_cl_warning1);
@@ -459,17 +464,15 @@ static gboolean applyConfig(gpointer p)
         th->warning2 = critical - 5;
     }
 
-    config_group_set_string(th->settings, "NormalColor", th->str_cl_normal);
-    config_group_set_string(th->settings, "Warning1Color", th->str_cl_warning1);
-    config_group_set_string(th->settings, "Warning2Color", th->str_cl_warning2);
-    config_group_set_int(th->settings, "AutomaticLevels", th->not_custom_levels);
-    /* TODO: clean obsolete setting
-    config_setting_remove(th->settings, "CustomLevels"); */
-    config_group_set_int(th->settings, "Warning1Temp", th->warning1);
-    config_group_set_int(th->settings, "Warning2Temp", th->warning2);
-    config_group_set_int(th->settings, "AutomaticSensor", th->auto_sensor);
-    config_group_set_string(th->settings, "Sensor", th->sensor);
-    RET(FALSE);
+    g_settings_set_string(th->settings, THERMAL_KEY_NORMAL, th->str_cl_normal);
+    g_settings_set_string(th->settings, THERMAL_KEY_W1_COLOR, th->str_cl_warning1);
+    g_settings_set_string(th->settings, THERMAL_KEY_W2_COLOR, th->str_cl_warning2);
+    g_settings_set_boolean(th->settings, THERMAL_KEY_AUTO_TEMP, th->not_custom_levels);
+    g_settings_set_int(th->settings, THERMAL_KEY_W1_TEMP, th->warning1);
+    g_settings_set_int(th->settings, THERMAL_KEY_W2_TEMP, th->warning2);
+    g_settings_set_boolean(th->settings, THERMAL_KEY_AUTO_SENSOR, th->auto_sensor);
+    g_settings_set_string(th->settings, THERMAL_KEY_SENSOR, th->sensor);
+    return FALSE;
 }
 
 static void
@@ -490,11 +493,10 @@ thermal_destructor(gpointer user_data)
 }
 
 static GtkWidget *
-thermal_constructor(SimplePanel *panel, config_setting_t *settings)
+thermal_constructor(SimplePanel *panel, GSettings *settings)
 {
     thermal *th;
     GtkWidget *p;
-    const char *tmp;
 
     ENTER;
     th = g_new0(thermal, 1);
@@ -514,29 +516,14 @@ thermal_constructor(SimplePanel *panel, config_setting_t *settings)
     /* By default, use automatic, that is, "not custom" temperature levels. If
      * we were using custom levels, they would be 0°C at startup, so we would
      * display in warning colors by default. */
-    th->not_custom_levels = TRUE;
-
-    if (config_setting_lookup_string(settings, "NormalColor", &tmp))
-        th->str_cl_normal = g_strdup(tmp);
-    if (config_setting_lookup_string(settings, "Warning1Color", &tmp))
-        th->str_cl_warning1 = g_strdup(tmp);
-    if (config_setting_lookup_string(settings, "Warning2Color", &tmp))
-        th->str_cl_warning2 = g_strdup(tmp);
-    config_setting_lookup_int(settings, "AutomaticSensor", &th->auto_sensor);
-    /* backward compatibility for wrong variable */
-    config_setting_lookup_int(settings, "CustomLevels", &th->not_custom_levels);
-    config_setting_lookup_int(settings, "AutomaticLevels", &th->not_custom_levels);
-    if (config_setting_lookup_string(settings, "Sensor", &tmp))
-        th->sensor = g_strdup(tmp);
-    config_setting_lookup_int(settings, "Warning1Temp", &th->warning1);
-    config_setting_lookup_int(settings, "Warning2Temp", &th->warning2);
-
-    if(!th->str_cl_normal)
-        th->str_cl_normal = g_strdup("#00ff00");
-    if(!th->str_cl_warning1)
-        th->str_cl_warning1 = g_strdup("#fff000");
-    if(!th->str_cl_warning2)
-        th->str_cl_warning2 = g_strdup("#ff0000");
+    th->str_cl_normal = g_settings_get_string(settings,THERMAL_KEY_NORMAL);
+    th->str_cl_warning1 = g_settings_get_string(settings,THERMAL_KEY_W1_COLOR);
+    th->str_cl_warning2 = g_settings_get_string(settings,THERMAL_KEY_W2_COLOR);
+    th->sensor = g_settings_get_string(settings,THERMAL_KEY_SENSOR);
+    th->not_custom_levels = g_settings_get_boolean(settings, THERMAL_KEY_AUTO_TEMP);
+    th->auto_sensor = g_settings_get_boolean(settings,THERMAL_KEY_AUTO_SENSOR);
+    th->warning1 = g_settings_get_int(settings,THERMAL_KEY_W1_TEMP);
+    th->warning2 = g_settings_get_int(settings,THERMAL_KEY_W2_TEMP);
 
     applyConfig(p);
 
@@ -577,6 +564,7 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
 
     .new_instance = thermal_constructor,
     .config = config,
+    .has_config = TRUE
 };
 
 

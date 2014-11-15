@@ -41,11 +41,6 @@
 #include "panel-enum-types.h"
 #include "misc.h"
 
-/* The same for new plugins type - they will be not unloaded by FmModule */
-#define REGISTER_STATIC_MODULE(pc) do { \
-    extern SimplePanelPluginInit lxpanel_static_plugin_##pc; \
-    lxpanel_register_plugin_type(#pc, &lxpanel_static_plugin_##pc); } while (0)
-
 enum
 {
     PROP_NONE,
@@ -87,7 +82,7 @@ static const GOptionEntry entries[] =
 
 static gboolean start_all_panels(PanelApp* app);
 static void _ensure_user_config_dirs(PanelApp *app);
-static void init_plugin_class_list(void);
+
 
 static void panel_app_startup(GApplication* app)
 {
@@ -356,32 +351,6 @@ static void _ensure_user_config_dirs(PanelApp* app)
     /* make sure the private profile and panels dir exists */
     g_mkdir_with_parents(dir, 0700);
     g_free(dir);
-}
-
-/* Initialize the static plugins. */
-static void init_plugin_class_list(void)
-{
-#ifdef STATIC_SEPARATOR
-    REGISTER_STATIC_MODULE(separator);
-#endif
-
-#ifdef STATIC_DCLOCK
-    REGISTER_STATIC_MODULE(dclock);
-#endif
-
-#ifdef STATIC_DIRMENU
-    REGISTER_STATIC_MODULE(dirmenu);
-#endif
-
-#ifndef DISABLE_MENU
-#ifdef STATIC_MENU
-    //REGISTER_STATIC_MODULE(menu);
-#endif
-#endif
-
-#ifdef STATIC_SPACE
-    REGISTER_STATIC_MODULE(space);
-#endif
 }
 
 void panel_app_init(PanelApp *self)
