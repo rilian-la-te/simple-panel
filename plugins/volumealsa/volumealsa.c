@@ -667,7 +667,8 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .config = volumealsa_configure,
     .reconfigure = volumealsa_panel_configuration_changed,
     .button_press_event = volumealsa_button_press_event,
-    .has_config = FALSE /* FIXME: make GSettings for select a channel*/
+    .has_config = FALSE
+     /* FIXME: make GSettings for select a channel*/
 };
 
 /* vim: set sw=4 et sts=4 : */

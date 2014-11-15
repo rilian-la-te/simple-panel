@@ -1690,6 +1690,7 @@ SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char*
             gtk_widget_destroy(GTK_WIDGET(panel));
             panel = NULL;
         }
+        update_positions_on_panel(panel);
         update_widget_positions(panel);
     }
     return panel;

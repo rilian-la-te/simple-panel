@@ -293,7 +293,7 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
 
     dc->clock_format = g_settings_get_string(settings,DCLOCK_KEY_CLOCK_FORMAT);
     dc->tooltip_format = g_settings_get_string(settings,DCLOCK_KEY_TOOLTIP_FORMAT);
-    dc->action = g_settings_get_string(settings,DCLOCK_KEY_ACTION);
+    g_settings_get(settings,DCLOCK_KEY_ACTION,"ms",&dc->action);
     dc->center_text = g_settings_get_boolean(settings,DCLOCK_KEY_CENTER_TEXT);
     dc->icon_only = g_settings_get_boolean(settings,DCLOCK_KEY_ICON_ONLY);
     dc->bold = g_settings_get_boolean(settings,DCLOCK_KEY_BOLD_FONT);
@@ -406,7 +406,8 @@ static gboolean dclock_apply_configuration(gpointer user_data)
     /* Save configuration */
     g_settings_set_string(dc->settings, DCLOCK_KEY_CLOCK_FORMAT, dc->clock_format);
     g_settings_set_string(dc->settings, DCLOCK_KEY_TOOLTIP_FORMAT, dc->tooltip_format);
-    g_settings_set_string(dc->settings, DCLOCK_KEY_ACTION, dc->action);
+    if(dc->action)
+        g_settings_set_string(dc->settings, DCLOCK_KEY_ACTION, dc->action);
     g_settings_set_boolean(dc->settings, DCLOCK_KEY_BOLD_FONT, dc->bold);
     g_settings_set_boolean(dc->settings, DCLOCK_KEY_ICON_ONLY, dc->icon_only);
     g_settings_set_boolean(dc->settings, DCLOCK_KEY_CENTER_TEXT, dc->center_text);

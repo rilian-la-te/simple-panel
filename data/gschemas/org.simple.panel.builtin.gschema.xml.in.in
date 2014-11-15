@@ -42,7 +42,7 @@
     <key name="icon" type="s">
       <default>'start-here'</default>
     </key>
-    <key name="color" type="s">
+    <key name="highlight-color" type="s">
       <default>'rgba(50,50,50,0.37)'</default>
     </key>
     <key name="layout" type="a(ssss)">

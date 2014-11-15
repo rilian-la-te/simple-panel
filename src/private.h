@@ -185,6 +185,7 @@ void init_plugin_class_list(void);
 GtkWidget *simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, guint pack_pos);
 GHashTable *lxpanel_get_all_types(void); /* transfer none */
 void set_widget_positions(SimplePanel* p);
+void update_positions_on_panel(SimplePanel* p);
 
 extern GQuark lxpanel_plugin_qinit; /* access to LXPanelPluginInit data */
 #define PLUGIN_CLASS(_i) ((SimplePanelPluginInit*)g_object_get_qdata(G_OBJECT(_i),lxpanel_plugin_qinit))

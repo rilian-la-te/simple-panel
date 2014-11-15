@@ -573,17 +573,30 @@ static int get_widget_index(SimplePanel* p, GtkWidget* pl)
     return data.idx;
 }
 
-static void set_widget_position(GtkWidget* widget, gpointer data)
+static void set_widget_position_key(GtkWidget* widget, gpointer data)
 {
     int idx = get_widget_index(LXPANEL(data),widget);
     PluginGSettings* s = g_object_get_qdata(G_OBJECT(widget), lxpanel_plugin_qconf);
     g_settings_set_uint(s->default_settings,DEFAULT_PLUGIN_KEY_POSITION,idx);
 }
 
+static void set_widget_position(GtkWidget* widget, gpointer data)
+{
+    PluginGSettings* s = g_object_get_qdata(G_OBJECT(widget), lxpanel_plugin_qconf);
+    int idx = g_settings_get_uint(s->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
+    gtk_box_reorder_child(GTK_BOX(data),widget,idx);
+}
+
 void update_widget_positions(SimplePanel* p)
 {
-    gtk_container_foreach(GTK_CONTAINER(p->priv->box),set_widget_position,p);
+    gtk_container_foreach(GTK_CONTAINER(p->priv->box),set_widget_position_key,p);
 }
+
+void update_positions_on_panel(SimplePanel* p)
+{
+    gtk_container_foreach(GTK_CONTAINER(p->priv->box),set_widget_position,p->priv->box);
+}
+
 
 static void on_moveup_plugin(  GtkButton* btn, GtkTreeView* view )
 {

@@ -917,6 +917,7 @@ read_menu(menup *m, GSettings *s)
             mi = read_separator(m);
         } else if (!g_ascii_strcasecmp(item_name,"system")){
             read_system_menu(GTK_MENU(menu),m);
+            continue;
         } else if (!g_ascii_strcasecmp(item_name,"gmenumodel")) {
             mi = read_menumodel(m,command,icon,action);
         } else {
@@ -935,34 +936,6 @@ read_menu(menup *m, GSettings *s)
     g_variant_unref(value);
     gtk_widget_show(mi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu),mi);
-//    for (i = 0; (s = config_setting_get_elem(list, i)) != NULL; i++)
-//    {
-//        str = config_setting_get_name(s);
-//        if (!g_ascii_strcasecmp(str, "item")) {
-//            mi = read_item(m, s);
-//        } else if (!g_ascii_strcasecmp(str, "separator")) {
-//            mi = read_separator(m, s);
-//        } else if (!g_ascii_strcasecmp(str, "system")) {
-//            read_system_menu(GTK_MENU(menu), m, s); /* add system menu items */
-//            continue;
-//        } else if (!g_ascii_strcasecmp(str, "menu")) {
-//            mi = read_menu(m, s, TRUE);
-//#if 0
-//        } else if (!g_ascii_strcasecmp(str, "include")) {
-//            read_include(p, fp);
-//            continue;
-//#endif
-//        } else {
-//            g_warning("menu: unknown block %s", str);
-//            goto error;
-//        }
-//        if (!mi) {
-//            g_warning("menu: can't create menu item");
-//            goto error;
-//        }
-//        gtk_widget_show(mi);
-//        gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
-//    }
     m->fname = fname ? expand_tilda(fname) : g_strdup(DEFAULT_MENU_ICON);
     m->caption = g_strdup(name);
     w = make_button(m, m->fname, name, &color, menu);
