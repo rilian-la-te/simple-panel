@@ -3313,7 +3313,7 @@ static void  on_menuitem_lock_tbp_clicked(GtkWidget * widget, LaunchTaskBarPlugi
         path = fm_path_to_str(fm_file_info_get_path(fi));
         /* g_debug("*** path '%s'",path); */
         btn->id = path;
-        launchbar_update_button_settings(ltbp);
+        launchbar_update_button_settings(tb);
         simple_panel_config_save(tb->panel);
     }
 }
