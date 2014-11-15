@@ -250,7 +250,7 @@ static void on_add_menu_item_to_panel(GtkMenuItem* item, MenuCacheApp* app)
                 /* FIXME: should we let the users choose which launcherbar to add the btn? */
                 break;
 #if 0
-                int n = lTB_Launchbar_get_n_btns(plugin);
+                int n = launchbar_get_n_btns(plugin);
                 if( n > n_btns )
                 {
                     lb = plugin;
@@ -936,6 +936,7 @@ read_menu(menup *m, GSettings *s)
     g_variant_unref(value);
     gtk_widget_show(mi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu),mi);
+    gtk_widget_show(menu);
     m->fname = fname ? expand_tilda(fname) : g_strdup(DEFAULT_MENU_ICON);
     m->caption = g_strdup(name);
     w = make_button(m, m->fname, name, &color, menu);

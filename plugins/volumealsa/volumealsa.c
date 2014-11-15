@@ -659,6 +659,7 @@ static void volumealsa_panel_configuration_changed(SimplePanel *panel, GtkWidget
 FM_DEFINE_MODULE(lxpanel_gtk, volumealsa)
 
 /* Plugin descriptor. */
+/* FIXME: make GSettings for select a channel*/
 SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Volume Control"),
     .description = N_("Display and control volume for ALSA"),
@@ -668,7 +669,6 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .reconfigure = volumealsa_panel_configuration_changed,
     .button_press_event = volumealsa_button_press_event,
     .has_config = FALSE
-     /* FIXME: make GSettings for select a channel*/
 };
 
 /* vim: set sw=4 et sts=4 : */
