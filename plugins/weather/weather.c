@@ -116,7 +116,9 @@ weather_constructor(SimplePanel *pPanel, GSettings *pConfig)
   pLocation->pcState_ = g_settings_get_string(pConfig, "state");
   pLocation->pcCountry_ = g_settings_get_string(pConfig, "country");
   pLocation->pcWOEID_ = g_settings_get_string(pConfig, "woeid");
-  pLocation->cUnits_ = g_settings_get_string(pConfig, "units")[1];
+  gchar* tmp = g_settings_get_string(pConfig, "units");
+  pLocation->cUnits_ = tmp[0];
+  g_free(tmp);
   pLocation->uiInterval_ = g_settings_get_uint(pConfig, "interval");
   pLocation->bEnabled_ = g_settings_get_boolean(pConfig, "enabled");
   if (pLocation->pcAlias_ && pLocation->pcWOEID_)
@@ -175,7 +177,7 @@ void weather_save_configuration(GtkWidget * pWeather, LocationInfo * pLocation)
           g_settings_set_string(pPriv->pConfig_, "units", units);
         }
 
-      g_settings_set_int(pPriv->pConfig_, "interval", (int) pLocation->uiInterval_);
+      g_settings_set_uint(pPriv->pConfig_, "interval", (int) pLocation->uiInterval_);
       g_settings_set_boolean(pPriv->pConfig_, "enabled", (int) pLocation->bEnabled_);
     }
 

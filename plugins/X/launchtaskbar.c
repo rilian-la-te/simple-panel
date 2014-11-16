@@ -267,7 +267,7 @@ static void launchbar_update_button_settings(LaunchTaskBarPlugin *ltbp)
     g_slist_foreach(ltbp->buttons,(GFunc)launchbutton_get_id,(gpointer)tmp);
     g_ptr_array_add(tmp,NULL);
     buttons = (gchar**)g_ptr_array_free(tmp,FALSE);
-    g_settings_set_strv(ltbp->settings,LTB_KEY_BUTTONS,buttons);
+    g_settings_set_strv(ltbp->settings,LTB_KEY_BUTTONS,(const gchar* const*)buttons);
     g_free(buttons);
 }
 
@@ -731,7 +731,7 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
         g_signal_connect(ltbp->screen, "window-manager-changed", G_CALLBACK(taskbar_window_manager_changed), ltbp);
 
         /* Fetch the client list and redraw the taskbar.  Then determine what window has focus. */
-//        taskbar_window_buttons(screen,(gpointer* ) ltbp);
+        taskbar_window_buttons(screen,(gpointer* ) ltbp);
         g_signal_connect(ltbp->panel, "style-updated", G_CALLBACK(taskbar_style_updated),(gpointer) ltbp);
         taskbar_on_active_window_changed(screen,NULL,(gpointer* ) ltbp);
     }
