@@ -1127,7 +1127,7 @@ static void on_combobox_mode_changed(GtkComboBox *p_combobox, gpointer p_data)
         break;
     }
 
-    config_group_set_int(ltbp->settings, "LaunchTaskBarMode", ltbp->mode);
+    g_settings_set_enum(ltbp->settings, LTB_KEY_MODE, ltbp->mode);
 }
 
 static void on_checkbutton_show_tooltips_toggled(GtkToggleButton *p_togglebutton, gpointer p_data)
@@ -1135,7 +1135,7 @@ static void on_checkbutton_show_tooltips_toggled(GtkToggleButton *p_togglebutton
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->tooltips = gtk_toggle_button_get_active(p_togglebutton);
     //g_print("\nltbp->tooltips upd\n");
-    config_group_set_int(ltbp->settings, "tooltips", ltbp->tooltips);
+    g_settings_set_boolean(ltbp->settings, LTB_KEY_TOOLTIPS, ltbp->tooltips);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1144,7 +1144,7 @@ static void on_checkbutton_icons_only_toggled(GtkToggleButton *p_togglebutton, g
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->icons_only = gtk_toggle_button_get_active(p_togglebutton);
     //g_print("\ntb->icons_only upd\n");
-    config_group_set_int(ltbp->settings, "IconsOnly", ltbp->icons_only);
+    g_settings_set_boolean(ltbp->settings, LTB_KEY_ICONS_ONLY, ltbp->icons_only);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1153,7 +1153,7 @@ static void on_checkbutton_flat_buttons_toggled(GtkToggleButton *p_togglebutton,
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->flat_button = gtk_toggle_button_get_active(p_togglebutton);
     //g_print("\ntb->flat_button upd\n");
-    config_group_set_int(ltbp->settings, "FlatButton", ltbp->flat_button);
+    g_settings_set_boolean(ltbp->settings, LTB_KEY_FLAT, ltbp->flat_button);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1162,7 +1162,7 @@ static void on_checkbutton_show_all_desks_toggled(GtkToggleButton *p_togglebutto
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->show_all_desks = gtk_toggle_button_get_active(p_togglebutton);
     //g_print("\ntb->show_all_desks upd\n");
-    config_group_set_int(ltbp->settings, "ShowAllDesks", ltbp->show_all_desks);
+    g_settings_set_boolean(ltbp->settings, LTB_KEY_ALL, ltbp->show_all_desks);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1171,7 +1171,7 @@ static void on_checkbutton_same_monitor_only_toggled(GtkToggleButton *p_togglebu
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->same_monitor_only = gtk_toggle_button_get_active(p_togglebutton);
     //g_print("\ntb->same_monitor_only upd\n");
-    config_group_set_int(ltbp->settings, "SameMonitorOnly", ltbp->same_monitor_only);
+    g_settings_set_boolean(ltbp->settings, LTB_KEY_MONITOR, ltbp->same_monitor_only);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1180,7 +1180,7 @@ static void on_checkbutton_mouse_wheel_toggled(GtkToggleButton *p_togglebutton, 
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->use_mouse_wheel = gtk_toggle_button_get_active(p_togglebutton);
     //g_print("\ntb->use_mouse_wheel upd\n");
-    config_group_set_int(ltbp->settings, "UseMouseWheel", ltbp->use_mouse_wheel);
+    g_settings_set_boolean(ltbp->settings, LTB_KEY_WHEEL, ltbp->use_mouse_wheel);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1189,7 +1189,7 @@ static void on_checkbutton_urgency_hint_toggled(GtkToggleButton *p_togglebutton,
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->use_urgency_hint = gtk_toggle_button_get_active(p_togglebutton);
     //g_print("\ntb->use_urgency_hint upd\n");
-    config_group_set_int(ltbp->settings, "UseUrgencyHint", ltbp->use_urgency_hint);
+    g_settings_set_boolean(ltbp->settings, LTB_KEY_URGENCY, ltbp->use_urgency_hint);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1198,7 +1198,7 @@ static void on_checkbutton_grouped_tasks_toggled(GtkToggleButton *p_togglebutton
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->grouped_tasks = gtk_toggle_button_get_active(p_togglebutton);
     //g_print("\ntb->grouped_tasks upd\n");
-    config_group_set_int(ltbp->settings, "GroupedTasks", ltbp->grouped_tasks);
+    g_settings_set_boolean(ltbp->settings, LTB_KEY_GROUPING, ltbp->grouped_tasks);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1207,7 +1207,7 @@ static void on_spinbutton_max_width_value_changed(GtkSpinButton *p_spinbutton, g
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->task_width_max = gtk_spin_button_get_value(p_spinbutton);
     //g_print("\ntb->task_width_max upd\n");
-    config_group_set_int(ltbp->settings, "MaxTaskWidth", ltbp->task_width_max);
+    g_settings_set_int(ltbp->settings, LTB_KEY_TASK_WIDTH, ltbp->task_width_max);
     taskbar_apply_configuration(ltbp);
 }
 
@@ -1216,7 +1216,7 @@ static void on_spinbutton_spacing_value_changed(GtkSpinButton *p_spinbutton, gpo
     LaunchTaskBarPlugin *ltbp = (LaunchTaskBarPlugin *)p_data;
     ltbp->spacing = gtk_spin_button_get_value(p_spinbutton);
     //g_print("\ntb->spacing upd\n");
-    config_group_set_int(ltbp->settings, "spacing", ltbp->spacing);
+    g_settings_set_int(ltbp->settings, LTB_KEY_SPACING, ltbp->spacing);
     taskbar_apply_configuration(ltbp);
 }
 

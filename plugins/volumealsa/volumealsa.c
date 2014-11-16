@@ -595,7 +595,7 @@ static GtkWidget *volumealsa_configure(SimplePanel *panel, GtkWidget *p)
 
     /* FIXME: configure settings! */
     /* check if command line was configured */
-    config_setting_lookup_string(vol->settings, "MixerCommand", &command_line);
+//    config_setting_lookup_string(vol->settings, "MixerCommand", &command_line);
 
     /* if command isn't set in settings then let guess it */
     if (command_line == NULL && (path = g_find_program_in_path("pulseaudio")))

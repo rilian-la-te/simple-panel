@@ -415,7 +415,13 @@ static void simple_panel_set_property(GObject      *object,
         if (configuration)
             _panel_set_panel_configuration_changed(toplevel);
         if (geometry)
+        {
+            if (prop_id == PROP_EDGE || prop_id == PROP_ALIGNMENT)
+                gtk_widget_hide(GTK_WIDGET(toplevel));
             gtk_widget_queue_resize(GTK_WIDGET(toplevel));
+            if (prop_id == PROP_EDGE || prop_id == PROP_ALIGNMENT)
+                gtk_widget_show(GTK_WIDGET(toplevel));
+        }
         if (background)
             panel_update_background(toplevel);
         if (fonts)
