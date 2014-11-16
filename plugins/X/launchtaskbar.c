@@ -262,7 +262,7 @@ static void launchbutton_make_index(LaunchButton* btn, GSList* l)
 static void launchbar_update_button_settings(LaunchTaskBarPlugin *ltbp)
 {
     guint len = g_slist_length(ltbp->buttons);
-    gchar** buttons = g_malloc0((1+len)*sizeof(gchar*));
+    char** buttons = g_malloc0((len+1)*sizeof(gchar*));
     buttons[len] = NULL;
     g_slist_foreach(ltbp->buttons,(GFunc)launchbutton_make_index,(gpointer)ltbp->buttons);
     g_slist_foreach(ltbp->buttons,(GFunc)launchbutton_get_id,(gpointer)buttons);
@@ -558,6 +558,7 @@ static LaunchButton *launchbutton_for_file_info(LaunchTaskBarPlugin * lb, FmFile
 
     /* Append at end of list to preserve configured order. */
     lb->buttons = g_slist_append(lb->buttons, btn);
+    btn->id = (fm_path_to_str(fm_file_info_get_path(fi)));
     launchbar_update_button_settings(lb);
 
     /* Show the widget and return. */
@@ -663,7 +664,7 @@ static void launchtaskbar_constructor_launch(LaunchTaskBarPlugin *ltbp, gboolean
             guint i;
             gchar** buttons;
             g_settings_get(ltbp->settings,LTB_KEY_BUTTONS,"mas",&buttons);
-            for (i = 0; buttons[i] != NULL; )
+            for (i = 0; (buttons!= NULL) && (buttons[i] != NULL); )
             {
                 if (!launchbutton_constructor(ltbp,i))
                 {

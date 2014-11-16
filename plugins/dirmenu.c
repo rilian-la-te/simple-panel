@@ -263,7 +263,7 @@ static GtkWidget *dirmenu_constructor(SimplePanel *panel, GSettings *settings)
 
     /* Load parameters from the configuration file. */
     dm->image = g_settings_get_string(settings,DIRMENU_KEY_ICON);
-    dm->name = g_settings_get_string(settings,DIRMENU_KEY_NAME);
+    g_settings_get(settings,DIRMENU_KEY_NAME,"ms",&dm->name);
     dm->path = expand_tilda(g_settings_get_string(settings,DIRMENU_KEY_PATH));
     /* Save construction pointers */
     dm->panel = panel;
@@ -333,7 +333,7 @@ static gboolean dirmenu_apply_configuration(gpointer user_data)
 
     /* Save configuration */
     g_settings_set_string(dm->settings,DIRMENU_KEY_PATH,dm->path);
-    g_settings_set_string(dm->settings,DIRMENU_KEY_NAME,dm->name);
+    g_settings_set(dm->settings,DIRMENU_KEY_NAME,"ms",dm->name);
     g_settings_set_string(dm->settings,DIRMENU_KEY_ICON,dm->image);
     lxpanel_button_set_icon(p, ((dm->image != NULL) ? dm->image : "file-manager"),
                             panel_get_icon_size(dm->panel));

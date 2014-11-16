@@ -641,12 +641,10 @@ reload_system_menu( menup* m, GtkMenu* menu )
 
 static void show_menu( GtkWidget* widget, menup* m, int btn, guint32 time )
 {
-    gtk_menu_attach_to_widget(GTK_MENU(m->menu),m->box,NULL);
     gtk_menu_popup(GTK_MENU(m->menu),
                    NULL, NULL,
                    (GtkMenuPositionFunc)menu_pos, widget,
                    btn, time);
-    gtk_menu_detach(GTK_MENU(m->menu));
 }
 
 static gboolean
@@ -699,6 +697,7 @@ make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkW
     g_action_map_add_action_entries(G_ACTION_MAP(grp),entries,G_N_ELEMENTS(entries),(gpointer)m);
     ENTER;
     m->menu = menu;
+    gtk_menu_attach_to_widget(GTK_MENU(m->menu),m->box,NULL);
 
     if( name )
     {
@@ -932,11 +931,10 @@ read_menu(menup *m, GSettings *s)
         g_free(command);
         g_free(icon);
         g_free(action);
+        gtk_widget_show(mi);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu),mi);
     }
     g_variant_unref(value);
-    gtk_widget_show(mi);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu),mi);
-    gtk_widget_show(menu);
     m->fname = fname ? expand_tilda(fname) : g_strdup(DEFAULT_MENU_ICON);
     m->caption = g_strdup(name);
     w = make_button(m, m->fname, name, &color, menu);

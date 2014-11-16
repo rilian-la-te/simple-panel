@@ -406,8 +406,7 @@ static gboolean dclock_apply_configuration(gpointer user_data)
     /* Save configuration */
     g_settings_set_string(dc->settings, DCLOCK_KEY_CLOCK_FORMAT, dc->clock_format);
     g_settings_set_string(dc->settings, DCLOCK_KEY_TOOLTIP_FORMAT, dc->tooltip_format);
-    if(dc->action)
-        g_settings_set_string(dc->settings, DCLOCK_KEY_ACTION, dc->action);
+    g_settings_set(dc->settings, DCLOCK_KEY_ACTION,"ms", dc->action);
     g_settings_set_boolean(dc->settings, DCLOCK_KEY_BOLD_FONT, dc->bold);
     g_settings_set_boolean(dc->settings, DCLOCK_KEY_ICON_ONLY, dc->icon_only);
     g_settings_set_boolean(dc->settings, DCLOCK_KEY_CENTER_TEXT, dc->center_text);
