@@ -117,7 +117,7 @@ static gboolean dclock_button_press_event(GtkWidget * widget, GdkEventButton * e
     DClockPlugin * dc = lxpanel_plugin_get_data(widget);
 
     /* If an action is set, execute it. */
-    if (dc->action != NULL && (strlen(dc->action)>0))
+    if (dc->action != NULL)
         fm_launch_command_simple(NULL, NULL, 0, dc->action, NULL);
 
     /* If no action is set, toggle the presentation of the calendar. */

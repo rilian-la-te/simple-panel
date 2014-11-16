@@ -79,7 +79,6 @@ response_event(GtkDialog *widget, gint arg1, Panel* panel )
     case GTK_RESPONSE_DELETE_EVENT:
     case GTK_RESPONSE_CLOSE:
     case GTK_RESPONSE_NONE:
-        simple_panel_config_save( panel->topgwin );
         gtk_application_remove_window(panel->app,GTK_WINDOW(panel->pref_dialog));
         /* NOTE: NO BREAK HERE*/
         gtk_widget_destroy(GTK_WIDGET(widget));
@@ -403,9 +402,6 @@ static void on_add_plugin_row_activated( GtkTreeView *view,
         if ((pl = simple_panel_add_plugin(p, s, position)))
         {
             gboolean expand;
-
-            simple_panel_config_save(p);
-
             plugin_widget_set_background(pl, p);
             gtk_container_child_get(GTK_CONTAINER(p->priv->box), pl, "expand", &expand, NULL);
             model = gtk_tree_view_get_model( _view );
@@ -521,7 +517,6 @@ static void on_remove_plugin( GtkButton* btn, GtkTreeView* view )
         /* reset conf pointer because the widget still may be referenced by configurator */
         g_object_set_qdata(G_OBJECT(pl), lxpanel_plugin_qconf, NULL);
         gtk_widget_destroy(pl);
-        simple_panel_config_save(p);
     }
 }
 
@@ -628,7 +623,6 @@ static void on_moveup_plugin(  GtkButton* btn, GtkTreeView* view )
 
             /* reorder in panel */
             gtk_box_reorder_child(GTK_BOX(panel->priv->box), pl, i - 1);
-            simple_panel_config_save(panel);
             update_widget_positions(panel);
             return;
         }
@@ -662,7 +656,6 @@ static void on_movedown_plugin(  GtkButton* btn, GtkTreeView* view )
     s = g_object_get_qdata(G_OBJECT(pl), lxpanel_plugin_qconf);
     /* reorder in panel */
     gtk_box_reorder_child(GTK_BOX(panel->priv->box), pl, i + 1);
-    simple_panel_config_save(panel);
     update_widget_positions(panel);
 }
 
@@ -1083,7 +1076,6 @@ static void generic_config_dlg_response(GtkWidget * dlg, int response, Panel * p
     g_object_set_data(G_OBJECT(dlg), "generic-config-plugin", NULL);
     panel->plugin_pref_dialog = NULL;
     gtk_widget_destroy(dlg);
-    simple_panel_config_save(panel->topgwin);
 }
 
 void _panel_show_config_dialog(SimplePanel *panel, GtkWidget *p, GtkWidget *dlg)

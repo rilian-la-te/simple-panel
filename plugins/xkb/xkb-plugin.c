@@ -391,7 +391,7 @@ static void on_xkb_checkbutton_keep_system_layouts_toggled(GtkToggleButton *tb, 
         /* Fetch the new value and redraw. */
         XkbPlugin * p_xkb = (XkbPlugin *)p_data;
         p_xkb->keep_system_layouts = gtk_toggle_button_get_active(tb);
-        g_settings_set_int(p_xkb->settings, XKB_KEY_SYSTEM, p_xkb->keep_system_layouts);
+        g_settings_set_boolean(p_xkb->settings, XKB_KEY_SYSTEM, p_xkb->keep_system_layouts);
         xkb_redraw(p_xkb);
 
         gtk_widget_set_sensitive(p_xkb->p_frame_kbd_model, !p_xkb->keep_system_layouts);

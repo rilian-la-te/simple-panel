@@ -162,13 +162,13 @@ void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint64 plu
 {
     GSList* l;
     PluginGSettings* removed_settings;
-    char* group_name = g_strdup_printf("%li",plugin_number);
+    gchar* group_name = g_strdup_printf("%li",plugin_number);
     for(l = settings->all_settings; l!=NULL; l=l->next)
     {
         removed_settings = l->data;
         if (plugin_number == removed_settings->plugin_number)
         {
-            settings->all_settings = g_slist_remove(l,removed_settings);
+            settings->all_settings = g_slist_remove(settings->all_settings,removed_settings);
             g_free(removed_settings->config_path_appender);
             if (removed_settings->config_settings)
                 g_object_unref(removed_settings->config_settings);
@@ -182,9 +182,9 @@ void panel_gsettings_remove_plugin_settings(PanelGSettings* settings, gint64 plu
             }
             g_key_file_free(keyfile);
             g_free(group_name);
+            g_free(removed_settings);
             return;
         }
-        removed_settings = NULL;
     }
 }
 

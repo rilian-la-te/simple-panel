@@ -424,6 +424,7 @@ static void launchbutton_build_bootstrap(LaunchTaskBarPlugin *lb)
          * The "desktop-id" being NULL is the marker that this is the bootstrap button. */
         lb->bootstrap_button = g_new0(LaunchButton, 1);
         lb->bootstrap_button->p = lb;
+        lb->bootstrap_button->id = NULL;
 
         /* Create an event box. */
         GtkWidget * event_box = gtk_event_box_new();

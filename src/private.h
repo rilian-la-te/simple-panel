@@ -103,7 +103,6 @@ struct _Panel {
     gulong strut_upper;
     int strut_edge;
 
-    guint config_changed : 1;
     guint self_destroy : 1;
     guint setdocktype : 1;
     guint setstrut : 1;

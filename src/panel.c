@@ -88,7 +88,6 @@ static void activate_remove_panel(GSimpleAction* action, GVariant* param, gpoint
 static void activate_panel_settings(GSimpleAction* action, GVariant* param, gpointer data);
 static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
-void simple_panel_config_save( SimplePanel* panel );
 PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel );
 
 G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_APPLICATION_WINDOW)
@@ -109,8 +108,6 @@ static void lxpanel_finalize(GObject *object)
     SimplePanel *self = LXPANEL(object);
     Panel *p = self->priv;
 
-    if( p->config_changed )
-        simple_panel_config_save( self );
     if (p->settings)
         panel_gsettings_free(p->settings,FALSE);
 
@@ -1158,9 +1155,6 @@ static void activate_config_plugin(GSimpleAction *action, GVariant *param, gpoin
     Panel *panel = PLUGIN_PANEL(plugin)->priv;
 
     lxpanel_plugin_show_config_dialog(plugin);
-
-    /* FIXME: this should be more elegant */
-    panel->config_changed = TRUE;
 }
 
 static void activate_remove_plugin(GSimpleAction *action, GVariant *param, gpointer pl)
@@ -1180,8 +1174,6 @@ static void activate_remove_plugin(GSimpleAction *action, GVariant *param, gpoin
     panel_gsettings_remove_plugin_settings(panel->settings,settings->plugin_number);
     /* reset conf pointer because the widget still may be referenced by configurator */
     g_object_set_qdata(G_OBJECT(plugin), lxpanel_plugin_qconf, NULL);
-
-    simple_panel_config_save(PLUGIN_PANEL(plugin));
     gtk_widget_destroy(plugin);
 }
 
@@ -1273,7 +1265,6 @@ found_edge:
     panel_start_gui(new_panel);
     gtk_widget_show_all(GTK_WIDGET(new_panel));
     gtk_widget_queue_draw(GTK_WIDGET(new_panel));
-    simple_panel_config_save(new_panel);
     gtk_application_add_window(GTK_APPLICATION(p->app),GTK_WINDOW(new_panel));
     all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
 }
@@ -1301,7 +1292,6 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
         panel_gsettings_free(panel->priv->settings,TRUE);
         g_unlink( fname );
         g_free(fname);
-        panel->priv->config_changed = 0;
         gtk_application_remove_window(GTK_APPLICATION(panel->priv->app),GTK_WINDOW(panel));
         gtk_widget_destroy(GTK_WIDGET(panel));
     }
@@ -1594,12 +1584,6 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     g_list_free(plugins);
     /* panel geometry changed? update panel background then */
     _panel_queue_update_background(panel);
-}
-
-void simple_panel_config_save( SimplePanel* panel )
-{
-    /* save the global config file */
-    panel->priv->config_changed = 0;
 }
 
 PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
