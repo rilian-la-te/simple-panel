@@ -1,0 +1,119 @@
+<schemalist gettext-domain="@GETTEXT_PACKAGE@">
+  <schema id="org.simple.panel.toplevel.batt">
+    <key name="alarm-command" type="s">
+      <default>'xmessage "Battery Low"'</default>
+    </key>
+    <key name="alarm-time" type="u">
+      <default>5</default>
+    </key>
+    <key name="border-width" type="u">
+      <default>1</default>
+    </key>
+    <key name="hide-if-no-battery" type="b">
+      <default>false</default>
+    </key>
+    <key name="show-extended-info" type="b">
+      <default>false</default>
+    </key>
+    <key name="size" type="u">
+      <default>3</default>
+    </key>
+    <key name="background-color" type="s">
+      <default>'transparent'</default>
+    </key>
+    <key name="charging-color-1" type="s">
+      <default>'#28f200'</default>
+    </key>
+    <key name="charging-color-2" type="s">
+      <default>'#22cc00'</default>
+    </key>
+    <key name="discharging-color-1" type="s">
+      <default>'#ffee00'</default>
+    </key>
+    <key name="discharging-color-2" type="s">
+      <default>'#d9ca00'</default>
+    </key>
+  </schema>
+  <schema id="org.simple.panel.toplevel.netstatus">
+    <key name="interface" type="s">
+      <default>'eth0'</default>
+    </key>
+    <key name="config-tool" type="s">
+      <default>'network-admin --configure %i'</default>
+    </key>
+  </schema>
+  <schema id="org.simple.panel.toplevel.netstat">
+    <key name="config-cmd" type="ms">
+      <default>nothing</default>
+    </key>
+  </schema>
+  <schema id="org.simple.panel.toplevel.monitors">
+    <key name="display-cpu-monitor" type="b">
+      <default>true</default>
+    </key>
+    <key name="display-ram-monitor" type="b">
+      <default>true</default>
+    </key>
+    <key name="click-action" type="ms">
+      <default>nothing</default>
+    </key>
+    <key name="cpu-color" type="s">
+      <default>'red'</default>
+    </key>
+    <key name="ram-color" type="s">
+      <default>'green'</default>
+    </key>
+  </schema>
+  <schema id="org.simple.panel.toplevel.thermal">
+    <key name="auto-temperature-levels" type="b">
+      <default>true</default>
+    </key>
+    <key name="use-auto-location" type="b">
+      <default>true</default>
+    </key>
+    <key name="sensor-location" type="s">
+      <default>''</default>
+    </key>
+    <key name="warning-color-1" type="s">
+      <default>'yellow'</default>
+    </key>
+    <key name="warning-color-2" type="s">
+      <default>'red'</default>
+    </key>
+    <key name="warning-temperature-1" type="i">
+      <default>60</default>
+    </key>
+    <key name="warning-temperature-2" type="i">
+      <default>65</default>
+    </key>
+    <key name="normal-color" type="s">
+      <default>'green'</default>
+    </key>
+  </schema>
+  <schema id="org.simple.panel.toplevel.weather">
+    <key name="alias" type="s">
+      <default>''</default>
+    </key>
+    <key name="city" type="s">
+      <default>''</default>
+    </key>
+    <key name="state" type="s">
+      <default>''</default>
+    </key>
+    <key name="country" type="s">
+      <default>''</default>
+    </key>
+    <key name="woeid" type="s">
+      <default>''</default>
+    </key>
+    <key name="units" type="s">
+      <default>'c'</default>
+    </key>
+    <key name="interval" type="u">
+      <default>15</default>
+    </key>
+    <key name="enabled" type="b">
+      <default>true</default>
+    </key>
+  </schema>
+</schemalist>
