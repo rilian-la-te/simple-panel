@@ -249,9 +249,9 @@ static void taskbar_apply_configuration(LaunchTaskBarPlugin * ltbp);
 static void task_update_style(Task * tk, LaunchTaskBarPlugin * tb);
 static void taskbar_style_updated(GtkWidget* btn,gpointer* data);
 
-static void launchbutton_get_id(LaunchButton* btn, gchar** buttons)
+static void launchbutton_get_id(LaunchButton* btn, GPtrArray* buttons)
 {
-    buttons[btn->number] = btn->id;
+    g_ptr_array_add(buttons,btn->id);
 }
 
 static void launchbutton_make_index(LaunchButton* btn, GSList* l)
@@ -261,13 +261,14 @@ static void launchbutton_make_index(LaunchButton* btn, GSList* l)
 
 static void launchbar_update_button_settings(LaunchTaskBarPlugin *ltbp)
 {
-    guint len = g_slist_length(ltbp->buttons);
-    char** buttons = g_malloc0((len+1)*sizeof(gchar*));
-    buttons[len] = NULL;
+    gchar** buttons;
+    GPtrArray* tmp = g_ptr_array_new();
     g_slist_foreach(ltbp->buttons,(GFunc)launchbutton_make_index,(gpointer)ltbp->buttons);
-    g_slist_foreach(ltbp->buttons,(GFunc)launchbutton_get_id,(gpointer)buttons);
-    g_settings_set(ltbp->settings,LTB_KEY_BUTTONS,"mas",buttons);
-    g_strfreev(buttons);
+    g_slist_foreach(ltbp->buttons,(GFunc)launchbutton_get_id,(gpointer)tmp);
+    g_ptr_array_add(tmp,NULL);
+    buttons = (gchar**)g_ptr_array_free(tmp,FALSE);
+    g_settings_set_strv(ltbp->settings,LTB_KEY_BUTTONS,buttons);
+    g_free(buttons);
 }
 
 static void f_get_exec_cmd_from_pid(GPid pid, gchar *buffer_128, const gchar *proc_file)
@@ -373,6 +374,8 @@ static void launchbutton_free(LaunchButton * btn)
         fm_file_info_unref(btn->fi);
     if (btn->dd)
         g_object_unref(btn->dd);
+    if (btn->id)
+        g_free(btn->id);
     g_free(btn);
 }
 
@@ -602,17 +605,14 @@ static LaunchButton *launchbutton_search_and_build_gui(LaunchTaskBarPlugin * lb,
 }
 
 /* Read the configuration file entry for a launchtaskbar button and create it. */
-static gboolean launchbutton_constructor(LaunchTaskBarPlugin * lb, gint num)
+static gboolean launchbutton_constructor(LaunchTaskBarPlugin * lb, gchar** buttons, gint num)
 {
     LaunchButton *btn = NULL;
     const char *str;
     char *str_path = NULL;
     FmPath *path;
-    gchar** buttons;
-
     /* Read parameters from the configuration file and validate. */
 
-    g_settings_get(lb->settings,LTB_KEY_BUTTONS,"mas",&buttons);
     str = buttons[num];
     if (str[0] == '\0')
         return FALSE;
@@ -637,14 +637,7 @@ static gboolean launchbutton_constructor(LaunchTaskBarPlugin * lb, gint num)
         btn = launchbutton_search_and_build_gui(lb, path);
     }
     fm_path_unref(path);
-    if (btn)
-    {
-        btn->id = str_path;
-        lb->buttons = g_slist_insert(lb->buttons,btn,num);
-    }
-    else
-        g_free(str_path);
-    g_strfreev(buttons);
+    g_free(str_path);
     return (btn != NULL);
 }
 
@@ -663,10 +656,10 @@ static void launchtaskbar_constructor_launch(LaunchTaskBarPlugin *ltbp, gboolean
         {
             guint i;
             gchar** buttons;
-            g_settings_get(ltbp->settings,LTB_KEY_BUTTONS,"mas",&buttons);
+            buttons = g_settings_get_strv(ltbp->settings,LTB_KEY_BUTTONS);
             for (i = 0; (buttons!= NULL) && (buttons[i] != NULL); )
             {
-                if (!launchbutton_constructor(ltbp,i))
+                if (!launchbutton_constructor(ltbp,buttons,i))
                 {
                     g_warning( "launchtaskbar: can't init button\n");
                     /* FIXME: show failed id to the user instead */
@@ -674,12 +667,14 @@ static void launchtaskbar_constructor_launch(LaunchTaskBarPlugin *ltbp, gboolean
                 else /* success, accept the setting */
                     i++;
             }
+            g_strfreev(buttons);
         }
         if(build_bootstrap)
         {
             if(ltbp->buttons == NULL)
                 launchbutton_build_bootstrap(ltbp);
         }
+        launchbar_update_button_settings(ltbp);
     }
     gtk_widget_set_visible(ltbp->lb_icon_grid, TRUE);
 }
@@ -926,7 +921,6 @@ static void  launchbar_remove_button(LaunchTaskBarPlugin *ltbp, LaunchButton *bt
 {
     ltbp->buttons = g_slist_remove(ltbp->buttons, btn);
     gtk_widget_destroy(btn->widget);
-    g_free(btn->id);
     launchbar_update_button_settings(ltbp);
     launchbutton_free(btn);
     /* Put the bootstrap button back if the list becomes empty. */
@@ -3315,7 +3309,6 @@ static void  on_menuitem_lock_tbp_clicked(GtkWidget * widget, LaunchTaskBarPlugi
         /* g_debug("*** path '%s'",path); */
         btn->id = path;
         launchbar_update_button_settings(tb);
-        simple_panel_config_save(tb->panel);
     }
 }
 
@@ -3327,7 +3320,7 @@ static void  on_menuitem_unlock_tbp_clicked(GtkWidget * widget, LaunchTaskBarPlu
     if(btn != NULL)
     {
         launchbar_remove_button(ltbp, btn);
-        simple_panel_config_save(tb->panel);
+        launchbar_update_button_settings(tb);
     }
     if (fi)
         fm_file_info_unref(fi);

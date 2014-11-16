@@ -68,8 +68,8 @@
     <key name="mode" enum="org.simple.panel.LtbMode">
       <default>'launchtaskbar'</default>
     </key>
-    <key name="launch-buttons" type="mas">
-      <default>nothing</default>
+    <key name="launch-buttons" type="as">
+      <default>[]</default>
     </key>
     <key name="tooltips" type="b">
       <default>true</default>
