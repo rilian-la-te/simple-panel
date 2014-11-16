@@ -68,7 +68,7 @@ enum
 };
 
 static GtkApplication* win_grp;
-
+static gulong monitors_handler = 0;
 GList* all_panels = NULL;
 
 gboolean is_restarting = FALSE;
@@ -119,9 +119,8 @@ static void lxpanel_finalize(GObject *object)
     G_OBJECT_CLASS(lxpanel_parent_class)->finalize(object);
 }
 
-static void lxpanel_destroy(GtkWidget *object)
+static void panel_stop_gui(SimplePanel *self)
 {
-    SimplePanel *self = LXPANEL(object);
     Panel *p = self->priv;
 
     if (p->autohide)
@@ -148,6 +147,19 @@ static void lxpanel_destroy(GtkWidget *object)
         g_source_remove(p->background_update_queued);
         p->background_update_queued = 0;
     }
+
+    if (gtk_bin_get_child(GTK_BIN(self)))
+    {
+        gtk_widget_destroy(p->box);
+        p->box = NULL;
+    }
+}
+static void simple_panel_destroy(GtkWidget* object)
+{
+    SimplePanel* self = LXPANEL(object);
+
+    panel_stop_gui(self);
+
 	GTK_WIDGET_CLASS(lxpanel_parent_class)->destroy(object);
 }
 
@@ -204,7 +216,7 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     _calculate_position(panel,a);
     p->ax = a->x;
     p->ay = a->y;
-    if (a->width != p->aw || a->height != p->ah || a->x != x || a->y != y)
+    if (a->width != p->aw || a->height != p->ah || p->ax != x || p->ay != y)
     {
         p->aw = a->width;
         p->ah = a->height;
@@ -308,7 +320,7 @@ static void simple_panel_set_property(GObject      *object,
     g_return_if_fail (LX_IS_PANEL (object));
 
     toplevel = LXPANEL (object);
-    gboolean geometry,background,configuration,fonts;
+    gboolean geometry,background,configuration,fonts, updatestrut;
     switch (prop_id) {
     case PROP_NAME:
         toplevel->priv->name = g_strdup(g_value_get_string(value));
@@ -320,18 +332,22 @@ static void simple_panel_set_property(GObject      *object,
                 : GTK_ORIENTATION_VERTICAL;
         configuration = TRUE;
         geometry = TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_HEIGHT:
         toplevel->priv->height = g_value_get_int(value);
         geometry = TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_WIDTH:
         toplevel->priv->width = g_value_get_int(value);
         geometry = TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_SIZE_TYPE:
         toplevel->priv->widthtype = g_value_get_enum(value);
         geometry = TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_MONITOR:
         _panel_set_monitor(toplevel,g_value_get_int(value));
@@ -341,10 +357,12 @@ static void simple_panel_set_property(GObject      *object,
     case PROP_ALIGNMENT:
         toplevel->priv->allign = g_value_get_enum(value);
         geometry = TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_MARGIN:
         toplevel->priv->margin = g_value_get_int(value);
         geometry = TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_BACKGROUNDTYPE:
         toplevel->priv->background = g_value_get_enum(value);
@@ -355,10 +373,12 @@ static void simple_panel_set_property(GObject      *object,
         toplevel->priv->autohide = g_value_get_boolean(value);
         toplevel->priv->visible = toplevel->priv->autohide ? FALSE : TRUE;
         geometry=TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_AUTOHIDE_SIZE:
         toplevel->priv->height_when_hidden = g_value_get_int(value);
         geometry=TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_ENABLEFONTCOLOR:
         toplevel->priv->usefontcolor = g_value_get_boolean (value);
@@ -398,10 +418,12 @@ static void simple_panel_set_property(GObject      *object,
         toplevel->priv->setdocktype = g_value_get_boolean(value);
         panel_set_dock_type(toplevel);
         geometry = TRUE;
+        updatestrut = TRUE;
         break;
     case PROP_STRUT:
         toplevel->priv->setstrut = g_value_get_boolean(value);
         geometry = TRUE;
+        updatestrut = TRUE;
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -412,13 +434,18 @@ static void simple_panel_set_property(GObject      *object,
         if (configuration)
             _panel_set_panel_configuration_changed(toplevel);
         if (geometry)
-        {
             gtk_widget_queue_resize(GTK_WIDGET(toplevel));
-        }
         if (background)
             panel_update_background(toplevel);
         if (fonts)
             _panel_update_fonts(toplevel);
+        if (updatestrut)
+        {
+            gboolean active = _panel_edge_can_strut(toplevel, toplevel->priv->edge, toplevel->priv->monitor, NULL);
+            if (!active)
+                g_settings_set_boolean(toplevel->priv->settings->toplevel_settings,PANEL_PROP_STRUT,FALSE);
+            _panel_set_wm_strut(toplevel);
+        }
     }
 }
 
@@ -511,7 +538,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
     gobject_class->get_property = simple_panel_get_property;
 
     gobject_class->finalize = lxpanel_finalize;
-	widget_class->destroy = lxpanel_destroy;
+    widget_class->destroy = simple_panel_destroy;
     widget_class->realize = lxpanel_realize;
 	widget_class->get_preferred_width = lxpanel_get_preferred_width;
 	widget_class->get_preferred_height = lxpanel_get_preferred_height;
@@ -609,9 +636,9 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     PANEL_PROP_MONITOR,
                     "Xinerama monitor",
                     "The monitor (in terms of Xinerama) which the panel is on",
-                    0,
+                    -1,
                     G_MAXINT,
-                    0,
+                    -1,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property (
                 gobject_class,
@@ -772,12 +799,96 @@ static void panel_normalize_configuration(Panel* p)
             p->height = PANEL_HEIGHT_MAX;
     }
     if (p->monitor < 0)
-        p->monitor = 0;
+        p->monitor = -1;
 }
+
 
 /****************************************************
  *         panel's handlers for WM events           *
  ****************************************************/
+
+gboolean _panel_edge_can_strut(SimplePanel *panel, int edge, gint monitor, gulong *size)
+{
+    Panel *p;
+    GdkScreen *screen;
+    GdkRectangle rect;
+    GdkRectangle rect2;
+    gint n, i;
+    gulong s;
+
+    if (!gtk_widget_get_mapped(GTK_WIDGET(panel)))
+        return FALSE;
+
+    p = panel->priv;
+    /* Handle autohide case.  EWMH recommends having the strut be the minimized size. */
+    if (p->autohide)
+        s = p->height_when_hidden;
+    else switch (edge)
+    {
+    case PANEL_EDGE_LEFT:
+    case PANEL_EDGE_RIGHT:
+        s = p->aw;
+        break;
+    case PANEL_EDGE_TOP:
+    case PANEL_EDGE_BOTTOM:
+        s = p->ah;
+        break;
+    default: /* error! */
+        return FALSE;
+    }
+
+    if (monitor < 0) /* screen span */
+    {
+        if (G_LIKELY(size))
+            *size = s;
+        return TRUE;
+    }
+
+    screen = gtk_widget_get_screen(GTK_WIDGET(panel));
+    gdk_screen_get_monitor_geometry(screen, monitor, &rect);
+    switch (edge)
+    {
+        case PANEL_EDGE_LEFT:
+            rect.width = rect.x;
+            rect.x = 0;
+            s += rect.width;
+            break;
+        case PANEL_EDGE_RIGHT:
+            rect.x += rect.width;
+            rect.width = gdk_screen_get_width(screen) - rect.x;
+            s += rect.width;
+            break;
+        case PANEL_EDGE_TOP:
+            rect.height = rect.y;
+            rect.y = 0;
+            s += rect.height;
+            break;
+        case PANEL_EDGE_BOTTOM:
+            rect.y += rect.height;
+            rect.height = gdk_screen_get_height(screen) - rect.y;
+            s += rect.height;
+            break;
+        default: ;
+    }
+    if (rect.height == 0 || rect.width == 0) ; /* on a border of monitor */
+    else
+    {
+        n = gdk_screen_get_n_monitors(screen);
+        for (i = 0; i < n; i++)
+        {
+            if (i == monitor)
+                continue;
+            gdk_screen_get_monitor_geometry(screen, i, &rect2);
+            if (gdk_rectangle_intersect(&rect, &rect2, NULL))
+                /* that monitor lies over the edge */
+                return FALSE;
+        }
+    }
+    if (G_LIKELY(size))
+        *size = s;
+    return TRUE;
+}
+
 
 void _panel_set_wm_strut(SimplePanel *panel)
 {
@@ -834,7 +945,8 @@ void _panel_set_wm_strut(SimplePanel *panel)
     /* Set up strut value in property format. */
     gulong desired_strut[12];
     memset(desired_strut, 0, sizeof(desired_strut));
-    if (p->setstrut)
+    if (p->setstrut &&
+        _panel_edge_can_strut(panel, p->edge, p->monitor, &strut_size))
     {
         desired_strut[index] = strut_size;
         desired_strut[4 + index * 2] = strut_lower;
@@ -1236,6 +1348,27 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     screen = gdk_screen_get_default();
     g_assert(screen);
     monitors = gdk_screen_get_n_monitors(screen);
+    /* try to allocate edge on current monitor first */
+    m = panel->priv->monitor;
+    if (m < 0)
+    {
+        /* panel is spanned over the screen, guess from pointer now */
+        gint x, y;
+        GdkDeviceManager *manager = gdk_display_get_device_manager (gdk_screen_get_display (screen));
+        GdkDevice *device = gdk_device_manager_get_client_pointer (manager);
+        gdk_device_get_position(device,&screen, &x, &y);
+        m = gdk_screen_get_monitor_at_point(screen, x, y);
+    }
+    for (e = PANEL_EDGE_TOP; e < PANEL_EDGE_RIGHT; ++e)
+    {
+        if (panel_edge_available(p, e, m))
+        {
+            p->edge = e;
+            p->monitor = m;
+            goto found_edge;
+        }
+    }
+    /* try all monitors */
     for(m=0; m<monitors; ++m)
     {
         /* try each of the four edges */
@@ -1260,7 +1393,6 @@ found_edge:
     g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
     g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
     panel_normalize_configuration(p);
-    panel_add_actions(new_panel);
     panel_configure(new_panel, 0);
     panel_start_gui(new_panel);
     gtk_widget_show_all(GTK_WIDGET(new_panel));
@@ -1294,6 +1426,7 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
         g_free(fname);
         gtk_application_remove_window(GTK_APPLICATION(panel->priv->app),GTK_WINDOW(panel));
         gtk_widget_destroy(GTK_WIDGET(panel));
+        all_panels = gtk_application_get_windows(GTK_APPLICATION(panel->priv->app));
     }
 }
 
@@ -1458,12 +1591,12 @@ gboolean lxpanel_image_set_icon_theme(SimplePanel * p, GtkWidget * image, const 
 static void
 panel_start_gui(SimplePanel *panel)
 {
-    gulong val;
+    gulong val, position;
     Panel *p = panel->priv;
     GtkWidget *w = GTK_WIDGET(panel);
+    GSList* l;
 
-    ENTER;
-
+    panel_add_actions(panel);
     /* main toplevel window */
    /* p->topgwin =  LXPANEL(gtk_window_new(GTK_WINDOW_POPUP))*/;
     p->display = gdk_display_get_default();
@@ -1507,10 +1640,15 @@ panel_start_gui(SimplePanel *panel)
                         gdk_atom_intern_static_string("CARDINAL"),
                         32, GDK_PROP_MODE_REPLACE, (guchar*)&val, 1);
 
-    _panel_set_wm_strut(panel);
     p->initialized = TRUE;
-
-    RET();
+    panel_gsettings_init_plugin_list(p->settings);
+    for (l = p->settings->all_settings; l != NULL; l = l->next)
+    {
+        position = g_settings_get_uint(((PluginGSettings*)l->data)->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
+        simple_panel_add_plugin(panel,l->data,position);
+    }
+    panel_update_background(panel);
+    _panel_update_fonts(panel);
 }
 
 /* Draw text into a label, with the user preference color and optionally bold. */
@@ -1627,27 +1765,39 @@ static void panel_add_actions( SimplePanel* p)
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE);
 }
 
+static void on_monitors_changed(GdkScreen* screen, gpointer unused)
+{
+    GList *pl;
+    int monitors = gdk_screen_get_n_monitors(screen);
+
+    for (pl = all_panels; pl; pl = pl->next)
+    {
+        SimplePanel *p = pl->data;
+
+        /* handle connecting and disconnecting monitors now */
+        if (p->priv->monitor < monitors && !p->priv->initialized)
+            panel_start_gui(p);
+        else if (p->priv->monitor >= monitors && p->priv->initialized)
+            panel_stop_gui(p);
+        else
+        {
+            ah_state_set(p, AH_STATE_VISIBLE);
+            gtk_widget_queue_resize(GTK_WIDGET(p));
+        }
+    }
+}
+
 static int panel_start( SimplePanel *p )
 {
-    GSList* l;
-    gint64 position;
-
-
+    GdkScreen *screen = gdk_screen_get_default();
     /* parse global section */
-    ENTER;
-
-    panel_add_actions(p);
     panel_start_gui(p);
-
-    panel_gsettings_init_plugin_list(p->priv->settings);
-    for (l = p->priv->settings->all_settings; l != NULL; l = l->next)
-    {
-        position = g_settings_get_uint(((PluginGSettings*)l->data)->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
-        simple_panel_add_plugin(p,l->data,position);
-    }
     /* update backgrond of panel and all plugins */
-    panel_update_background(p);
-    _panel_update_fonts(p);
+    if (p->priv->monitor < gdk_screen_get_n_monitors(screen))
+        panel_start_gui(p);
+    if (monitors_handler == 0)
+        monitors_handler = g_signal_connect(screen, "monitors-changed",
+                                            G_CALLBACK(on_monitors_changed), NULL);
     gtk_widget_queue_draw(GTK_WIDGET(p));
     return 1;
 }
@@ -1667,6 +1817,7 @@ SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char*
         panel->priv->name = g_strdup(config_name);
         panel->priv->app = app;
         win_grp=app;
+        all_panels = gtk_application_get_windows(panel->priv->app);
         g_object_get(G_OBJECT(panel->priv->app),"profile",&cprofile,NULL);
         g_debug("starting panel from file %s",config_file);
         panel->priv->settings = panel_gsettings_create(config_file);
@@ -1744,7 +1895,8 @@ gboolean _class_is_present(const SimplePanelPluginInit *init)
     {
         SimplePanel *panel = (SimplePanel*)sl->data;
         GList *plugins, *p;
-
+        if (panel->priv->box == NULL)
+            continue;
         plugins = gtk_container_get_children(GTK_CONTAINER(panel->priv->box));
         for (p = plugins; p; p = p->next)
             if (PLUGIN_CLASS(p->data) == init)

@@ -207,6 +207,7 @@ void _panel_queue_update_background(SimplePanel *p);
 
 void panel_configure(SimplePanel* p, int sel_page);
 gboolean panel_edge_available(Panel* p, int edge, gint monitor);
+gboolean _panel_edge_can_strut(SimplePanel *panel, int edge, gint monitor, gulong *size);
 void restart(void);
 void logout(void);
 void gtk_run(void);

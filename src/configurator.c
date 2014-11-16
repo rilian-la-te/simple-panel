@@ -105,14 +105,30 @@ gboolean panel_edge_available(Panel* p, int edge, gint monitor)
     return TRUE;
 }
 
-
-static void set_monitor(GtkSpinButton *widget, SimplePanel *panel)
+static void state_configure_monitor(GSimpleAction *action,GVariant* param, gpointer data)
 {
-    Panel *p = panel->priv;
-
-    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_MONITOR,(gtk_spin_button_get_value_as_int(widget) - 1));
+    GtkWidget *widget = GTK_WIDGET(data);
+    SimplePanel* panel = (SimplePanel*) g_object_get_data( G_OBJECT(widget), "panel" );
+    /* change monitor */
+    int request_mon = g_variant_get_int32(param);
+    if (request_mon == -2)
+    {
+        GVariant *tmp = g_variant_new_int32(g_settings_get_int(panel->priv->settings->toplevel_settings,PANEL_PROP_MONITOR));
+        g_simple_action_set_state(action,tmp);
+        g_variant_unref(tmp);
+    }
+    gchar* str = request_mon < 0 ? _("All") : g_strdup_printf("%d",request_mon);
+    int edge = g_settings_get_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_EDGE);
+    if(panel_edge_available(panel->priv, edge, request_mon))
+    {
+        g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_MONITOR,request_mon);
+        g_simple_action_set_state(action,param);
+        gtk_button_set_label(GTK_BUTTON(widget),str);
+    }
+    if (request_mon>=0)
+        g_free(str);
+    //FIXME: update edge and strut sensitivities
 }
-
 
 static void
 set_margin(GtkSpinButton* spin, SimplePanel* panel)
@@ -589,7 +605,12 @@ void update_widget_positions(SimplePanel* p)
 
 void update_positions_on_panel(SimplePanel* p)
 {
-    gtk_container_foreach(GTK_CONTAINER(p->priv->box),set_widget_position,p->priv->box);
+    GList* l, * children = gtk_container_get_children(GTK_CONTAINER(p->priv->box));
+    for (l = children; l != NULL; l = l->next)
+    {
+        set_widget_position(GTK_WIDGET(l->data),p->priv->box);
+    }
+//    gtk_container_foreach(GTK_CONTAINER(p->priv->box),set_widget_position,p->priv->box); - not working
 }
 
 
@@ -718,12 +739,13 @@ void panel_configure( SimplePanel* panel, int sel_page )
     Panel *p = panel->priv;
     GtkBuilder* builder;
     GtkWidget *w, *w2, *w3, *popover , *tint_clr;
+    GtkWidget *mon_control, *edge_control, *allign_control;
     FmMimeType *mt;
     GtkAppChooserButton *fm;
     GdkScreen *screen;
     gint monitors;
     GMenu* menu;
-    GMenuItem* item;
+    GSimpleActionGroup* configurator = g_simple_action_group_new();
 
     if( p->pref_dialog )
     {
@@ -749,7 +771,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* position */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
-    gtk_button_set_label(GTK_BUTTON(w3),_("Panel Edge"));
+    gtk_button_set_label(GTK_BUTTON(w3),_("Edge"));
     menu = g_menu_new();
     g_menu_append(menu,_("Top"),"win."PANEL_PROP_EDGE"('top')");
     g_menu_append(menu,_("Bottom"),"win."PANEL_PROP_EDGE"('bottom')");
@@ -761,18 +783,34 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* monitor */
     monitors = 1;
-    screen = gdk_screen_get_default();
+    const GActionEntry entries_monitor[] = {
+        {"configure-monitors", NULL,"i","-2" ,state_configure_monitor},
+        {NULL}
+    };
+    screen = gtk_widget_get_screen(GTK_WIDGET(panel));
     if(screen) monitors = gdk_screen_get_n_monitors(screen);
     g_assert(monitors >= 1);
-    w = (GtkWidget*)gtk_builder_get_object( builder, "monitor" );
-    gtk_spin_button_set_range(GTK_SPIN_BUTTON(w), 1, monitors);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(w), p->monitor + 1);
-    gtk_widget_set_sensitive(w, monitors > 1);
-    g_signal_connect(w, "value-changed", G_CALLBACK(set_monitor), panel);
+    mon_control = w = (GtkWidget*)gtk_builder_get_object( builder, "monitors-button");
+    g_object_set_data(G_OBJECT(mon_control), "panel", panel);
+    menu = g_menu_new();
+    g_menu_append(menu,_("All"),"conf.configure-monitors(-1)");
+    gint i;
+    for (i = 1; i < monitors; i++)
+    {
+        gchar* tmp = g_strdup_printf("conf.configure-monitors(%d)",i);
+        gchar* str_num = g_strdup_printf("%d",i);
+        g_menu_append(menu,str_num,tmp);
+        g_free(tmp);
+        g_free(str_num);
+    }
+    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
+    g_object_unref(menu);
+    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
+    g_action_map_add_action_entries(G_ACTION_MAP(configurator),entries_monitor,G_N_ELEMENTS(entries_monitor),mon_control);
 
     /* alignment */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment-button");
-    gtk_button_set_label(GTK_BUTTON(w3),_("Panel Alignment"));
+    gtk_button_set_label(GTK_BUTTON(w3),_("Alignment"));
     menu = g_menu_new();
     g_menu_append(menu,_("Start"),"win."PANEL_PROP_ALIGNMENT"('left')");
     g_menu_append(menu,_("Center"),"win."PANEL_PROP_ALIGNMENT"('center')");
@@ -960,21 +998,9 @@ void panel_configure( SimplePanel* panel, int sel_page )
     g_object_unref(menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
     g_object_unref(builder);
-    GSimpleActionGroup* configurator = g_simple_action_group_new();
+    gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"conf",G_ACTION_GROUP(configurator));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));
-//    panel_adjust_geometry_terminology(p);
     gtk_widget_show(GTK_WIDGET(p->pref_dialog));
-}
-
-void restart(void)
-{
-    /* This is defined in panel.c */
-    extern gboolean is_restarting;
-    ENTER;
-    is_restarting = TRUE;
-
-    gtk_main_quit();
-    RET();
 }
 
 static void notify_apply_config( GtkWidget* widget )

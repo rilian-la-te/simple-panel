@@ -6,7 +6,7 @@
       <_description>This is a human readable name which you can use to identify a panel. It also serves as a config name for panel config file.</_description>
     </key>
     <key name="monitor" type="i">
-      <default>0</default>
+      <default>-1</default>
       <_summary>Xinerama monitor where the panel is displayed</_summary>
       <_description>In a Xinerama setup, you may have panels on each individual monitor. This key identifies the current monitor the panel is displayed on.</_description>
     </key>

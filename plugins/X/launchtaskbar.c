@@ -844,11 +844,9 @@ static void launchtaskbar_destructor_task(LaunchTaskBarPlugin *ltbp)
 
     /* Remove "window-manager-changed" handler. */
     g_signal_handlers_disconnect_by_func(ltbp->screen, taskbar_window_manager_changed, ltbp);
-
     /* Deallocate task list - widgets are already destroyed there. */
     while(ltbp->p_task_list != NULL)
         task_delete(ltbp, ltbp->p_task_list, TRUE, FALSE);
-
     /* Deallocate class list. */
     while(ltbp->p_taskclass_list != NULL)
     {
@@ -857,7 +855,6 @@ static void launchtaskbar_destructor_task(LaunchTaskBarPlugin *ltbp)
         g_free(tc->res_class);
         g_free(tc);
     }
-
     /* Deallocate other memory. */
     gtk_widget_destroy(ltbp->menu);
     task_group_menu_destroy(ltbp);
@@ -2282,8 +2279,15 @@ static GdkPixbuf * get_wm_icon(Window task_win, guint required_width, guint requ
         return NULL;
     else
     {
-        GdkPixbuf * ret = gdk_pixbuf_scale_simple(pixmap, required_width, required_height, GDK_INTERP_TILES);
-        g_object_unref(pixmap);
+        gulong w = gdk_pixbuf_get_width (pixmap);
+        gulong h = gdk_pixbuf_get_height (pixmap);
+        if ((w > required_width) || (h > required_height))
+        {
+            w = required_width;
+            h = required_height;
+        }
+
+        GdkPixbuf * ret = gdk_pixbuf_scale_simple(pixmap, w, h, GDK_INTERP_TILES);        g_object_unref(pixmap);
         *current_source = possible_source;
         return ret;
     }

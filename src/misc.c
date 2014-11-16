@@ -246,9 +246,23 @@ void _calculate_position(SimplePanel *panel, GdkRectangle* rect)
 //        marea.width  = np->workarea[np->curdesk*4 + 2];
 //        marea.height = np->workarea[np->curdesk*4 + 3];
     } else {
-        screen = gtk_widget_get_screen(GTK_WIDGET(panel));
-        g_assert(np->monitor >= 0 && np->monitor < gdk_screen_get_n_monitors(screen));
-        gdk_screen_get_monitor_geometry(screen,np->monitor,&marea);
+        screen = gdk_screen_get_default();
+        if (np->monitor < 0) /* all monitors */
+        {
+            marea.x = 0;
+            marea.y = 0;
+            marea.width = gdk_screen_get_width(screen);
+            marea.height = gdk_screen_get_height(screen);
+        }
+        else if (np->monitor < gdk_screen_get_n_monitors(screen))
+            gdk_screen_get_monitor_geometry(screen,np->monitor,&marea);
+        else
+        {
+            marea.x = 0;
+            marea.y = 0;
+            marea.width = 0;
+            marea.height = 0;
+        }
     }
 
     if (np->edge == PANEL_EDGE_TOP || np->edge == PANEL_EDGE_BOTTOM) {
@@ -920,5 +934,4 @@ void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,c
     g_action_map_add_action(map,action);
     g_object_unref(action);
 }
-
 /* vim: set sw=4 et sts=4 : */

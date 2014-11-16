@@ -432,7 +432,6 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
 
     lx_battery *lx_b;
     GtkWidget *p;
-    const char *str;
     int tmp_int;
 
     lx_b = g_new0(lx_battery, 1);
@@ -515,6 +514,7 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
 
     /* Start the update loop */
     lx_b->timer = g_timeout_add_seconds( 9, (GSourceFunc) update_timout, (gpointer) lx_b);
+    gtk_widget_set_app_paintable(GTK_WIDGET(p),TRUE);
 
     RET(p);
 }
