@@ -638,7 +638,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "The monitor (in terms of Xinerama) which the panel is on",
                     -1,
                     G_MAXINT,
-                    -1,
+                    G_MAXINT,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property (
                 gobject_class,
@@ -1392,9 +1392,10 @@ found_edge:
     p->settings = simple_panel_create_gsettings(new_panel);
     g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
     g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
+    panel_add_actions(new_panel);
     panel_normalize_configuration(p);
-    panel_configure(new_panel, 0);
     panel_start_gui(new_panel);
+    panel_configure(new_panel, 0);
     gtk_widget_show_all(GTK_WIDGET(new_panel));
     gtk_widget_queue_draw(GTK_WIDGET(new_panel));
     gtk_application_add_window(GTK_APPLICATION(p->app),GTK_WINDOW(new_panel));
@@ -1596,7 +1597,6 @@ panel_start_gui(SimplePanel *panel)
     GtkWidget *w = GTK_WIDGET(panel);
     GSList* l;
 
-    panel_add_actions(panel);
     /* main toplevel window */
    /* p->topgwin =  LXPANEL(gtk_window_new(GTK_WINDOW_POPUP))*/;
     p->display = gdk_display_get_default();
@@ -1649,6 +1649,7 @@ panel_start_gui(SimplePanel *panel)
     }
     panel_update_background(panel);
     _panel_update_fonts(panel);
+    g_object_set(G_OBJECT(panel),PANEL_PROP_STRUT,p->setstrut,NULL);
 }
 
 /* Draw text into a label, with the user preference color and optionally bold. */
@@ -1790,15 +1791,13 @@ static void on_monitors_changed(GdkScreen* screen, gpointer unused)
 static int panel_start( SimplePanel *p )
 {
     GdkScreen *screen = gdk_screen_get_default();
-    /* parse global section */
-    panel_start_gui(p);
+    panel_add_actions(p);
     /* update backgrond of panel and all plugins */
     if (p->priv->monitor < gdk_screen_get_n_monitors(screen))
         panel_start_gui(p);
     if (monitors_handler == 0)
         monitors_handler = g_signal_connect(screen, "monitors-changed",
                                             G_CALLBACK(on_monitors_changed), NULL);
-    gtk_widget_queue_draw(GTK_WIDGET(p));
     return 1;
 }
 
