@@ -1292,16 +1292,24 @@ static gboolean _panel_set_monitor(SimplePanel* panel, int monitor)
 }
 /* FIXME: Potentially we can support multiple panels at the same edge,
  * but currently this cannot be done due to some positioning problems. */
-static char* gen_panel_name( SimplePanel* p)
+static char* gen_panel_name( PanelEdgeType edge, gint mon)
 {
-    gchar* edge_str = g_settings_get_string(p->priv->settings->toplevel_settings,PANEL_PROP_EDGE);
+    const gchar* edge_str;
+    if (edge == PANEL_EDGE_TOP)
+        edge_str="top";
+    if (edge == PANEL_EDGE_BOTTOM)
+        edge_str="bottom";
+    if (edge == PANEL_EDGE_LEFT)
+        edge_str="left";
+    if (edge == PANEL_EDGE_RIGHT)
+        edge_str="right";
     char* name = NULL;
     char* dir = _user_config_file_name("panels", NULL);
     int i;
     for( i = 0; i < G_MAXINT; ++i )
     {
         char* f;
-        name = g_strdup_printf( "%s-m%d-%d", edge_str, p->priv->monitor, i );
+        name = g_strdup_printf( "%s-m%d-%d", edge_str, mon, i );
 
         f = g_build_filename( dir, name, NULL );
         if( ! g_file_test( f, G_FILE_TEST_EXISTS ) )
@@ -1312,7 +1320,6 @@ static char* gen_panel_name( SimplePanel* p)
         g_free( name );
         g_free( f );
     }
-    g_free(edge_str);
     g_free( dir );
     return name;
 }
@@ -1374,10 +1381,10 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     return;
 
 found_edge:
+    p->name = gen_panel_name(p->edge,p->monitor);
     p->settings = simple_panel_create_gsettings(new_panel);
     g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
     g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
-    p->name = gen_panel_name(new_panel);
     panel_add_actions(new_panel);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
