@@ -645,18 +645,10 @@ static void show_menu( GtkWidget* widget, menup* m, int btn, guint32 time )
                    btn, time);
 }
 
-static gboolean
-menu_button_press_event(GtkWidget *widget, GdkEventButton *event, SimplePanel* data)
+static void menu_button_clicked(GtkButton* widget, gpointer data)
 {
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(GTK_WIDGET(widget), &allocation);
-
-    if (event->button == 1)
-    {
-        show_menu( widget, lxpanel_plugin_get_data(widget), event->button, event->time );
-        RET(TRUE);
-    }
-    RET(FALSE);
+    menup* m = (menup*)data;
+    gtk_menu_popup(GTK_MENU(m->menu),NULL,NULL,(GtkMenuPositionFunc)menu_pos,m->box,0,GDK_CURRENT_TIME);
 }
 
 static gboolean show_system_menu_idle(gpointer user_data)
@@ -664,7 +656,7 @@ static gboolean show_system_menu_idle(gpointer user_data)
     menup* m = (menup*)user_data;
     if (g_source_is_destroyed(g_main_current_source()))
         return FALSE;
-    show_menu( m->img, m, 0, GDK_CURRENT_TIME );
+    show_menu( m->box, m, 0, GDK_CURRENT_TIME );
     m->show_system_menu_idle = 0;
     return FALSE;
 }
@@ -724,6 +716,7 @@ make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkW
 
     m->ds = fm_dnd_src_new(NULL);
     gtk_widget_insert_action_group(m->box,"menu",G_ACTION_GROUP(grp));
+    g_signal_connect(m->img,"clicked",G_CALLBACK(menu_button_clicked),m);
     RET(m->img);
 }
 
@@ -959,32 +952,12 @@ menu_constructor(SimplePanel *panel, GSettings *settings)
     /* Save construction pointers */
     m->panel = panel;
     m->settings = settings;
-
-    /* Check if configuration exists */
-//    settings = config_setting_add(settings, "", PANEL_CONF_TYPE_LIST);
-//    if (config_setting_get_elem(settings, 0) == NULL)
-//    {
-//        /* create default menu */
-//        config_setting_add(settings, "system", PANEL_CONF_TYPE_GROUP);
-//        config_setting_add(settings, "separator", PANEL_CONF_TYPE_GROUP);
-//        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
-//            config_group_set_string(s, "command", "run");
-//        config_setting_add(settings, "separator", PANEL_CONF_TYPE_GROUP);
-//        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
-//            config_group_set_string(s, "command", "logout");
-//            config_group_set_string(s, "image", "gnome-logout");
-//        s = config_setting_add(settings, "item", PANEL_CONF_TYPE_GROUP);
-//            config_group_set_string(s, "command", "shutdown");
-//            config_group_set_string(s, "image", "gnome-shutdown");
-//        config_group_set_string(m->settings, "image", DEFAULT_MENU_ICON);
-//    }
-
-    if (!read_menu(m, m->settings)) {
+    m->img = read_menu(m, m->settings);
+    if (!m->img) {
         g_warning("menu: plugin init failed");
         gtk_widget_destroy(m->box);
         return NULL;
     }
-
     return m->box;
 }
 
@@ -1024,7 +997,6 @@ SimplePanelPluginInit lxpanel_static_plugin_menu = {
     .config = menu_config,
     .reconfigure = menu_panel_configuration_changed,
     .show_system_menu = show_system_menu,
-    .button_press_event = menu_button_press_event,
     .has_config = TRUE
 };
 

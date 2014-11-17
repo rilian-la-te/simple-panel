@@ -401,6 +401,7 @@ static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *ic
     GtkWidget * event_box = gtk_button_new();
     gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
     gtk_widget_set_can_focus(event_box, FALSE);
+    gtk_widget_set_has_window(event_box,FALSE);
     GtkWidget * image = gtk_image_new_for_gicon(panel,icon, size);
     if (label == NULL)
         gtk_container_add(GTK_CONTAINER(event_box), image);
