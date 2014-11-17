@@ -138,6 +138,7 @@ static void panel_stop_gui(SimplePanel *self)
     if (p->initialized)
     {
         gtk_application_remove_window(GTK_APPLICATION(win_grp), GTK_WINDOW(self));
+        all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
         gdk_flush();
         p->initialized = FALSE;
     }
@@ -209,10 +210,9 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     if (p->heighttype == PANEL_SIZE_DYNAMIC)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->height : a->width;
 
-    if (GDK_IS_WINDOW(gtk_widget_get_window(widget)))
-        gdk_window_get_origin(gtk_widget_get_window(widget),&x,&y);
-    else
-        x=y=0;
+    if (!gtk_widget_get_realized(widget))
+        return;
+    gdk_window_get_origin(gtk_widget_get_window(widget),&x,&y);
     _calculate_position(panel,a);
     p->ax = a->x;
     p->ay = a->y;
@@ -228,9 +228,7 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     {
         g_source_remove(p->background_update_queued);
         p->background_update_queued = 0;
-
-        if (gtk_widget_get_realized(widget))
-            panel_update_background(LXPANEL(widget));
+        panel_update_background(LXPANEL(widget));
     }
 }
 
@@ -842,6 +840,9 @@ gboolean _panel_edge_can_strut(SimplePanel *panel, int edge, gint monitor, gulon
     }
 
     screen = gtk_widget_get_screen(GTK_WIDGET(panel));
+    n = gdk_screen_get_n_monitors(screen);
+    if (monitor >= n) /* hidden now */
+        return FALSE;
     gdk_screen_get_monitor_geometry(screen, monitor, &rect);
     switch (edge)
     {
@@ -909,35 +910,27 @@ void _panel_set_wm_strut(SimplePanel *panel)
     {
         case PANEL_EDGE_LEFT:
             index = 0;
-            strut_size = p->aw;
             strut_lower = p->ay;
             strut_upper = p->ay + p->ah;
             break;
         case PANEL_EDGE_RIGHT:
             index = 1;
-            strut_size = p->aw;
             strut_lower = p->ay;
             strut_upper = p->ay + p->ah;
             break;
         case PANEL_EDGE_TOP:
             index = 2;
-            strut_size = p->ah;
             strut_lower = p->ax;
             strut_upper = p->ax + p->aw;
             break;
         case PANEL_EDGE_BOTTOM:
             index = 3;
-            strut_size = p->ah;
             strut_lower = p->ax;
             strut_upper = p->ax + p->aw;
             break;
         default:
             return;
     }
-
-    /* Handle autohide case.  EWMH recommends having the strut be the minimized size. */
-    if (p->autohide)
-        strut_size = p->height_when_hidden;
 
     /* Set up strut value in property format. */
     gulong desired_strut[12];
@@ -1299,21 +1292,16 @@ static gboolean _panel_set_monitor(SimplePanel* panel, int monitor)
 }
 /* FIXME: Potentially we can support multiple panels at the same edge,
  * but currently this cannot be done due to some positioning problems. */
-static char* gen_panel_name( int edge, gint monitor)
+static char* gen_panel_name( SimplePanel* p)
 {
-    const char* edge_str = num2str( edge_pair, edge, "" );
+    gchar* edge_str = g_settings_get_string(p->priv->settings->toplevel_settings,PANEL_PROP_EDGE);
     char* name = NULL;
     char* dir = _user_config_file_name("panels", NULL);
     int i;
     for( i = 0; i < G_MAXINT; ++i )
     {
         char* f;
-        if(monitor != 0)
-            name = g_strdup_printf( "%s-m%d-%d", edge_str, monitor, i );
-        else if( G_LIKELY( i > 0 ) )
-            name =  g_strdup_printf( "%s%d", edge_str, i );
-        else
-            name = g_strdup( edge_str );
+        name = g_strdup_printf( "%s-m%d-%d", edge_str, p->priv->monitor, i );
 
         f = g_build_filename( dir, name, NULL );
         if( ! g_file_test( f, G_FILE_TEST_EXISTS ) )
@@ -1324,6 +1312,7 @@ static char* gen_panel_name( int edge, gint monitor)
         g_free( name );
         g_free( f );
     }
+    g_free(edge_str);
     g_free( dir );
     return name;
 }
@@ -1385,7 +1374,7 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     return;
 
 found_edge:
-    p->name = gen_panel_name(p->edge, p->monitor);
+    p->name = gen_panel_name(new_panel);
     p->settings = simple_panel_create_gsettings(new_panel);
     g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
     g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
@@ -1395,8 +1384,6 @@ found_edge:
     panel_configure(new_panel, 0);
     gtk_widget_show_all(GTK_WIDGET(new_panel));
     gtk_widget_queue_draw(GTK_WIDGET(new_panel));
-    gtk_application_add_window(GTK_APPLICATION(p->app),GTK_WINDOW(new_panel));
-    all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
 }
 
 static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpointer data)
@@ -1610,7 +1597,7 @@ panel_start_gui(SimplePanel *panel)
     gtk_window_set_accept_focus(GTK_WINDOW(panel),FALSE);
 
     gtk_application_add_window(GTK_APPLICATION(win_grp), (GtkWindow*)panel );
-
+    all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
     gtk_widget_add_events( w, GDK_BUTTON_PRESS_MASK );
 
     gtk_widget_realize(w);

@@ -539,8 +539,12 @@ static LaunchButton *launchbutton_for_file_info(LaunchTaskBarPlugin * lb, FmFile
     btn->fi = fi;
 
     /* Create a button with the specified icon. */
-    button = lxpanel_button_new_for_fm_icon(lb->panel, fm_file_info_get_icon(fi),
+    GIcon* icon = fm_icon_get_gicon(fm_file_info_get_icon(fi));
+    gchar* tmp = g_icon_to_string(icon);
+    button = simple_panel_button_new_for_icon(lb->panel,tmp,
                                             NULL, NULL);
+    g_free(tmp);
+    g_object_unref(icon);
     btn->widget = button;
     gtk_widget_set_can_focus(button, FALSE);
 
@@ -1420,8 +1424,6 @@ static void launchtaskbar_panel_configuration_changed(SimplePanel *panel, GtkWid
     if (new_icon_size != ltbp->icon_size)
     {
         Task * tk;
-        GSList * l;
-        ltbp->icon_size = new_icon_size;
         for (tk = ltbp->p_task_list; tk != NULL; tk = tk->p_task_flink_xwid)
         {
             GdkPixbuf * pixbuf = task_update_icon(ltbp, tk, None);
@@ -1430,12 +1432,6 @@ static void launchtaskbar_panel_configuration_changed(SimplePanel *panel, GtkWid
                 gtk_image_set_from_pixbuf(GTK_IMAGE(tk->image), pixbuf);
                 g_object_unref(pixbuf);
             }
-        }
-        for (l = ltbp->buttons; l != NULL; l = l->next)
-        {
-            LaunchButton * btn = (LaunchButton *) l->data;
-            lxpanel_button_update_icon(btn->widget, fm_file_info_get_icon(btn->fi),
-                                       new_icon_size);
         }
 
     }

@@ -646,9 +646,8 @@ static void show_menu( GtkWidget* widget, menup* m, int btn, guint32 time )
 }
 
 static gboolean
-menu_button_press_event(GtkWidget *widget, GdkEventButton *event, menup *m)
+menu_button_press_event(GtkWidget *widget, GdkEventButton *event, SimplePanel* data)
 {
-    ENTER;
     GtkAllocation allocation;
     gtk_widget_get_allocation(GTK_WIDGET(widget), &allocation);
 
@@ -711,13 +710,13 @@ make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkW
             g_key_file_free( kf );
         }
 
-        m->img = lxpanel_button_new_for_icon(m->panel, fname, tint, title ? title : name);
+        m->img = simple_panel_button_new_for_icon(m->panel, fname, tint, title ? title : name);
 
         g_free( title );
     }
     else
     {
-        m->img = lxpanel_button_new_for_icon(m->panel, fname, tint, NULL);
+        m->img = simple_panel_button_new_for_icon(m->panel, fname, tint, NULL);
     }
 
     gtk_widget_show(m->img);
@@ -995,7 +994,7 @@ static gboolean apply_config(gpointer user_data)
     menup* m = lxpanel_plugin_get_data(p);
 
     if( m->fname ) {
-        lxpanel_button_set_icon(m->img, m->fname, panel_get_icon_size(m->panel));
+        simple_panel_image_change_icon(m->img, m->fname);
     }
     g_settings_set_string(m->settings, MENU_KEY_ICON, m->fname);
     g_settings_set_string(m->settings, MENU_KEY_NAME, m->caption);

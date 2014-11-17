@@ -60,6 +60,8 @@ libsimplepanel_la_SOURCES = \
 libsimplepanel_la_LIBADD = \
        $(PACKAGE_LIBS)
 
+libsimplepanel_la_LDFLAGS = \
+       -no-undefined
 
 if ENABLE_MENU_CACHE
 MENU_SOURCES = menu-policy.c

@@ -272,7 +272,7 @@ static GtkWidget *dirmenu_constructor(SimplePanel *panel, GSettings *settings)
     /* Allocate top level widget and set into Plugin widget pointer.
      * It is not known why, but the button text will not draw if it is edited from empty to non-empty
      * unless this strategy of initializing it with a non-empty value first is followed. */
-    p = lxpanel_button_new_for_icon(panel,
+    p = simple_panel_button_new_for_icon(panel,
                             ((dm->image != NULL) ? dm->image : "file-manager"),
                             NULL, "Temp");
     lxpanel_plugin_set_data(p, dm, dirmenu_destructor);
@@ -335,8 +335,7 @@ static gboolean dirmenu_apply_configuration(gpointer user_data)
     g_settings_set_string(dm->settings,DIRMENU_KEY_PATH,dm->path);
     g_settings_set(dm->settings,DIRMENU_KEY_NAME,"ms",dm->name);
     g_settings_set_string(dm->settings,DIRMENU_KEY_ICON,dm->image);
-    lxpanel_button_set_icon(p, ((dm->image != NULL) ? dm->image : "file-manager"),
-                            panel_get_icon_size(dm->panel));
+    simple_panel_button_set_icon(p,((dm->image != NULL) ? dm->image : "file-manager"),-1);
 
     gtk_widget_set_tooltip_text(p, dm->path);
     gtk_container_foreach(GTK_CONTAINER(p), (GtkCallback) dirmenu_apply_configuration_to_children, (gpointer) dm);

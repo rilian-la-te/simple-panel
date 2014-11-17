@@ -258,7 +258,7 @@ static GtkWidget *cpu_constructor(SimplePanel *panel, GSettings *settings)
     /* Show the widget.  Connect a timer to refresh the statistics. */
     gtk_widget_show(c->da);
     c->timer = g_timeout_add(1500, (GSourceFunc) cpu_update, (gpointer) c);
-    gtk_widget_set_app_paintable(c,TRUE);
+    gtk_widget_set_app_paintable(GTK_WIDGET(c),TRUE);
     return p;
 }
 

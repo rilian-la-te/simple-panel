@@ -34,78 +34,23 @@
 
 /* data used by themed images buttons */
 typedef struct {
-    FmIcon *icon;
+    GIcon *icon;
     guint theme_changed_handler;
+    guint icon_changed_handler;
     GdkPixbuf* pixbuf;
     GdkPixbuf* hilight;
-    gulong hicolor;
+    GdkRGBA hicolor;
     gint size; /* desired size */
+    SimplePanel *panel;
 } ImgData;
 
 static GQuark img_data_id = 0;
 
-static void on_theme_changed(GtkIconTheme* theme, GtkWidget* img);
+static void on_theme_changed(GtkWidget* img, GObject* object);
 static void _gtk_image_set_from_file_scaled(GtkWidget *img, ImgData *data);
-static GtkWidget *_gtk_image_new_for_icon(FmIcon *icon, gint size);
-
-pair allign_pair[] = {
-    { PANEL_ALLIGN_LEFT, "left" },
-    { PANEL_ALLIGN_RIGHT, "right" },
-    { PANEL_ALLIGN_CENTER, "center"},
-    { 0, NULL },
-};
-
-pair edge_pair[] = {
-    { PANEL_EDGE_LEFT, "left" },
-    { PANEL_EDGE_RIGHT, "right" },
-    { PANEL_EDGE_TOP, "top" },
-    { PANEL_EDGE_BOTTOM, "bottom" },
-    { 0, NULL },
-};
-
-pair strut_pair[] = {
-    { PANEL_SIZE_FILL, "none" },
-    { PANEL_SIZE_DYNAMIC, "request" },
-    { PANEL_SIZE_PIXEL, "pixel" },
-    { PANEL_SIZE_PERCENT, "percent" },
-    { 0, NULL },
-};
-
-pair background_pair[] = {
-    { PANEL_BACKGROUND_GTK, "gtk-normal" },
-    { PANEL_BACKGROUND_GNOME, "gtk-gnome-panel" },
-    { PANEL_BACKGROUND_CUSTOM_COLOR, "color" },
-    { PANEL_BACKGROUND_CUSTOM_IMAGE, "image" },
-    { 0, NULL },
-};
-
-pair bool_pair[] = {
-    { 0, "0" },
-    { 1, "1" },
-    { 0, NULL },
-};
-
-int
-str2num(pair *p, const gchar *str, int defval)
-{
-    ENTER;
-    for (;p && p->str; p++) {
-        if (!g_ascii_strcasecmp(str, p->str))
-            RET(p->num);
-    }
-    RET(defval);
-}
-
-const gchar *
-num2str(pair *p, int num, const gchar *defval)
-{
-    ENTER;
-    for (;p && p->str; p++) {
-        if (num == p->num)
-            RET(p->str);
-    }
-    RET(defval);
-}
+static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data);
+static GtkWidget *gtk_image_new_for_gicon(SimplePanel* p, GIcon *icon, gint size);
+//static GtkWidget *_gtk_image_new_for_icon(FmIcon *icon, gint size);
 
 int buf_gets( char* buf, int len, char **fp )
 {
@@ -322,6 +267,11 @@ expand_tilda(const gchar *file)
 static void img_data_free(ImgData * data)
 {
     g_object_unref(data->icon);
+    if (data->panel != NULL)
+    {
+        g_object_remove_weak_pointer(G_OBJECT(data->panel), (gpointer *)&data->panel);
+        g_signal_handler_disconnect(data->panel, data->icon_changed_handler);
+    }
     if (data->theme_changed_handler != 0)
         g_signal_handler_disconnect(gtk_icon_theme_get_default(), data->theme_changed_handler);
     if (data->pixbuf != NULL)
@@ -332,14 +282,14 @@ static void img_data_free(ImgData * data)
 }
 
 /* Handler for "changed" signal in _gtk_image_new_from_file_scaled. */
-static void on_theme_changed(GtkIconTheme * theme, GtkWidget * img)
+static void on_theme_changed(GtkWidget * img, GObject *object)
 {
     ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(img), img_data_id);
-    _gtk_image_set_from_file_scaled(img, data);
+    _gtk_image_set_from_file_gicon(img, data);
 }
 
 /* consumes reference on icon */
-static void _lxpanel_button_set_icon(GtkWidget* btn, FmIcon* icon, gint size)
+static void _simple_panel_button_set_icon(GtkWidget* btn, GIcon* icon, gint size)
 {
     /* Locate the image within the button. */
     GtkWidget * child = gtk_bin_get_child(GTK_BIN(btn));
@@ -356,13 +306,14 @@ static void _lxpanel_button_set_icon(GtkWidget* btn, FmIcon* icon, gint size)
     if (img != NULL)
     {
         ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(img), img_data_id);
-
+        if (size <= 0)
+            size = data->size;
         if (icon != data->icon || size != data->size) /* something was changed */
         {
             g_object_unref(data->icon);
             data->icon = icon;
             data->size = size;
-            _gtk_image_set_from_file_scaled(img, data);
+            _gtk_image_set_from_file_gicon(img, data);
         }
         else
             g_object_unref(icon);
@@ -371,55 +322,51 @@ static void _lxpanel_button_set_icon(GtkWidget* btn, FmIcon* icon, gint size)
         g_object_unref(icon);
 }
 
-void lxpanel_button_set_icon(GtkWidget* btn, const gchar *name, gint size)
+void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, gint size)
 {
-    _lxpanel_button_set_icon(btn, fm_icon_from_name(name), size);
+    _simple_panel_button_set_icon(btn, g_icon_new_for_string(name,NULL), size);
 }
 
-void lxpanel_button_update_icon(GtkWidget* btn, FmIcon *icon, gint size)
+GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gint height)
 {
-    _lxpanel_button_set_icon(btn, g_object_ref(icon), size);
+    return gtk_image_new_for_gicon(p,g_icon_new_for_string(name,NULL),height);
 }
 
-static void _gtk_image_set_from_file_scaled(GtkWidget * img, ImgData * data)
+static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data)
 {
-    if (data->pixbuf != NULL)
+    if (data->icon)
     {
-        g_object_unref(data->pixbuf);
-        data->pixbuf = NULL;
-    }
-
-    /* if there is a cached hilighted version of this pixbuf, free it */
-    if (data->hilight != NULL)
-    {
-        g_object_unref(data->hilight);
-        data->hilight = NULL;
-    }
-
-    if (G_LIKELY(G_IS_THEMED_ICON(data->icon)))
-        data->pixbuf = fm_pixbuf_from_icon_with_fallback(data->icon, data->size,
-                                                         "application-x-executable");
-    else
-    {
-        char *file = g_icon_to_string(fm_icon_get_gicon(data->icon));
-        data->pixbuf = gdk_pixbuf_new_from_file_at_scale(file, -1, data->size, TRUE, NULL);
-        g_free(file);
-    }
-
-    if (data->pixbuf != NULL)
-    {
-        /* Set the pixbuf into the image widget. */
-        gtk_image_set_from_pixbuf((GtkImage *)img, data->pixbuf);
-    }
-    else
-    {
-        /* No pixbuf available.  Set the "missing image" icon. */
-        gtk_image_set_from_icon_name(GTK_IMAGE(img), "image-missing", GTK_ICON_SIZE_BUTTON);
+        gtk_image_set_from_gicon(GTK_IMAGE(img),data->icon,GTK_ICON_SIZE_INVALID);
+        gtk_image_set_pixel_size(GTK_IMAGE(img),data->panel->priv->icon_size);
     }
 }
 
-/* consumes reference on icon */
-static GtkWidget *_gtk_image_new_for_icon(FmIcon *icon, gint size)
+gboolean simple_panel_image_change_icon(GtkWidget *img, const gchar *name)
+{
+    ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(img), img_data_id);
+
+    g_return_val_if_fail(data != NULL && name != NULL, FALSE);
+    if(data == NULL || name == NULL)
+        return FALSE;
+    g_object_unref(data->icon);
+    data->icon = g_icon_new_for_string(name,NULL);
+    if (!G_IS_THEMED_ICON(data->icon))
+    {
+        if (data->theme_changed_handler != 0)
+            g_signal_handler_disconnect(gtk_icon_theme_get_default(), data->theme_changed_handler);
+        data->theme_changed_handler = 0;
+    }
+    else if (data->theme_changed_handler == 0)
+    {
+        /* This image is loaded from icon theme.  Update the image if the icon theme is changed. */
+        data->theme_changed_handler = g_signal_connect_swapped(gtk_icon_theme_get_default(),
+                                                "changed", G_CALLBACK(on_theme_changed), img);
+    }
+    _gtk_image_set_from_file_gicon(img, data);
+    return TRUE;
+}
+
+static GtkWidget* gtk_image_new_for_gicon(SimplePanel* p,GIcon * icon, gint size)
 {
     GtkWidget * img = gtk_image_new();
     ImgData * data = g_new0(ImgData, 1);
@@ -429,19 +376,64 @@ static GtkWidget *_gtk_image_new_for_icon(FmIcon *icon, gint size)
     if (img_data_id == 0)
         img_data_id = g_quark_from_static_string("ImgData");
     g_object_set_qdata_full(G_OBJECT(img), img_data_id, data, (GDestroyNotify) img_data_free);
-    _gtk_image_set_from_file_scaled(img, data);
+    if (p && size < 0)
+    {
+        data->panel = p;
+        data->icon_changed_handler = g_signal_connect_swapped(p, "notify::"PANEL_PROP_ICON_SIZE,
+                                                G_CALLBACK(on_theme_changed), img);
+        /* it is in fact not required if image is panel child but let be safe */
+        g_object_add_weak_pointer(G_OBJECT(p), (gpointer *)&data->panel);
+    }
+    _gtk_image_set_from_file_gicon(img, data);
     if (G_IS_THEMED_ICON(data->icon))
     {
         /* This image is loaded from icon theme.  Update the image if the icon theme is changed. */
-        data->theme_changed_handler = g_signal_connect(gtk_icon_theme_get_default(), "changed", G_CALLBACK(on_theme_changed), img);
+        data->theme_changed_handler = g_signal_connect_swapped(gtk_icon_theme_get_default(), "changed", G_CALLBACK(on_theme_changed), img);
     }
     return img;
 }
 
-/* parameters width and keep_ratio are unused, kept for backward compatibility */
-GtkWidget * _gtk_image_new_from_file_scaled(const gchar * file, gint width, gint height, gboolean keep_ratio)
+/* consumes reference on icon */
+static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *icon,
+                                               gint size, const GdkRGBA* color,
+                                               const gchar *label)
 {
-    return _gtk_image_new_for_icon(fm_icon_from_name(file), height);
+    GtkWidget * event_box = gtk_button_new();
+    gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
+    gtk_widget_set_can_focus(event_box, FALSE);
+    GtkWidget * image = gtk_image_new_for_gicon(panel,icon, size);
+    if (label == NULL)
+        gtk_container_add(GTK_CONTAINER(event_box), image);
+    else
+    {
+        GtkWidget * inner = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+        gtk_container_set_border_width(GTK_CONTAINER(inner), 0);
+        gtk_widget_set_can_focus(inner, FALSE);
+        gtk_container_add(GTK_CONTAINER(event_box), inner);
+
+        gtk_box_pack_start(GTK_BOX(inner), image, FALSE, FALSE, 0);
+
+        GtkWidget * lbl = gtk_label_new(label);
+        gtk_box_pack_end(GTK_BOX(inner), lbl, FALSE, FALSE, 0);
+    }
+    gtk_widget_show_all(event_box);
+    gchar* css;
+    ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(image), img_data_id);
+    gchar* tmp = gdk_rgba_to_string(color);
+    gdk_rgba_parse(&data->hicolor,tmp);
+    g_free(tmp);
+    css = css_generate_panel_icon_button(data->hicolor);
+    css_apply_with_class(event_box,css,"-panel-icon-button",FALSE);
+    css_apply_with_class(event_box,css,GTK_STYLE_CLASS_BUTTON,TRUE);
+    g_free(css);
+    return event_box;
+}
+
+GtkWidget *simple_panel_button_new_for_icon(SimplePanel *panel, const gchar *name, GdkRGBA *color, const gchar *label)
+{
+    GdkRGBA fallback = {1,1,1,0.15};
+    return _simple_panel_button_new_for_icon(panel,g_icon_new_for_string(name,NULL),
+                                        -1, (color != NULL) ? color : &fallback, label);
 }
 
 void
@@ -463,136 +455,6 @@ get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name)
 
     gtk_widget_destroy(b);
     RET();
-}
-
-
-guint32 gcolor2rgb24(GdkRGBA *color)
-{
-    guint32 i;
-
-    ENTER;
-
-    i = (gint)round(color->red * 0xFF) & 0xFF;
-    i <<= 8;
-    i |= (gint)round(color->green * 0xFF) & 0xFF;
-    i <<= 8;
-    i |= (gint)round(color->blue * 0xFF) & 0xFF;
-    DBG("i=%x\n", i);
-    RET(i);
-}
-
-///* Handler for "enter-notify-event" signal on image that has highlighting requested. */
-static gboolean fb_button_enter(GtkImage * widget, GdkEventCrossing * event)
-{
-    if (gtk_image_get_storage_type(widget) == GTK_IMAGE_PIXBUF)
-    {
-        ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(widget), img_data_id);
-        if (data != NULL)
-        {
-            if (data->hilight == NULL)
-            {
-                GdkPixbuf * dark = data->pixbuf;
-                int height = gdk_pixbuf_get_height(dark);
-                int rowstride = gdk_pixbuf_get_rowstride(dark);
-                gulong hicolor = data->hicolor;
-
-                GdkPixbuf * light = gdk_pixbuf_add_alpha(dark, FALSE, 0, 0, 0);
-                if (light != NULL)
-                {
-                    guchar extra[3];
-                    int i;
-                    for (i = 2; i >= 0; i--, hicolor >>= 8)
-                        extra[i] = hicolor & 0xFF;
-
-                    guchar * src = gdk_pixbuf_get_pixels(light);
-                    guchar * up;
-                    for (up = src + height * rowstride; src < up; src += 4)
-                    {
-                        if (src[3] != 0)
-                        {
-                            for (i = 0; i < 3; i++)
-                            {
-                            int value = src[i] + extra[i];
-                            if (value > 255) value = 255;
-                            src[i] = value;
-                            }
-                        }
-                    }
-                data->hilight = light;
-                }
-            }
-
-        if (data->hilight != NULL)
-            gtk_image_set_from_pixbuf(widget, data->hilight);
-        }
-    }
-    return TRUE;
-}
-
-///* Handler for "leave-notify-event" signal on image that has highlighting requested. */
-static gboolean fb_button_leave(GtkImage * widget, GdkEventCrossing * event, gpointer user_data)
-{
-    if (gtk_image_get_storage_type(widget) == GTK_IMAGE_PIXBUF)
-    {
-        ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(widget), img_data_id);
-        if ((data != NULL) && (data->pixbuf != NULL))
-            gtk_image_set_from_pixbuf(widget, data->pixbuf);
-    }
-    return TRUE;
-}
-
-
-/* consumes reference on icon */
-static GtkWidget *_lxpanel_button_new_for_icon(FmIcon *icon,
-                                               gint size, gulong highlight_color,
-                                               const gchar *label)
-{
-    GtkWidget * event_box = gtk_event_box_new();
-    gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
-    gtk_widget_set_can_focus(event_box, FALSE);
-
-    GtkWidget * image = _gtk_image_new_for_icon(icon, size);
-    if (highlight_color != 0)
-    {
-        ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(image), img_data_id);
-        data->hicolor = highlight_color;
-
-        gtk_widget_add_events(event_box, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
-        g_signal_connect_swapped(G_OBJECT(event_box), "enter-notify-event", G_CALLBACK(fb_button_enter), image);
-        g_signal_connect_swapped(G_OBJECT(event_box), "leave-notify-event", G_CALLBACK(fb_button_leave), image);
-    }
-
-    if (label == NULL)
-        gtk_container_add(GTK_CONTAINER(event_box), image);
-    else
-    {
-        GtkWidget * inner = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-        gtk_container_set_border_width(GTK_CONTAINER(inner), 0);
-        gtk_widget_set_can_focus(inner, FALSE);
-        gtk_container_add(GTK_CONTAINER(event_box), inner);
-
-        gtk_box_pack_start(GTK_BOX(inner), image, FALSE, FALSE, 0);
-
-        GtkWidget * lbl = gtk_label_new(label);
-        gtk_box_pack_end(GTK_BOX(inner), lbl, FALSE, FALSE, 0);
-    }
-
-    gtk_widget_show_all(event_box);
-    return event_box;
-}
-
-GtkWidget *lxpanel_button_new_for_icon(SimplePanel *panel, const gchar *name, GdkRGBA *color, const gchar *label)
-{
-    gulong highlight_color = color ? gcolor2rgb24(color) : PANEL_ICON_HIGHLIGHT;
-    return _lxpanel_button_new_for_icon(fm_icon_from_name(name),
-                                        panel->priv->icon_size, highlight_color, label);
-}
-
-GtkWidget *lxpanel_button_new_for_fm_icon(SimplePanel *panel, FmIcon *icon, GdkRGBA *color, const gchar *label)
-{
-    gulong highlight_color = color ? gcolor2rgb24(color) : PANEL_ICON_HIGHLIGHT;
-    return _lxpanel_button_new_for_icon(g_object_ref(icon),
-                                        panel->priv->icon_size, highlight_color, label);
 }
 
 char* translate_exec_to_cmd( const char* exec, const char* icon,
@@ -640,41 +502,6 @@ char* translate_exec_to_cmd( const char* exec, const char* icon,
             g_string_append_c( cmd, *exec );
     }
     return g_string_free( cmd, FALSE );
-}
-
-/*
- This function is used to re-create a new box with different
- orientation from the old one, add all children of the old one to
- the new one, and then destroy the old box.
- It's mainly used when we need to change the orientation of the panel or
- any plugin with a layout box. Since GtkHBox cannot be changed to GtkVBox,
- recreating a new box to replace the old one is required.
-*/
-/* for compatibility with old plugins */
-GtkWidget* recreate_box( GtkBox* oldbox, GtkOrientation orientation )
-{
-    gtk_orientable_set_orientation(GTK_ORIENTABLE(oldbox), orientation);
-    return GTK_WIDGET(oldbox);
-}
-
-/* for compatibility with old plugins */
-void show_error( GtkWindow* parent_win, const char* msg )
-{
-    fm_show_error(parent_win, NULL, msg);
-}
-
-/* old plugins compatibility mode, use fm_pixbuf_from_icon_with_fallback() instead */
-GdkPixbuf * lxpanel_load_icon(const char * name, int width, int height, gboolean use_fallback)
-{
-    FmIcon * fm_icon;
-    GdkPixbuf * icon = NULL;
-
-    fm_icon = fm_icon_from_name(name ? name : "application-x-executable");
-    /* well, we don't use parameter width and not really use cache here */
-    icon = fm_pixbuf_from_icon_with_fallback(fm_icon, height,
-                            use_fallback ? "application-x-executable" : NULL);
-    g_object_unref(fm_icon);
-    return icon;
 }
 
 /*

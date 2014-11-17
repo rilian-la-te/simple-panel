@@ -24,6 +24,7 @@
 #include "panel.h"
 #include "conf-gsettings.h"
 #include "css.h"
+#include "misc.h"
 
 G_BEGIN_DECLS
 

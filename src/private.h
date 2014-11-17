@@ -144,21 +144,6 @@ typedef struct {
 
 #define FBPANEL_WIN(win)  gdk_window_lookup(win)
 
-/* Extracted from misc.h */
-typedef struct {
-    int num;
-    gchar *str;
-} pair;
-
-extern pair allign_pair[];
-extern pair edge_pair[];
-extern pair strut_pair[];
-extern pair background_pair[];
-extern pair bool_pair[];
-
-int str2num(pair *p, const gchar *str, int defval);
-const gchar *num2str(pair *p, int num, const gchar *defval);
-
 //void _queue_panel_calculate_size(Panel *panel);
 
 /* FIXME: optional definitions */
@@ -240,16 +225,6 @@ extern SimplePanel* panel_load(GtkApplication *app, const char* config_file, con
 /* if current window manager is EWMH conforming. */
 extern gboolean is_ewmh_supported;
 
-/*
- This function is used to re-create a new box with different
- orientation from the old one, add all children of the old one to
- the new one, and then destroy the old box.
- It's mainly used when we need to change the orientation of the panel or
- any plugin with a layout box. Since GtkHBox cannot be changed to GtkVBox,
- recreating a new box to replace the old one is required.
-*/
-GtkWidget* recreate_box( GtkBox* oldbox, GtkOrientation orientation );
-
 extern const char* lxpanel_get_file_manager();
 
 
@@ -271,16 +246,6 @@ extern int lxpanel_put_line(FILE* fp, const char* format, ...);
 #define lxpanel_put_str(fp, name, val) (G_UNLIKELY( !(val) || !*(val) )) ? 0 : lxpanel_put_line(fp, "%s=%s", name, val)
 #define lxpanel_put_bool(fp, name, val) lxpanel_put_line(fp, "%s=%c", name, (val) ? '1' : '0')
 #define lxpanel_put_int(fp, name, val) lxpanel_put_line(fp, "%s=%d", name, val)
-
-GtkWidget *_gtk_image_new_from_file_scaled(const gchar *file, gint width,
-                                           gint height, gboolean keep_ratio);
-
-GtkWidget * fb_button_new_from_file(
-    const gchar * image_file, int width, int height, gulong highlight_color, gboolean keep_ratio);
-GtkWidget * fb_button_new_from_file_with_label(
-    const gchar * image_file, int width, int height, gulong highlight_color, gboolean keep_ratio, Panel * panel, const gchar * label);
-
-void fb_button_set_from_file(GtkWidget* btn, const char* img_file, gint width, gint height, gboolean keep_ratio);
 
 char* translate_exec_to_cmd( const char* exec, const char* icon,
                              const char* title, const char* fpath );

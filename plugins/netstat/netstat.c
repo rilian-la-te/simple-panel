@@ -170,7 +170,7 @@ wireless_menu(netdev_info *ni)
 
             /* Encryption */
             if (aps->apinfo->haskey) {
-                lockicon = gtk_image_new_from_file(ICONS_WL_LOCK);
+                lockicon = simple_panel_image_new_for_icon(NULL,ICONS_WL_LOCK,18);
                 gtk_box_pack_start(GTK_BOX(item_box), lockicon, FALSE, FALSE, 0);
             }
 
@@ -322,6 +322,7 @@ static void refresh_systray(netstat *ns, NETDEVLIST_PTR netdev_list)
 {
     NETDEVLIST_PTR ptr;
     char *tooltip;
+    const char* theme_icon;
 
     if (netdev_list==NULL) {
         return;
@@ -373,7 +374,7 @@ static void refresh_systray(netstat *ns, NETDEVLIST_PTR netdev_list)
                                                                 _("Activity"), _("Sent"), _("Received"),
                                                                 ptr->info.trans_bytes, ptr->info.recv_bytes, _("bytes"),
                                                                 ptr->info.trans_packets, ptr->info.recv_packets, _("packets"));
-
+            theme_icon = select_icon_theme(ptr->info.plug, ptr->info.connected, ptr->info.status);
             /* status icon doesn't exist  */
             if (ptr->info.status_icon==NULL) {
                 netdev_info *ni;
@@ -381,12 +382,12 @@ static void refresh_systray(netstat *ns, NETDEVLIST_PTR netdev_list)
                 ni->ns = ns;
                 ni->netdev_list = ptr;
 
-                ptr->info.status_icon = create_statusicon(ns->mainw, select_icon(ptr->info.plug, ptr->info.connected, ptr->info.status), tooltip, select_icon_theme(ptr->info.plug, ptr->info.connected, ptr->info.status));
+                ptr->info.status_icon = create_statusicon(ns->panel,ns->mainw, tooltip, theme_icon);
                 g_signal_connect(ptr->info.status_icon->main, "button-press-event", G_CALLBACK(menupopup), ni);
                 g_object_weak_ref(G_OBJECT(ptr->info.status_icon->main), g_free_weaknotify, ni);
             } else {
                 set_statusicon_tooltips(ptr->info.status_icon, tooltip);
-                set_statusicon_image_from_file(ptr->info.status_icon, select_icon(ptr->info.plug, ptr->info.connected, ptr->info.status));
+                update_statusicon(ptr->info.status_icon, theme_icon);
                 set_statusicon_visible(ptr->info.status_icon, TRUE);
             }
             g_free(tooltip);

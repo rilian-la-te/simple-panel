@@ -315,7 +315,7 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
      * Only one of these is visible at a time, controlled by user preference. */
     dc->clock_label = gtk_label_new(NULL);
     gtk_container_add(GTK_CONTAINER(hbox), dc->clock_label);
-    dc->clock_icon = gtk_image_new();
+    dc->clock_icon = simple_panel_image_new_for_icon(panel,"clock",-1);
     gtk_container_add(GTK_CONTAINER(hbox), dc->clock_icon);
 
     /* Initialize the clock display. */
@@ -366,9 +366,6 @@ static gboolean dclock_apply_configuration(gpointer user_data)
     /* Set up the icon or the label as the displayable widget. */
     if (dc->icon_only)
     {
-        if(lxpanel_image_set_icon_theme(dc->panel, dc->clock_icon, "clock") != FALSE) {
-            lxpanel_image_set_from_file(dc->panel, dc->clock_icon, PACKAGE_DATA_DIR "/images/clock.png");
-        }
         gtk_widget_show(dc->clock_icon);
         gtk_widget_hide(dc->clock_label);
     }
