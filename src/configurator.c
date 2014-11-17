@@ -734,7 +734,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
     GtkBuilder* builder;
     GtkWidget *w, *w2, *w3, *popover , *tint_clr;
     GtkWidget *mon_control, *edge_control, *allign_control;
-    FmMimeType *mt;
     GtkAppChooserButton *fm;
     GdkScreen *screen;
     gint monitors;
@@ -787,10 +786,10 @@ void panel_configure( SimplePanel* panel, int sel_page )
     menu = g_menu_new();
     g_menu_append(menu,_("All monitors"),"conf.configure-monitors(-1)");
     gint i;
-    for (i = 1; i < monitors; i++)
+    for (i = 0; i < monitors; i++)
     {
-        gchar* tmp = g_strdup_printf("conf.configure-monitors(%d)",i-1);
-        gchar* str_num = g_strdup_printf(_("Monitor %d"),i);
+        gchar* tmp = g_strdup_printf("conf.configure-monitors(%d)",i);
+        gchar* str_num = g_strdup_printf(_("Monitor %d"),i+1);
         g_menu_append(menu,str_num,tmp);
         g_free(tmp);
         g_free(str_num);
