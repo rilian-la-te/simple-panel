@@ -654,6 +654,7 @@ monitors_constructor(SimplePanel *panel, GSettings *settings)
      * seconds */
     mp->timer = g_timeout_add_seconds(UPDATE_PERIOD, (GSourceFunc) monitors_update,
                               (gpointer) mp);
+    gtk_widget_set_app_paintable(p,TRUE);
     RET(p);
 }
 

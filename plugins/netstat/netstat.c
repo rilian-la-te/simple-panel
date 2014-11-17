@@ -233,7 +233,7 @@ static gint menupopup(GtkWidget *widget, GdkEvent *event, netdev_info *ni)
                 gtk_menu_popup(GTK_MENU(wireless_menu(ni)), NULL, NULL, NULL, NULL, event_button->button, event_button->time);
             }
             return TRUE;
-        } else if (event_button->button == 3) {
+        } else if (event_button->button == 2) {
             GtkWidget *menu;
             GtkWidget *menu_item;
 
