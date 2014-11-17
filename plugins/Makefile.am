@@ -13,8 +13,8 @@ AM_LDFLAGS = \
 	$(top_builddir)/src/libsimplepanel.la \
 	$(PACKAGE_LIBS)
 
-$(top_builddir)/src/libsimplepanel.la:
-	cd $(top_builddir)/src && $(MAKE) libsimplepanel.la
+#$(top_builddir)/src/libsimplepanel.la:
+#	cd $(top_builddir)/src && $(MAKE) libsimplepanel.la
 
 ## built-in plugins
 noinst_LIBRARIES = libbuiltin_plugins.a

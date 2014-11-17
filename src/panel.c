@@ -133,7 +133,7 @@ static void panel_stop_gui(SimplePanel *self)
     if (p->plugin_pref_dialog != NULL)
         /* just close the dialog, it will do all required cleanup */
         gtk_dialog_response(GTK_DIALOG(p->plugin_pref_dialog), GTK_RESPONSE_CLOSE);
-    if (p->settings)
+    if (p->settings != NULL)
         panel_gsettings_free(p->settings,FALSE);
     if (p->initialized)
     {
@@ -327,9 +327,6 @@ static void simple_panel_set_property(GObject      *object,
         break;
     case PROP_EDGE:
         toplevel->priv->edge = g_value_get_enum (value);
-        toplevel->priv->orientation = (PANEL_EDGE_TOP || PANEL_EDGE_BOTTOM)
-                ? GTK_ORIENTATION_HORIZONTAL
-                : GTK_ORIENTATION_VERTICAL;
         configuration = TRUE;
         geometry = TRUE;
         updatestrut = TRUE;

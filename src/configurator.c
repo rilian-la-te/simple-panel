@@ -111,13 +111,7 @@ static void state_configure_monitor(GSimpleAction *action,GVariant* param, gpoin
     SimplePanel* panel = (SimplePanel*) g_object_get_data( G_OBJECT(widget), "panel" );
     /* change monitor */
     int request_mon = g_variant_get_int32(param);
-    if (request_mon == -2)
-    {
-        GVariant *tmp = g_variant_new_int32(g_settings_get_int(panel->priv->settings->toplevel_settings,PANEL_PROP_MONITOR));
-        g_simple_action_set_state(action,tmp);
-        g_variant_unref(tmp);
-    }
-    gchar* str = request_mon < 0 ? _("All") : g_strdup_printf("%d",request_mon);
+    gchar* str = request_mon < 0 ? _("All monitors") : g_strdup_printf(_("Monitor %d"),request_mon+1);
     int edge = g_settings_get_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_EDGE);
     if(panel_edge_available(panel->priv, edge, request_mon))
     {
@@ -771,7 +765,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* position */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
-    gtk_button_set_label(GTK_BUTTON(w3),_("Edge"));
     menu = g_menu_new();
     g_menu_append(menu,_("Top"),"win."PANEL_PROP_EDGE"('top')");
     g_menu_append(menu,_("Bottom"),"win."PANEL_PROP_EDGE"('bottom')");
@@ -785,7 +778,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
     monitors = 1;
     const GActionEntry entries_monitor[] = {
         {"configure-monitors", NULL,"i","-2" ,state_configure_monitor},
-        {NULL}
     };
     screen = gtk_widget_get_screen(GTK_WIDGET(panel));
     if(screen) monitors = gdk_screen_get_n_monitors(screen);
@@ -793,24 +785,29 @@ void panel_configure( SimplePanel* panel, int sel_page )
     mon_control = w = (GtkWidget*)gtk_builder_get_object( builder, "monitors-button");
     g_object_set_data(G_OBJECT(mon_control), "panel", panel);
     menu = g_menu_new();
-    g_menu_append(menu,_("All"),"conf.configure-monitors(-1)");
+    g_menu_append(menu,_("All monitors"),"conf.configure-monitors(-1)");
     gint i;
     for (i = 1; i < monitors; i++)
     {
-        gchar* tmp = g_strdup_printf("conf.configure-monitors(%d)",i);
-        gchar* str_num = g_strdup_printf("%d",i);
+        gchar* tmp = g_strdup_printf("conf.configure-monitors(%d)",i-1);
+        gchar* str_num = g_strdup_printf(_("Monitor %d"),i);
         g_menu_append(menu,str_num,tmp);
         g_free(tmp);
         g_free(str_num);
     }
-    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
+    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(mon_control),G_MENU_MODEL(menu));
     g_object_unref(menu);
-    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
+    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(mon_control),TRUE);
     g_action_map_add_action_entries(G_ACTION_MAP(configurator),entries_monitor,G_N_ELEMENTS(entries_monitor),mon_control);
+    g_action_group_change_action_state(G_ACTION_GROUP(configurator),
+                                       "configure-monitors",
+                                       g_variant_new_int32(
+                                           g_settings_get_int(
+                                               p->settings->toplevel_settings,
+                                               PANEL_PROP_MONITOR)));
 
     /* alignment */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment-button");
-    gtk_button_set_label(GTK_BUTTON(w3),_("Alignment"));
     menu = g_menu_new();
     g_menu_append(menu,_("Start"),"win."PANEL_PROP_ALIGNMENT"('left')");
     g_menu_append(menu,_("Center"),"win."PANEL_PROP_ALIGNMENT"('center')");
