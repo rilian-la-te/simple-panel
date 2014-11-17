@@ -1374,10 +1374,10 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     return;
 
 found_edge:
-    p->name = gen_panel_name(new_panel);
     p->settings = simple_panel_create_gsettings(new_panel);
     g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
     g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
+    p->name = gen_panel_name(new_panel);
     panel_add_actions(new_panel);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
