@@ -435,7 +435,6 @@ static GtkWidget *netstat_constructor(SimplePanel *panel, GSettings *settings)
     const char *tmp;
     GtkWidget *p;
 
-    ENTER;
     ns = g_new0(netstat, 1);
     g_return_val_if_fail(ns != NULL, NULL);
     /* apply config */
@@ -447,6 +446,7 @@ static GtkWidget *netstat_constructor(SimplePanel *panel, GSettings *settings)
     ns->fnetd->sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     ns->fnetd->iwsockfd = iw_sockets_open();
     ns->fnetd->lxnmchannel = lxnm_socket();
+    ns->panel = panel;
 
     /* main */
     ns->mainw = panel_box_new(panel, 1);

@@ -333,7 +333,10 @@ static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data)
     if (data->icon)
     {
         gtk_image_set_from_gicon(GTK_IMAGE(img),data->icon,GTK_ICON_SIZE_INVALID);
-        gtk_image_set_pixel_size(GTK_IMAGE(img),data->panel->priv->icon_size);
+        if (data->panel != NULL)
+            gtk_image_set_pixel_size(GTK_IMAGE(img),data->panel->priv->icon_size);
+        else
+            gtk_image_set_pixel_size(GTK_IMAGE(img),data->size);
     }
 }
 
