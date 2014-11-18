@@ -76,11 +76,7 @@ static void panel_icon_grid_size_allocate(GtkWidget *widget,
 	/* Apply given allocation */
 	gtk_widget_set_allocation(widget, allocation);
     border = gtk_container_get_border_width(GTK_CONTAINER(widget));
-#if GTK_CHECK_VERSION(2, 20, 0)
     if (gtk_widget_get_realized(widget))
-#else
-    if (GTK_WIDGET_REALIZED(widget))
-#endif
     {
         if (!gtk_widget_get_has_window(widget))
         {
@@ -153,11 +149,7 @@ static void panel_icon_grid_size_allocate(GtkWidget *widget,
         if (gtk_widget_get_visible(child))
         {
             /* Do necessary operations on the child. */
-#if GTK_CHECK_VERSION (3, 0, 0)
 			gtk_widget_get_preferred_size(child, &req, NULL);
-#else
-            gtk_widget_size_request(child, &req);
-#endif
             child_allocation.x = x;
             child_allocation.y = y;
             child_allocation.width = child_width;
@@ -304,19 +296,6 @@ static void panel_icon_grid_size_request(GtkWidget *widget,
 		gtk_widget_queue_resize(widget);
 }
 
-/* Handler for "size-request" event on the icon grid element. */
-#if !GTK_CHECK_VERSION (3,0,0)
-static void icon_grid_element_size_request(GtkWidget * widget, GtkRequisition * requisition, PanelIconGrid * ig)
-{
-    /* This is our opportunity to request space for the element. */
-    // FIXME: if fill_width then calculate width from aspect
-    requisition->width = ig->child_width;
-    if ((ig->constrain_width) && (ig->constrained_child_width > 1))
-        requisition->width = ig->constrained_child_width;
-    requisition->height = ig->child_height;
-}
-#endif
-#if GTK_CHECK_VERSION (3,0,0)
 static void icon_grid_element_get_preferred_width(GtkWidget * widget,gint* minimal_width, gint* natural_width, PanelIconGrid * ig){
 	*minimal_width = ig->child_width;
 	if ((ig->constrain_width) && (ig->constrained_child_width > 1))
@@ -326,7 +305,6 @@ static void icon_grid_element_get_preferred_width(GtkWidget * widget,gint* minim
 static void icon_grid_element_get_preferred_height(GtkWidget * widget,gint* minimal_height, gint* natural_height, PanelIconGrid * ig){
 	*natural_height=*minimal_height = ig->child_height;
 }
-#endif
 
 /* Add an icon grid element and establish its initial visibility. */
 static void panel_icon_grid_add(GtkContainer *container, GtkWidget *widget)
@@ -337,15 +315,9 @@ static void panel_icon_grid_add(GtkContainer *container, GtkWidget *widget)
     ig->children = g_list_append(ig->children, widget);
 
     /* Add the widget to the layout container. */
-#if GTK_CHECK_VERSION (3, 0, 0)
 	gint height,width,dummy;
 	icon_grid_element_get_preferred_height(widget,&height,&dummy,ig);
 	icon_grid_element_get_preferred_width(widget,&width,&dummy,ig);
-//	gtk_widget_set_size_request(widget,width,height);
-#else
-    g_signal_connect(G_OBJECT(widget), "size-request",
-                     G_CALLBACK(icon_grid_element_size_request), container);
-#endif
     gtk_widget_set_parent(widget, GTK_WIDGET(container));
 	gtk_widget_queue_resize(GTK_WIDGET(container));
 }

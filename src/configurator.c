@@ -48,20 +48,6 @@ enum{
 
 extern GSList* all_panels;
 extern int config;
-
-/* macros to update config */
-#define UPDATE_GLOBAL_INT(panel,name,val) do { \
-    config_setting_t *_s = config_setting_add(config_setting_get_elem(config_setting_get_member(config_root_setting(panel->config),""),\
-                                                                      0),\
-                                              name,PANEL_CONF_TYPE_INT);\
-    if (_s) config_setting_set_int(_s,val); } while(0)
-
-#define UPDATE_GLOBAL_STRING(panel,name,val) do { \
-    config_setting_t *_s = config_setting_add(config_setting_get_elem(config_setting_get_member(config_root_setting(panel->config),""),\
-                                                                      0),\
-                                              name,PANEL_CONF_TYPE_STRING);\
-    if (_s) config_setting_set_string(_s,val); } while(0)
-
 static void update_opt_menu(GtkWidget *w, int ind);
 static void update_toggle_button(GtkWidget *w, gboolean n);
 static void modify_plugin( GtkTreeView* view );
@@ -111,7 +97,7 @@ static void state_configure_monitor(GSimpleAction *action,GVariant* param, gpoin
     SimplePanel* panel = (SimplePanel*) g_object_get_data( G_OBJECT(widget), "panel" );
     /* change monitor */
     int request_mon = g_variant_get_int32(param);
-    gchar* str = request_mon < 0 ? _("All monitors") : g_strdup_printf(_("Monitor %d"),request_mon+1);
+    gchar* str = request_mon < 0 ? _("Monitor: All") : g_strdup_printf(_("Monitor: %d"),request_mon+1);
     int edge = g_settings_get_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_EDGE);
     if(panel_edge_available(panel->priv, edge, request_mon))
     {
@@ -784,12 +770,12 @@ void panel_configure( SimplePanel* panel, int sel_page )
     mon_control = w = (GtkWidget*)gtk_builder_get_object( builder, "monitors-button");
     g_object_set_data(G_OBJECT(mon_control), "panel", panel);
     menu = g_menu_new();
-    g_menu_append(menu,_("All monitors"),"conf.configure-monitors(-1)");
+    g_menu_append(menu,_("All"),"conf.configure-monitors(-1)");
     gint i;
     for (i = 0; i < monitors; i++)
     {
         gchar* tmp = g_strdup_printf("conf.configure-monitors(%d)",i);
-        gchar* str_num = g_strdup_printf(_("Monitor %d"),i+1);
+        gchar* str_num = g_strdup_printf("%d",i+1);
         g_menu_append(menu,str_num,tmp);
         g_free(tmp);
         g_free(str_num);

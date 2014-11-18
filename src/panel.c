@@ -768,7 +768,18 @@ static void lxpanel_init(PanelWindow *self)
 /* Allocate and initialize new Panel structure. */
 static SimplePanel* panel_allocate(GtkApplication* app)
 {
-    return g_object_new(LX_TYPE_PANEL, NULL);
+    return g_object_new(LX_TYPE_PANEL,
+                        "border-width", 0,
+                        "decorated", FALSE,
+                        "name", "PanelWindow",
+                        "resizable", FALSE,
+                        "title", "panel",
+                        "type-hint", GDK_WINDOW_TYPE_HINT_DOCK,
+                        "window-position", GTK_WIN_POS_NONE,
+                        "skip-taskbar-hint", TRUE,
+                        "skip-pager-hint", TRUE,
+                        "accept-focus", FALSE,
+                        NULL);
 }
 
 /* TODO: Make constructor from various functions like panel_new */
@@ -1554,27 +1565,16 @@ panel_start_gui(SimplePanel *panel)
     GtkWidget *w = GTK_WIDGET(panel);
     GSList* l;
 
-    /* main toplevel window */
-   /* p->topgwin =  LXPANEL(gtk_window_new(GTK_WINDOW_POPUP))*/;
     p->display = gdk_display_get_default();
     p->ax = p->ay = p->aw = p->ah = 0;
-    gtk_container_set_border_width(GTK_CONTAINER(panel), 0);
-    gtk_window_set_resizable(GTK_WINDOW(panel), FALSE);
-    gtk_window_set_wmclass(GTK_WINDOW(panel), "panel", "lxpanel");
-    gtk_window_set_title(GTK_WINDOW(panel), "panel");
-    gtk_window_set_position(GTK_WINDOW(panel), GTK_WIN_POS_NONE);
-    gtk_window_set_decorated(GTK_WINDOW(panel), FALSE);
-    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(panel),TRUE);
-    gtk_window_set_skip_pager_hint(GTK_WINDOW(panel),TRUE);
+    gtk_window_set_wmclass(GTK_WINDOW(panel), "panel", "simple-panel");
     gtk_window_stick(GTK_WINDOW(panel));
-    gtk_window_set_accept_focus(GTK_WINDOW(panel),FALSE);
 
-    gtk_application_add_window(GTK_APPLICATION(win_grp), (GtkWindow*)panel );
-    all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
+    gtk_application_add_window(win_grp, (GtkWindow*)panel);
+    all_panels = gtk_application_get_windows(p->app);
     gtk_widget_add_events( w, GDK_BUTTON_PRESS_MASK );
 
     gtk_widget_realize(w);
-    //gdk_window_set_decorations(gtk_widget_get_window(p->topgwin), 0);
 
     // main layout manager as a single child of panel
     p->box = panel_box_new(panel, 0);
@@ -1587,7 +1587,7 @@ panel_start_gui(SimplePanel *panel)
     panel_set_dock_type(panel);
 
     /* window mapping point */
-    gtk_widget_show_all(w);
+    gtk_window_present(GTK_WINDOW(panel));
     /* the settings that should be done after window is mapped */
     _panel_establish_autohide(panel);
 
