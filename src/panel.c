@@ -435,12 +435,7 @@ static void simple_panel_set_property(GObject      *object,
         if (fonts)
             _panel_update_fonts(toplevel);
         if (updatestrut)
-        {
-            gboolean active = _panel_edge_can_strut(toplevel, toplevel->priv->edge, toplevel->priv->monitor, NULL);
-            if (!active)
-                g_settings_set_boolean(toplevel->priv->settings->toplevel_settings,PANEL_PROP_STRUT,FALSE);
             _panel_set_wm_strut(toplevel);
-        }
     }
 }
 
