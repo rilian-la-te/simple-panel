@@ -571,7 +571,6 @@ static LaunchButton *launchbutton_for_file_info(LaunchTaskBarPlugin * lb, FmFile
 
     /* Show the widget and return. */
     gtk_widget_show(button);
-    plugin_widget_set_background(button, lb->panel);
     return btn;
 }
 

@@ -98,12 +98,9 @@ gchar* css_apply_from_file_to_app (gchar* file)
 inline gchar* css_generate_panel_icon_button(GdkRGBA color){
     gchar* returnie;
     returnie = g_strdup_printf(".-panel-icon-button {\n"
-                               " transition: all 200ms ease-out;"
                                " padding: 1px;\n"
                                " -GtkWidget-focus-line-width: 0px;\n"
                                " -GtkWidget-focus-padding: 0px;\n"
-                               " background-color: transparent;\n"
-                               " background-image: none;\n"
                                "}\n"
                                ".-panel-icon-button:hover,"
                                ".-panel-icon-button:prelight,"
@@ -123,9 +120,8 @@ inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboole
 					" background-image: none;\n"
 					"}",gdk_rgba_to_string(&color));
 	else returnie = g_strdup_printf(".-simple-panel-background{\n"
-						 " background-color: %s;\n"
                          " background-image: url('%s');\n"
-						 "}",gdk_rgba_to_string(&color),filename);
+                         "}",filename);
 	return returnie;
 }
 

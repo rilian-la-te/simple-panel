@@ -384,6 +384,7 @@ static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *ic
                                                const gchar *label)
 {
     GtkWidget * event_box = gtk_button_new();
+    css_apply_with_class(event_box,NULL,GTK_STYLE_CLASS_BUTTON,TRUE);
     gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
     gtk_widget_set_can_focus(event_box, FALSE);
     gtk_widget_set_has_window(event_box,FALSE);
@@ -410,7 +411,6 @@ static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *ic
     g_free(tmp);
     css = css_generate_panel_icon_button(data->hicolor);
     css_apply_with_class(event_box,css,"-panel-icon-button",FALSE);
-    css_apply_with_class(event_box,css,GTK_STYLE_CLASS_BUTTON,TRUE);
     g_free(css);
     return event_box;
 }

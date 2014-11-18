@@ -219,7 +219,6 @@ extern void panel_set_wm_strut(Panel *p);
 extern void panel_set_dock_type(SimplePanel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
 extern void panel_update_background( SimplePanel* p );
-extern SimplePanel* panel_new(GtkApplication *app, const char* config_file, const char* config_name);
 extern SimplePanel* panel_load(GtkApplication *app, const char* config_file, const char* config_name);
 
 /* if current window manager is EWMH conforming. */
