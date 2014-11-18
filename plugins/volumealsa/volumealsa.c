@@ -58,10 +58,7 @@ typedef struct {
     GIOChannel **channels;                      /* Channels that we listen to */
     guint *watches;                             /* Watcher IDs for channels */
     guint num_channels;                         /* Number of channels */
-
-    /* Icons */
-    const char* icon_panel;
-    const char* icon_fallback;
+    GIcon* icon;
 
 } VolumeALSAPlugin;
 
@@ -293,31 +290,24 @@ static void volumealsa_update_current_icon(VolumeALSAPlugin * vol)
     int level = asound_get_volume(vol);
 
     /* Change icon according to mute / volume */
-    const char* icon_panel="audio-volume-muted-panel";
-    const char* icon_fallback=ICONS_MUTE;
+    if (vol->icon != NULL);
+        g_object_unref(vol->icon);
     if (mute)
     {
-         icon_panel = "audio-volume-muted-panel";
-         icon_fallback=ICONS_MUTE;
+        vol->icon = g_themed_icon_new_with_default_fallbacks("audio-volume-muted-panel");
     }
     else if (level >= 75)
     {
-         icon_panel = "audio-volume-high-panel";
-         icon_fallback=ICONS_VOLUME_HIGH;
+        vol->icon = g_themed_icon_new_with_default_fallbacks("audio-volume-high-panel");
     }
     else if (level >= 50)
     {
-         icon_panel = "audio-volume-medium-panel";
-         icon_fallback=ICONS_VOLUME_MEDIUM;
+        vol->icon = g_themed_icon_new_with_default_fallbacks("audio-volume-medium-panel");
     }
     else if (level > 0)
     {
-         icon_panel = "audio-volume-low-panel";
-         icon_fallback=ICONS_VOLUME_LOW;
+        vol->icon = g_themed_icon_new_with_default_fallbacks("audio-volume-low-panel");
     }
-
-    vol->icon_panel = icon_panel;
-    vol->icon_fallback= icon_fallback;
 }
 
 /* Do a full redraw of the display. */
@@ -330,7 +320,7 @@ static void volumealsa_update_display(VolumeALSAPlugin * vol)
     volumealsa_update_current_icon(vol);
 
     /* Change icon, fallback to default icon if theme doesn't exsit */
-    simple_panel_image_change_icon(vol->tray_icon,vol->icon_panel);
+    simple_panel_image_change_gicon(vol->tray_icon,vol->icon);
 
     g_signal_handler_block(vol->mute_check, vol->mute_check_handler);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(vol->mute_check), mute);
@@ -524,7 +514,8 @@ static GtkWidget *volumealsa_constructor(SimplePanel *panel, GSettings *settings
     gtk_widget_set_tooltip_text(p, _("Volume control"));
 
     /* Allocate icon as a child of top level. */
-    vol->tray_icon = simple_panel_image_new_for_icon(panel,"audio-volume-muted-panel",-1);
+    vol->icon = g_themed_icon_new_with_default_fallbacks("audio-volume-muted-panel");
+    vol->tray_icon = simple_panel_image_new_for_gicon(panel,vol->icon,-1);
     gtk_container_add(GTK_CONTAINER(p), vol->tray_icon);
 
     /* Initialize window to appear when icon clicked. */
@@ -551,7 +542,8 @@ static void volumealsa_destructor(gpointer user_data)
 
     if (vol->restart_idle)
         g_source_remove(vol->restart_idle);
-
+    if (vol->icon != NULL);
+        g_object_unref(vol->icon);
     /* Deallocate all memory. */
     g_free(vol);
 }

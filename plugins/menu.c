@@ -539,12 +539,8 @@ static void _unload_old_icons(GtkMenu* menu, GtkIconTheme* theme, menup* m)
             {
 	        img = GTK_IMAGE(gtk_image_menu_item_get_image(GTK_IMAGE_MENU_ITEM(item)));
                 gtk_image_clear(img);
-#if GTK_CHECK_VERSION(2, 24, 0)
                 if (gtk_widget_get_mapped(GTK_WIDGET(img)))
-#else
-                if( GTK_WIDGET_MAPPED(img) )
-#endif
-		    on_menu_item_map(GTK_WIDGET(item), m);
+                    on_menu_item_map(GTK_WIDGET(item), m);
             }
         }
         else if( ( sub_menu = gtk_menu_item_get_submenu( item ) ) )

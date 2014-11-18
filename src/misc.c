@@ -35,10 +35,7 @@
 /* data used by themed images buttons */
 typedef struct {
     GIcon *icon;
-    guint theme_changed_handler;
     guint icon_changed_handler;
-    GdkPixbuf* pixbuf;
-    GdkPixbuf* hilight;
     GdkRGBA hicolor;
     gint size; /* desired size */
     SimplePanel *panel;
@@ -47,10 +44,8 @@ typedef struct {
 static GQuark img_data_id = 0;
 
 static void on_theme_changed(GtkWidget* img, GObject* object);
-static void _gtk_image_set_from_file_scaled(GtkWidget *img, ImgData *data);
 static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data);
 static GtkWidget *gtk_image_new_for_gicon(SimplePanel* p, GIcon *icon, gint size);
-//static GtkWidget *_gtk_image_new_for_icon(FmIcon *icon, gint size);
 
 int buf_gets( char* buf, int len, char **fp )
 {
@@ -266,18 +261,13 @@ expand_tilda(const gchar *file)
 /* DestroyNotify handler for image data in _gtk_image_new_from_file_scaled. */
 static void img_data_free(ImgData * data)
 {
-    g_object_unref(data->icon);
+    if (data->icon != NULL)
+        g_object_unref(data->icon);
     if (data->panel != NULL)
     {
         g_object_remove_weak_pointer(G_OBJECT(data->panel), (gpointer *)&data->panel);
         g_signal_handler_disconnect(data->panel, data->icon_changed_handler);
     }
-    if (data->theme_changed_handler != 0)
-        g_signal_handler_disconnect(gtk_icon_theme_get_default(), data->theme_changed_handler);
-    if (data->pixbuf != NULL)
-        g_object_unref(data->pixbuf);
-    if (data->hilight != NULL)
-        g_object_unref(data->hilight);
     g_free(data);
 }
 
@@ -332,6 +322,11 @@ GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gi
     return gtk_image_new_for_gicon(p,g_icon_new_for_string(name,NULL),height);
 }
 
+GtkWidget* simple_panel_image_new_for_gicon(SimplePanel * p,GIcon *icon, gint height)
+{
+    return gtk_image_new_for_gicon(p,icon,height);
+}
+
 static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data)
 {
     if (data->icon)
@@ -343,34 +338,28 @@ static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data)
 
 gboolean simple_panel_image_change_icon(GtkWidget *img, const gchar *name)
 {
+    return simple_panel_image_change_gicon(img,g_icon_new_for_string(name,NULL));
+}
+
+gboolean simple_panel_image_change_gicon(GtkWidget *img, GIcon *icon)
+{
     ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(img), img_data_id);
 
-    g_return_val_if_fail(data != NULL && name != NULL, FALSE);
-    if(data == NULL || name == NULL)
+    g_return_val_if_fail(data != NULL && icon != NULL, FALSE);
+    if(data == NULL || icon == NULL)
         return FALSE;
-    g_object_unref(data->icon);
-    data->icon = g_icon_new_for_string(name,NULL);
-    if (!G_IS_THEMED_ICON(data->icon))
-    {
-        if (data->theme_changed_handler != 0)
-            g_signal_handler_disconnect(gtk_icon_theme_get_default(), data->theme_changed_handler);
-        data->theme_changed_handler = 0;
-    }
-    else if (data->theme_changed_handler == 0)
-    {
-        /* This image is loaded from icon theme.  Update the image if the icon theme is changed. */
-        data->theme_changed_handler = g_signal_connect_swapped(gtk_icon_theme_get_default(),
-                                                "changed", G_CALLBACK(on_theme_changed), img);
-    }
+    if (data->icon != NULL)
+        g_object_unref(data->icon);
+    data->icon=icon;
     _gtk_image_set_from_file_gicon(img, data);
     return TRUE;
 }
 
 static GtkWidget* gtk_image_new_for_gicon(SimplePanel* p,GIcon * icon, gint size)
 {
+    g_return_val_if_fail(icon != NULL, NULL);
     GtkWidget * img = gtk_image_new();
     ImgData * data = g_new0(ImgData, 1);
-
     data->icon = icon;
     data->size = size;
     if (img_data_id == 0)
@@ -385,11 +374,6 @@ static GtkWidget* gtk_image_new_for_gicon(SimplePanel* p,GIcon * icon, gint size
         g_object_add_weak_pointer(G_OBJECT(p), (gpointer *)&data->panel);
     }
     _gtk_image_set_from_file_gicon(img, data);
-    if (G_IS_THEMED_ICON(data->icon))
-    {
-        /* This image is loaded from icon theme.  Update the image if the icon theme is changed. */
-        data->theme_changed_handler = g_signal_connect_swapped(gtk_icon_theme_get_default(), "changed", G_CALLBACK(on_theme_changed), img);
-    }
     return img;
 }
 
