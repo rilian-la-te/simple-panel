@@ -1604,6 +1604,8 @@ panel_start_gui(SimplePanel *panel)
         position = g_settings_get_uint(((PluginGSettings*)l->data)->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
         simple_panel_add_plugin(panel,l->data,position);
     }
+    update_positions_on_panel(panel);
+    update_widget_positions(panel);
     panel_update_background(panel);
     _panel_update_fonts(panel);
     g_object_set(G_OBJECT(panel),PANEL_PROP_STRUT,p->setstrut,NULL);
@@ -1783,8 +1785,6 @@ SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char*
             gtk_widget_destroy(GTK_WIDGET(panel));
             panel = NULL;
         }
-        update_positions_on_panel(panel);
-        update_widget_positions(panel);
     }
     return panel;
 }
