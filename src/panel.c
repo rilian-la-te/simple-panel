@@ -1546,40 +1546,6 @@ void _panel_establish_autohide(SimplePanel *p)
     }
 }
 
-/* Set an image from a file with scaling to the panel icon size. */
-void panel_image_set_from_file(Panel * p, GtkWidget * image, const char * file)
-{
-    GdkPixbuf * pixbuf = gdk_pixbuf_new_from_file_at_scale(file, p->icon_size, p->icon_size, TRUE, NULL);
-    if (pixbuf != NULL)
-    {
-        gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
-        g_object_unref(pixbuf);
-    }
-}
-
-void lxpanel_image_set_from_file(SimplePanel * p, GtkWidget * image, const char * file)
-{
-    panel_image_set_from_file(p->priv, image, file);
-}
-
-/* Set an image from a icon theme with scaling to the panel icon size. */
-gboolean panel_image_set_icon_theme(Panel * p, GtkWidget * image, const gchar * icon)
-{
-    if (gtk_icon_theme_has_icon(p->icon_theme, icon))
-    {
-        GdkPixbuf * pixbuf = gtk_icon_theme_load_icon(p->icon_theme, icon, p->icon_size, 0, NULL);
-        gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
-        g_object_unref(pixbuf);
-        return TRUE;
-    }
-    return FALSE;
-}
-
-gboolean lxpanel_image_set_icon_theme(SimplePanel * p, GtkWidget * image, const gchar * icon)
-{
-    return panel_image_set_icon_theme(p->priv, image, icon);
-}
-
 static void
 panel_start_gui(SimplePanel *panel)
 {

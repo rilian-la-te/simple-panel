@@ -300,7 +300,8 @@ static void _simple_panel_button_set_icon(GtkWidget* btn, GIcon* icon, gint size
             size = data->size;
         if (icon != data->icon || size != data->size) /* something was changed */
         {
-            g_object_unref(data->icon);
+            if (data->icon != NULL)
+                g_object_unref(data->icon);
             data->icon = icon;
             data->size = size;
             _gtk_image_set_from_file_gicon(img, data);

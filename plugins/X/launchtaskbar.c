@@ -1864,7 +1864,6 @@ static void task_delete(LaunchTaskBarPlugin * tb, Task * tk, gboolean unlink, gb
     g_free(tk);
 }
 
-#if GTK_CHECK_VERSION(3,0,0)
 static cairo_surface_t *
 _wnck_cairo_surface_get_from_pixmap (Screen *screen,
 									 Pixmap  xpixmap)
@@ -1932,68 +1931,6 @@ _wnck_gdk_pixbuf_get_from_pixmap (Screen *screen,
 
   return retval;
 }
-
-#else
-/* Get a pixbuf from a pixmap.
- * Originally from libwnck, Copyright (C) 2001 Havoc Pennington. */
-static GdkPixbuf * _wnck_gdk_pixbuf_get_from_pixmap(Pixmap xpixmap, int width, int height)
-{
-    /* Get the drawable. */
-#if GTK_CHECK_VERSION(2, 24, 0)
-    GdkDrawable * drawable = gdk_x11_window_lookup_for_display(gdk_display_get_default(), xpixmap);
-#else
-    GdkDrawable * drawable = gdk_xid_table_lookup(xpixmap);
-#endif
-    if (drawable != NULL)
-        g_object_ref(G_OBJECT(drawable));
-    else
-        drawable = gdk_pixmap_foreign_new(xpixmap);
-
-    GdkColormap * colormap = NULL;
-    GdkPixbuf * retval = NULL;
-    if (drawable != NULL)
-    {
-        /* Get the colormap.
-         * If the drawable has no colormap, use no colormap or the system colormap as recommended in the documentation of gdk_drawable_get_colormap. */
-        colormap = gdk_drawable_get_colormap(drawable);
-        gint depth = gdk_drawable_get_depth(drawable);
-        if (colormap != NULL)
-            g_object_ref(G_OBJECT(colormap));
-        else if (depth == 1)
-            colormap = NULL;
-        else
-        {
-#if GTK_CHECK_VERSION(2, 24, 0)
-            colormap = gdk_screen_get_system_colormap(gdk_window_get_screen(drawable));
-#else
-            colormap = gdk_screen_get_system_colormap(gdk_drawable_get_screen(drawable));
-#endif
-            g_object_ref(G_OBJECT(colormap));
-        }
-
-        /* Be sure we aren't going to fail due to visual mismatch. */
-#if GTK_CHECK_VERSION(2,22,0)
-        if ((colormap != NULL) && (gdk_visual_get_depth(gdk_colormap_get_visual(colormap)) != depth))
-#else
-        if ((colormap != NULL) && (gdk_colormap_get_visual(colormap)->depth != depth))
-#endif
-        {
-            g_object_unref(G_OBJECT(colormap));
-            colormap = NULL;
-        }
-
-        /* Do the major work. */
-        retval = gdk_pixbuf_get_from_drawable(NULL, drawable, colormap, 0, 0, 0, 0, width, height);
-    }
-
-    /* Clean up and return. */
-    if (colormap != NULL)
-        g_object_unref(G_OBJECT(colormap));
-    if (drawable != NULL)
-        g_object_unref(G_OBJECT(drawable));
-    return retval;
-}
-#endif
 
 /* Apply a mask to a pixbuf.
  * Originally from libwnck, Copyright (C) 2001 Havoc Pennington. */

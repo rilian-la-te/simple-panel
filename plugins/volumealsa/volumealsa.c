@@ -289,9 +289,6 @@ static void volumealsa_update_current_icon(VolumeALSAPlugin * vol)
     gboolean mute = asound_is_muted(vol);
     int level = asound_get_volume(vol);
 
-    /* Change icon according to mute / volume */
-    if (vol->icon != NULL);
-        g_object_unref(vol->icon);
     if (mute)
     {
         vol->icon = g_themed_icon_new_with_default_fallbacks("audio-volume-muted-panel");
@@ -497,6 +494,7 @@ static GtkWidget *volumealsa_constructor(SimplePanel *panel, GSettings *settings
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     VolumeALSAPlugin * vol = g_new0(VolumeALSAPlugin, 1);
     GtkWidget *p;
+    vol->icon == NULL;
 
     /* Initialize ALSA.  If that fails, present nothing. */
     if ( ! asound_initialize(vol))

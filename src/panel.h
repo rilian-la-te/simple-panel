@@ -96,36 +96,6 @@ extern void lxpanel_draw_label_text(SimplePanel * p, GtkWidget * label, const ch
                                     gboolean bold, float custom_size_factor,
                                     gboolean custom_color);
 
-/**
- * lxpanel_image_set_from_file
- * @p: a panel instance
- * @image: a #GtkImage widget
- * @file: image file path
- *
- * Applies icon from @file to @image in accordance with icon size setting
- * on panel @p.
- */
-extern void lxpanel_image_set_from_file(SimplePanel * p, GtkWidget * image, const char * file);
-
-/**
- * lxpanel_image_set_icon_theme
- * @p: a panel instance
- * @image: a #GtkImage widget
- * @icon: icon name
- *
- * Applies icon size and theme from settings of @p to @image using @icon
- * name to select icon.
- */
-extern gboolean lxpanel_image_set_icon_theme(SimplePanel * p, GtkWidget * image, const gchar * icon);
-
-/**
- * lxpanel_config_save
- * @p: a panel instance
- *
- * Immediately saves current configuration for panel @p.
- */
-void lxpanel_config_save(SimplePanel *p); /* defined in configurator.c */
-
 /* Accessors APIs for Panel* */
 extern GtkOrientation panel_get_orientation(SimplePanel *panel);
 extern gint panel_get_icon_size(SimplePanel *panel);
