@@ -789,17 +789,8 @@ static SimplePanel* panel_allocate(GtkApplication* app)
 static void panel_normalize_configuration(Panel* p)
 {
     panel_set_panel_configuration_changed( p );
-    if (p->width < 0)
-        p->width = 100;
     if (p->widthtype == PANEL_SIZE_PERCENT && p->width > 100)
         p->width = 100;
-    p->heighttype = PANEL_SIZE_PIXEL;
-    if (p->heighttype == PANEL_SIZE_PIXEL) {
-        if (p->height < PANEL_HEIGHT_MIN)
-            p->height = PANEL_HEIGHT_MIN;
-        else if (p->height > PANEL_HEIGHT_MAX)
-            p->height = PANEL_HEIGHT_MAX;
-    }
     if (p->monitor < 0)
         p->monitor = -1;
 }
@@ -1582,6 +1573,15 @@ panel_start_gui(SimplePanel *panel)
 
     panel_set_dock_type(panel);
 
+    panel_gsettings_init_plugin_list(p->settings);
+    for (l = p->settings->all_settings; l != NULL; l = l->next)
+    {
+        position = g_settings_get_uint(((PluginGSettings*)l->data)->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
+        simple_panel_add_plugin(panel,l->data,position);
+    }
+    update_positions_on_panel(panel);
+    update_widget_positions(panel);
+
     /* window mapping point */
     gtk_window_present(GTK_WINDOW(panel));
     /* the settings that should be done after window is mapped */
@@ -1592,19 +1592,10 @@ panel_start_gui(SimplePanel *panel)
                         gdk_atom_intern_static_string("_NET_WM_DESKTOP"),
                         gdk_atom_intern_static_string("CARDINAL"),
                         32, GDK_PROP_MODE_REPLACE, (guchar*)&val, 1);
-
-    p->initialized = TRUE;
-    panel_gsettings_init_plugin_list(p->settings);
-    for (l = p->settings->all_settings; l != NULL; l = l->next)
-    {
-        position = g_settings_get_uint(((PluginGSettings*)l->data)->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
-        simple_panel_add_plugin(panel,l->data,position);
-    }
-    update_positions_on_panel(panel);
-    update_widget_positions(panel);
     panel_update_background(panel);
     _panel_update_fonts(panel);
     g_object_set(G_OBJECT(panel),PANEL_PROP_STRUT,p->setstrut,NULL);
+    p->initialized = TRUE;
 }
 
 /* Draw text into a label, with the user preference color and optionally bold. */

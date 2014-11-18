@@ -65,7 +65,7 @@ response_event(GtkDialog *widget, gint arg1, Panel* panel )
     case GTK_RESPONSE_DELETE_EVENT:
     case GTK_RESPONSE_CLOSE:
     case GTK_RESPONSE_NONE:
-        gtk_application_remove_window(panel->app,GTK_WINDOW(panel->pref_dialog));
+        gtk_application_remove_window(panel->app,GTK_WINDOW(widget));
         /* NOTE: NO BREAK HERE*/
         gtk_widget_destroy(GTK_WIDGET(widget));
         break;

@@ -201,14 +201,14 @@ void _calculate_position(SimplePanel *panel, GdkRectangle* rect)
         rect->y = marea.y + ((np->edge == PANEL_EDGE_TOP) ? 0 : (marea.height - rect->height));
 
     } else {
-        rect->height = np->height;
+        rect->height = np->width;
         rect->y = marea.y;
         calculate_width(marea.height, np->widthtype, np->allign, np->margin,
               &rect->height, &rect->y);
         rect->width = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
         rect->x = marea.x + ((np->edge == PANEL_EDGE_LEFT) ? 0 : (marea.width - rect->width));
     }
-    RET();
+    return;
 }
 
 void calculate_position(SimplePanel *np)
