@@ -439,7 +439,7 @@ static GtkWidget *netstat_constructor(SimplePanel *panel, GSettings *settings)
     ns = g_new0(netstat, 1);
     g_return_val_if_fail(ns != NULL, NULL);
     /* apply config */
-    ns->fixcmd = g_settings_get_string(settings,NETSTAT_KEY_FIX);
+    g_settings_get(settings,NETSTAT_KEY_FIX,"ms",&ns->fixcmd);
 
     /* initializing */
     ns->fnetd = malloc(sizeof(FNETD));
