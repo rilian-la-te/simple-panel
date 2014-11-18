@@ -480,6 +480,7 @@ expose_event(GtkWidget * widget, GdkEventExpose * event, Monitor *m)
         cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
         gdk_cairo_region(cr, event->region);
         cairo_clip(cr);
+        cairo_set_source_rgba(cr,0,0,0,0);
 //        gdk_cairo_set_source_color(cr, &style->black);
         cairo_set_source_surface(cr, m->pixmap, BORDER_SIZE, BORDER_SIZE);
         cairo_paint(cr);
@@ -515,8 +516,9 @@ redraw_pixmap (Monitor *m)
     cairo_set_line_width (cr, 1.0);
 
     /* Erase pixmap */
+    cairo_set_source_rgba(cr,0,0,0,0);
 //    gdk_cairo_set_source_color(cr, &style->black);
-//    cairo_paint(cr);
+    cairo_paint(cr);
 
     gdk_cairo_set_source_rgba(cr, &m->foreground_color);
     for (i = 0; i < m->pixmap_width; i++)

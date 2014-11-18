@@ -73,6 +73,7 @@ static void redraw_pixmap(CPUPlugin * c)
     cairo_set_line_width (cr, 1.0);
     /* Erase pixmap. */
     cairo_rectangle(cr, 0, 0, c->pixmap_width, c->pixmap_height);
+    cairo_set_source_rgba(cr,0,0,0,0);
 //    gdk_cairo_set_source_color(cr, &style->black);
     cairo_fill(cr);
 

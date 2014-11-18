@@ -303,7 +303,6 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
                 lx_b->height - lx_b->border - chargeLevel, (lx_b->width + 1) / 2
                 - lx_b->border, chargeLevel);
         cairo_fill(cr);
-
     }
     else {
 
@@ -319,6 +318,7 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
         cairo_rectangle(cr, lx_b->border, (lx_b->height + 1)
                 / 2, chargeLevel, lx_b->height / 2 - lx_b->border);
         cairo_fill(cr);
+        cairo_paint(cr);
 
     }
     gtk_widget_show(gtk_widget_get_parent(lx_b->drawingArea));
@@ -395,7 +395,7 @@ static gint configureEvent(GtkWidget *widget, GdkEventConfigure *event,
         lx_b->thickness = lx_b->height;
     }
 
-    lx_b->pixmap = cairo_image_surface_create (CAIRO_FORMAT_RGB24, allocation.width,
+    lx_b->pixmap = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, allocation.width,
                                                allocation.height);
     check_cairo_surface_status(&lx_b->pixmap);
 
@@ -416,6 +416,7 @@ static gint draw(GtkWidget *widget, GdkEventExpose *event, lx_battery *lx_b) {
     cairo_clip(cr);
 
 //    gdk_cairo_set_source_color(cr, &style->black);
+    cairo_set_source_rgba(cr,0,0,0,0);
     cairo_set_source_surface(cr, lx_b->pixmap, 0, 0);
     cairo_paint(cr);
 
@@ -493,7 +494,7 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
     lx_b->chargingColor2 = g_settings_get_string(settings,BATT_KEY_CH2);
     lx_b->dischargingColor1 = g_settings_get_string(settings,BATT_KEY_DIS1);
     lx_b->dischargingColor2 = g_settings_get_string(settings,BATT_KEY_DIS2);
-        lx_b->thickness = MAX(1, tmp_int);
+        lx_b->thickness = MAX(1, lx_b->thickness);
         if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL)
             lx_b->width = lx_b->thickness;
         else
