@@ -367,6 +367,7 @@ static void simple_panel_set_property(GObject      *object,
     case PROP_AUTOHIDE:
         toplevel->priv->autohide = g_value_get_boolean(value);
         toplevel->priv->visible = toplevel->priv->autohide ? FALSE : TRUE;
+        _panel_establish_autohide(toplevel);
         geometry=TRUE;
         updatestrut = TRUE;
         break;
