@@ -251,6 +251,7 @@ static void img_data_free(ImgData * data)
 {
     if (data->icon != NULL)
         g_object_unref(data->icon);
+    g_signal_handler_disconnect(gtk_icon_theme_get_default(),data->theme_changed_handler);
     if (data->panel != NULL)
     {
         g_object_remove_weak_pointer(G_OBJECT(data->panel), (gpointer *)&data->panel);

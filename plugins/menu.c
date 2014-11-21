@@ -683,7 +683,7 @@ make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkW
     m->menu = menu;
     gtk_menu_attach_to_widget(GTK_MENU(m->menu),m->box,NULL);
 
-    if( name )
+    if( name && strlen(name)>0 )
     {
         /* load the name from *.directory file if needed */
         if( g_str_has_suffix( name, ".directory" ) )
@@ -963,7 +963,7 @@ static gboolean apply_config(gpointer user_data)
     menup* m = lxpanel_plugin_get_data(p);
 
     if( m->fname ) {
-        simple_panel_image_change_icon(m->img, m->fname);
+        simple_panel_button_set_icon(m->img, m->fname,-1);
     }
     g_settings_set_string(m->settings, MENU_KEY_ICON, m->fname);
     g_settings_set_string(m->settings, MENU_KEY_NAME, m->caption);
@@ -979,19 +979,12 @@ static GtkWidget *menu_config(SimplePanel *panel, GtkWidget *p)
                                       NULL);
 }
 
-/* Callback when panel configuration changes. */
-static void menu_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
-{
-    apply_config(p);
-}
-
 SimplePanelPluginInit lxpanel_static_plugin_menu = {
     .name = N_("Menu"),
     .description = N_("Application Menu"),
 
     .new_instance = menu_constructor,
     .config = menu_config,
-    .reconfigure = menu_panel_configuration_changed,
     .show_system_menu = show_system_menu,
     .has_config = TRUE
 };

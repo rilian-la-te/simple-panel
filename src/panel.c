@@ -1521,7 +1521,6 @@ panel_start_gui(SimplePanel *panel)
         simple_panel_add_plugin(panel,l->data,position);
     }
     update_positions_on_panel(panel);
-    update_widget_positions(panel);
 
     val = G_MAXULONG;
     gdk_property_change(gtk_widget_get_window(w),

@@ -374,6 +374,8 @@ static void init_plugin_list( SimplePanel* p, GtkTreeView* view, GtkWidget* labe
         gtk_tree_selection_select_iter( tree_sel, &it );
 }
 
+void update_widget_positions(SimplePanel* p);
+
 static void on_add_plugin_row_activated( GtkTreeView *view,
                                          GtkTreePath *path,
                                          GtkTreeViewColumn *col,
@@ -412,6 +414,7 @@ static void on_add_plugin_row_activated( GtkTreeView *view,
                 gtk_tree_view_scroll_to_cell( _view, tree_path, NULL, FALSE, 0, 0 );
                 gtk_tree_path_free( tree_path );
             }
+            update_widget_positions(p);
         }
         else /* free unused setting */
             panel_gsettings_remove_plugin_settings(p->priv->settings,s->plugin_number);
