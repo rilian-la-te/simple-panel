@@ -48,6 +48,7 @@ typedef struct {
     GdkRGBA foreground_color;			/* Foreground color for drawing area */
     GtkWidget * da;				/* Drawing area */
     cairo_surface_t * pixmap;				/* Pixmap to be drawn on drawing area */
+    SimplePanel* panel;
 
     guint timer;				/* Timer for periodic update */
     CPUSample * stats_cpu;			/* Ring buffer of CPU utilization values */
@@ -69,12 +70,13 @@ static void cpu_destructor(gpointer user_data);
 static void redraw_pixmap(CPUPlugin * c)
 {
     cairo_t * cr = cairo_create(c->pixmap);
-//    GtkStyle * style = gtk_widget_get_style(c->da);
+    gtk_style_context_get_color(gtk_widget_get_style_context(GTK_WIDGET(c->panel)),
+                                gtk_widget_get_state_flags(GTK_WIDGET(c->panel)),
+                                &c->foreground_color);
     cairo_set_line_width (cr, 1.0);
     /* Erase pixmap. */
     cairo_rectangle(cr, 0, 0, c->pixmap_width, c->pixmap_height);
     cairo_set_source_rgba(cr,0,0,0,0);
-//    gdk_cairo_set_source_color(cr, &style->black);
     cairo_fill(cr);
 
     /* Recompute pixmap. */
@@ -200,9 +202,8 @@ static gboolean configure_event(GtkWidget * widget, GdkEventConfigure * event, C
         c->pixmap_height = new_pixmap_height;
         if (c->pixmap)
             cairo_surface_destroy(c->pixmap);
-        c->pixmap = cairo_image_surface_create(CAIRO_FORMAT_RGB24, c->pixmap_width, c->pixmap_height);
-        /* check_cairo_surface_status(&c->pixmap); */
-
+        c->pixmap = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, c->pixmap_width, c->pixmap_height);
+        cairo_surface_status(c->pixmap);
         /* Redraw pixmap at the new size. */
         redraw_pixmap(c);
     }
@@ -210,20 +211,18 @@ static gboolean configure_event(GtkWidget * widget, GdkEventConfigure * event, C
 }
 
 /* Handler for expose_event on drawing area. */
-static gboolean draw_event(GtkWidget * widget, GdkEventExpose * event, CPUPlugin * c)
+static gboolean draw_event(GtkWidget * widget, cairo_t * cr, CPUPlugin * c)
 {
     /* Draw the requested part of the pixmap onto the drawing area.
      * Translate it in both x and y by the border size. */
     if (c->pixmap != NULL)
     {
-        cairo_t * cr = gdk_cairo_create(gtk_widget_get_window(widget));
-        gdk_cairo_region(cr, event->region);
-        cairo_clip(cr);
+        cairo_set_source_rgba(cr,0,0,0,0);
+        cairo_fill(cr);
         cairo_set_source_surface(cr, c->pixmap,
               BORDER_SIZE, BORDER_SIZE);
         cairo_paint(cr);
         /* check_cairo_status(cr); */
-        cairo_destroy(cr);
     }
     return FALSE;
 }
@@ -234,6 +233,7 @@ static GtkWidget *cpu_constructor(SimplePanel *panel, GSettings *settings)
     /* Allocate plugin context and set into Plugin private data pointer. */
     CPUPlugin * c = g_new0(CPUPlugin, 1);
     GtkWidget * p;
+    c->panel = panel;
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     p = gtk_event_box_new();
@@ -249,9 +249,9 @@ static GtkWidget *cpu_constructor(SimplePanel *panel, GSettings *settings)
 
     /* Clone a graphics context and set "green" as its foreground color.
      * We will use this to draw the graph. */
-//    gdk_color_parse("green",  &c->foreground_color);
-      const gchar* css = ".-cpu-plugin {\n color: green; \n}\n";
-      css_apply_with_class(GTK_WIDGET(c),css,"-cpu-plugin",FALSE);
+    gtk_style_context_get_color(gtk_widget_get_style_context(GTK_WIDGET(panel)),
+                                gtk_widget_get_state_flags(GTK_WIDGET(panel)),
+                                &c->foreground_color);
     /* Connect signals. */
     g_signal_connect(G_OBJECT(c->da), "configure-event", G_CALLBACK(configure_event), (gpointer) c);
     g_signal_connect(G_OBJECT(c->da), "draw", G_CALLBACK(draw_event), (gpointer) c);
@@ -259,7 +259,6 @@ static GtkWidget *cpu_constructor(SimplePanel *panel, GSettings *settings)
     /* Show the widget.  Connect a timer to refresh the statistics. */
     gtk_widget_show(c->da);
     c->timer = g_timeout_add(1500, (GSourceFunc) cpu_update, (gpointer) c);
-    gtk_widget_set_app_paintable(GTK_WIDGET(c),TRUE);
     return p;
 }
 

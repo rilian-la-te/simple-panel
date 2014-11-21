@@ -148,11 +148,11 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
                 gtk_widget_get_style_context(GTK_WIDGET(panel)),
                 gtk_widget_get_state_flags(GTK_WIDGET(panel)),
                 &color);
-    color.alpha = 0.6;
+    color.alpha = 0.8;
     active_color.red=color.red;
     active_color.green=color.green;
     active_color.blue=color.blue;
-    active_color.alpha =0.8;
+    active_color.alpha =0.5;
     const gchar* edge;
     GtkPositionType direction = panel_get_edge(panel);
     if (direction==GTK_POS_BOTTOM)

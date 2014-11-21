@@ -146,8 +146,7 @@ static void plugin_class_unref(PluginClass * pc)
 /* Recursively set the background of all widgets on a panel background configuration change. */
 void plugin_widget_set_background(GtkWidget * w, SimplePanel * panel)
 {
-    GdkRGBA transparent;
-    gdk_rgba_parse(&transparent,"transparent");
+    GdkRGBA transparent = {1,1,1,0};
     if (w != NULL)
     {
         gchar* css = css_generate_background("",transparent,TRUE);

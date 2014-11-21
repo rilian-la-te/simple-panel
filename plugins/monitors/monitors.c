@@ -149,7 +149,7 @@ static void     mem_tooltip_update (Monitor *m);
 
 
 static gboolean configure_event(GtkWidget*, GdkEventConfigure*, gpointer);
-static gboolean expose_event(GtkWidget *, GdkEventExpose *, Monitor *);
+static gboolean draw_event(GtkWidget *, cairo_t *, Monitor *);
 static void redraw_pixmap (Monitor *m);
 
 /* Monitors functions */
@@ -174,8 +174,8 @@ monitor_init(MonitorsPlugin *mp, Monitor *m, gchar *color)
     /* Signals */
     g_signal_connect(G_OBJECT(m->da), "configure-event",
         G_CALLBACK(configure_event), (gpointer) m);
-    g_signal_connect (G_OBJECT(m->da), "expose-event",
-        G_CALLBACK(expose_event), (gpointer) m);
+    g_signal_connect (G_OBJECT(m->da), "draw",
+        G_CALLBACK(draw_event), (gpointer) m);
     /* g_signal_connect(G_OBJECT(m->da), "button-press-event",
                     G_CALLBACK(plugin_button_press_event), p); */
 
@@ -460,7 +460,7 @@ configure_event(GtkWidget* widget, GdkEventConfigure* dummy, gpointer data)
         m->pixmap_height = new_pixmap_height;
         if (m->pixmap)
             cairo_surface_destroy(m->pixmap);
-        m->pixmap = cairo_image_surface_create(CAIRO_FORMAT_RGB24,
+        m->pixmap = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
                                    m->pixmap_width,
                                    m->pixmap_height);
         check_cairo_surface_status(&m->pixmap);
@@ -471,21 +471,15 @@ configure_event(GtkWidget* widget, GdkEventConfigure* dummy, gpointer data)
 }
 
 static gboolean
-expose_event(GtkWidget * widget, GdkEventExpose * event, Monitor *m)
+draw_event(GtkWidget * widget, cairo_t * cr, Monitor *m)
 {
     /* Draw the requested part of the pixmap onto the drawing area.
      * Translate it in both x and y by the border size. */
     if (m->pixmap != NULL)
     {
-        cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
-        gdk_cairo_region(cr, event->region);
-        cairo_clip(cr);
-        cairo_set_source_rgba(cr,0,0,0,0);
-//        gdk_cairo_set_source_color(cr, &style->black);
         cairo_set_source_surface(cr, m->pixmap, BORDER_SIZE, BORDER_SIZE);
         cairo_paint(cr);
         check_cairo_status(cr);
-        cairo_destroy(cr);
     }
 
     return FALSE;
@@ -633,7 +627,7 @@ monitors_constructor(SimplePanel *panel, GSettings *settings)
     /* Apply options */
     mp->displayed_monitors[CPU_POSITION] = g_settings_get_boolean(settings,MONITORS_KEY_DISPLAY_CPU);
     mp->displayed_monitors[MEM_POSITION] = g_settings_get_boolean(settings,MONITORS_KEY_DISPLAY_RAM);
-    mp->action = g_settings_get_string(settings,MONITORS_KEY_ACTION);
+    g_settings_get(settings,"ms",MONITORS_KEY_ACTION,&mp->action);
     colors[CPU_POSITION] = g_settings_get_string(settings,MONITORS_KEY_CPU_CL);
     colors[MEM_POSITION] = g_settings_get_string(settings,MONITORS_KEY_CPU_CL);
 
@@ -656,7 +650,6 @@ monitors_constructor(SimplePanel *panel, GSettings *settings)
      * seconds */
     mp->timer = g_timeout_add_seconds(UPDATE_PERIOD, (GSourceFunc) monitors_update,
                               (gpointer) mp);
-    gtk_widget_set_app_paintable(p,TRUE);
     RET(p);
 }
 
@@ -768,7 +761,7 @@ start:
     }
     g_settings_set_boolean(mp->settings, MONITORS_KEY_DISPLAY_CPU, mp->displayed_monitors[CPU_POSITION]);
     g_settings_set_boolean(mp->settings, MONITORS_KEY_DISPLAY_RAM, mp->displayed_monitors[MEM_POSITION]);
-    g_settings_set_string(mp->settings, MONITORS_KEY_ACTION, mp->action);
+    g_settings_set(mp->settings,"ms", MONITORS_KEY_ACTION, mp->action);
     g_settings_set_string(mp->settings, MONITORS_KEY_CPU_CL,
                             mp->monitors[CPU_POSITION] ? colors[CPU_POSITION] : NULL);
     g_settings_set_string(mp->settings, MONITORS_KEY_RAM_CL,

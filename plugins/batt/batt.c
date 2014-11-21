@@ -80,6 +80,7 @@ typedef struct {
         discharging1,
         discharging2;
     cairo_surface_t *pixmap;
+    GtkContainer *box;
     GtkWidget *drawingArea;
     GtkOrientation orientation;
     unsigned int alarmTime,
@@ -285,7 +286,7 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
 
     set_tooltip_text(lx_b);
 
-    int chargeLevel = lx_b->b->percentage * (lx_b->length - 2 * lx_b->border) / 100;
+    int chargeLevel = lx_b->b->percentage * lx_b->length / 100;
 
     if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL) {
 
@@ -293,15 +294,13 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
            color 2 for the right half */
         gdk_cairo_set_source_rgba(cr,
                 isCharging ? &lx_b->charging1 : &lx_b->discharging1);
-        cairo_rectangle(cr, lx_b->border,
-                lx_b->height - lx_b->border - chargeLevel, lx_b->width / 2
-                - lx_b->border, chargeLevel);
+        cairo_rectangle(cr, 0, lx_b->height - chargeLevel,
+                        lx_b->width / 2, chargeLevel);
         cairo_fill(cr);
         gdk_cairo_set_source_rgba(cr,
                 isCharging ? &lx_b->charging2 : &lx_b->discharging2);
-        cairo_rectangle(cr, lx_b->width / 2,
-                lx_b->height - lx_b->border - chargeLevel, (lx_b->width + 1) / 2
-                - lx_b->border, chargeLevel);
+        cairo_rectangle(cr, lx_b->width / 2, lx_b->height - chargeLevel,
+                        (lx_b->width + 1) / 2, chargeLevel);
         cairo_fill(cr);
     }
     else {
@@ -310,13 +309,12 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
            color 2 for the bottom half */
         gdk_cairo_set_source_rgba(cr,
                 isCharging ? &lx_b->charging1 : &lx_b->discharging1);
-        cairo_rectangle(cr, lx_b->border,
-                lx_b->border, chargeLevel, lx_b->height / 2 - lx_b->border);
+        cairo_rectangle(cr, 0, 0, chargeLevel, lx_b->height / 2);
         cairo_fill(cr);
         gdk_cairo_set_source_rgba(cr,
                 isCharging ? &lx_b->charging2 : &lx_b->discharging2);
-        cairo_rectangle(cr, lx_b->border, (lx_b->height + 1)
-                / 2, chargeLevel, lx_b->height / 2 - lx_b->border);
+        cairo_rectangle(cr, 0, (lx_b->height + 1) / 2,
+                        chargeLevel, lx_b->height / 2);
         cairo_fill(cr);
         cairo_paint(cr);
 
@@ -388,11 +386,9 @@ static gint configureEvent(GtkWidget *widget, GdkEventConfigure *event,
     lx_b->height = allocation.height;
     if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL) {
         lx_b->length = lx_b->height;
-        lx_b->thickness = lx_b->width;
     }
     else {
         lx_b->length = lx_b->width;
-        lx_b->thickness = lx_b->height;
     }
 
     lx_b->pixmap = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, allocation.width,
@@ -401,30 +397,38 @@ static gint configureEvent(GtkWidget *widget, GdkEventConfigure *event,
 
     /* Perform an update so the bar will look right in its new orientation */
     update_display(lx_b, FALSE);
+    /* we enforce border width here as it seems GtkEventBox doesn't apply it initially */
+    gtk_container_set_border_width(lx_b->box, lx_b->border);
 
     RET(TRUE);
 }
 
 
-static gint draw(GtkWidget *widget, GdkEventExpose *event, lx_battery *lx_b) {
+static gint draw(GtkWidget *widget, cairo_t *cr, lx_battery *lx_b) {
 
     ENTER;
-    cairo_t *cr = gdk_cairo_create(gtk_widget_get_window(widget));
-//    GtkStyle *style = gtk_widget_get_style(lx_b->drawingArea);
-
-    gdk_cairo_region(cr, event->region);
-    cairo_clip(cr);
-
-//    gdk_cairo_set_source_color(cr, &style->black);
     cairo_set_source_rgba(cr,0,0,0,0);
+    cairo_fill(cr);
     cairo_set_source_surface(cr, lx_b->pixmap, 0, 0);
     cairo_paint(cr);
 
     check_cairo_status(cr);
-    cairo_destroy(cr);
 
     RET(FALSE);
 }
+
+/* updates length, border, and height/width appropriate to orientation */
+static void updateSizes(lx_battery *b)
+{
+    b->length = panel_get_height(b->panel);
+    b->border = MIN(b->requestedBorder, (MAX(1, b->length) - 1) / 2);
+    b->length -= 2 * b->border;
+    if (b->orientation == GTK_ORIENTATION_HORIZONTAL)
+        b->height = b->length;
+    else
+        b->width = b->length;
+}
+
 
 
 static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
@@ -443,30 +447,16 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
     p = gtk_event_box_new();
     lxpanel_plugin_set_data(p, lx_b, destructor);
     gtk_widget_set_has_window(p, FALSE);
-    gtk_container_set_border_width( GTK_CONTAINER(p), 1 );
+    lx_b->box = GTK_CONTAINER(p);
 
     lx_b->drawingArea = gtk_drawing_area_new();
     gtk_widget_add_events( lx_b->drawingArea, GDK_BUTTON_PRESS_MASK );
 
-    gtk_container_add( (GtkContainer*)p, lx_b->drawingArea );
+    gtk_container_add(lx_b->box, lx_b->drawingArea);
 
     lx_b->orientation = panel_get_orientation(panel);
-    if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL) {
-        lx_b->height = lx_b->length = 20;
-        lx_b->thickness = lx_b->width = 8;
-    }
-    else {
-        lx_b->height = lx_b->thickness = 8;
-        lx_b->length = lx_b->width = 20;
-    }
-    gtk_widget_set_size_request(lx_b->drawingArea, lx_b->width, lx_b->height);
 
     gtk_widget_show(lx_b->drawingArea);
-
-    g_signal_connect (G_OBJECT (lx_b->drawingArea),"configure-event",
-          G_CALLBACK (configureEvent), (gpointer) lx_b);
-    g_signal_connect (G_OBJECT (lx_b->drawingArea), "draw",
-          G_CALLBACK (draw), (gpointer) lx_b);
 
     sem_init(&(lx_b->alarmProcessLock), 0, 1);
 
@@ -485,6 +475,22 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
 
     lx_b->hide_if_no_battery = g_settings_get_boolean(settings,BATT_KEY_HIDE);
     lx_b->show_extended_information = g_settings_get_boolean(settings,BATT_KEY_EXTENDED);
+    updateSizes(lx_b);
+    if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL)
+    {
+        lx_b->width = lx_b->thickness;
+        gtk_widget_set_size_request(lx_b->drawingArea, lx_b->width, -1);
+    }
+    else
+    {
+        lx_b->height = lx_b->thickness;
+        gtk_widget_set_size_request(lx_b->drawingArea, -1, lx_b->height);
+    }
+    gtk_container_set_border_width(lx_b->box, lx_b->border);
+    g_signal_connect (G_OBJECT (lx_b->drawingArea),"configure-event",
+          G_CALLBACK (configureEvent), (gpointer) lx_b);
+    g_signal_connect (G_OBJECT (lx_b->drawingArea), "draw",
+          G_CALLBACK (draw), (gpointer) lx_b);
     lx_b->alarmCommand = g_settings_get_string(settings,BATT_KEY_ALARM_COMMAND);
     lx_b->alarmTime = g_settings_get_uint(settings,BATT_KEY_ALARM_TIME);
     lx_b->requestedBorder = g_settings_get_uint(settings,BATT_KEY_BORDER_WIDTH);
@@ -515,7 +521,7 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
 
     /* Start the update loop */
     lx_b->timer = g_timeout_add_seconds( 9, (GSourceFunc) update_timout, (gpointer) lx_b);
-    gtk_widget_set_app_paintable(GTK_WIDGET(p),TRUE);
+    gtk_widget_show(p);
 
     RET(p);
 }
@@ -560,10 +566,18 @@ static void orientation(SimplePanel *panel, GtkWidget *p) {
 
     if (b->orientation != panel_get_orientation(panel)) {
         b->orientation = panel_get_orientation(panel);
-        unsigned int swap = b->height;
-        b->height = b->width;
-        b->width = swap;
-        gtk_widget_set_size_request(b->drawingArea, b->width, b->height);
+        updateSizes(b);
+        if (b->orientation == GTK_ORIENTATION_HORIZONTAL)
+        {
+            b->width = b->thickness;
+            gtk_widget_set_size_request(b->drawingArea, b->width, -1);
+        }
+        else
+        {
+            b->height = b->thickness;
+            gtk_widget_set_size_request(b->drawingArea, -1, b->height);
+        }
+        gtk_widget_queue_resize(GTK_WIDGET(b));
     }
 
     RET();
@@ -592,15 +606,21 @@ static gboolean applyConfig(gpointer user_data)
         g_settings_set_string(b->settings, BATT_KEY_DIS2, b->dischargingColor2);
 
     /* Make sure the border value is acceptable */
-    b->border = MIN(b->requestedBorder,
-                    (MAX(1, MIN(b->length, b->thickness)) - 1) / 2);
+    b->requestedBorder = MIN(b->requestedBorder, 6);
+    updateSizes(b);
 
     /* Resize the widget */
-    b->width = b->height = b->length;
+    gtk_container_set_border_width(b->box, b->border);
     if (b->orientation == GTK_ORIENTATION_HORIZONTAL)
+    {
         b->width = b->thickness;
+        gtk_widget_set_size_request(b->drawingArea, b->width, -1);
+    }
     else
+    {
         b->height = b->thickness;
+        gtk_widget_set_size_request(b->drawingArea, -1, b->height);
+    }
     gtk_widget_set_size_request(b->drawingArea, b->width, b->height);
     /* ensure visibility if requested */
     if (!b->hide_if_no_battery)
@@ -619,7 +639,6 @@ static gboolean applyConfig(gpointer user_data)
     g_settings_set_uint(b->settings, BATT_KEY_SIZE, b->thickness);
     g_settings_set_boolean(b->settings, BATT_KEY_EXTENDED,
                          b->show_extended_information);
-
     RET(FALSE);
 }
 
