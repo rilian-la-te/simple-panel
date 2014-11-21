@@ -132,7 +132,6 @@ struct _Panel {
     guint initialized : 1;              /* Should be grouped better later, */
     guint ah_far : 1;                   /* placed here for binary compatibility */
     guint ah_state : 3;
-    guint background_update_queued;
     guint mouse_timeout;
 };
 
@@ -149,13 +148,8 @@ typedef struct {
 /* FIXME: optional definitions */
 #define STATIC_SEPARATOR
 #define STATIC_LAUNCHBAR
-#define STATIC_LAUNCHTASKBAR
 #define STATIC_DCLOCK
-#define STATIC_WINCMD
 #define STATIC_DIRMENU
-#define STATIC_TASKBAR
-#define STATIC_PAGER
-#define STATIC_TRAY
 #define STATIC_MENU
 #define STATIC_SPACE
 #define STATIC_ICONS
@@ -218,7 +212,6 @@ extern gboolean panel_image_set_icon_theme(Panel * p, GtkWidget * image, const g
 extern void panel_set_wm_strut(Panel *p);
 extern void panel_set_dock_type(SimplePanel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
-extern void panel_update_background( SimplePanel* p );
 extern SimplePanel* panel_load(GtkApplication *app, const char* config_file, const char* config_name);
 
 /* if current window manager is EWMH conforming. */

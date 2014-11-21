@@ -81,7 +81,7 @@ static void simple_panel_get_preferred_size(GtkWidget* widget, GtkRequisition* m
 static void panel_start_gui(SimplePanel *p);
 static void ah_start(SimplePanel *p);
 static void ah_stop(SimplePanel *p);
-static void _panel_update_fonts(SimplePanel * p);
+static void panel_update_fonts(SimplePanel * p);
 static void activate_remove_plugin(GSimpleAction* action, GVariant* param, gpointer pl);
 static void activate_new_panel(GSimpleAction* action, GVariant* param, gpointer data);
 static void activate_remove_panel(GSimpleAction* action, GVariant* param, gpointer data);
@@ -89,6 +89,7 @@ static void activate_panel_settings(GSimpleAction* action, GVariant* param, gpoi
 static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
 PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel );
+static void panel_update_background(SimplePanel * panel);
 
 G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_APPLICATION_WINDOW)
 
@@ -143,12 +144,6 @@ static void panel_stop_gui(SimplePanel *self)
         p->initialized = FALSE;
     }
 
-    if (p->background_update_queued)
-    {
-        g_source_remove(p->background_update_queued);
-        p->background_update_queued = 0;
-    }
-
     if (gtk_bin_get_child(GTK_BIN(self)))
     {
         gtk_widget_destroy(p->box);
@@ -162,40 +157,6 @@ static void simple_panel_destroy(GtkWidget* object)
     panel_stop_gui(self);
 
 	GTK_WIDGET_CLASS(lxpanel_parent_class)->destroy(object);
-}
-
-static gboolean idle_update_background(gpointer p)
-{
-    SimplePanel *panel = LXPANEL(p);
-
-    if (g_source_is_destroyed(g_main_current_source()))
-        return FALSE;
-
-    /* Panel could be destroyed while background update scheduled */
-    if (gtk_widget_get_realized(p))
-    {
-        gdk_display_sync( gtk_widget_get_display(p) );
-        panel_update_background(panel);
-    }
-    panel->priv->background_update_queued = 0;
-
-    return FALSE;
-}
-
-void _panel_queue_update_background(SimplePanel *panel)
-{
-    if (panel->priv->background_update_queued)
-        return;
-    panel->priv->background_update_queued = g_idle_add_full(G_PRIORITY_HIGH,
-                                                            idle_update_background,
-                                                            panel, NULL);
-}
-
-static void lxpanel_realize(GtkWidget *widget)
-{
-    GTK_WIDGET_CLASS(lxpanel_parent_class)->realize(widget);
-
-    _panel_queue_update_background(LXPANEL(widget));
 }
 
 static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
@@ -223,13 +184,8 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
         gtk_window_move(GTK_WINDOW(widget), p->ax, p->ay);
         _panel_set_wm_strut(LXPANEL(widget));
     }
-    else
-		if (p->background_update_queued)
-    {
-        g_source_remove(p->background_update_queued);
-        p->background_update_queued = 0;
-        panel_update_background(LXPANEL(widget));
-    }
+    if (gtk_widget_get_mapped(widget))
+        _panel_establish_autohide(panel);
 }
 
 static void
@@ -367,7 +323,6 @@ static void simple_panel_set_property(GObject      *object,
     case PROP_AUTOHIDE:
         toplevel->priv->autohide = g_value_get_boolean(value);
         toplevel->priv->visible = toplevel->priv->autohide ? FALSE : TRUE;
-        _panel_establish_autohide(toplevel);
         geometry=TRUE;
         updatestrut = TRUE;
         break;
@@ -434,7 +389,7 @@ static void simple_panel_set_property(GObject      *object,
         if (background)
             panel_update_background(toplevel);
         if (fonts)
-            _panel_update_fonts(toplevel);
+            panel_update_fonts(toplevel);
         if (updatestrut)
             _panel_set_wm_strut(toplevel);
     }
@@ -530,7 +485,6 @@ static void lxpanel_class_init(PanelWindowClass *klass)
 
     gobject_class->finalize = lxpanel_finalize;
     widget_class->destroy = simple_panel_destroy;
-    widget_class->realize = lxpanel_realize;
 	widget_class->get_preferred_width = lxpanel_get_preferred_width;
 	widget_class->get_preferred_height = lxpanel_get_preferred_height;
     widget_class->size_allocate = lxpanel_size_allocate;
@@ -788,7 +742,7 @@ static SimplePanel* panel_allocate(GtkApplication* app)
 /* Normalize panel configuration after load from file or reconfiguration. */
 static void panel_normalize_configuration(Panel* p)
 {
-    panel_set_panel_configuration_changed( p );
+    _panel_set_panel_configuration_changed( p->topgwin );
     if (p->widthtype == PANEL_SIZE_PERCENT && p->width > 100)
         p->width = 100;
     if (p->monitor < 0)
@@ -978,7 +932,7 @@ void _panel_set_wm_strut(SimplePanel *panel)
 /****************************************************
  *         panel's handlers for GTK events          *
  ****************************************************/
-static void panel_determine_background_css(SimplePanel * panel, GtkWidget * widget)
+static void panel_update_background(SimplePanel * panel)
 {
 	Panel * p = panel->priv;
     gchar* css = NULL;
@@ -1001,33 +955,20 @@ static void panel_determine_background_css(SimplePanel * panel, GtkWidget * widg
         css = css_generate_background("none",p->gtintcolor,TRUE);
     }
     else if (p->background == PANEL_BACKGROUND_GNOME)
-        gtk_style_context_add_class(gtk_widget_get_style_context(GTK_WIDGET(p->topgwin)),"gnome-panel-menu-bar");
+        gtk_style_context_add_class(gtk_widget_get_style_context(GTK_WIDGET(panel)),"gnome-panel-menu-bar");
     else
-        gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(p->topgwin)),"gnome-panel-menu-bar");
+        gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(panel)),"gnome-panel-menu-bar");
 
     if (css)
     {
-        css_apply_with_class(widget,css,"-simple-panel-background",system);
+        css_apply_with_class(GTK_WIDGET(panel),css,"-simple-panel-background",system);
         g_free(css);
     }
     else if (system)
-        css_apply_with_class(widget,"","-simple-panel-background",system);
+        css_apply_with_class(GTK_WIDGET(panel),"","-simple-panel-background",system);
 }
 
-/* Update the background of the entire panel.
- * This function should only be called after the panel has been realized. */
-void panel_update_background(SimplePanel * p)
-{
-    GtkWidget *w = GTK_WIDGET(p);
-    panel_determine_background_css(p, w);
-}
-
-void panel_update_fonts(Panel * p)
-{
-    _panel_update_fonts(p->topgwin);
-}
-
-void _panel_update_fonts(SimplePanel * p)
+void panel_update_fonts(SimplePanel * p)
 {
     gchar* css;
     if (p->priv->usefontcolor){
@@ -1582,18 +1523,12 @@ panel_start_gui(SimplePanel *panel)
     update_positions_on_panel(panel);
     update_widget_positions(panel);
 
-    /* window mapping point */
-    gtk_window_present(GTK_WINDOW(panel));
-    /* the settings that should be done after window is mapped */
-    _panel_establish_autohide(panel);
-
     val = G_MAXULONG;
     gdk_property_change(gtk_widget_get_window(w),
                         gdk_atom_intern_static_string("_NET_WM_DESKTOP"),
                         gdk_atom_intern_static_string("CARDINAL"),
                         32, GDK_PROP_MODE_REPLACE, (guchar*)&val, 1);
-    panel_update_background(panel);
-    _panel_update_fonts(panel);
+    gtk_window_present(GTK_WINDOW(panel));
     g_object_set(G_OBJECT(panel),PANEL_PROP_STRUT,p->setstrut,NULL);
     p->initialized = TRUE;
 }
@@ -1617,10 +1552,6 @@ void lxpanel_draw_label_text(SimplePanel * p, GtkWidget * label, const char * te
     panel_draw_label_text(p->priv, label, text, bold, custom_size_factor, custom_color);
 }
 
-void panel_set_panel_configuration_changed(Panel *p)
-{
-    _panel_set_panel_configuration_changed(p->topgwin);
-}
 
 void _panel_set_panel_configuration_changed(SimplePanel *panel)
 {
@@ -1668,7 +1599,6 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     }
     g_list_free(plugins);
     /* panel geometry changed? update panel background then */
-    _panel_queue_update_background(panel);
 }
 
 PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
@@ -1702,7 +1632,7 @@ static void panel_add_actions( SimplePanel* p)
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_DOCK);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ICON_SIZE);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_MARGIN);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_MONITOR);
+    simple_panel_bind_gsettings(G_OBJECT(p),p->priv->settings->toplevel_settings,PANEL_PROP_MONITOR);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_SIZE);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_FONT_SIZE);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_COLOR);

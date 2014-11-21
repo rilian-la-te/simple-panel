@@ -39,7 +39,7 @@ void simple_panel_scale_button_set_value_labeled (GtkScaleButton* b, gint value)
 void start_panels_from_dir(GtkApplication* app,const char *panel_dir);
 void simple_panel_add_prop_as_action(GActionMap* map,const char* prop);
 void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,const char* prop);
-
+void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop);
 G_END_DECLS
 
 #endif

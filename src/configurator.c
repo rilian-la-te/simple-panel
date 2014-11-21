@@ -65,7 +65,6 @@ response_event(GtkDialog *widget, gint arg1, Panel* panel )
     case GTK_RESPONSE_DELETE_EVENT:
     case GTK_RESPONSE_CLOSE:
     case GTK_RESPONSE_NONE:
-        gtk_application_remove_window(panel->app,GTK_WINDOW(widget));
         /* NOTE: NO BREAK HERE*/
         gtk_widget_destroy(GTK_WIDGET(widget));
         break;
@@ -93,13 +92,14 @@ gboolean panel_edge_available(Panel* p, int edge, gint monitor)
 
 static void state_configure_monitor(GSimpleAction *action,GVariant* param, gpointer data)
 {
+    int state = g_variant_get_int32(g_action_get_state(G_ACTION(action)));
     GtkWidget *widget = GTK_WIDGET(data);
     SimplePanel* panel = (SimplePanel*) g_object_get_data( G_OBJECT(widget), "panel" );
     /* change monitor */
     int request_mon = g_variant_get_int32(param);
     gchar* str = request_mon < 0 ? _("Monitor: All") : g_strdup_printf(_("Monitor: %d"),request_mon+1);
     int edge = g_settings_get_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_EDGE);
-    if(panel_edge_available(panel->priv, edge, request_mon))
+    if(panel_edge_available(panel->priv, edge, request_mon) || (state<-1))
     {
         g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_MONITOR,request_mon);
         g_simple_action_set_state(action,param);
@@ -398,7 +398,6 @@ static void on_add_plugin_row_activated( GtkTreeView *view,
         if ((pl = simple_panel_add_plugin(p, s, position)))
         {
             gboolean expand;
-            plugin_widget_set_background(pl, p);
             gtk_container_child_get(GTK_CONTAINER(p->priv->box), pl, "expand", &expand, NULL);
             model = gtk_tree_view_get_model( _view );
             gtk_list_store_append( GTK_LIST_STORE(model), &it );
@@ -413,7 +412,6 @@ static void on_add_plugin_row_activated( GtkTreeView *view,
                 gtk_tree_view_scroll_to_cell( _view, tree_path, NULL, FALSE, 0, 0 );
                 gtk_tree_path_free( tree_path );
             }
-            panel_update_background(p);
         }
         else /* free unused setting */
             panel_gsettings_remove_plugin_settings(p->priv->settings,s->plugin_number);
@@ -742,7 +740,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     p->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "panel_pref" );
     gtk_window_set_transient_for(GTK_WINDOW(p->pref_dialog), GTK_WINDOW(panel));
-    gtk_application_add_window(p->app,GTK_WINDOW(p->pref_dialog));
     g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), p);
     g_object_add_weak_pointer( G_OBJECT(p->pref_dialog), (gpointer) &p->pref_dialog );
     gtk_window_set_position( GTK_WINDOW(p->pref_dialog), GTK_WIN_POS_CENTER );
@@ -982,6 +979,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
     g_object_unref(builder);
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"conf",G_ACTION_GROUP(configurator));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));
+    gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"app",G_ACTION_GROUP(panel->priv->app));
     gtk_widget_show(GTK_WIDGET(p->pref_dialog));
 }
 

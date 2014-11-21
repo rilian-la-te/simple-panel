@@ -357,8 +357,6 @@ static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, Simple
         return; /* not changed */
     *alloc = *allocation;
          /* g_debug("size-allocate on %s, params: %d,%d\n", PLUGIN_CLASS(widget)->name,allocation->width,allocation->height); */
-    _panel_queue_update_background(p);
-//    _queue_panel_calculate_size(p);
 }
 
 GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, guint pack_pos)
@@ -413,6 +411,7 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
     g_object_set_qdata(G_OBJECT(widget), lxpanel_plugin_qinit, (gpointer)init);
     g_object_set_qdata_full(G_OBJECT(widget), lxpanel_plugin_qsize,
                             g_new0(GdkRectangle, 1), g_free);
+    plugin_widget_set_background(widget,p);
     return widget;
 }
 

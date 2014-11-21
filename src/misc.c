@@ -36,6 +36,7 @@
 typedef struct {
     GIcon *icon;
     guint icon_changed_handler;
+    guint theme_changed_handler;
     GdkRGBA hicolor;
     gint size; /* desired size */
     SimplePanel *panel;
@@ -342,6 +343,18 @@ gboolean simple_panel_image_change_gicon(GtkWidget *img, GIcon *icon)
     if (data->icon != NULL)
         g_object_unref(data->icon);
     data->icon=icon;
+    if (!G_IS_THEMED_ICON(data->icon))
+    {
+        if (data->theme_changed_handler != 0)
+            g_signal_handler_disconnect(gtk_icon_theme_get_default(), data->theme_changed_handler);
+        data->theme_changed_handler = 0;
+    }
+    else if (data->theme_changed_handler == 0)
+    {
+        /* This image is loaded from icon theme.  Update the image if the icon theme is changed. */
+        data->theme_changed_handler = g_signal_connect_swapped(gtk_icon_theme_get_default(),
+                                                "changed", G_CALLBACK(on_theme_changed), img);
+    }
     _gtk_image_set_from_file_gicon(img, data);
     return TRUE;
 }
@@ -363,6 +376,11 @@ static GtkWidget* gtk_image_new_for_gicon(SimplePanel* p,GIcon * icon, gint size
                                                 G_CALLBACK(on_theme_changed), img);
         /* it is in fact not required if image is panel child but let be safe */
         g_object_add_weak_pointer(G_OBJECT(p), (gpointer *)&data->panel);
+    }
+    if (G_LIKELY(G_IS_THEMED_ICON(icon)))
+    {
+        data->theme_changed_handler = g_signal_connect_swapped(gtk_icon_theme_get_default(),
+                                                "changed", G_CALLBACK(on_theme_changed), img);
     }
     _gtk_image_set_from_file_gicon(img, data);
     return img;
@@ -732,9 +750,15 @@ void simple_panel_add_prop_as_action(GActionMap* map,const char* prop)
 void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,const char* prop)
 {
     GAction* action;
-    g_settings_bind(settings,prop,G_OBJECT(map),prop,G_SETTINGS_BIND_DEFAULT);
+    g_settings_bind(settings,prop,G_OBJECT(map),prop,G_SETTINGS_BIND_GET | G_SETTINGS_BIND_SET |G_SETTINGS_BIND_DEFAULT);
     action = G_ACTION(g_settings_create_action(settings,prop));
     g_action_map_add_action(map,action);
     g_object_unref(action);
 }
+
+void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop)
+{
+    g_settings_bind(settings,prop,obj,prop,G_SETTINGS_BIND_GET | G_SETTINGS_BIND_SET | G_SETTINGS_BIND_DEFAULT);
+}
+
 /* vim: set sw=4 et sts=4 : */

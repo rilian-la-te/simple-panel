@@ -155,18 +155,21 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
     active_color.alpha =0.8;
     const gchar* edge;
     GtkPositionType direction = panel_get_edge(panel);
-    if (direction==GTK_POS_TOP)
-        edge="0px 0px 2px 0px";
     if (direction==GTK_POS_BOTTOM)
+        edge="0px 0px 2px 0px";
+    if (direction==GTK_POS_TOP)
         edge="2px 0px 0px 0px";
-    if (direction==GTK_POS_LEFT)
-        edge="0px 2px 0px 0px";
     if (direction==GTK_POS_RIGHT)
+        edge="0px 2px 0px 0px";
+    if (direction==GTK_POS_LEFT)
         edge="0px 0px 0px 2px";
     returnie = g_strdup_printf(".-panel-flat-button {\n"
                                "padding: 0px;\n"
                                " -GtkWidget-focus-line-width: 0px;\n"
                                " -GtkWidget-focus-padding: 0px;\n"
+                               "border-style: solid;"
+                               "border-color: transparent;"
+                               "border-width: %s;"
                                "}\n"
 #if GTK_CHECK_VERSION (3, 14, 0)
                                ".-panel-flat-button:checked,"
@@ -182,6 +185,6 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
                                "border-style: solid;"
                                "border-width: %s;"
                                "border-color: %s;"
-                               "}\n",edge,gdk_rgba_to_string(&active_color),edge,gdk_rgba_to_string(&color));
+                               "}\n",edge,edge,gdk_rgba_to_string(&active_color),edge,gdk_rgba_to_string(&color));
     return returnie;
 }

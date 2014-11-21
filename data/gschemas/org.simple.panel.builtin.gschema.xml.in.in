@@ -46,7 +46,7 @@
       <default>'rgba(50,50,50,0.37)'</default>
     </key>
     <key name="layout" type="a(ssss)">
-      <default>[("system","","",""),("separator","","",""),("item","run","applications-x-executable","command"),("separator","","",""),("item","logout","gnome-logout","command"),("item","shutdown","gnome-shutdown","command")]</default>
+      <default>[("system","","",""),("separator","","",""),("item","run","application-x-executable","command"),("separator","","",""),("item","logout","gnome-logout","command"),("item","shutdown","gnome-shutdown","command")]</default>
     </key>
   </schema>
 </schemalist>

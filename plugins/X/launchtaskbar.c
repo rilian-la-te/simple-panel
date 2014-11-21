@@ -132,6 +132,7 @@ typedef struct _task {
     GtkWidget * image;                      /* Icon for task, child of button */
     Atom image_source;                      /* Atom that is the source of taskbar icon */
     GtkWidget * label;                      /* Label for task, child of button */
+    GtkWidget * menu_item;                  /* Menu item for grouped task after click */
     int desktop;                            /* Desktop that contains task, needed to switch to it on Raise */
     gint monitor;                           /* Monitor that the window is on or closest to */
     guint flash_timeout;                    /* Timer for urgency notification */
@@ -1446,7 +1447,7 @@ static void set_timer_on_task(Task * tk)
     gint interval;
     g_return_if_fail(tk->flash_timeout == 0);
     g_object_get(gtk_widget_get_settings(tk->button), "gtk-cursor-blink-time", &interval, NULL);
-    tk->flash_timeout = g_timeout_add(interval, flash_window_timeout, tk);
+    tk->flash_timeout = g_timeout_add(interval /2, flash_window_timeout, tk);
 }
 
 /* Determine if a task is visible considering only its desktop placement. */
@@ -1475,7 +1476,7 @@ static void recompute_group_visibility_for_class(LaunchTaskBarPlugin * tb, TaskC
             tc->visible_count += 1;
 
             /* Compute summary bit for urgency anywhere in the class. */
-            if (tk->urgency)
+            if (tk->urgency && !tk->focused)
                 class_has_urgency = TRUE;
 
             /* If there is urgency, record the currently flashing task. */
@@ -1514,6 +1515,10 @@ static void recompute_group_visibility_for_class(LaunchTaskBarPlugin * tb, TaskC
             flashing_task->flash_timeout = 0;
             tc->p_task_visible->flash_state = flashing_task->flash_state;
             flashing_task->flash_state = FALSE;
+            if (tc->p_task_visible->menu_item != NULL)
+                g_object_unref(tc->p_task_visible->menu_item);
+            tc->p_task_visible->menu_item = flashing_task->menu_item;
+            flashing_task->menu_item = NULL;
             set_timer_on_task(tc->p_task_visible);
         }
     }
@@ -1829,6 +1834,13 @@ static void task_delete(LaunchTaskBarPlugin * tb, Task * tk, gboolean unlink, gb
         g_source_remove(tk->flash_timeout);
         tk->flash_timeout = 0;
     }
+
+    if (tk->menu_item)
+    {
+        g_object_unref(tk->menu_item);
+        tk->menu_item = NULL;
+    }
+
 
     /* Deallocate structures. */
     if (remove)
@@ -2251,8 +2263,12 @@ static GdkPixbuf * task_update_icon(LaunchTaskBarPlugin * tb, Task * tk, Atom so
 /* Timer expiration for urgency notification.  Also used to draw the button in setting and clearing urgency. */
 static void flash_window_update(Task * tk)
 {
-    /* Set state on the button and redraw. */
+    if ( ! tk->tb->flat_button)
+        gtk_widget_set_state_flags(tk->button, tk->flash_state ? GTK_STATE_FLAG_SELECTED : GTK_STATE_FLAG_NORMAL,FALSE);
     task_draw_label(tk);
+    if (tk->menu_item != NULL && gtk_widget_get_mapped(tk->menu_item))
+        /* if submenu exists and mapped then set state too */
+        gtk_widget_set_state_flags(tk->menu_item, tk->flash_state ? GTK_STATE_FLAG_SELECTED : GTK_STATE_FLAG_NORMAL,FALSE);
 
     /* Complement the flashing context. */
     tk->flash_state = ! tk->flash_state;
@@ -2411,6 +2427,7 @@ static gboolean taskbar_task_control_event(GtkWidget * widget, GdkEventButton * 
             menu = gtk_menu_new();
             /* Bring up a popup menu listing all the class members. */
             Task * tk_cursor;
+            GtkWidget * flashing_menu = NULL;
             for (tk_cursor = tc->p_task_head; tk_cursor != NULL;
                     tk_cursor = tk_cursor->p_task_flink_same_class)
             {
@@ -2426,8 +2443,18 @@ static gboolean taskbar_task_control_event(GtkWidget * widget, GdkEventButton * 
                     g_signal_connect(mi, "button-press-event",
                             G_CALLBACK(taskbar_popup_activate_event), (gpointer) tk_cursor);
                     gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+                    /* set mi as if it's urgent with reference */
+                    if (tk_cursor->menu_item != NULL)
+                        g_object_unref(tk_cursor->menu_item);
+                    tk_cursor->menu_item = NULL;
+                    if (tk_cursor->urgency && !tk_cursor->focused && flashing_menu == NULL)
+                        flashing_menu = g_object_ref_sink(mi);
                 }
             }
+            /* since tc->visible_count > 1, tc->p_task_visible cannot be NULL */
+            g_assert(tc->p_task_visible != NULL);
+            g_assert(tc->p_task_visible->menu_item == NULL);
+            tc->p_task_visible->menu_item = flashing_menu;
         }
         else if(event->button == 3) /* Right click */
         {
@@ -2799,7 +2826,7 @@ static void task_build_gui(LaunchTaskBarPlugin * tb, Task * tk)
     task_update_style(tk, tb);
 
     /* Flash button for window with urgency hint. */
-    if (tk->urgency)
+    if (tk->urgency && !tk->focused)
         task_set_urgency(tk);
 }
 
@@ -2997,6 +3024,8 @@ static void taskbar_on_active_window_changed(WnckScreen* screen, WnckWindow* win
     if ((ctk != NULL) && (drop_old))
     {
         ctk->focused = FALSE;
+        if (ctk->urgency)
+            task_set_urgency(ctk);
         tb->focused = NULL;
             gtk_toggle_button_set_active((GtkToggleButton*)ctk->button, FALSE);
         task_button_redraw(ctk, tb);
@@ -3007,6 +3036,8 @@ static void taskbar_on_active_window_changed(WnckScreen* screen, WnckWindow* win
     {
             gtk_toggle_button_set_active((GtkToggleButton*)ntk->button, TRUE);
         ntk->focused = TRUE;
+        if (ntk->urgency)
+            task_clear_urgency(ntk);
         tb->focused = ntk;
         task_button_redraw(ntk, tb);
     }
@@ -3091,7 +3122,7 @@ static void taskbar_property_notify_event(LaunchTaskBarPlugin *tb, XEvent *ev)
                     if (tb->use_urgency_hint)
                     {
                         tk->urgency = task_has_urgency(tk);
-                        if (tk->urgency)
+                        if (tk->urgency && !tk->focused)
                             task_set_urgency(tk);
                         else
                             task_clear_urgency(tk);
