@@ -120,6 +120,7 @@ inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboole
 					" background-image: none;\n"
 					"}",gdk_rgba_to_string(&color));
 	else returnie = g_strdup_printf(".-simple-panel-background{\n"
+                         " background-color: transparent;\n"
                          " background-image: url('%s');\n"
                          "}",filename);
 	return returnie;
