@@ -398,6 +398,10 @@ static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *ic
     gtk_widget_set_can_focus(event_box, FALSE);
     gtk_widget_set_has_window(event_box,FALSE);
     GtkWidget * image = gtk_image_new_for_gicon(panel,icon, size);
+    gtk_button_set_always_show_image(GTK_BUTTON(event_box),TRUE);
+//    gtk_button_set_label(GTK_BUTTON(event_box),label);
+//    gtk_button_set_image(GTK_BUTTON(event_box),image);
+//    gtk_button_set_image_position(GTK_BUTTON(event_box),GTK_POS_LEFT);
     if (label == NULL)
         gtk_container_add(GTK_CONTAINER(event_box), image);
     else

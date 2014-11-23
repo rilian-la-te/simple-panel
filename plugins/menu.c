@@ -136,37 +136,9 @@ static void activate_command(GSimpleAction *action, GVariant *param, gpointer da
 static void
 menu_pos(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, GtkWidget *widget)
 {
-    int ox, oy, w, h;
-    menup *m;
-    GtkAllocation allocation;
-
-    gtk_widget_get_allocation(GTK_WIDGET(widget), &allocation);
-    ENTER;
-    m = lxpanel_plugin_get_data(widget);
-    gdk_window_get_origin(gtk_widget_get_window(widget), &ox, &oy);
-    gtk_widget_get_preferred_width(GTK_WIDGET(menu),&w,NULL);
-    gtk_widget_get_preferred_height(GTK_WIDGET(menu),&h,NULL);;
-
-    if (panel_get_orientation(m->panel) == GTK_ORIENTATION_HORIZONTAL) {
-        *x = ox;
-        if (*x + w > gdk_screen_width())
-            *x = ox + allocation.width - w;
-        *y = oy - h;
-        if (*y < 0)
-            *y = oy + allocation.height;
-    } else {
-        *x = ox + allocation.width;
-        if (*x > gdk_screen_width())
-            *x = ox - w;
-        *y = oy;
-        if (*y + h >  gdk_screen_height())
-            *y = oy + allocation.height - h;
-    }
-    DBG("widget: x,y=%d,%d  w,h=%d,%d\n", ox, oy,
-          allocation.width, allocation.height );
-    DBG("w-h %d %d\n", w, h);
+    menup *m = lxpanel_plugin_get_data(widget);
+    lxpanel_plugin_popup_set_position_helper(m->panel, widget, GTK_WIDGET(menu), x, y);
     *push_in = TRUE;
-    RET();
 }
 
 static void on_menu_item( GtkMenuItem* mi, menup* m )

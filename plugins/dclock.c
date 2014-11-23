@@ -426,12 +426,6 @@ static GtkWidget *dclock_configure(SimplePanel *panel, GtkWidget *p)
         NULL);
 }
 
-/* Callback when panel configuration changes. */
-static void dclock_reconfigure(SimplePanel *panel, GtkWidget *p)
-{
-    dclock_apply_configuration(p);
-}
-
 /* Plugin descriptor. */
 SimplePanelPluginInit lxpanel_static_plugin_dclock = {
     .name = N_("Digital Clock"),
@@ -440,6 +434,5 @@ SimplePanelPluginInit lxpanel_static_plugin_dclock = {
     .new_instance = dclock_constructor,
     .config = dclock_configure,
     .has_config = TRUE,
-    .reconfigure = dclock_reconfigure,
     .button_press_event = dclock_button_press_event
 };
