@@ -1088,17 +1088,20 @@ static gboolean ah_state_hide_timeout(gpointer p)
 static void ah_state_set(SimplePanel *panel, PanelAHState ah_state)
 {
     Panel *p = panel->priv;
+    GdkRectangle rect;
 
     ENTER;
     if (p->ah_state != ah_state) {
         p->ah_state = ah_state;
         switch (ah_state) {
         case AH_STATE_VISIBLE:
+            p->visible = TRUE;
+            _calculate_position(panel, &rect);
+            gtk_window_move(GTK_WINDOW(panel), rect.x, rect.y);
             gtk_widget_show(GTK_WIDGET(panel));
             gtk_widget_show(p->box);
             gtk_widget_queue_resize(GTK_WIDGET(panel));
             gtk_window_stick(GTK_WINDOW(panel));
-            p->visible = TRUE;
             break;
         case AH_STATE_WAITING:
             if (p->hide_timeout)
@@ -1492,6 +1495,7 @@ panel_start_gui(SimplePanel *panel)
     Panel *p = panel->priv;
     GtkWidget *w = GTK_WIDGET(panel);
     GSList* l;
+    GdkRectangle rect;
 
     p->display = gdk_display_get_default();
     p->ax = p->ay = p->aw = p->ah = 0;
@@ -1527,7 +1531,8 @@ panel_start_gui(SimplePanel *panel)
                         gdk_atom_intern_static_string("_NET_WM_DESKTOP"),
                         gdk_atom_intern_static_string("CARDINAL"),
                         32, GDK_PROP_MODE_REPLACE, (guchar*)&val, 1);
-    gtk_window_present(GTK_WINDOW(panel));
+
+    g_object_set(G_OBJECT(panel),PANEL_PROP_AUTOHIDE,p->autohide,NULL);
     g_object_set(G_OBJECT(panel),PANEL_PROP_STRUT,p->setstrut,NULL);
     p->initialized = TRUE;
 }

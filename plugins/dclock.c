@@ -71,12 +71,6 @@ static gboolean dclock_update_display(DClockPlugin * dc);
 static void dclock_destructor(gpointer user_data);
 static gboolean dclock_apply_configuration(gpointer user_data);
 
-/* Handler for "map" signal on popup window. */
-static void dclock_popup_map(GtkWidget * widget, DClockPlugin * dc)
-{
-    lxpanel_plugin_adjust_popup_position(widget, dc->plugin);
-}
-
 static void dclock_style_updated(GtkWidget* widget, DClockPlugin* pl)
 {
     gchar* css = css_generate_flat_button(widget,pl->panel);
@@ -90,6 +84,7 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
 {
     /* Create a new window. */
     GtkWidget * win = gtk_window_new(GTK_WINDOW_POPUP);
+    gint x, y;
 //    gtk_style_context_remove_class(gtk_widget_get_style_context(win),GTK_STYLE_CLASS_BACKGROUND);
     gtk_window_set_default_size(GTK_WINDOW(win), 180, 180);
     gtk_container_set_border_width(GTK_CONTAINER(win), 5);
@@ -104,8 +99,11 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
         GTK_CALENDAR_SHOW_WEEK_NUMBERS | GTK_CALENDAR_SHOW_DAY_NAMES | GTK_CALENDAR_SHOW_HEADING);
     gtk_box_pack_start(GTK_BOX(box), calendar, TRUE, TRUE, 0);
 
-    /* Connect signals. */
-    g_signal_connect(G_OBJECT(win), "map", G_CALLBACK(dclock_popup_map), dc);
+
+    /* Preset the widget position right now to not move it across the screen */
+    gtk_widget_show_all(box);
+    lxpanel_plugin_popup_set_position_helper(dc->panel, dc->plugin, win, &x, &y);
+    gtk_window_move(GTK_WINDOW(win), x, y);
 
     /* Return the widget. */
     return win;

@@ -2,7 +2,7 @@
 
 bin_PROGRAMS = simple-panel
 
-simple_panel_CFLAGS = \
+simple_panel_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
@@ -45,7 +45,7 @@ simple_panel_built_sources =			\
 	panel-enum-types.c	\
 	panel-enum-types.h
 
-libsimplepanel_la_CFLAGS = $(simple_panel_CFLAGS)
+libsimplepanel_la_CPPFLAGS = $(simple_panel_CPPFLAGS)
 libsimplepanel_la_SOURCES = \
 	misc.c \
 	css.c \
