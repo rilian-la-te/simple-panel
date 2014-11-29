@@ -1532,6 +1532,7 @@ panel_start_gui(SimplePanel *panel)
                         gdk_atom_intern_static_string("CARDINAL"),
                         32, GDK_PROP_MODE_REPLACE, (guchar*)&val, 1);
 
+    gtk_window_present(GTK_WINDOW(panel));
     g_object_set(G_OBJECT(panel),PANEL_PROP_AUTOHIDE,p->autohide,NULL);
     g_object_set(G_OBJECT(panel),PANEL_PROP_STRUT,p->setstrut,NULL);
     p->initialized = TRUE;
