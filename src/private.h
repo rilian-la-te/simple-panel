@@ -34,10 +34,10 @@
 
 /* Extracted from panel.h */
 typedef enum {
-    PANEL_ALLIGN_LEFT,
-    PANEL_ALLIGN_CENTER,
-    PANEL_ALLIGN_RIGHT
-} PanelAllignType;
+    PANEL_ALIGN_LEFT,
+    PANEL_ALIGN_CENTER,
+    PANEL_ALIGN_RIGHT
+} PanelAlignType;
 typedef enum {
     PANEL_SIZE_FILL=0,
     PANEL_SIZE_DYNAMIC,
@@ -91,7 +91,7 @@ struct _Panel {
 
     int ax, ay, aw, ah;  /* prefferd allocation of a panel */
     int cx, cy, cw, ch;  /* current allocation (as reported by configure event) allocation */
-    int allign, margin;
+    int align, margin;
     PanelEdgeType edge;
     GtkOrientation orientation;
     PanelBackgroundType background;

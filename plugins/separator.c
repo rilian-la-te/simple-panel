@@ -28,8 +28,6 @@ static GtkWidget *separator_constructor(SimplePanel *panel, GSettings *settings)
     /* Allocate top level widget and set into Plugin widget pointer. */
     instance = gtk_event_box_new();
     gtk_widget_set_has_window(instance, FALSE);
-    gtk_widget_add_events(instance, GDK_BUTTON_PRESS_MASK);
-    gtk_container_set_border_width(GTK_CONTAINER(instance), 1);
 
     /* Allocate separator as a child of top level. */
     sep = panel_separator_new(panel);

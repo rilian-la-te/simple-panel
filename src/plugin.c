@@ -380,7 +380,7 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
         g_settings_set_boolean(settings->default_settings,DEFAULT_PLUGIN_KEY_EXPAND, FALSE);
     expand = g_settings_get_boolean(settings->default_settings,DEFAULT_PLUGIN_KEY_EXPAND);
     padding = g_settings_get_int(settings->default_settings,DEFAULT_PLUGIN_KEY_PADDING);
-    border = g_settings_get_int(settings->default_settings,DEFAULT_PLUGIN_KEY_BORDER);
+//    border = g_settings_get_int(settings->default_settings,DEFAULT_PLUGIN_KEY_BORDER); (useless)
     /* If this plugin can only be instantiated once, count the instantiation.
      * This causes the configuration system to avoid displaying the plugin as one that can be added. */
     if (init->new_instance) /* new style of plugin */

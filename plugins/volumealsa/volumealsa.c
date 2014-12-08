@@ -516,7 +516,6 @@ static GtkWidget *volumealsa_constructor(SimplePanel *panel, GSettings *settings
     vol->plugin = p = gtk_event_box_new();
     vol->settings = settings;
     lxpanel_plugin_set_data(p, vol, volumealsa_destructor);
-    gtk_widget_add_events(p, GDK_BUTTON_PRESS_MASK);
     gtk_widget_set_tooltip_text(p, _("Volume control"));
 
     /* Allocate icon as a child of top level. */

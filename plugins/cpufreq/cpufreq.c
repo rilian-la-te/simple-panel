@@ -351,7 +351,6 @@ static GtkWidget *cpufreq_constructor(SimplePanel *panel, GSettings *settings)
     cf->main = gtk_event_box_new();
     lxpanel_plugin_set_data(cf->main, cf, cpufreq_destructor);
     gtk_widget_set_has_window(cf->main, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(cf->main), 2);
 
     cf->namew = simple_panel_image_new_for_icon(panel,PROC_ICON,-1);
     gtk_container_add(GTK_CONTAINER(cf->main), cf->namew);

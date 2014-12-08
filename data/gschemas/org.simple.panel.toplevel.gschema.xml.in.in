@@ -31,7 +31,7 @@
       <_summary>Panel height type</_summary>
       <_description>This key determines as width for panel counts. If dynamic, it taken from size request, if pixel, it exactly as in width key, is percent it will be a value from 1 to 100.</_description>
     </key>
-    <key name="alignment" enum="org.simple.panel.PanelAllignType">
+    <key name="alignment" enum="org.simple.panel.PanelAlignType">
       <default>'center'</default>
       <_summary>Panel alignment type</_summary>
       <_description>This key determines from which point width for panel counts.</_description>

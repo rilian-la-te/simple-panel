@@ -34,9 +34,7 @@
 #include "x-misc.h"
 #include "icon-grid.h"
 
-#if GTK_CHECK_VERSION (3,0,0)
 #include <gtk/gtkx.h>
-#endif
 
 /* Standards reference:  http://standards.freedesktop.org/systemtray-spec/ */
 
@@ -434,9 +432,7 @@ static void trayclient_request_dock(TrayPlugin * tr, XClientMessageEvent * xeven
     gtk_widget_set_size_request(tc->socket,22,22);
     gtk_container_add(GTK_CONTAINER(tr->plugin), tc->socket);
     gtk_widget_show(tc->socket);
-#if GTK_CHECK_VERSION (3, 0, 0)
     gdk_window_set_composited (gtk_widget_get_window(tc->socket),TRUE);
-#endif
 
     /* Connect the socket to the plug.  This can only be done after the socket is realized. */
     gtk_socket_add_id(GTK_SOCKET(tc->socket), tc->window);
@@ -552,7 +548,6 @@ static void tray_unmanage_selection(TrayPlugin * tr)
     }
 }
 
-#if GTK_CHECK_VERSION (3, 0, 0)
 static void
 tray_set_visual_property (GtkWidget *invisible, GdkScreen* screen)
 {
@@ -632,7 +627,6 @@ tray_draw_box (GtkWidget *box,
     gtk_container_foreach (GTK_CONTAINER (box), tray_draw_icon, cr);
 }
 
-#endif
 
 /* Plugin constructor. */
 static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
@@ -661,9 +655,7 @@ static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
     GtkWidget * invisible = gtk_invisible_new_for_screen(screen);
     gtk_widget_realize(invisible);
     gtk_widget_add_events(invisible, GDK_PROPERTY_CHANGE_MASK | GDK_STRUCTURE_MASK);
-#if GTK_CHECK_VERSION (3, 0, 0)
     tray_set_visual_property (invisible, screen);
-#endif
     /* Try to claim the _NET_SYSTEM_TRAY_Sn selection. */
     guint32 timestamp = gdk_x11_get_server_time(gtk_widget_get_window(invisible));
     if (gdk_selection_owner_set_for_display(
@@ -681,11 +673,7 @@ static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
         xev.format = 32;
         xev.data.l[0] = timestamp;
         xev.data.l[1] = selection_atom;
-#if GTK_CHECK_VERSION (3,0,0)
 		xev.data.l[2] = GDK_WINDOW_XID(gtk_widget_get_window(invisible));
-#else
-        xev.data.l[2] = GDK_WINDOW_XWINDOW(gtk_widget_get_window(invisible));
-#endif
         xev.data.l[3] = 0;    /* manager specific data */
         xev.data.l[4] = 0;    /* manager specific data */
         XSendEvent(GDK_DISPLAY_XDISPLAY(display), RootWindowOfScreen(xscreen), False, StructureNotifyMask, (XEvent *) &xev);
@@ -695,11 +683,7 @@ static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
         gulong data = SYSTEM_TRAY_ORIENTATION_HORZ;
         XChangeProperty(
             GDK_DISPLAY_XDISPLAY(display),
-#if GTK_CHECK_VERSION (3,0,0)
 			GDK_WINDOW_XID(gtk_widget_get_window(invisible)),
-#else
-            GDK_WINDOW_XWINDOW(gtk_widget_get_window(invisible)),
-#endif
             a_NET_SYSTEM_TRAY_ORIENTATION,
             XA_CARDINAL, 32,
             PropModeReplace,
@@ -720,24 +704,17 @@ static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
     gdk_window_add_filter(NULL, (GdkFilterFunc) tray_event_filter, tr);
     /* Reference the window since it is never added to a container. */
     tr->invisible = g_object_ref_sink(G_OBJECT(invisible));
-#if GTK_CHECK_VERSION (3,0,0)
 	tr->invisible_window = GDK_WINDOW_XID(gtk_widget_get_window(invisible));
-#else
-    tr->invisible_window = GDK_WINDOW_XWINDOW(gtk_widget_get_window(invisible));
-#endif
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     tr->plugin = p = panel_icon_grid_new(panel_get_orientation(panel),
                                          panel_get_icon_size(panel),
                                          panel_get_icon_size(panel),
                                          3, 0, panel_get_height(panel));
-#if GTK_CHECK_VERSION (3, 0, 0)
     g_signal_connect (tr->plugin, "draw",
                       G_CALLBACK (tray_draw_box), NULL);
-#endif
     lxpanel_plugin_set_data(p, tr, tray_destructor);
     gtk_widget_set_name(p, "tray");
-    gtk_container_set_border_width(GTK_CONTAINER(p), 1);
 
     return p;
 }

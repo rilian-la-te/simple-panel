@@ -306,7 +306,7 @@ static void simple_panel_set_property(GObject      *object,
         configuration = TRUE;
         break;
     case PROP_ALIGNMENT:
-        toplevel->priv->allign = g_value_get_enum(value);
+        toplevel->priv->align = g_value_get_enum(value);
         geometry = TRUE;
         updatestrut = TRUE;
         break;
@@ -428,7 +428,7 @@ static void simple_panel_get_property(GObject      *object,
         g_value_set_int(value,toplevel->priv->monitor);
         break;
     case PROP_ALIGNMENT:
-        g_value_set_enum(value, toplevel->priv->allign);
+        g_value_set_enum(value, toplevel->priv->align);
         break;
     case PROP_MARGIN:
         g_value_set_int(value,toplevel->priv->margin);
@@ -560,8 +560,8 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     PANEL_PROP_ALIGNMENT,
                     "Alignment",
                     "Panel alignment side",
-                    PANEL_ALLIGN_TYPE,
-                    PANEL_ALLIGN_CENTER,
+                    PANEL_ALIGN_TYPE,
+                    PANEL_ALIGN_CENTER,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(
                 gobject_class,

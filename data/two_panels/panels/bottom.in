@@ -1,34 +1,16 @@
-# lxpanel <profile> config file. Manually editing is not recommended.
-# Use preference dialog in lxpanel to adjust config when you can.
-
-Global {
-    edge=bottom
-    allign=left
+[toplevel-settings]
+    edge='bottom'
+    allignment='left'
     margin=0
-    widthtype=percent
+    size-type='percent'
     width=100
     height=26
-    transparent=0
-    tintcolor=#000000
-    alpha=0
-    setdocktype=1
-    setpartialstrut=1
-    usefontcolor=0
-    fontcolor=#ffffff
-    usefontsize=0
-    fontsize=10    
-    background=0
-    backgroundfile=@prefix@/share/lxpanel/images/background.png
-}
 
-Plugin {
-    type = space
-    Config {
-        Size=4
-    }
-}
+[0]
+plugin-type = 'space'
+size=4
 
-Plugin {
+[1]
     type = wincmd
     Config {
         Button1=iconify
@@ -36,7 +18,7 @@ Plugin {
     }
 }
 
-Plugin {
+[2]
     type = space
     Config {
         Size=4
@@ -61,9 +43,8 @@ Plugin {
     }
 }
 
-Plugin {
-    type = dirmenu
-    Config {
-    }
+[3]
+type = dirmenu
+
 }
 

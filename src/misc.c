@@ -139,7 +139,7 @@ lxpanel_get_line(char**fp, line *s)
 }
 
 static void
-calculate_width(int scrw, int wtype, int allign, int margin,
+calculate_width(int scrw, int wtype, int align, int margin,
       int *panw, int *x)
 {
     if (wtype == PANEL_SIZE_PERCENT) {
@@ -150,7 +150,7 @@ calculate_width(int scrw, int wtype, int allign, int margin,
             *panw = 1;
         *panw = ((gfloat) scrw * (gfloat) *panw) / 100.0;
     }
-    if (allign != PANEL_ALLIGN_CENTER) {
+    if (align != PANEL_ALIGN_CENTER) {
         if (margin > scrw) {
             g_warning( "margin is bigger then edge size %d > %d. Ignoring margin",
                   margin, scrw);
@@ -158,13 +158,13 @@ calculate_width(int scrw, int wtype, int allign, int margin,
         }
 	*panw = MIN(scrw - margin, *panw);
     }
-    if (allign == PANEL_ALLIGN_LEFT)
+    if (align == PANEL_ALIGN_LEFT)
         *x += margin;
-    else if (allign == PANEL_ALLIGN_RIGHT) {
+    else if (align == PANEL_ALIGN_RIGHT) {
         *x += scrw - *panw - margin;
         if (*x < 0)
             *x = 0;
-    } else if (allign == PANEL_ALLIGN_CENTER)
+    } else if (align == PANEL_ALIGN_CENTER)
         *x += (scrw - *panw) / 2;
     RET();
 }
@@ -196,7 +196,7 @@ void _calculate_position(SimplePanel *panel, GdkRectangle* rect)
     if (np->edge == PANEL_EDGE_TOP || np->edge == PANEL_EDGE_BOTTOM) {
         rect->width = np->width;
         rect->x = marea.x;
-        calculate_width(marea.width, np->widthtype, np->allign, np->margin,
+        calculate_width(marea.width, np->widthtype, np->align, np->margin,
               &rect->width, &rect->x);
         rect->height = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
         rect->y = marea.y + ((np->edge == PANEL_EDGE_TOP) ? 0 : (marea.height - rect->height));
@@ -204,7 +204,7 @@ void _calculate_position(SimplePanel *panel, GdkRectangle* rect)
     } else {
         rect->height = np->width;
         rect->y = marea.y;
-        calculate_width(marea.height, np->widthtype, np->allign, np->margin,
+        calculate_width(marea.height, np->widthtype, np->align, np->margin,
               &rect->height, &rect->y);
         rect->width = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
         rect->x = marea.x + ((np->edge == PANEL_EDGE_LEFT) ? 0 : (marea.width - rect->width));

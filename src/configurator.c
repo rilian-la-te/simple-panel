@@ -738,7 +738,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
     Panel *p = panel->priv;
     GtkBuilder* builder;
     GtkWidget *w, *w2, *w3 , *tint_clr;
-    GtkWidget *mon_control, *edge_control, *allign_control;
+    GtkWidget *mon_control, *edge_control, *align_control;
     GtkAppChooserButton *fm;
     GdkScreen *screen;
     gint monitors;
