@@ -33,6 +33,12 @@
     <property name="value">10</property>
     <property name="step_increment">1</property>
   </object>
+  <object class="GtkImage" id="image-close">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">window-close-symbolic</property>
+    <property name="use_fallback">True</property>
+  </object>
   <object class="GtkListStore" id="liststore-background">
     <columns>
       <!-- column-name item -->
@@ -70,23 +76,6 @@
       </row>
     </data>
   </object>
-  <object class="GtkListStore" id="liststore-widgetstyle">
-    <columns>
-      <!-- column-name item -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">Normal</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Dark</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Custom CSS</col>
-      </row>
-    </data>
-  </object>
   <object class="GtkDialog" id="panel_pref">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -107,13 +96,14 @@
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="close_btn">
-                <property name="label">gtk-close</property>
+                <property name="label">Close</property>
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_stock">True</property>
+                <property name="image">image-close</property>
+                <property name="always_show_image">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -778,7 +768,7 @@
                           <object class="GtkImage" id="image1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="icon_name">list-add</property>
+                            <property name="icon_name">list-add-symbolic</property>
                             <property name="use_fallback">True</property>
                           </object>
                         </child>
@@ -799,7 +789,7 @@
                           <object class="GtkImage" id="image2">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="icon_name">list-remove</property>
+                            <property name="icon_name">list-remove-symbolic</property>
                             <property name="use_fallback">True</property>
                           </object>
                         </child>
@@ -820,7 +810,7 @@
                           <object class="GtkImage" id="image3">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="icon_name">preferences-system</property>
+                            <property name="icon_name">preferences-system-symbolic</property>
                             <property name="use_fallback">True</property>
                           </object>
                         </child>
@@ -842,7 +832,7 @@
                           <object class="GtkImage" id="image4">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="icon_name">go-up</property>
+                            <property name="icon_name">go-up-symbolic</property>
                             <property name="use_fallback">True</property>
                           </object>
                         </child>
@@ -863,7 +853,7 @@
                           <object class="GtkImage" id="image5">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="icon_name">go-down</property>
+                            <property name="icon_name">go-down-symbolic</property>
                             <property name="use_fallback">True</property>
                           </object>
                         </child>
@@ -1113,23 +1103,6 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <object class="GtkComboBox" id="widget-style-combo">
-                                    <property name="can_focus">False</property>
-                                    <property name="model">liststore-widgetstyle</property>
-                                    <child>
-                                      <object class="GtkCellRendererText" id="cellrenderertext6"/>
-                                      <attributes>
-                                        <attribute name="text">0</attribute>
-                                      </attributes>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkMenuButton" id="widget-style-button">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -1208,5 +1181,22 @@
     <action-widgets>
       <action-widget response="-7">close_btn</action-widget>
     </action-widgets>
+  </object>
+  <object class="GtkListStore" id="liststore-widgetstyle">
+    <columns>
+      <!-- column-name item -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">Normal</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Dark</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Custom CSS</col>
+      </row>
+    </data>
   </object>
 </interface>

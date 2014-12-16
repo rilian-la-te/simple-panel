@@ -107,7 +107,47 @@ static void state_configure_monitor(GSimpleAction *action,GVariant* param, gpoin
     }
     if (request_mon>=0)
         g_free(str);
-    //FIXME: update edge and strut sensitivities
+}
+
+static void edge_changed(SimplePanel* panel, GParamSpec* spec, GtkWidget* w)
+{
+    int edge = panel->priv->edge;
+    gchar* str = NULL;
+    switch (edge)
+    {
+    case PANEL_EDGE_BOTTOM:
+        str = _("Edge: Bottom");
+        break;
+    case PANEL_EDGE_TOP:
+        str = _("Edge: Top");
+        break;
+    case PANEL_EDGE_LEFT:
+        str = _("Edge: Left");
+        break;
+    case PANEL_EDGE_RIGHT:
+        str = _("Edge: Right");
+        break;
+    };
+    gtk_button_set_label(GTK_BUTTON(w),str);
+}
+
+static void alignment_changed(SimplePanel* panel, GParamSpec* spec, GtkWidget* w)
+{
+    int alignment = panel->priv->align;
+    gchar* str = NULL;
+    switch (alignment)
+    {
+    case PANEL_ALIGN_LEFT:
+        str = _("Align: Start");
+        break;
+    case PANEL_ALIGN_CENTER:
+        str = _("Align: Center");
+        break;
+    case PANEL_ALIGN_RIGHT:
+        str = _("Align: End");
+        break;
+    };
+    gtk_button_set_label(GTK_BUTTON(w),str);
 }
 
 static void
@@ -776,6 +816,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
     g_object_unref(menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
+    edge_changed(panel,NULL,w);
+    g_signal_connect(panel,"notify::"PANEL_PROP_EDGE,G_CALLBACK(edge_changed),w);
 
     /* monitor */
     monitors = 1;
@@ -808,7 +850,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
                                            g_settings_get_int(
                                                p->settings->toplevel_settings,
                                                PANEL_PROP_MONITOR)));
-
     /* alignment */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment-button");
     menu = g_menu_new();
@@ -818,6 +859,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
     g_object_unref(menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
+    alignment_changed(panel,NULL,w);
+    g_signal_connect(panel,"notify::"PANEL_PROP_ALIGNMENT,G_CALLBACK(alignment_changed),w);
 
     /* margin */
     p->margin_control = w = (GtkWidget*)gtk_builder_get_object( builder, "margin" );
