@@ -72,11 +72,6 @@ response_event(GtkDialog *widget, gint arg1, Panel* panel )
     return;
 }
 
-static gboolean edge_selector(Panel* p, int edge)
-{
-    return (p->edge == edge);
-}
-
 /* If there is a panel on this edge and it is not the panel being configured, set the edge unavailable. */
 gboolean panel_edge_available(Panel* p, int edge, gint monitor)
 {
@@ -150,30 +145,22 @@ static void alignment_changed(SimplePanel* panel, GParamSpec* spec, GtkWidget* w
     gtk_button_set_label(GTK_BUTTON(w),str);
 }
 
-static void
-set_margin(GtkSpinButton* spin, SimplePanel* panel)
+void simple_panel_notify_scale_cb(SimplePanel* panel, GParamSpec* param, GtkScaleButton* scale)
 {
-    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_MARGIN,gtk_spin_button_get_value(spin));
-}
-
-static void
-set_width(GtkScaleButton* spin, SimplePanel* panel)
-{
-    Panel *p = panel->priv;
-    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,gtk_scale_button_get_value(spin));
-    gchar* str = g_strdup_printf("%d",p->width);
-    gtk_button_set_label(GTK_BUTTON(spin),str);
-    g_free(str);
-}
-
-static void
-set_height(GtkScaleButton* spin, SimplePanel* panel)
-{
-    Panel *p = panel->priv;
-
-    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_HEIGHT,gtk_scale_button_get_value(spin));
-    gchar* str = g_strdup_printf("%d",p->height);
-    gtk_button_set_label(GTK_BUTTON(spin),str);
+    const gchar* name = g_param_spec_get_name(param);
+    const gchar* retn;
+    int val;
+    if (g_intern_static_string(PANEL_PROP_WIDTH) == name)
+        retn = PANEL_PROP_WIDTH;
+    if (g_intern_static_string(PANEL_PROP_HEIGHT) == name)
+        retn = PANEL_PROP_HEIGHT;
+    if (g_intern_static_string(PANEL_PROP_ICON_SIZE) == name)
+        retn = PANEL_PROP_ICON_SIZE;
+    if (g_intern_static_string(PANEL_PROP_AUTOHIDE_SIZE) == name)
+        retn = PANEL_PROP_AUTOHIDE_SIZE;
+    g_object_get(panel,retn,&val);
+    gchar* str = g_strdup_printf("%d",val);
+    gtk_button_set_label(GTK_BUTTON(scale),str);
     g_free(str);
 }
 
@@ -265,30 +252,6 @@ on_tint_color_set( GtkColorChooser* clr,  Panel* p )
     char* color = gdk_rgba_to_string(&p->gtintcolor);
     g_settings_set_string(p->settings->toplevel_settings,PANEL_PROP_BACKGROUND_COLOR,color);
     g_free(color);
-}
-
-static void
-on_font_size_set( GtkSpinButton* spin, Panel* p )
-{
-    g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_FONT_SIZE,gtk_spin_button_get_value_as_int(spin));
-}
-
-static void
-set_height_when_minimized(GtkScaleButton* spin, SimplePanel* panel)
-{
-    g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_AUTOHIDE_SIZE,(int)gtk_scale_button_get_value(spin));
-    gchar* str = g_strdup_printf("%d",panel->priv->height_when_hidden);
-    gtk_button_set_label(GTK_BUTTON(spin),str);
-    g_free(str);
-}
-
-static void
-set_icon_size( GtkScaleButton* spin,  Panel* p  )
-{
-    g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_ICON_SIZE,(int)gtk_scale_button_get_value(spin));
-    gchar* str = g_strdup_printf("%d",p->icon_size);
-    gtk_button_set_label(GTK_BUTTON(spin),str);
-    g_free(str);
 }
 
 static void
@@ -864,9 +827,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* margin */
     p->margin_control = w = (GtkWidget*)gtk_builder_get_object( builder, "margin" );
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(w), p->margin);
-    g_signal_connect( w, "value-changed",
-                      G_CALLBACK(set_margin), panel);
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_MARGIN,w,"value",G_SETTINGS_BIND_DEFAULT);
 
     /* size */
     p->width_control = w = (GtkWidget*)gtk_builder_get_object( builder, "scale-width" );
@@ -878,7 +839,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
         upper = (((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
     simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),0,upper);
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->width );
-    g_signal_connect( w, "value-changed", G_CALLBACK(set_width), panel );
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_WIDTH,w,"value",G_SETTINGS_BIND_DEFAULT);
+    g_signal_connect(panel, "notify::"PANEL_PROP_WIDTH, G_CALLBACK(simple_panel_notify_scale_cb), w );
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "width_unit" );
     update_opt_menu( w, p->widthtype - 1 );
@@ -889,13 +851,14 @@ void panel_configure( SimplePanel* panel, int sel_page )
     p->height_control = w = (GtkWidget*)gtk_builder_get_object( builder, "scale-height" );
     simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),PANEL_HEIGHT_MIN,PANEL_HEIGHT_MAX);
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->height);
-    g_signal_connect( w, "value-changed", G_CALLBACK(set_height), panel );
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_HEIGHT,w,"value",G_SETTINGS_BIND_DEFAULT);
+    g_signal_connect(panel, "notify::"PANEL_PROP_HEIGHT, G_CALLBACK(simple_panel_notify_scale_cb), w );
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "scale-iconsize" );
     simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),PANEL_HEIGHT_MIN,PANEL_HEIGHT_MAX);
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->icon_size );
-    g_signal_connect( w, "value-changed", G_CALLBACK(set_icon_size), p );
-
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_ICON_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
+    g_signal_connect(panel, "notify::"PANEL_PROP_ICON_SIZE, G_CALLBACK(simple_panel_notify_scale_cb), w );
     /* properties */
 
     /* Explaination from Ruediger Arp <ruediger@gmx.net>:
@@ -926,9 +889,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "scale-minimized" );
     simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(w), p->height_when_hidden);
-    g_signal_connect( w, "value-changed",
-                      G_CALLBACK(set_height_when_minimized), panel);
-
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_AUTOHIDE_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
+    g_signal_connect(panel, "notify::"PANEL_PROP_AUTOHIDE_SIZE, G_CALLBACK(simple_panel_notify_scale_cb), w );
     /* background */
     {
         GtkWidget* type_list;
@@ -964,9 +926,8 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* font size */
     w = (GtkWidget*)gtk_builder_get_object( builder, "font_size" );
-    gtk_spin_button_set_value( GTK_SPIN_BUTTON(w), p->fontsize );
-    g_signal_connect( w, "value-changed",
-                      G_CALLBACK(on_font_size_set), p);
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_FONT_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
+
 
     w2 = (GtkWidget*)gtk_builder_get_object( builder, "use_font_size" );
     gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w2),"win."PANEL_PROP_ENABLE_FONT_SIZE);
