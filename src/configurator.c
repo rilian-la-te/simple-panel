@@ -750,7 +750,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     if( p->pref_dialog )
     {
-//        panel_adjust_geometry_terminology(p);
         gtk_window_present(GTK_WINDOW(p->pref_dialog));
         return;
     }
@@ -762,7 +761,7 @@ void panel_configure( SimplePanel* panel, int sel_page )
         return;
     }
 
-    p->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "panel_pref" );
+    p->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "panel-pref" );
     gtk_window_set_transient_for(GTK_WINDOW(p->pref_dialog), GTK_WINDOW(panel));
     g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), p);
     g_object_add_weak_pointer( G_OBJECT(p->pref_dialog), (gpointer) &p->pref_dialog );
@@ -771,14 +770,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
 
     /* position */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
-    menu = g_menu_new();
-    g_menu_append(menu,_("Top"),"win."PANEL_PROP_EDGE"('top')");
-    g_menu_append(menu,_("Bottom"),"win."PANEL_PROP_EDGE"('bottom')");
-    g_menu_append(menu,_("Left"),"win."PANEL_PROP_EDGE"('left')");
-    g_menu_append(menu,_("Right"),"win."PANEL_PROP_EDGE"('right')");
-    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
-    g_object_unref(menu);
-    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
     edge_changed(panel,NULL,w);
     g_signal_connect(panel,"notify::"PANEL_PROP_EDGE,G_CALLBACK(edge_changed),w);
 
@@ -815,13 +806,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
                                                PANEL_PROP_MONITOR)));
     /* alignment */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "alignment-button");
-    menu = g_menu_new();
-    g_menu_append(menu,_("Start"),"win."PANEL_PROP_ALIGNMENT"('left')");
-    g_menu_append(menu,_("Center"),"win."PANEL_PROP_ALIGNMENT"('center')");
-    g_menu_append(menu,_("End"),"win."PANEL_PROP_ALIGNMENT"('right')");
-    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
-    g_object_unref(menu);
-    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
     alignment_changed(panel,NULL,w);
     g_signal_connect(panel,"notify::"PANEL_PROP_ALIGNMENT,G_CALLBACK(alignment_changed),w);
 
@@ -859,32 +843,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->icon_size );
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_ICON_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
     g_signal_connect(panel, "notify::"PANEL_PROP_ICON_SIZE, G_CALLBACK(simple_panel_notify_scale_cb), w );
-    /* properties */
-
-    /* Explaination from Ruediger Arp <ruediger@gmx.net>:
-        "Set Dock Type", it is referring to the behaviour of
-        dockable applications such as those found in WindowMaker (e.g.
-        http://www.cs.mun.ca/~gstarkes/wmaker/dockapps ) and other
-        lightweight window managers. These dockapps are probably being
-        treated in some special way.
-    */
-    w = (GtkWidget*)gtk_builder_get_object( builder, "as_dock" );
-    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w),"win."PANEL_PROP_DOCK);
-
-    /* Explaination from Ruediger Arp <ruediger@gmx.net>:
-        "Set Strut": Reserve panel's space so that it will not be
-        covered by maximazied windows.
-        This is clearly an option to avoid the panel being
-        covered/hidden by other applications so that it always is
-        accessible. The panel "steals" some screen estate which cannot
-        be accessed by other applications.
-        GNOME Panel acts this way, too.
-    */
-    w = (GtkWidget*)gtk_builder_get_object( builder, "reserve_space" );
-    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w),"win."PANEL_PROP_STRUT);
-
-    w = (GtkWidget*)gtk_builder_get_object( builder, "autohide" );
-    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w),"win."PANEL_PROP_AUTOHIDE);
 
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "scale-minimized" );
@@ -921,16 +879,9 @@ void panel_configure( SimplePanel* panel, int sel_page )
     gtk_color_chooser_set_rgba( GTK_COLOR_CHOOSER(w), &p->gfontcolor );
     g_signal_connect( w, "color-set", G_CALLBACK( on_font_color_set ), p );
 
-    w2 = (GtkWidget*)gtk_builder_get_object( builder, "use_font_clr" );
-    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w2),"win."PANEL_PROP_ENABLE_FONT_COLOR);
-
     /* font size */
     w = (GtkWidget*)gtk_builder_get_object( builder, "font_size" );
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_FONT_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
-
-
-    w2 = (GtkWidget*)gtk_builder_get_object( builder, "use_font_size" );
-    gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(w2),"win."PANEL_PROP_ENABLE_FONT_SIZE);
 
     /* plugin list */
     {
@@ -995,12 +946,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-button" );
     gtk_button_set_always_show_image(GTK_BUTTON(w3),TRUE);
     gtk_button_set_label(GTK_BUTTON(w3),_("Application Widget Style"));
-    menu = g_menu_new();
-    g_menu_append(menu,_("Use dark theme"),"app.is-dark");
-    g_menu_append(menu,_("Use custom CSS"),"app.is-custom");
-    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(w3),G_MENU_MODEL(menu));
-    g_object_unref(menu);
-    gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(w3),TRUE);
     g_object_unref(builder);
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"conf",G_ACTION_GROUP(configurator));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));
