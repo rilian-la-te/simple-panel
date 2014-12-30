@@ -1,8 +1,8 @@
 [encoding: UTF-8]
-src/bg.c
+src/app-actions.c
+src/app.c
 src/configurator.c
 src/dbg.c
-src/ev.c
 src/panel.c
 src/plugin.c
 src/gtk-run.c
@@ -13,15 +13,15 @@ data/ui/panel-pref.glade
 # Putting translation of plugins in main catalog is not a good idea...
 plugins/cpu/cpu.c
 plugins/deskno/deskno.c
-plugins/launchtaskbar.c
+plugins/X/launchtaskbar.c
 plugins/dclock.c
 plugins/menu.c
 plugins/separator.c
-plugins/pager.c
+plugins/X/pager.c
 plugins/space.c
-plugins/tray.c
+plugins/X/tray.c
 plugins/xkb/xkb-plugin.c
-plugins/wincmd.c
+plugins/X/wincmd.c
 plugins/dirmenu.c
 plugins/thermal/thermal.c
 

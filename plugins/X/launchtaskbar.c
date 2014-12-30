@@ -251,6 +251,7 @@ static void taskbar_window_manager_changed(GdkScreen * screen, LaunchTaskBarPlug
 static void taskbar_apply_configuration(LaunchTaskBarPlugin * ltbp);
 static void task_update_style(Task * tk, LaunchTaskBarPlugin * tb);
 static void taskbar_style_updated(GtkWidget* btn,gpointer* data);
+static void taskbar_style_updated_notify(GtkWidget* btn,GParamSpec* p,gpointer* data);
 
 static void launchbutton_get_id(LaunchButton* btn, GPtrArray* buttons)
 {
@@ -738,6 +739,7 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
 
         /* Fetch the client list and redraw the taskbar.  Then determine what window has focus. */
         taskbar_window_buttons(screen,(gpointer* ) ltbp);
+        g_signal_connect(ltbp->panel, "notify::"PANEL_PROP_EDGE, G_CALLBACK(taskbar_style_updated_notify),(gpointer) ltbp);
         g_signal_connect(ltbp->panel, "style-updated", G_CALLBACK(taskbar_style_updated),(gpointer) ltbp);
         taskbar_on_active_window_changed(screen,NULL,(gpointer* ) ltbp);
     }
@@ -2729,6 +2731,12 @@ static void taskbar_style_updated(GtkWidget* btn,gpointer* data)
     for (tk = ltbp->p_task_list; tk != NULL; tk = tk->p_task_flink_xwid)
         task_update_style(tk, ltbp);
 }
+
+static void taskbar_style_updated_notify(GtkWidget* btn,GParamSpec* p,gpointer* data)
+{
+    taskbar_style_updated(btn,data);
+}
+
 
 /* Update style on a task button when created or after a configuration change. */
 static void task_update_style(Task * tk, LaunchTaskBarPlugin * tb)

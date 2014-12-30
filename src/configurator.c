@@ -79,7 +79,7 @@ gboolean panel_edge_available(Panel* p, int edge, gint monitor)
     for (l = gtk_application_get_windows(p->app); l != NULL; l = l->next)
         {
         SimplePanel* pl = (SimplePanel*) l->data;
-        if ((pl->priv != p) && (pl->priv->edge == edge) && (pl->priv->monitor == monitor))
+        if ((pl->priv != p) && (pl->priv->edge == edge) && ((pl->priv->monitor == monitor)||pl->priv->monitor<0))
             return FALSE;
         }
     return TRUE;
@@ -941,8 +941,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
         gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), custom_css);
     g_free(custom_css);
     g_signal_connect( w, "file-set", G_CALLBACK (custom_css_file_helper), panel);
-    w = (GtkWidget*)gtk_builder_get_object( builder, "notebook" );
-    gtk_notebook_set_current_page( GTK_NOTEBOOK(w), sel_page );
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-button" );
     gtk_button_set_always_show_image(GTK_BUTTON(w3),TRUE);
     gtk_button_set_label(GTK_BUTTON(w3),_("Application Widget Style"));
