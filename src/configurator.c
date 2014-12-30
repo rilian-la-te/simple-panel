@@ -49,7 +49,6 @@ enum{
 extern GSList* all_panels;
 extern int config;
 static void update_opt_menu(GtkWidget *w, int ind);
-static void update_toggle_button(GtkWidget *w, gboolean n);
 static void modify_plugin( GtkTreeView* view );
 static gboolean on_entry_focus_out_old( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean on_entry_focus_out( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
@@ -207,19 +206,7 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
 
 /* FIXME: heighttype and spacing and RoundCorners */
 
-static void set_background_type(GtkWidget* item, SimplePanel* panel)
-{
-    Panel *p = panel->priv;
-    int type;
-
-    type = gtk_combo_box_get_active(GTK_COMBO_BOX(item));
-    if (p->background == type) /* not changed */
-        return;
-
-    g_settings_set_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE,type);
-}
-
-static void background_file_helper(Panel * p, GtkWidget * toggle, GtkFileChooser * file_chooser)
+static void background_changed(GtkFileChooser *file_chooser,  Panel* p )
 {
     char * file = g_strdup(gtk_file_chooser_get_filename(file_chooser));
     if (file != NULL)
@@ -227,12 +214,6 @@ static void background_file_helper(Panel * p, GtkWidget * toggle, GtkFileChooser
         g_settings_set_string(p->settings->toplevel_settings,PANEL_PROP_BACKGROUND_FILE,file);
         g_free(file);
     }
-}
-
-static void background_changed(GtkFileChooser *file_chooser,  Panel* p )
-{
-    GtkWidget * btn = GTK_WIDGET(g_object_get_data(G_OBJECT(file_chooser), "bg_image"));
-    background_file_helper(p, btn, file_chooser);
 }
 
 static void
@@ -247,7 +228,6 @@ on_font_color_set( GtkColorChooser* clr,  Panel* p )
 static void
 on_tint_color_set( GtkColorChooser* clr,  Panel* p )
 {
-    gtk_color_chooser_set_use_alpha(clr,TRUE);
     gtk_color_chooser_get_rgba( clr, &p->gtintcolor );
     char* color = gdk_rgba_to_string(&p->gtintcolor);
     g_settings_set_string(p->settings->toplevel_settings,PANEL_PROP_BACKGROUND_COLOR,color);
@@ -699,43 +679,6 @@ update_opt_menu(GtkWidget *w, int ind)
     RET();
 }
 
-static void
-update_toggle_button(GtkWidget *w, gboolean n)
-{
-    gboolean c;
-
-    ENTER;
-    /* this trick will trigger "changed" signal even if active entry is
-     * not actually changing */
-    c = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w));
-    if (c == n) {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), !n);
-    }
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), n);
-    RET();
-}
-
-static void on_app_chooser_destroy(GtkAppChooser *fm, gpointer _unused)
-{
-    GAppInfo *app = gtk_app_chooser_get_app_info(fm);
-    if(app)
-    {
-        g_app_info_set_as_default_for_type(app, "inode/directory", NULL);
-        g_object_unref(app);
-    }
-}
-
-static void custom_css_file_helper(GtkFileChooser * file_chooser, SimplePanel * p)
-{
-    char * file = g_strdup(gtk_file_chooser_get_filename(file_chooser));
-    if (file != NULL)
-    {
-        GVariant* v = g_variant_new_string(file);
-        g_action_group_activate_action(G_ACTION_GROUP(p->priv->app),"css",v);
-        g_free(file);
-    }
-}
-
 void panel_configure( SimplePanel* panel, const gchar* sel_page )
 {
     Panel *p = panel->priv;
@@ -743,7 +686,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     GtkWidget *w, *w3 , *tint_clr;
     GtkWidget *mon_control, *edge_control, *align_control;
     GdkScreen *screen;
-    gint monitors;
+    gint monitors, back_type;
     GMenu* menu;
     GSimpleActionGroup* configurator = g_simple_action_group_new();
 
@@ -753,6 +696,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
         return;
     }
 
+    back_type = p->background;
     builder = gtk_builder_new();
     if( !gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/panel-pref.ui", NULL) )
     {
@@ -848,21 +792,15 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(w), p->height_when_hidden);
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_AUTOHIDE_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
     g_signal_connect(panel, "notify::"PANEL_PROP_AUTOHIDE_SIZE, G_CALLBACK(simple_panel_notify_scale_cb), w );
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_AUTOHIDE,w,"sensitive",G_SETTINGS_BIND_GET);
     /* background */
     {
-        GtkWidget* type_list;
         GtkIconInfo* info;
         tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
         gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
         g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
-        type_list = (GtkWidget*)gtk_builder_get_object( builder, "background-type-combo" );
-        update_opt_menu( type_list, p->background);
-
 
         w = (GtkWidget*)gtk_builder_get_object( builder, "img_file" );
-        g_object_set_data(G_OBJECT(type_list), "img_file", w);
-        g_signal_connect( type_list, "changed",
-                         G_CALLBACK(set_background_type), panel);
         if (p->background_file != NULL)
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), p->background_file);
         else if ((info = gtk_icon_theme_lookup_icon(p->icon_theme, "lxpanel-background", 0, 0)))
@@ -870,17 +808,18 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), gtk_icon_info_get_filename(info));
             g_object_unref(info);
         }
-        g_object_set_data( G_OBJECT(w), "bg_image", type_list );
         g_signal_connect( w, "file-set", G_CALLBACK (background_changed), p);
     }
     /* font color */
     w = (GtkWidget*)gtk_builder_get_object( builder, "font_clr" );
     gtk_color_chooser_set_rgba( GTK_COLOR_CHOOSER(w), &p->gfontcolor );
     g_signal_connect( w, "color-set", G_CALLBACK( on_font_color_set ), p );
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_COLOR,w,"sensitive",G_SETTINGS_BIND_GET);
 
     /* font size */
     w = (GtkWidget*)gtk_builder_get_object( builder, "font_size" );
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_FONT_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
+    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_SIZE,w,"sensitive",G_SETTINGS_BIND_GET);
 
     /* plugin list */
     {
@@ -909,6 +848,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"app",G_ACTION_GROUP(panel->priv->app));
     gtk_widget_show(GTK_WIDGET(p->pref_dialog));
+    g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE,back_type);
 }
 
 static void notify_apply_config( GtkWidget* widget )
