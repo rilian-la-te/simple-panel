@@ -736,13 +736,12 @@ static void custom_css_file_helper(GtkFileChooser * file_chooser, SimplePanel * 
     }
 }
 
-void panel_configure( SimplePanel* panel, int sel_page )
+void panel_configure( SimplePanel* panel, const gchar* sel_page )
 {
     Panel *p = panel->priv;
     GtkBuilder* builder;
-    GtkWidget *w, *w2, *w3 , *tint_clr;
+    GtkWidget *w, *w3 , *tint_clr;
     GtkWidget *mon_control, *edge_control, *align_control;
-    GtkAppChooserButton *fm;
     GdkScreen *screen;
     gint monitors;
     GMenu* menu;
@@ -905,45 +904,6 @@ void panel_configure( SimplePanel* panel, int sel_page )
         w = (GtkWidget*)gtk_builder_get_object( builder, "plugin_desc" );
         init_plugin_list( panel, GTK_TREE_VIEW(plugin_list), w );
     }
-    /* advanced, applications */
-    fm = GTK_APP_CHOOSER_BUTTON(gtk_builder_get_object(builder, "fm-chooser"));
-    g_signal_connect(fm, "destroy", G_CALLBACK(on_app_chooser_destroy), NULL);
-
-    w = (GtkWidget*)gtk_builder_get_object( builder, "term" );
-    if (fm_config->terminal)
-        gtk_entry_set_text( GTK_ENTRY(w), fm_config->terminal );
-    g_signal_connect( w, "focus-out-event",
-                      G_CALLBACK(on_entry_focus_out),
-                      &fm_config->terminal);
-
-    /* If we are under LXSession, setting logout command is not necessary. */
-    w = (GtkWidget*)gtk_builder_get_object( builder, "logout" );
-    if( getenv("_LXSESSION_PID") ) {
-        gtk_widget_hide( w );
-        w = (GtkWidget*)gtk_builder_get_object( builder, "logout_label" );
-        gtk_widget_hide( w );
-    }
-    else {
-        char* logout_cmd;
-        g_object_get(G_OBJECT(panel->priv->app),"logout-command",&logout_cmd,NULL);
-        if(logout_cmd)
-            gtk_entry_set_text( GTK_ENTRY(w), logout_cmd );
-        g_signal_connect( w, "focus-out-event",
-                        G_CALLBACK(on_entry_focus_out_old),
-                        &logout_cmd);
-    }
-
-    char* custom_css;
-    w = (GtkWidget*)gtk_builder_get_object( builder, "css-chooser" );
-    g_object_set_data(G_OBJECT(w3), "css-chooser", w);
-    g_object_get(G_OBJECT(panel->priv->app),"css",&custom_css,NULL);
-    if (custom_css != NULL)
-        gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), custom_css);
-    g_free(custom_css);
-    g_signal_connect( w, "file-set", G_CALLBACK (custom_css_file_helper), panel);
-    w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "widget-style-button" );
-    gtk_button_set_always_show_image(GTK_BUTTON(w3),TRUE);
-    gtk_button_set_label(GTK_BUTTON(w3),_("Application Widget Style"));
     g_object_unref(builder);
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"conf",G_ACTION_GROUP(configurator));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));

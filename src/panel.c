@@ -1186,8 +1186,7 @@ static void ah_stop(SimplePanel *p)
 
 void activate_panel_settings(GSimpleAction *action, GVariant *param, gpointer data)
 {
-    int page = g_variant_get_int32(param);
-    g_variant_unref(param);
+    const gchar* page = g_variant_get_string(param,NULL);
     SimplePanel* p = (SimplePanel*)data;
     panel_configure(p,page);
 
@@ -1423,11 +1422,11 @@ GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
         g_object_unref(gmenusection);
     }
     gmenusection = g_menu_new();
-    g_menu_append(gmenusection,_("Add / Remove Panel Items"),"win.panel-settings(1)");
+    g_menu_append(gmenusection,_("Add / Remove Panel Items"),"win.panel-settings('plugins')");
     g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
     g_object_unref(gmenusection);
     gmenusection = g_menu_new();
-    g_menu_append(gmenusection,_("Panel Settings"),"win.panel-settings(0)");
+    g_menu_append(gmenusection,_("Panel Settings"),"win.panel-settings('appearance')");
     g_menu_append(gmenusection,_("Create New Panel"),"win.new-panel");
     gboolean enabled = g_list_length(gtk_application_get_windows(panel->priv->app))>1;
     g_simple_action_set_enabled (
@@ -1438,6 +1437,7 @@ GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
     g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
     g_object_unref(gmenusection);
     gmenusection = g_menu_new();
+    g_menu_append(gmenusection,_("Application Settings"),"app.preferences");
     g_menu_append(gmenusection,_("About"),"app.about");
     g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
     g_object_unref(gmenusection);
@@ -1623,7 +1623,7 @@ static void panel_add_actions( SimplePanel* p)
     {
         {"new-panel", activate_new_panel, NULL, NULL, NULL},
         {"remove-panel", activate_remove_panel, NULL, NULL, NULL},
-        {"panel-settings", activate_panel_settings, "i", NULL, NULL},
+        {"panel-settings", activate_panel_settings, "s", NULL, NULL},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(p),win_action_entries,G_N_ELEMENTS(win_action_entries),p);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_EDGE);

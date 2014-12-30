@@ -60,12 +60,14 @@ G_DEFINE_TYPE_WITH_PRIVATE(PanelApp, panel_app, GTK_TYPE_APPLICATION)
 
 static gchar *ccommand = NULL;
 static gboolean is_started;
+static void activate_preferences (GSimpleAction* simple, GVariant* param, gpointer data);
 
 static const gchar* panel_commands = "run menu config exit ";
 
 const GActionEntry app_action_entries[] =
 {
     {"terminal", activate_terminal, "s", NULL, NULL},
+    {"preferences", activate_preferences, NULL, NULL, NULL},
     {"about", activate_about, NULL, NULL, NULL},
     {"run", activate_run, NULL, NULL, NULL},
     {"logout", activate_logout, NULL, NULL, NULL},
@@ -82,6 +84,52 @@ static const GOptionEntry entries[] =
 
 static gboolean start_all_panels(PanelApp* app);
 static void _ensure_user_config_dirs(PanelApp *app);
+
+static void custom_css_file_helper(GtkFileChooser * file_chooser, GtkApplication * p)
+{
+    char * file = g_strdup(gtk_file_chooser_get_filename(file_chooser));
+    if (file != NULL)
+    {
+        g_action_group_activate_action(G_ACTION_GROUP(p),"css",g_variant_new_string(file));
+        g_free(file);
+    }
+}
+
+static void activate_preferences (GSimpleAction* simple, GVariant* param, gpointer data)
+{
+    PanelApp* app = (PanelApp*)data;
+    PANEL_APP(app)->priv = PANEL_APP_GET_PRIVATE(app);
+    GtkWidget* w;
+    if (app->priv->pref_dialog!= NULL)
+    {
+        gtk_window_present(GTK_WINDOW(app->priv->pref_dialog));
+        return;
+    }
+    GtkBuilder* builder = gtk_builder_new();
+    if( !gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/app-pref.ui", NULL) )
+    {
+        g_object_unref(builder);
+        return;
+    }
+    app->priv->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "app-pref" );
+    gtk_application_add_window(GTK_APPLICATION(app),GTK_WINDOW(app->priv->pref_dialog));
+    g_object_add_weak_pointer( G_OBJECT(app->priv->pref_dialog), (gpointer) &app->priv->pref_dialog );
+    gtk_window_set_position( GTK_WINDOW(app->priv->pref_dialog), GTK_WIN_POS_CENTER );
+    panel_apply_icon(GTK_WINDOW(app->priv->pref_dialog));
+
+    w = (GtkWidget*)gtk_builder_get_object( builder, "term" );
+    g_settings_bind(app->priv->config,"terminal-command",w,"text",G_SETTINGS_BIND_DEFAULT);
+    w = (GtkWidget*)gtk_builder_get_object( builder, "logout" );
+    g_settings_bind(app->priv->config,"logout-command",w,"text",G_SETTINGS_BIND_DEFAULT);
+    if( getenv("_LXSESSION_PID") ) gtk_widget_hide(w);
+    w = (GtkWidget*)gtk_builder_get_object( builder, "shutdown" );
+    g_settings_bind(app->priv->config,"shutdown-command",w,"text",G_SETTINGS_BIND_DEFAULT);
+    if( getenv("_LXSESSION_PID") ) gtk_widget_hide(w);
+    w = (GtkWidget*)gtk_builder_get_object( builder, "css-chooser" );
+    gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), app->priv->custom_css != NULL ? app->priv->custom_css: "");
+    g_signal_connect( w, "file-set", G_CALLBACK (custom_css_file_helper), GTK_APPLICATION(app));
+    gtk_window_present(GTK_WINDOW(app->priv->pref_dialog));
+}
 
 
 static void panel_app_startup(GApplication* app)

@@ -42,6 +42,7 @@ struct _PanelAppPrivate
     gchar* custom_css;
     gchar* terminal_cmd;
     gchar* profile;
+    GtkWidget* pref_dialog;
 };
 
 G_END_DECLS
