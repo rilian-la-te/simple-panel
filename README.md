@@ -1,27 +1,27 @@
 #Simple Panel
 Simple-panel is a lightweight desktop panel (fork of LXPanel).
 
-For roadmap of the fork, see TODO.md.
+For roadmap of the fork, see [TODO](TODO.md).
 
 To build this program you need some development packages:
-  libtool 2.2 or newer, intltool, libgtk 3.12 or newer,
-  libfm-gtk 1.2 or newer, libwnck.
+-  *libtool 2.2* or newer, *intltool*, *libgtk 3.12* or newer,
+-  *libfm-gtk 1.2* or newer.
 Optional development packages may be required to build some modules:
-  libmenu-cache,
-  libX11 ('deskno', 'xkb' and 'wincmd' plugins weren't built if missing),
-  libwnck ('pager' and 'launchtaskbar' plugins weren't built if missing),
-  libalsasound ('volumealsa' plugin isn't built if missing),
-  libindicator 0.3.0 ('indicator' plugin isn't built if missing),
-  wireless-tools (required to build 'netstat' plugin),
-  libxml-2.0 (required to build 'weather' plugin).
+-  *libmenu-cache*,
+-  *libX11* ('deskno', 'xkb' and 'wincmd' plugins weren't built if missing),
+-  *libwnck* ('pager' and 'launchtaskbar' plugins weren't built if missing),
+-  *libalsasound* ('volumealsa' plugin isn't built if missing),
+-  *libindicator-0.3.0* ('indicator' plugin isn't built if missing),
+-  *wireless-tools* (required to build 'netstat' plugin),
+-  *libxml-2.0* (required to build 'weather' plugin).
 
 To install this program, three other packages are needed:
-  menu-cache, libfm-gtk (for gtk 3.0), lxmenu-data.
+  *menu-cache*, *libfm-gtk-3.0*, *lxmenu-data*.
 Please install them before installing simple-panel.
 
 There are 1 program contained in the package.
 
-1. simple-panel: the panel
+simple-panel: the panel.
 
 About Netstat and Netstatus plugins:
 
@@ -39,17 +39,17 @@ About theming & simple-panel:
 1. For transparency simple-panel requires compositing.
 
 2. Current icon names that can be themed specifically for simple-panel include:
-	*"simple-panel-background"
-	*"clock"
-	*"capslock-on"
-	*"capslock-off"
-	*"numlock-on"
-	*"numlock-off"
-	*"scrllock-on"
-	*"scrllock-off"
-	*"wincmd"
-	*"ns-lock"
-	*possibly more, as yet unfound.
+  -	*"simple-panel-background"
+  -	*"clock"
+  -	*"capslock-on"
+  -	*"capslock-off"
+  -	*"numlock-on"
+  -	*"numlock-off"
+  -	*"scrllock-on"
+  -	*"scrllock-off"
+  -	*"wincmd"
+  -	*"ns-lock"
+  -	*possibly more, as yet unfound.
 
 3. You can also set theme for any plugin specifically using it's widget name
     which is equal to plugin type.
