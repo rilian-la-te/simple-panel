@@ -30,7 +30,8 @@ SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	private.h \
 	app.h \
 	app-actions.h \
-	app-misc.h
+        app-misc.h \
+        gmenu-maker.h
 
 SIMPLE_PANEL_ENUM_FILES = $(SIMPLE_PANEL_HEADER_FILES)
 SIMPLE_PANEL_ENUM_FILES += $(SIMPLE_PANEL_NOINST_HEADER_FILES)
@@ -57,15 +58,10 @@ libsimplepanel_la_SOURCES = \
 	conf-gsettings.c \
 	panel-enum-types.c
 
-libsimplepanel_la_LIBADD = \
-       $(PACKAGE_LIBS)
+libsimplepanel_la_LIBADD = $(PACKAGE_LIBS)
 
 libsimplepanel_la_LDFLAGS = \
        -no-undefined
-
-if ENABLE_MENU_CACHE
-MENU_SOURCES = menu-policy.c
-endif
 
 simple_panel_SOURCES = \
 	gtk-run.c \
@@ -73,7 +69,16 @@ simple_panel_SOURCES = \
 	app.c \
 	app-actions.c \
 	app-misc.c \
-	$(MENU_SOURCES)
+        $(MENU_SOURCES) \
+        $(GMENU_SOURCES)
+
+if ENABLE_MENU_CACHE
+MENU_SOURCES = menu-policy.c
+endif
+
+if ENABLE_GNOME_MENUS
+GMENU_SOURCES = gmenu-maker.c
+endif
 
 simple_panel_includedir = $(includedir)/simple-panel
 simple_panel_include_HEADERS = $(SIMPLE_PANEL_HEADER_FILES)
@@ -88,7 +93,8 @@ simple_panel_LDADD = \
 		libsimplepanel.la \
 		$(BUILTIN_PLUGINS) \
 		$(PACKAGE_LIBS) \
-		$(INTLLIBS)
+		$(INTLLIBS) \
+		$(GNOME_MENUS_LIBS)
 ##		$(X11_LIBS) \
 
 EXTRA_DIST = $(SIMPLE_PANEL_NOINST_HEADER_FILES) \
