@@ -1,31 +1,27 @@
-LXPanel is a lightweight X11 desktop panel.
+#Simple Panel
+Simple-panel is a lightweight desktop panel (fork of LXPanel).
+
+For roadmap of the fork, see TODO.md.
 
 To build this program you need some development packages:
-  libtool 2.2 or newer, intltool, libgtk 2.18 or newer,
+  libtool 2.2 or newer, intltool, libgtk 3.12 or newer,
   libfm-gtk 1.2 or newer, libwnck.
 Optional development packages may be required to build some modules:
   libmenu-cache,
+  libX11 ('deskno', 'xkb' and 'wincmd' plugins weren't built if missing),
+  libwnck ('pager' and 'launchtaskbar' plugins weren't built if missing),
   libalsasound ('volumealsa' plugin isn't built if missing),
   libindicator 0.3.0 ('indicator' plugin isn't built if missing),
   wireless-tools (required to build 'netstat' plugin),
   libxml-2.0 (required to build 'weather' plugin).
 
 To install this program, three other packages are needed:
-  menu-cache, libfm-gtk, lxmenu-data.
-Please install them before installing lxpanel.
+  menu-cache, libfm-gtk (for gtk 3.0), lxmenu-data.
+Please install them before installing simple-panel.
 
-There are 2 programs contained in the package.
+There are 1 program contained in the package.
 
-1. lxpanel: the panel
-
-2. lxpanelctl: the controller of lxpanel, can be used to control lxpanel in 
-               other programs.  The best place to use lxpanelctl is by far 
-               the numerous key bindings provided by window managers.
-               When the key combination is pressed, call lxpanelctl to popup
-               system menu, or to open run dialog in lxpanel.
-               Run lxpanelctl without any argument to see what command it 
-               currently recognizes.
-
+1. simple-panel: the panel
 
 About Netstat and Netstatus plugins:
 
@@ -38,12 +34,12 @@ About Netstat and Netstatus plugins:
    efficient.  At the current stage, netstat runs only on Linux.
 
 
-About theming & lxpanel:
+About theming & simple-panel:
 
-1. In future, hardcoding should not be used for icon lookup. Instead, use Gtk's built-in functions to handle icon lookup. If necessary, provide a fallback (hardcoded) icon.
+1. For transparency simple-panel requires compositing.
 
-2. Current icon names that can be themed specifically for lxpanel include:
-	*"lxpanel-background"
+2. Current icon names that can be themed specifically for simple-panel include:
+	*"simple-panel-background"
 	*"clock"
 	*"capslock-on"
 	*"capslock-off"
@@ -58,9 +54,11 @@ About theming & lxpanel:
 3. You can also set theme for any plugin specifically using it's widget name
     which is equal to plugin type.
 
-4. There is a specific RC file which can be loaded by LXPanel, it can be placed
-    as ~/.config/lxpanel/$PROFILE/gtkrc, where $PROFILE is the profile used on
-    the LXPanel start.
+4. Simple-panel can load specific CSS file. CSS file must be referenced in config
+    file ~/.config/simple-panel/$PROFILE/config, where $PROFILE is the profile used on
+    the simple-panel start.
+
+5. Simple-panel uses GKeyFile config format and GSettings.
 
 There are also a substantial amount of others, but they use the icon naming specification.
 

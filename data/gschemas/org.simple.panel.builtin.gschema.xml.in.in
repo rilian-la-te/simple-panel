@@ -36,11 +36,11 @@
     </key>
   </schema>
   <schema id="org.simple.panel.toplevel.menu">
-    <key name="name" type="s">
-      <default>''</default>
+    <key name="name" type="ms">
+      <default>nothing</default>
     </key>
     <key name="icon" type="s">
-      <default>'start-here'</default>
+      <default>'start-here-symbolic'</default>
     </key>
     <key name="highlight-color" type="s">
       <default>'rgba(50,50,50,0.37)'</default>

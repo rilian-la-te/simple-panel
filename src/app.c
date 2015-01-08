@@ -121,12 +121,11 @@ static void activate_preferences (GSimpleAction* simple, GVariant* param, gpoint
     g_settings_bind(app->priv->config,"terminal-command",w,"text",G_SETTINGS_BIND_DEFAULT);
     w = (GtkWidget*)gtk_builder_get_object( builder, "logout" );
     g_settings_bind(app->priv->config,"logout-command",w,"text",G_SETTINGS_BIND_DEFAULT);
-    if( getenv("_LXSESSION_PID") ) gtk_widget_hide(w);
     w = (GtkWidget*)gtk_builder_get_object( builder, "shutdown" );
     g_settings_bind(app->priv->config,"shutdown-command",w,"text",G_SETTINGS_BIND_DEFAULT);
-    if( getenv("_LXSESSION_PID") ) gtk_widget_hide(w);
     w = (GtkWidget*)gtk_builder_get_object( builder, "css-chooser" );
-    gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), app->priv->custom_css != NULL ? app->priv->custom_css: "");
+    g_settings_bind(app->priv->config,"is-custom",w,"sensitive",G_SETTINGS_BIND_GET);
+    gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), app->priv->custom_css != NULL ? app->priv->custom_css: NULL);
     g_signal_connect( w, "file-set", G_CALLBACK (custom_css_file_helper), GTK_APPLICATION(app));
     gtk_window_present(GTK_WINDOW(app->priv->pref_dialog));
 }
@@ -225,7 +224,7 @@ void panel_app_activate(GApplication* app)
             GList* all_panels = gtk_application_get_windows(GTK_APPLICATION(app));
             SimplePanel * p = ((all_panels != NULL) ? all_panels->data : NULL);
             if (p != NULL)
-                panel_configure(p, 0);
+                panel_configure(p, "geometry");
         }
 //        else if (!g_strcmp0(ccommand,"restart"))
 //            restart();
