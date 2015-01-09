@@ -216,8 +216,8 @@ struct LaunchTaskBarPlugin {
 };
 
 static gchar *launchtaskbar_css_normal = ".-panel-task-normal {\n"
-        " -GtkWidget-focus-line-width: 1px;\n"
-        " -GtkWidget-focus-padding: 1px;\n"
+        " -GtkWidget-focus-line-width: 0px;\n"
+        " -GtkWidget-focus-padding: 0px;\n"
         "padding: 0px 0px 0px 0px;\n"
         "}\n";
 

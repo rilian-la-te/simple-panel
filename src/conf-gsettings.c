@@ -33,11 +33,21 @@ PanelGSettings*  panel_gsettings_create_custom
 
 void plugin_gsettings_remove (PluginGSettings* settings)
 {
-    g_free(settings->config_path_appender);
+    if (!settings) return;
     if (settings->config_settings)
+    {
         g_object_unref(settings->config_settings);
-    g_object_unref(settings->default_settings);
+        settings->config_settings = NULL;
+    }
+    if (settings->default_settings)
+        g_object_unref(settings->default_settings);
+    if (settings->config_path_appender)
+    {
+        g_free(settings->config_path_appender);
+        settings->config_path_appender = NULL;
+    }
     g_free(settings);
+    settings = NULL;
 }
 
 inline static guint compare_uint(gconstpointer a, gconstpointer b)

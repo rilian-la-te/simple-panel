@@ -135,7 +135,10 @@ static void panel_stop_gui(SimplePanel *self)
         /* just close the dialog, it will do all required cleanup */
         gtk_dialog_response(GTK_DIALOG(p->plugin_pref_dialog), GTK_RESPONSE_CLOSE);
     if (p->settings != NULL)
+    {
         panel_gsettings_free(p->settings,FALSE);
+        p->settings = NULL;
+    }
     if (p->initialized)
     {
         gtk_application_remove_window(GTK_APPLICATION(win_grp), GTK_WINDOW(self));
@@ -1350,16 +1353,13 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
     gtk_widget_destroy( dlg );
     if( ok )
     {
+        panel_stop_gui(panel);
+        gtk_widget_destroy(GTK_WIDGET(panel));
         gchar *fname;
-
         /* delete the config file of this panel */
         fname = _user_config_file_name("panels", panel->priv->name);
-        panel_gsettings_free(panel->priv->settings,TRUE);
         g_unlink( fname );
         g_free(fname);
-        gtk_application_remove_window(GTK_APPLICATION(panel->priv->app),GTK_WINDOW(panel));
-        gtk_widget_destroy(GTK_WIDGET(panel));
-        all_panels = gtk_application_get_windows(GTK_APPLICATION(panel->priv->app));
     }
 }
 

@@ -28,11 +28,19 @@ get_applications_menu (void)
  xdg_menu_prefx ? xdg_menu_prefx : "gnome-");
 }
 
-static GMenuModel* load_gmenu_dir(GMenuTreeDirectory* dir,const gchar* tree_name)
+static void gmenu_changed_connect_cb()
+{
+
+}
+
+static GMenu* load_gmenu_dir(GMenuTreeDirectory* dir,const gchar* tree_name, GMenu* dir_menu)
 {
     GMenuTreeDirectory* root;
     if (!root)
+    {
         gmenu_tree_new(tree_name!=NULL ? tree_name : get_applications_menu(),GMENU_TREE_FLAGS_SORT_DISPLAY_NAME);
+        dir_menu = g_menu_new();
+    }
     gmenu_tree_load_sync(GMENU_TREE(root),NULL);
 
 }
