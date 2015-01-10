@@ -46,6 +46,12 @@ enum{
     N_COLS
 };
 
+
+#define	panel_signal_handlers_disconnect_by_func_only(instance, func)						\
+    g_signal_handlers_disconnect_matched ((instance),								\
+                      (GSignalMatchType) (G_SIGNAL_MATCH_FUNC),	\
+                      0, 0, NULL, (func), NULL)
+
 extern GSList* all_panels;
 extern int config;
 static void update_opt_menu(GtkWidget *w, int ind);
@@ -53,23 +59,6 @@ static void modify_plugin( GtkTreeView* view );
 static gboolean on_entry_focus_out_old( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean on_entry_focus_out( GtkWidget* edit, GdkEventFocus *evt, gpointer user_data );
 static gboolean _on_entry_focus_out_do_work(GtkWidget* edit, gpointer user_data);
-
-static void
-response_event(GtkDialog *widget, gint arg1, Panel* panel )
-{
-    switch (arg1) {
-    /* FIXME: what will happen if the user exit lxpanel without
-              close this config dialog?
-              Then the config won't be save, I guess. */
-    case GTK_RESPONSE_DELETE_EVENT:
-    case GTK_RESPONSE_CLOSE:
-    case GTK_RESPONSE_NONE:
-        /* NOTE: NO BREAK HERE*/
-        gtk_widget_destroy(GTK_WIDGET(widget));
-        break;
-    }
-    return;
-}
 
 /* If there is a panel on this edge and it is not the panel being configured, set the edge unavailable. */
 gboolean panel_edge_available(Panel* p, int edge, gint monitor)
@@ -144,7 +133,7 @@ static void alignment_changed(SimplePanel* panel, GParamSpec* spec, GtkWidget* w
     gtk_button_set_label(GTK_BUTTON(w),str);
 }
 
-void simple_panel_notify_scale_cb(SimplePanel* panel, GParamSpec* param, GtkScaleButton* scale)
+static void simple_panel_notify_scale_cb(SimplePanel* panel, GParamSpec* param, GtkScaleButton* scale)
 {
     const gchar* name = g_param_spec_get_name(param);
     const gchar* retn;
@@ -163,6 +152,45 @@ void simple_panel_notify_scale_cb(SimplePanel* panel, GParamSpec* param, GtkScal
     g_free(str);
 }
 
+static void simple_panel_notify_color_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
+{
+    gtk_widget_set_sensitive(w,panel->priv->background==PANEL_BACKGROUND_CUSTOM_COLOR);
+}
+
+static void simple_panel_notify_image_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
+{
+    gtk_widget_set_sensitive(w,panel->priv->background==PANEL_BACKGROUND_CUSTOM_IMAGE);
+}
+
+static void simple_panel_notify_align_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
+{
+    gtk_widget_set_sensitive(w,panel->priv->align!=PANEL_ALIGN_CENTER);
+}
+
+static void
+response_event(GtkDialog *widget, gint arg1, SimplePanel* panel )
+{
+    switch (arg1) {
+    /* FIXME: what will happen if the user exit lxpanel without
+              close this config dialog?
+              Then the config won't be save, I guess. */
+    case GTK_RESPONSE_DELETE_EVENT:
+    case GTK_RESPONSE_CLOSE:
+    case GTK_RESPONSE_NONE:
+        /* NOTE: NO BREAK HERE*/
+        panel_signal_handlers_disconnect_by_func_only(panel,simple_panel_notify_scale_cb);
+        panel_signal_handlers_disconnect_by_func_only(panel,simple_panel_notify_align_cb);
+        panel_signal_handlers_disconnect_by_func_only(panel,simple_panel_notify_color_cb);
+        panel_signal_handlers_disconnect_by_func_only(panel,simple_panel_notify_image_cb);
+        panel_signal_handlers_disconnect_by_func_only(panel,edge_changed);
+        panel_signal_handlers_disconnect_by_func_only(panel,alignment_changed);
+        gtk_widget_destroy(GTK_WIDGET(widget));
+        break;
+    }
+    return;
+}
+
+
 static void set_strut_type( GtkWidget *item, SimplePanel* panel )
 {
     GtkWidget* spin;
@@ -179,29 +207,29 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
     spin = (GtkWidget*)g_object_get_data(G_OBJECT(item), "scale-width" );
     t = (widthtype != PANEL_SIZE_DYNAMIC);
     gtk_widget_set_sensitive( spin, t );
+    g_settings_set_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_SIZE_TYPE,widthtype);
     switch (widthtype)
     {
     case PANEL_SIZE_PERCENT:
         simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,100);
-        gtk_scale_button_set_value( GTK_SCALE_BUTTON(spin), 100 );
+        g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,100);
         break;
     case PANEL_SIZE_PIXEL:
         if ((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM))
         {
             simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_width());
-            gtk_scale_button_set_value( GTK_SCALE_BUTTON(spin), gdk_screen_width() );
+            g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,gdk_screen_width());
         }
         else
         {
             simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_height());
-            gtk_scale_button_set_value( GTK_SCALE_BUTTON(spin), gdk_screen_height() );
+            g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,gdk_screen_height());
         }
         break;
     case PANEL_SIZE_DYNAMIC:
         break;
     default: ;
     }
-    g_settings_set_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_SIZE_TYPE,widthtype);
 }
 
 /* FIXME: heighttype and spacing and RoundCorners */
@@ -684,7 +712,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     Panel *p = panel->priv;
     GtkBuilder* builder;
     GtkWidget *w, *w3 , *tint_clr;
-    GtkWidget *mon_control, *edge_control, *align_control;
+    GtkWidget *mon_control;
     GdkScreen *screen;
     gint monitors, back_type;
     GMenu* menu;
@@ -706,7 +734,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
 
     p->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "panel-pref" );
     gtk_window_set_transient_for(GTK_WINDOW(p->pref_dialog), GTK_WINDOW(panel));
-    g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), p);
+    g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), panel);
     g_object_add_weak_pointer( G_OBJECT(p->pref_dialog), (gpointer) &p->pref_dialog );
     gtk_window_set_position( GTK_WINDOW(p->pref_dialog), GTK_WIN_POS_CENTER );
     panel_apply_icon(GTK_WINDOW(p->pref_dialog));
@@ -755,10 +783,11 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     /* margin */
     p->margin_control = w = (GtkWidget*)gtk_builder_get_object( builder, "margin" );
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_MARGIN,w,"value",G_SETTINGS_BIND_DEFAULT);
+    gtk_widget_set_sensitive(w,p->align != PANEL_ALIGN_CENTER);
+    g_signal_connect(panel, "notify::"PANEL_PROP_ALIGNMENT,G_CALLBACK(simple_panel_notify_align_cb),w);
 
     /* size */
     p->width_control = w = (GtkWidget*)gtk_builder_get_object( builder, "scale-width" );
-    gtk_widget_set_sensitive( w, p->widthtype != PANEL_SIZE_DYNAMIC );
     gint upper = 0;
     if( p->widthtype == PANEL_SIZE_PERCENT)
         upper = 100;
@@ -768,6 +797,8 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->width );
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_WIDTH,w,"value",G_SETTINGS_BIND_DEFAULT);
     g_signal_connect(panel, "notify::"PANEL_PROP_WIDTH, G_CALLBACK(simple_panel_notify_scale_cb), w );
+    gtk_widget_set_sensitive( w, p->widthtype != PANEL_SIZE_DYNAMIC );
+
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "width_unit" );
     update_opt_menu( w, p->widthtype - 1 );
@@ -799,6 +830,8 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
         tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
         gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
         g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
+        gtk_widget_set_sensitive(tint_clr,p->background == PANEL_BACKGROUND_CUSTOM_COLOR);
+        g_signal_connect(panel, "notify::"PANEL_PROP_BACKGROUND_TYPE,G_CALLBACK(simple_panel_notify_color_cb),w);
 
         w = (GtkWidget*)gtk_builder_get_object( builder, "img_file" );
         if (p->background_file != NULL)
@@ -808,6 +841,8 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), gtk_icon_info_get_filename(info));
             g_object_unref(info);
         }
+        gtk_widget_set_sensitive(w,p->background == PANEL_BACKGROUND_CUSTOM_IMAGE);
+        g_signal_connect(panel, "notify::"PANEL_PROP_BACKGROUND_TYPE,G_CALLBACK(simple_panel_notify_image_cb),w);
         g_signal_connect( w, "file-set", G_CALLBACK (background_changed), p);
     }
     /* font color */

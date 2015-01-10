@@ -852,7 +852,7 @@ read_menu(menup *m, GSettings *s)
 
     fname = NULL;
     name = NULL;
-    name = g_settings_get_string(s, MENU_KEY_NAME);
+    g_settings_get(s, MENU_KEY_NAME,"ms",name);
     fname = g_settings_get_string(s, MENU_KEY_ICON);
     char* color_str = g_settings_get_string(s,MENU_KEY_COLOR);
     gdk_rgba_parse(&color,color_str);
@@ -937,7 +937,7 @@ static gboolean apply_config(gpointer user_data)
         simple_panel_button_set_icon(m->img, m->fname,-1);
     }
     g_settings_set_string(m->settings, MENU_KEY_ICON, m->fname);
-    g_settings_set_string(m->settings, MENU_KEY_NAME, m->caption);
+    g_settings_set(m->settings, MENU_KEY_NAME,"ms", m->caption);
     return FALSE;
 }
 

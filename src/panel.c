@@ -166,11 +166,15 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
 {
     SimplePanel *panel = LXPANEL(widget);
     Panel *p = panel->priv;
-    gint x, y;
+    gint x, y, w;
     GTK_WIDGET_CLASS(lxpanel_parent_class)->size_allocate(widget, a);
     gtk_widget_set_allocation(widget,a);
-    if (p->widthtype == PANEL_SIZE_DYNAMIC)
-        p->width = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->width : a->height;
+    if (p->widthtype == PANEL_SIZE_DYNAMIC && p->box)
+    {
+        (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? gtk_widget_get_preferred_width (p->box,NULL, &w) : gtk_widget_get_preferred_height (p->box,NULL, &w);
+        if (w!=p->width)
+            g_settings_set_int(p->settings->toplevel_settings, PANEL_PROP_WIDTH,w);
+    }
     if (p->heighttype == PANEL_SIZE_DYNAMIC)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->height : a->width;
 
