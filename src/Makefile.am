@@ -31,7 +31,7 @@ SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	app.h \
 	app-actions.h \
         app-misc.h \
-        gmenu-maker.h
+        menu-maker.h
 
 SIMPLE_PANEL_ENUM_FILES = $(SIMPLE_PANEL_HEADER_FILES)
 SIMPLE_PANEL_ENUM_FILES += $(SIMPLE_PANEL_NOINST_HEADER_FILES)
@@ -50,6 +50,7 @@ libsimplepanel_la_CPPFLAGS = $(simple_panel_CPPFLAGS)
 libsimplepanel_la_SOURCES = \
 	misc.c \
 	css.c \
+	menu-maker.c \
 	configurator.c \
 	dbg.c \
 	icon-grid.c \

@@ -18,29 +18,48 @@
  */
 
 #define GMENU_I_KNOW_THIS_IS_UNSTABLE
-#include "gmenu-maker.h"
 
-gchar *
-get_applications_menu (void)
+#include "gmenu-maker.h"
+#include <glib.h>
+#include <gio/gdesktopappinfo.h>
+#include <gnome-menus-3.0/gmenu-tree.h>
+#include <glib/gi18n.h>
+#include <glib/gstdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#define LAUNCH_ACTION "app.launch-id('%s')"
+
+static gchar *
+get_applications_menu_name (void)
 {
  const gchar *xdg_menu_prefx = g_getenv ("XDG_MENU_PREFIX");
  return g_strdup_printf ("%sapplications.menu",
  xdg_menu_prefx ? xdg_menu_prefx : "gnome-");
 }
 
+
 static void gmenu_changed_connect_cb()
 {
 
 }
 
-static GMenu* load_gmenu_dir(GMenuTreeDirectory* dir,const gchar* tree_name, GMenu* dir_menu)
+static GMenu* make_application_menumodel_rec(GMenuTreeDirectory* dir,const gchar* tree_name)
 {
     GMenuTreeDirectory* root;
+    GMenuTree* tree;
+    GMenuTreeItemType* iter, type;
+    GMenu* dir_menu;
     if (!root)
     {
-        gmenu_tree_new(tree_name!=NULL ? tree_name : get_applications_menu(),GMENU_TREE_FLAGS_SORT_DISPLAY_NAME);
+        tree = gmenu_tree_new(tree_name!=NULL ? tree_name : get_applications_menu_name(),GMENU_TREE_FLAGS_SORT_DISPLAY_NAME);
         dir_menu = g_menu_new();
     }
     gmenu_tree_load_sync(GMENU_TREE(root),NULL);
-
+    root = (dir) ? dir : gmenu_tree_get_root_directory(tree);
 }

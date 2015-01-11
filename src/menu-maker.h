@@ -24,6 +24,9 @@
 
 G_BEGIN_DECLS
 
+GMenu* g_menu_from_system ();
+GMenuModel* do_applications_menu();
+
 G_END_DECLS
 
 #endif // GMENUMAKER_H

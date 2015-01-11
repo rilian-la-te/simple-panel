@@ -878,6 +878,8 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
         w = (GtkWidget*)gtk_builder_get_object( builder, "plugin_desc" );
         init_plugin_list( panel, GTK_TREE_VIEW(plugin_list), w );
     }
+    w = (GtkWidget*)gtk_builder_get_object( builder, "prefs" );
+    gtk_stack_set_visible_child_name(GTK_STACK(w),sel_page);
     g_object_unref(builder);
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"conf",G_ACTION_GROUP(configurator));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));

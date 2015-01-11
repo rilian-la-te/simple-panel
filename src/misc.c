@@ -19,6 +19,8 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
+#include <gio/gio.h>
+#include <gio/gdesktopappinfo.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -704,6 +706,15 @@ gboolean lxpanel_launch_app(const char* exec, GList* files, gboolean in_terminal
     return (error == NULL);
 }
 
+void activate_menu_launch_id (GSimpleAction* action,GVariant* param, gpointer user_data)
+{
+    const gchar* id = g_variant_get_string(param,NULL);
+    GDesktopAppInfo *info = g_desktop_app_info_new(id);
+    g_app_info_launch (G_APP_INFO (info), NULL, NULL, NULL);
+    g_object_unref(info);
+}
+
+
 void start_panels_from_dir(GtkApplication* app,const char *panel_dir)
 {
     GDir* dir = g_dir_open( panel_dir, 0, NULL );
@@ -764,6 +775,130 @@ void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,c
 void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop)
 {
     g_settings_bind(settings,prop,obj,prop,G_SETTINGS_BIND_GET | G_SETTINGS_BIND_SET | G_SETTINGS_BIND_DEFAULT);
+}
+
+static void
+indent_string (GString *string,
+               gint     indent)
+{
+    while (indent--)
+        g_string_append_c (string, ' ');
+}
+
+static GString *
+g_menu_print_string (GString    *string,
+                            GMenuModel *model,
+                            gint        indent,
+                            gint        tabstop)
+{
+    gboolean need_nl = FALSE;
+    gint i, n;
+
+    if G_UNLIKELY (string == NULL)
+            string = g_string_new (NULL);
+
+    n = g_menu_model_get_n_items (model);
+
+    for (i = 0; i < n; i++)
+    {
+        GMenuAttributeIter *attr_iter;
+        GMenuLinkIter *link_iter;
+        GString *contents;
+        GString *attrs;
+
+        attr_iter = g_menu_model_iterate_item_attributes (model, i);
+        link_iter = g_menu_model_iterate_item_links (model, i);
+        contents = g_string_new (NULL);
+        attrs = g_string_new (NULL);
+
+        while (g_menu_attribute_iter_next (attr_iter))
+        {
+            const char *name = g_menu_attribute_iter_get_name (attr_iter);
+            GVariant *value = g_menu_attribute_iter_get_value (attr_iter);
+
+            if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
+            {
+                gchar *str;
+                str = g_markup_printf_escaped (" %s='%s'", name, g_variant_get_string (value, NULL));
+                g_string_append (attrs, str);
+                g_free (str);
+            }
+
+            else
+            {
+                gchar *printed;
+                gchar *str;
+                const gchar *type;
+
+                printed = g_variant_print (value, TRUE);
+                type = g_variant_type_peek_string (g_variant_get_type (value));
+                str = g_markup_printf_escaped ("<attribute name='%s' type='%s'>%s</attribute>\n", name, type, printed);
+                indent_string (contents, indent + tabstop);
+                g_string_append (contents, str);
+                g_free (printed);
+                g_free (str);
+            }
+
+            g_variant_unref (value);
+        }
+        g_object_unref (attr_iter);
+
+        while (g_menu_link_iter_next (link_iter))
+        {
+            const gchar *name = g_menu_link_iter_get_name (link_iter);
+            GMenuModel *menu = g_menu_link_iter_get_value (link_iter);
+            gchar *str;
+
+            if (contents->str[0])
+                g_string_append_c (contents, '\n');
+
+            str = g_markup_printf_escaped ("<link name='%s'>\n", name);
+            indent_string (contents, indent + tabstop);
+            g_string_append (contents, str);
+            g_free (str);
+
+            g_menu_print_string (contents, menu, indent + 2 * tabstop, tabstop);
+
+            indent_string (contents, indent + tabstop);
+            g_string_append (contents, "</link>\n");
+            g_object_unref (menu);
+        }
+        g_object_unref (link_iter);
+
+        if (contents->str[0])
+        {
+            indent_string (string, indent);
+            g_string_append_printf (string, "<item%s>\n", attrs->str);
+            g_string_append (string, contents->str);
+            indent_string (string, indent);
+            g_string_append (string, "</item>\n");
+            need_nl = TRUE;
+        }
+
+        else
+        {
+            if (need_nl)
+                g_string_append_c (string, '\n');
+
+            indent_string (string, indent);
+            g_string_append_printf (string, "<item%s/>\n", attrs->str);
+            need_nl = FALSE;
+        }
+
+        g_string_free (contents, TRUE);
+        g_string_free (attrs, TRUE);
+    }
+
+    return string;
+}
+
+gchar* g_menu_make_xml (GMenuModel *model)
+{
+    GString *string;
+    string = g_string_new ("<interface>\n<menu>\n");
+    g_menu_print_string (string, model, 2, 2);
+    g_string_append(string,"</menu>\n</interface>\n");
+    return g_string_free (string, FALSE);
 }
 
 /* vim: set sw=4 et sts=4 : */
