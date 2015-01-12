@@ -34,6 +34,7 @@ PLUGINS_SOURCES = \
 	dirmenu.c \
 	separator.c \
         space.c \
+	menumodel.c \
         $(MENU_SOURCES)
 
 libbuiltin_plugins_a_SOURCES = \

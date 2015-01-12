@@ -49,4 +49,21 @@
       <default>[("system","","",""),("separator","","",""),("item","run","application-x-executable","command"),("separator","","",""),("item","logout","gnome-logout","command"),("item","shutdown","gnome-shutdown","command")]</default>
     </key>
   </schema>
+  <schema id="org.simple.panel.toplevel.menumodel">
+    <key name="menu-name" type="ms">
+      <default>nothing</default>
+    </key>
+    <key name="icon-name" type="s">
+      <default>'start-here-symbolic'</default>
+    </key>
+    <key name="is-system-menu" type="b">
+      <default>true</default>
+    </key>
+    <key name="menu-type" enum="org.simple.panel.MenuTypeEnum">
+      <default>'bar'</default>
+    </key>
+    <key name="model-file" type="ms">
+      <default>nothing</default>
+    </key>
+  </schema>
 </schemalist>

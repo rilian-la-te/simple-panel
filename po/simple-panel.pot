@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-12-30 17:35+0600\n"
+"POT-Creation-Date: 2015-01-12 20:29+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,7 +28,7 @@ msgid "SimplePanel"
 msgstr ""
 
 #: ../src/app-actions.c:74
-msgid "Copyright (C) 2008-2014"
+msgid "Copyright (C) 2008-2015"
 msgstr ""
 
 #: ../src/app-actions.c:75
@@ -43,102 +43,98 @@ msgstr ""
 msgid "Shutdown command is not set"
 msgstr ""
 
-#: ../src/app.c:77
+#: ../src/app.c:81
 msgid "Print version and exit"
 msgstr ""
 
-#: ../src/app.c:78
+#: ../src/app.c:82
 msgid "Use specified profile"
 msgstr ""
 
-#: ../src/app.c:78
+#: ../src/app.c:82
 msgid "profile"
 msgstr ""
 
-#: ../src/app.c:79
+#: ../src/app.c:83
 msgid "Run command on already opened panel"
 msgstr ""
 
-#: ../src/app.c:79
+#: ../src/app.c:83
 msgid "cmd"
 msgstr ""
 
-#: ../src/app.c:193
+#: ../src/app.c:246
 #, c-format
 msgid "%s - Version %s\n"
 msgstr ""
 
-#: ../src/app.c:216
+#: ../src/app.c:269
 #, c-format
 msgid "%s: invalid command - %s. Doing nothing. Valid commands: %s\n"
 msgstr ""
 
-#: ../src/configurator.c:95
+#: ../src/configurator.c:83
 msgid "Monitor: All"
 msgstr ""
 
-#: ../src/configurator.c:95
+#: ../src/configurator.c:83
 #, c-format
 msgid "Monitor: %d"
 msgstr ""
 
-#: ../src/configurator.c:114
+#: ../src/configurator.c:102
 msgid "Edge: Bottom"
 msgstr ""
 
-#: ../src/configurator.c:117
+#: ../src/configurator.c:105
 msgid "Edge: Top"
 msgstr ""
 
-#: ../src/configurator.c:120
+#: ../src/configurator.c:108
 msgid "Edge: Left"
 msgstr ""
 
-#: ../src/configurator.c:123
+#: ../src/configurator.c:111
 msgid "Edge: Right"
 msgstr ""
 
-#: ../src/configurator.c:136
+#: ../src/configurator.c:124
 msgid "Align: Start"
 msgstr ""
 
-#: ../src/configurator.c:139
+#: ../src/configurator.c:127
 msgid "Align: Center"
 msgstr ""
 
-#: ../src/configurator.c:142
+#: ../src/configurator.c:130
 msgid "Align: End"
 msgstr ""
 
-#: ../src/configurator.c:338
+#: ../src/configurator.c:346
 msgid "Currently loaded plugins"
 msgstr ""
 
-#: ../src/configurator.c:347
+#: ../src/configurator.c:355
 msgid "Stretch"
 msgstr ""
 
-#: ../src/configurator.c:469
+#: ../src/configurator.c:477
 msgid "Available plugins"
 msgstr ""
 
-#: ../src/configurator.c:787
+#: ../src/configurator.c:758
 msgid "All"
 msgstr ""
 
-#: ../src/configurator.c:946
-msgid "Application Widget Style"
-msgstr ""
-
-#: ../src/configurator.c:1019
+#: ../src/configurator.c:956
 msgid "Select a directory"
 msgstr ""
 
-#: ../src/configurator.c:1019 ../src/configurator.c:1135
+#: ../src/configurator.c:956 ../src/configurator.c:1072
 msgid "Select a file"
 msgstr ""
 
-#: ../src/configurator.c:1022 ../src/gtk-run.c:334
+#: ../src/configurator.c:959 ../src/gtk-run.c:334
 #: ../plugins/xkb/xkb-plugin.c:598 ../plugins/xkb/xkb-plugin.c:721
 #: ../plugins/xkb/xkb-plugin.c:893 ../plugins/netstat/passwd_gui.c:91
 #: ../plugins/weather/weatherwidget.c:797
@@ -148,7 +144,7 @@ msgstr ""
 msgid "_Cancel"
 msgstr ""
 
-#: ../src/configurator.c:1023 ../plugins/xkb/xkb-plugin.c:599
+#: ../src/configurator.c:960 ../plugins/xkb/xkb-plugin.c:599
 #: ../plugins/xkb/xkb-plugin.c:722 ../plugins/xkb/xkb-plugin.c:894
 #: ../plugins/netstat/passwd_gui.c:90 ../plugins/weather/weatherwidget.c:796
 #: ../plugins/weather/weatherwidget.c:1137
@@ -157,55 +153,59 @@ msgstr ""
 msgid "_OK"
 msgstr ""
 
-#: ../src/configurator.c:1086 ../plugins/xkb/xkb-plugin.c:1218
+#: ../src/configurator.c:1023 ../plugins/xkb/xkb-plugin.c:1218
 msgid "_Close"
 msgstr ""
 
-#: ../src/configurator.c:1168
+#: ../src/configurator.c:1105
 msgid "_Browse"
 msgstr ""
 
-#: ../src/panel.c:1322
+#: ../src/panel.c:1328
 msgid "There is no room for another panel. All the edges are taken."
 msgstr ""
 
-#: ../src/panel.c:1347
+#: ../src/panel.c:1353
 msgid ""
 "Really delete this panel?\n"
 "<b>Warning: This can not be recovered.</b>"
 msgstr ""
 
-#: ../src/panel.c:1349
+#: ../src/panel.c:1355
 msgid "Confirm"
 msgstr ""
 
-#: ../src/panel.c:1407
+#: ../src/panel.c:1410
 #, c-format
 msgid "\"%s\" Settings"
 msgstr ""
 
-#: ../src/panel.c:1412
+#: ../src/panel.c:1415
 #, c-format
 msgid "Remove \"%s\" From Panel"
 msgstr ""
 
-#: ../src/panel.c:1426
+#: ../src/panel.c:1429
 msgid "Add / Remove Panel Items"
 msgstr ""
 
-#: ../src/panel.c:1430
+#: ../src/panel.c:1433
 msgid "Panel Settings"
 msgstr ""
 
-#: ../src/panel.c:1431
+#: ../src/panel.c:1434
 msgid "Create New Panel"
 msgstr ""
 
-#: ../src/panel.c:1437
+#: ../src/panel.c:1440
 msgid "Delete This Panel"
 msgstr ""
 
-#: ../src/panel.c:1441
+#: ../src/panel.c:1444
+msgid "Application Settings"
+msgstr ""
+
+#: ../src/panel.c:1445
 msgid "About"
 msgstr ""
 
@@ -223,7 +223,7 @@ msgid "_Run"
 msgstr ""
 
 #. vim: set sw=4 et sts=4 ts=4 :
-#: ../data/ui/launchtaskbar.glade.h:1 ../plugins/X/launchtaskbar.c:3507
+#: ../data/ui/launchtaskbar.glade.h:1 ../plugins/X/launchtaskbar.c:3505
 msgid "Application Launch and Task Bar"
 msgstr ""
 
@@ -407,153 +407,153 @@ msgid "_End"
 msgstr ""
 
 #: ../data/ui/panel-pref.glade.h:8
-msgid "GTK Window"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:9
-msgid "Gnome Panel"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:10
-msgid "Custom Color"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:11 ../plugins/xkb/xkb-plugin.c:1434
-msgid "Custom Image"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:12
 msgid "Dynamic"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:13
+#: ../data/ui/panel-pref.glade.h:9
 msgid "Pixels"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:14
+#: ../data/ui/panel-pref.glade.h:10
 msgid "Percent"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:15
-msgid "Use _dark theme"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:16
-msgid "Use _custom CSS"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:17
+#: ../data/ui/panel-pref.glade.h:11
 msgid "Normal"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:19
+#: ../data/ui/panel-pref.glade.h:12
+msgid "Gnome Panel"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:13
+msgid "Custom Color"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:14 ../plugins/xkb/xkb-plugin.c:1434
+msgid "Custom Image"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:16
 #, no-c-format
 msgid "% Percent"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:20
+#: ../data/ui/panel-pref.glade.h:17
 msgid "Margin:"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:21
+#: ../data/ui/panel-pref.glade.h:18
 msgid "1"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:22
+#: ../data/ui/panel-pref.glade.h:19
 msgid "<b>Position</b>"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:23
+#: ../data/ui/panel-pref.glade.h:20
 msgid "x"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:24
+#: ../data/ui/panel-pref.glade.h:21
 msgid "<b>Size</b>"
 msgstr ""
 
+#: ../data/ui/panel-pref.glade.h:22
+msgid "Minimize panel when not in use with size: "
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:23
+msgid "Autohide"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:24
+msgid "Make window managers treat the panel as dock"
+msgstr ""
+
 #: ../data/ui/panel-pref.glade.h:25
-msgid "Select an image file"
+msgid "Reserve space, and not covered by maximized windows"
 msgstr ""
 
 #: ../data/ui/panel-pref.glade.h:26
-msgid "<b>Background</b>"
+msgid "<b>Properties</b>"
 msgstr ""
 
 #: ../data/ui/panel-pref.glade.h:27
+msgid "Geometry"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:28
+msgid "GTK Window"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:29
 msgid "Custom color"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:28 ../plugins/space.c:84
+#: ../data/ui/panel-pref.glade.h:30
+msgid "Custom image"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:31
+msgid "Select an image file"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:32
+msgid "<b>Background</b>"
+msgstr ""
+
+#: ../data/ui/panel-pref.glade.h:33 ../plugins/space.c:84
 #: ../plugins/batt/batt.c:659
 msgid "Size"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:29
+#: ../data/ui/panel-pref.glade.h:34
 msgid "10"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:30
+#: ../data/ui/panel-pref.glade.h:35
 msgid "<b>Font</b>"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:31
-msgid "Minimize panel when not in use with size: "
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:32
-msgid "Autohide"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:33
+#: ../data/ui/panel-pref.glade.h:36
 msgid "Appearance"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:34
+#: ../data/ui/panel-pref.glade.h:37
 msgid "Plugins"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:35
-msgid "Choose File Manager"
+#: ../data/ui/app-pref.glade.h:1
+msgid "Terminal..."
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:36
-msgid "Terminal Emulator:"
+#: ../data/ui/app-pref.glade.h:2
+msgid "Logout manager..."
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:37
-msgid "Logout Command:"
+#: ../data/ui/app-pref.glade.h:3
+msgid "Shutdown application..."
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:38
-msgid "File Manager:"
+#: ../data/ui/app-pref.glade.h:4
+msgid "Preferred Applications:"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:39
-msgid "Preferred Applications"
+#: ../data/ui/app-pref.glade.h:5
+msgid "Use dark theme"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:40
-msgid "Make window managers treat the panel as dock"
+#: ../data/ui/app-pref.glade.h:6
+msgid "Use custom CSS"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:41
-msgid "Reserve space, and not covered by maximized windows"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:42
-msgid "<b>Properties</b>"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:43
+#: ../data/ui/app-pref.glade.h:7
 msgid "Select a CSS File"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:44
+#: ../data/ui/app-pref.glade.h:8
 msgid "Widget Style"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:45
-msgid "Advanced"
 msgstr ""
 
 #: ../plugins/cpu/cpu.c:282
@@ -580,86 +580,86 @@ msgstr ""
 msgid "Display workspace number, by cmeury@users.sf.net"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:1385 ../plugins/X/launchtaskbar.c:3475
+#: ../plugins/X/launchtaskbar.c:1383 ../plugins/X/launchtaskbar.c:3473
 msgid "Application Launch Bar"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:1388 ../plugins/X/launchtaskbar.c:3485
+#: ../plugins/X/launchtaskbar.c:1386 ../plugins/X/launchtaskbar.c:3483
 msgid "Task Bar (Window List)"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:2465
+#: ../plugins/X/launchtaskbar.c:2463
 msgid "_Close all windows"
 msgstr ""
 
 #. Add Raise menu item.
-#: ../plugins/X/launchtaskbar.c:3333
+#: ../plugins/X/launchtaskbar.c:3331
 msgid "_Raise"
 msgstr ""
 
 #. Add Restore menu item.
-#: ../plugins/X/launchtaskbar.c:3338
+#: ../plugins/X/launchtaskbar.c:3336
 msgid "R_estore"
 msgstr ""
 
 #. Add Maximize menu item.
-#: ../plugins/X/launchtaskbar.c:3343
+#: ../plugins/X/launchtaskbar.c:3341
 msgid "Ma_ximize"
 msgstr ""
 
 #. Add Iconify menu item.
-#: ../plugins/X/launchtaskbar.c:3348
+#: ../plugins/X/launchtaskbar.c:3346
 msgid "Ico_nify"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3367
+#: ../plugins/X/launchtaskbar.c:3365
 #, c-format
 msgid "Workspace _%d"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3372
+#: ../plugins/X/launchtaskbar.c:3370
 #, c-format
 msgid "Workspace %d"
 msgstr ""
 
 #. Add "move to all workspaces" item.  This causes the window to be visible no matter what desktop is active.
-#: ../plugins/X/launchtaskbar.c:3388
+#: ../plugins/X/launchtaskbar.c:3386
 msgid "_All workspaces"
 msgstr ""
 
 #. Add Move to Workspace menu item as a submenu.
-#: ../plugins/X/launchtaskbar.c:3394
+#: ../plugins/X/launchtaskbar.c:3392
 msgid "_Move to Workspace"
 msgstr ""
 
 #. Add Close menu item.  By popular demand, we place this menu item closest to the cursor.
-#: ../plugins/X/launchtaskbar.c:3400
+#: ../plugins/X/launchtaskbar.c:3398
 msgid "_Close Window"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3402
+#: ../plugins/X/launchtaskbar.c:3400
 msgid "A_dd to Launcher"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3403
+#: ../plugins/X/launchtaskbar.c:3401
 msgid "Rem_ove from Launcher"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3404
+#: ../plugins/X/launchtaskbar.c:3402
 msgid "_New Instance"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3476
+#: ../plugins/X/launchtaskbar.c:3474
 msgid "Bar with buttons to launch application"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3486
+#: ../plugins/X/launchtaskbar.c:3484
 msgid ""
 "Taskbar shows all opened windows and allow to iconify them, shade or get "
 "focus"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3508
+#: ../plugins/X/launchtaskbar.c:3506
 msgid "Bar with buttons to launch application and/or show all opened windows"
 msgstr ""
 

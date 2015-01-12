@@ -435,6 +435,10 @@ void init_plugin_class_list(void)
 #endif
 #endif
 
+#ifdef STATIC_MENUMODEL
+    REGISTER_STATIC_MODULE(menumodel);
+#endif
+
 #ifdef STATIC_SPACE
     REGISTER_STATIC_MODULE(space);
 #endif
