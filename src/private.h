@@ -70,9 +70,6 @@ typedef enum {
 #define PANEL_AUTOHIDE_SIZE           2     /* Default autohide size */
 #define GSETTINGS_PREFIX              "conf"
 
-/* to check if we are in LXDE */
-extern gboolean is_in_lxde;
-
 /* Context of a panel on a given edge. */
 struct _Panel {
     char* name;
@@ -124,8 +121,6 @@ struct _Panel {
     GtkWidget* plugin_pref_dialog;	/* Plugin preference dialog */
     GtkWidget* pref_dialog;		/* preference dialog */
     GtkWidget* margin_control;		/* Margin control in preference dialog */
-    GtkWidget* alignment_left_label;	/* Label of alignment: left control */
-    GtkWidget* alignment_right_label;	/* Label of alignment: right control */
     GtkWidget* height_control;		/* Height control in preference dialog */
     GtkWidget* width_control;		/* Width control in preference dialog */
 
@@ -135,22 +130,13 @@ struct _Panel {
     guint mouse_timeout;
 };
 
-typedef struct {
-    char *name;
-    char *disp_name;
-    void (*cmd)(void);
-} Command;
-
-#define FBPANEL_WIN(win)  gdk_window_lookup(win)
-
-//void _queue_panel_calculate_size(Panel *panel);
-
 /* FIXME: optional definitions */
 #define STATIC_SEPARATOR
 #define STATIC_LAUNCHBAR
 #define STATIC_DCLOCK
 #define STATIC_DIRMENU
 #define STATIC_MENU
+#define STATIC_MENUMODEL
 #define STATIC_SPACE
 #define STATIC_ICONS
 
@@ -187,29 +173,21 @@ void _panel_queue_update_background(SimplePanel *p);
 void panel_configure(SimplePanel* p, const gchar *sel_page);
 gboolean panel_edge_available(Panel* p, int edge, gint monitor);
 gboolean _panel_edge_can_strut(SimplePanel *panel, int edge, gint monitor, gulong *size);
-void restart(void);
-void logout(void);
-void gtk_run(void);
 
 /* -----------------------------------------------------------------------------
  *   Deprecated declarations. Kept for compatibility with old code plugins.
  *   Should be removed and appropriate code cleaned on some of next releases. */
 
-extern Command commands[];
-
 /* Extracted from panel.h */
 extern int verbose;
 
 extern void panel_destroy(Panel *p);
-extern void panel_adjust_geometry_terminology(Panel *p);
-extern void panel_determine_background_pixmap(Panel * p, GtkWidget * widget, GdkWindow * window);
 extern void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,
                                   gboolean bold, float custom_size_factor,
                                   gboolean custom_color);
 extern void panel_establish_autohide(Panel *p);
 extern void panel_image_set_from_file(Panel * p, GtkWidget * image, const char * file);
 extern gboolean panel_image_set_icon_theme(Panel * p, GtkWidget * image, const gchar * icon);
-extern void panel_set_wm_strut(Panel *p);
 extern void panel_set_dock_type(SimplePanel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
 extern SimplePanel* panel_load(GtkApplication *app, const char* config_file, const char* config_name);
@@ -223,21 +201,7 @@ extern const char* lxpanel_get_file_manager();
 /* Extracted from misc.h */
 typedef struct _Plugin Plugin;
 
-enum { LINE_NONE, LINE_BLOCK_START, LINE_BLOCK_END, LINE_VAR };
-
-typedef struct {
-    int num, len, type;
-    gchar str[256];
-    gchar *t[3];
-} line;
-
 void calculate_position(SimplePanel *np);
-
-extern int lxpanel_get_line(char **fp, line *s);
-extern int lxpanel_put_line(FILE* fp, const char* format, ...);
-#define lxpanel_put_str(fp, name, val) (G_UNLIKELY( !(val) || !*(val) )) ? 0 : lxpanel_put_line(fp, "%s=%s", name, val)
-#define lxpanel_put_bool(fp, name, val) lxpanel_put_line(fp, "%s=%c", name, (val) ? '1' : '0')
-#define lxpanel_put_int(fp, name, val) lxpanel_put_line(fp, "%s=%d", name, val)
 
 char* translate_exec_to_cmd( const char* exec, const char* icon,
                              const char* title, const char* fpath );

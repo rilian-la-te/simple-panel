@@ -161,7 +161,7 @@ expand_tilda(const gchar *file)
 /* DestroyNotify handler for image data in _gtk_image_new_from_file_scaled. */
 static void img_data_free(ImgData * data)
 {
-    if (data->icon != NULL)
+    if (data->icon != NULL && G_IS_OBJECT(data->icon))
         g_object_unref(data->icon);
     g_signal_handler_disconnect(gtk_icon_theme_get_default(),data->theme_changed_handler);
     if (data->panel != NULL)
@@ -368,200 +368,6 @@ get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name)
     RET();
 }
 
-char* translate_exec_to_cmd( const char* exec, const char* icon,
-                             const char* title, const char* fpath )
-{
-    GString* cmd = g_string_sized_new( 256 );
-    if (!exec)
-	    return NULL;
-    for( ; *exec; ++exec )
-    {
-        if( G_UNLIKELY(*exec == '%') )
-        {
-            ++exec;
-            if( !*exec )
-                break;
-            switch( *exec )
-            {
-                case 'c':
-                    if( title )
-                    {
-                        g_string_append( cmd, title );
-                    }
-                    break;
-                case 'i':
-                    if( icon )
-                    {
-                        g_string_append( cmd, "--icon " );
-                        g_string_append( cmd, icon );
-                    }
-                    break;
-                case 'k':
-                    if( fpath )
-                    {
-                        char* uri = g_filename_to_uri( fpath, NULL, NULL );
-                        g_string_append( cmd, uri );
-                        g_free( uri );
-                    }
-                    break;
-                case '%':
-                    g_string_append_c( cmd, '%' );
-                    break;
-            }
-        }
-        else
-            g_string_append_c( cmd, *exec );
-    }
-    return g_string_free( cmd, FALSE );
-}
-
-/*
- * Taken from pcmanfm:
- * Parse Exec command line of app desktop file, and translate
- * it into a real command which can be passed to g_spawn_command_line_async().
- * file_list is a null-terminated file list containing full
- * paths of the files passed to app.
- * returned char* should be freed when no longer needed.
- */
-static char* translate_app_exec_to_command_line( const char* pexec,
-                                                 GList* file_list )
-{
-    char* file;
-    GList* l;
-    gchar *tmp;
-    GString* cmd = g_string_new("");
-    gboolean add_files = FALSE;
-
-    for( ; *pexec; ++pexec )
-    {
-        if( *pexec == '%' )
-        {
-            ++pexec;
-            switch( *pexec )
-            {
-            case 'U':
-                for( l = file_list; l; l = l->next )
-                {
-                    tmp = g_filename_to_uri( (char*)l->data, NULL, NULL );
-                    file = g_shell_quote( tmp );
-                    g_free( tmp );
-                    g_string_append( cmd, file );
-                    if (l->next)
-                        g_string_append_c( cmd, ' ' );
-                    g_free( file );
-                }
-                add_files = TRUE;
-                break;
-            case 'u':
-                if( file_list && file_list->data )
-                {
-                    file = (char*)file_list->data;
-                    tmp = g_filename_to_uri( file, NULL, NULL );
-                    file = g_shell_quote( tmp );
-                    g_free( tmp );
-                    g_string_append( cmd, file );
-                    g_free( file );
-                    add_files = TRUE;
-                }
-                break;
-            case 'F':
-            case 'N':
-                for( l = file_list; l; l = l->next )
-                {
-                    file = (char*)l->data;
-                    tmp = g_shell_quote( file );
-                    g_string_append( cmd, tmp );
-                    if (l->next)
-                        g_string_append_c( cmd, ' ' );
-                    g_free( tmp );
-                }
-                add_files = TRUE;
-                break;
-            case 'f':
-            case 'n':
-                if( file_list && file_list->data )
-                {
-                    file = (char*)file_list->data;
-                    tmp = g_shell_quote( file );
-                    g_string_append( cmd, tmp );
-                    g_free( tmp );
-                    add_files = TRUE;
-                }
-                break;
-            case 'D':
-                for( l = file_list; l; l = l->next )
-                {
-                    tmp = g_path_get_dirname( (char*)l->data );
-                    file = g_shell_quote( tmp );
-                    g_free( tmp );
-                    g_string_append( cmd, file );
-                    if (l->next)
-                        g_string_append_c( cmd, ' ' );
-                    g_free( file );
-                }
-                add_files = TRUE;
-                break;
-            case 'd':
-                if( file_list && file_list->data )
-                {
-                    tmp = g_path_get_dirname( (char*)file_list->data );
-                    file = g_shell_quote( tmp );
-                    g_free( tmp );
-                    g_string_append( cmd, file );
-                    g_free( tmp );
-                    add_files = TRUE;
-                }
-                break;
-            case 'c':
-                #if 0
-                g_string_append( cmd, vfs_app_desktop_get_disp_name( app ) );
-                #endif
-                break;
-            case 'i':
-                /* Add icon name */
-                #if 0
-                if( vfs_app_desktop_get_icon_name( app ) )
-                {
-                    g_string_append( cmd, "--icon " );
-                    g_string_append( cmd, vfs_app_desktop_get_icon_name( app ) );
-                }
-                #endif
-                break;
-            case 'k':
-                /* Location of the desktop file */
-                break;
-            case 'v':
-                /* Device name */
-                break;
-            case '%':
-                g_string_append_c ( cmd, '%' );
-                break;
-            case '\0':
-                goto _finish;
-                break;
-            }
-        }
-        else  /* not % escaped part */
-        {
-            g_string_append_c ( cmd, *pexec );
-        }
-    }
-_finish:
-    if( ! add_files )
-    {
-        for( l = file_list; l; l = l->next )
-        {
-            g_string_append_c( cmd, ' ' );
-            file = (char*)l->data;
-            tmp = g_shell_quote( file );
-            g_string_append( cmd, tmp );
-            g_free( tmp );
-        }
-    }
-
-    return g_string_free( cmd, FALSE );
-}
-
 gboolean spawn_command_async(GtkWindow *parent_window, gchar const* workdir,
         gchar const* cmd)
 {
@@ -586,44 +392,42 @@ gboolean spawn_command_async(GtkWindow *parent_window, gchar const* workdir,
     return !err;
 }
 
-/* FIXME: this should be replaced with fm_launch_file_simple() */
-gboolean lxpanel_launch_app(const char* exec, GList* files, gboolean in_terminal, char const* in_workdir)
-{
-    GError *error = NULL;
-    char* cmd;
-    if( ! exec )
-        return FALSE;
-    cmd = translate_app_exec_to_command_line(exec, files);
-    if( in_terminal )
-    {
-	char * escaped_cmd = g_shell_quote(cmd);
-        char* term_cmd;
-        const char* term = fm_config->terminal ? fm_config->terminal : "lxterminal";
-        if( strstr(term, "%s") )
-            term_cmd = g_strdup_printf(term, escaped_cmd);
-        else
-            term_cmd = g_strconcat( term, " -e ", escaped_cmd, NULL );
-	g_free(escaped_cmd);
-        if( cmd != exec )
-            g_free(cmd);
-        cmd = term_cmd;
-    }
-
-    spawn_command_async(NULL, in_workdir, cmd);
-
-    g_free(cmd);
-
-    return (error == NULL);
-}
-
 void activate_menu_launch_id (GSimpleAction* action,GVariant* param, gpointer user_data)
 {
+    GError* err = NULL;
     const gchar* id = g_variant_get_string(param,NULL);
     GDesktopAppInfo *info = g_desktop_app_info_new(id);
-    g_app_info_launch (G_APP_INFO (info), NULL, NULL, NULL);
+    g_app_info_launch (G_APP_INFO (info), NULL, G_APP_LAUNCH_CONTEXT(gdk_display_get_app_launch_context(gdk_display_get_default())), &err);
     g_object_unref(info);
+    if (err)
+        g_warning("%s\n",err->message);
+    g_clear_error(&err);
 }
 
+void activate_menu_launch_uri (GSimpleAction* action,GVariant* param, gpointer user_data)
+{
+    GError* err = NULL;
+    const char* uri = g_variant_get_string(param,NULL);
+    g_app_info_launch_default_for_uri(uri,
+                                      G_APP_LAUNCH_CONTEXT(gdk_display_get_app_launch_context(gdk_display_get_default())),&err);
+    if (err)
+        g_warning("%s\n",err->message);
+    g_clear_error(&err);
+}
+
+void activate_menu_launch_command (GSimpleAction* action,GVariant* param, gpointer user_data)
+{
+    GError* err = NULL;
+    const char* commandline = g_variant_get_string(param,NULL);
+    GAppInfo*  info = g_app_info_create_from_commandline(commandline, NULL,G_APP_INFO_CREATE_SUPPORTS_STARTUP_NOTIFICATION,&err);
+    if (err)
+        g_warning("%s\n",err->message);
+    g_clear_error(&err);
+    g_app_info_launch(info,NULL,G_APP_LAUNCH_CONTEXT(gdk_display_get_app_launch_context(gdk_display_get_default())),&err);
+    if (err)
+        g_warning("%s\n",err->message);
+    g_clear_error(&err);
+}
 
 void start_panels_from_dir(GtkApplication* app,const char *panel_dir)
 {
@@ -685,130 +489,6 @@ void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,c
 void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop)
 {
     g_settings_bind(settings,prop,obj,prop,G_SETTINGS_BIND_GET | G_SETTINGS_BIND_SET | G_SETTINGS_BIND_DEFAULT);
-}
-
-static void
-indent_string (GString *string,
-               gint     indent)
-{
-    while (indent--)
-        g_string_append_c (string, ' ');
-}
-
-static GString *
-g_menu_print_string (GString    *string,
-                            GMenuModel *model,
-                            gint        indent,
-                            gint        tabstop)
-{
-    gboolean need_nl = FALSE;
-    gint i, n;
-
-    if G_UNLIKELY (string == NULL)
-            string = g_string_new (NULL);
-
-    n = g_menu_model_get_n_items (model);
-
-    for (i = 0; i < n; i++)
-    {
-        GMenuAttributeIter *attr_iter;
-        GMenuLinkIter *link_iter;
-        GString *contents;
-        GString *attrs;
-
-        attr_iter = g_menu_model_iterate_item_attributes (model, i);
-        link_iter = g_menu_model_iterate_item_links (model, i);
-        contents = g_string_new (NULL);
-        attrs = g_string_new (NULL);
-
-        while (g_menu_attribute_iter_next (attr_iter))
-        {
-            const char *name = g_menu_attribute_iter_get_name (attr_iter);
-            GVariant *value = g_menu_attribute_iter_get_value (attr_iter);
-
-            if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
-            {
-                gchar *str;
-                str = g_markup_printf_escaped (" %s='%s'", name, g_variant_get_string (value, NULL));
-                g_string_append (attrs, str);
-                g_free (str);
-            }
-
-            else
-            {
-                gchar *printed;
-                gchar *str;
-                const gchar *type;
-
-                printed = g_variant_print (value, TRUE);
-                type = g_variant_type_peek_string (g_variant_get_type (value));
-                str = g_markup_printf_escaped ("<attribute name='%s' type='%s'>%s</attribute>\n", name, type, printed);
-                indent_string (contents, indent + tabstop);
-                g_string_append (contents, str);
-                g_free (printed);
-                g_free (str);
-            }
-
-            g_variant_unref (value);
-        }
-        g_object_unref (attr_iter);
-
-        while (g_menu_link_iter_next (link_iter))
-        {
-            const gchar *name = g_menu_link_iter_get_name (link_iter);
-            GMenuModel *menu = g_menu_link_iter_get_value (link_iter);
-            gchar *str;
-
-            if (contents->str[0])
-                g_string_append_c (contents, '\n');
-
-            str = g_markup_printf_escaped ("<link name='%s'>\n", name);
-            indent_string (contents, indent + tabstop);
-            g_string_append (contents, str);
-            g_free (str);
-
-            g_menu_print_string (contents, menu, indent + 2 * tabstop, tabstop);
-
-            indent_string (contents, indent + tabstop);
-            g_string_append (contents, "</link>\n");
-            g_object_unref (menu);
-        }
-        g_object_unref (link_iter);
-
-        if (contents->str[0])
-        {
-            indent_string (string, indent);
-            g_string_append_printf (string, "<item%s>\n", attrs->str);
-            g_string_append (string, contents->str);
-            indent_string (string, indent);
-            g_string_append (string, "</item>\n");
-            need_nl = TRUE;
-        }
-
-        else
-        {
-            if (need_nl)
-                g_string_append_c (string, '\n');
-
-            indent_string (string, indent);
-            g_string_append_printf (string, "<item%s/>\n", attrs->str);
-            need_nl = FALSE;
-        }
-
-        g_string_free (contents, TRUE);
-        g_string_free (attrs, TRUE);
-    }
-
-    return string;
-}
-
-gchar* g_menu_make_xml (GMenuModel *model)
-{
-    GString *string;
-    string = g_string_new ("<interface>\n<menu>\n");
-    g_menu_print_string (string, model, 2, 2);
-    g_string_append(string,"</menu>\n</interface>\n");
-    return g_string_free (string, FALSE);
 }
 
 /* vim: set sw=4 et sts=4 : */

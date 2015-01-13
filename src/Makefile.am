@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-bin_PROGRAMS = simple-panel
+bin_PROGRAMS = simple-panel xdg-menumodel-maker
 
 simple_panel_CPPFLAGS = \
 	-I$(top_srcdir) \
@@ -97,6 +97,11 @@ simple_panel_LDADD = \
 		$(INTLLIBS) \
 		$(GNOME_MENUS_LIBS)
 ##		$(X11_LIBS) \
+
+xdg_menumodel_maker_CFLAGS = $(simple_panel_CFLAGS) -DSTANDALONE_MAKER=1
+xdg_menumodel_maker_CPPFLAGS = $(simple_panel_CPPFLAGS) -DSTANDALONE_MAKER=1
+xdg_menumodel_maker_SOURCES = menu-maker.c menu-maker.h
+xdg_menumodel_maker_LDADD = $(PACKAGE_LIBS)
 
 EXTRA_DIST = $(SIMPLE_PANEL_NOINST_HEADER_FILES) \
 	panel-enum-types.h

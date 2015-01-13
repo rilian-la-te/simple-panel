@@ -43,90 +43,91 @@
 
 #define MENUMODEL_KEY_ICON "icon-name"
 #define MENUMODEL_KEY_CAPTION "menu-name"
-#define MENUMODEL_KEY_MENU_TYPE "menu-type"
+#define MENUMODEL_KEY_IS_MENU_BAR "is-menu-bar"
 #define MENUMODEL_KEY_IS_SYSTEM_MENU "is-system-menu"
+#define MENUMODEL_KEY_IS_INTERNAL_MENU "is-internal-menu"
 #define MENUMODEL_KEY_MODEL_FILE "model-file"
+#define MENUMODEL_KEY_MODEL_NAME "model-name"
 
-typedef enum {
-    MENU_TYPE_BAR,
-    MENU_TYPE_BUTTON,
-} MenuTypeEnum;
 
 typedef struct {
-    GtkWidget *box, *button;
+    GtkWidget *box, *button, *icon;
     char* caption;
-    GIcon* icon;
     SimplePanel *panel;
     GSettings *settings;
-    GMenu* menu;
-    gboolean has_system_menu;
+    GMenuModel* menu;
+    gchar* icon_str, *model_file, *model_name;
+    GAppInfoMonitor* app_monitor;
+    GFileMonitor* file_monitor;
+    gboolean system,internal,bar;
     guint show_system_menu_idle;
+    guint monitor_update_idle;
 } MenuModelPlugin;
-
-static gchar *css = ".-panel-menu {\n"
-        "padding: 0px 0px 0px 0px;\n"
-        "margin: 0px 0px 0px 0px;\n"
-        "}\n";
-
-//typedef struct {
-//    GtkWidget *box, *img, *label;
-//    GtkWidget* menu;
-//    char *fname, *caption;
-//    int iconsize;
-//    gboolean has_system_menu;
-//    guint show_system_menu_idle;
-//    SimplePanel *panel;
-//    GSettings *settings;
-
-//    MenuCache* menu_cache;
-//    guint visibility_flags;
-//    gpointer reload_notify;
-//    FmDndSrc *ds;
-//} menup;
 
 //static guint idle_loader = 0;
 
 //GQuark SYS_MENU_ITEM_ID = 0;
 
-///* FIXME: this is defined in misc.c and should be replaced later */
-//GtkWidget *_gtk_image_new_from_file_scaled(const gchar *file, gint width,
-//                                           gint height, gboolean keep_ratio);
+static GMenuModel* return_menumodel(MenuModelPlugin* m);
+static GMenuModel* read_menumodel(MenuModelPlugin *m);
+static GtkWidget* create_menubutton(MenuModelPlugin* m);
+static GtkWidget* create_menubar(MenuModelPlugin* m);
+static void monitor_update(MenuModelPlugin* m);
+static GtkWidget* menumodel_widget_create(MenuModelPlugin* m);
+static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, MenuModelPlugin* menu);
 
-//static void on_data_get(FmDndSrc *ds, GtkWidget *mi)
-//{
-//    FmFileInfo *fi = g_object_get_qdata(G_OBJECT(mi), SYS_MENU_ITEM_ID);
-
-//    /* g_debug("on_data_get(...)"); */
-//    fm_dnd_src_set_file(ds, fi);
-//}
-
-static void
-menu_destructor(gpointer user_data)
+static void menumodel_widget_destroy(MenuModelPlugin* m)
 {
-    MenuModelPlugin *m = (MenuModelPlugin *)user_data;
-
-//    if( G_UNLIKELY( idle_loader ) )
-//    {
-//        g_source_remove( idle_loader );
-//        idle_loader = 0;
-//    }
-
     if (m->show_system_menu_idle)
         g_source_remove(m->show_system_menu_idle);
-
-//    g_signal_handlers_disconnect_matched(m->ds, G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-//                                         on_data_get, NULL);
-//    g_object_unref(G_OBJECT(m->ds));
-    g_object_unref(m->menu);
-    g_object_unref(m->icon);
-    g_free(m->caption);
-    g_free(m);
-    RET();
+    if (m->monitor_update_idle)
+        g_source_remove(m->monitor_update_idle);
+    if (m->app_monitor)
+    {
+        g_signal_handlers_disconnect_matched(m->app_monitor, G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+                                         monitor_update, NULL);
+        g_object_unref(m->app_monitor);
+    }
+    if (m->file_monitor)
+    {
+        g_signal_handlers_disconnect_matched(m->file_monitor, G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+                                         monitor_update, NULL);
+        g_object_unref(m->file_monitor);
+    }
+    if (m->bar)
+        g_signal_handlers_disconnect_matched(m->panel, G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+                                         panel_edge_changed, NULL);
+    if (m->menu)
+        g_object_unref(m->menu);
+    gtk_container_remove(GTK_CONTAINER(m->box),m->button);
 }
 
-static void activate_command(GSimpleAction *action, GVariant *param, gpointer data)
+static void
+menumodel_destructor(gpointer user_data)
 {
-    fm_launch_command_simple(NULL,NULL,0,g_variant_get_string(param,NULL),NULL);
+    MenuModelPlugin *m = (MenuModelPlugin *)user_data;
+    menumodel_widget_destroy(m);
+    if (m->icon_str)
+        g_free(m->icon_str);
+    if (m->model_file)
+        g_free(m->model_file);
+    if (m->model_name)
+        g_free(m->model_name);
+    if (m->caption)
+        g_free(m->caption);
+    g_free(m);
+    return;
+}
+
+static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, MenuModelPlugin* menu)
+{
+    int edge = panel_get_edge(panel);
+    int orient;
+    orient = (edge == GTK_POS_TOP || edge == GTK_POS_BOTTOM) ? GTK_PACK_DIRECTION_LTR : GTK_PACK_DIRECTION_TTB;
+    if (menu->bar)
+    {
+        gtk_menu_bar_set_pack_direction(GTK_MENU_BAR(menu->button),orient);
+    }
 }
 
 static void
@@ -137,485 +138,16 @@ menu_pos(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, GtkWidget *widget)
     *push_in = TRUE;
 }
 
-//static void on_menu_item( GtkMenuItem* mi, menup* m )
-//{
-//    FmFileInfo *fi = g_object_get_qdata(G_OBJECT(mi), SYS_MENU_ITEM_ID);
-
-//    lxpanel_launch_path(m->panel, fm_file_info_get_path(fi));
-//}
-
-///* load icon when mapping the menu item to speed up */
-//static void on_menu_item_map(GtkWidget *mi, menup *m)
-//{
-//  GtkImage* img = GTK_IMAGE(gtk_image_menu_item_get_image(GTK_IMAGE_MENU_ITEM(mi)));
-//    if( img )
-//    {
-//        FmFileInfo *fi;
-//        if (gtk_image_get_storage_type(img) == GTK_IMAGE_EMPTY &&
-//            (fi = g_object_get_qdata(G_OBJECT(mi), SYS_MENU_ITEM_ID)) != NULL &&
-//            fi != (gpointer)1 /* ignore placeholder or separator */)
-//        {
-//            FmIcon *fm_icon = fm_file_info_get_icon(fi);
-//            FmIcon *_fm_icon = NULL;
-//            GdkPixbuf *icon = NULL;
-
-//            if (fm_icon == NULL)
-//                fm_icon = _fm_icon = fm_icon_from_name("application-x-executable");
-//            icon = fm_pixbuf_from_icon_with_fallback(fm_icon, m->iconsize,
-//                                                         "application-x-executable");
-//            if (_fm_icon)
-//                g_object_unref(_fm_icon);
-//            if (icon)
-//            {
-//                gtk_image_set_from_pixbuf(img, icon);
-//                g_object_unref(icon);
-//            }
-//        }
-//    }
-//}
-
-//static void on_menu_item_style_updated(GtkWidget* mi, menup *m)
-//{
-//    /* reload icon */
-//    on_menu_item_map(mi, m);
-//}
-
-///* FIXME: this is very dirty, especially if desktop is set not to ~/Desktop
-//   therefore it should be removed and drag & drop gestures used instead */
-//static void on_add_menu_item_to_desktop(GtkMenuItem* item, GtkWidget* mi)
-//{
-//    FmFileInfo *fi = g_object_get_qdata(G_OBJECT(mi), SYS_MENU_ITEM_ID);
-//    FmPathList *files = fm_path_list_new();
-
-//    fm_path_list_push_tail(files, fm_file_info_get_path(fi));
-//    fm_link_files(NULL, files, fm_path_get_desktop());
-//    fm_path_list_unref(files);
-//}
-
-///* TODO: add menu item to panel */
-//#if 0
-//static void on_add_menu_item_to_panel(GtkMenuItem* item, MenuCacheApp* app)
-//{
-//    /* Find a penel containing lTB_Launchbar applet.
-//     * The lTB_Launchbar with most buttons will be choosen if
-//     * there are several lTB_Launchbar applets loaded.
-//     */
-//    GSList* l;
-//    Plugin* lb = NULL;
-//    int n_btns = -1;
-
-//    for(l = all_panels; !lb && l; l = l->next)
-//    {
-//        Panel* panel = (Panel*)l->data;
-//        GList* pl;
-//        for(pl=panel->plugins; pl; pl = pl->next)
-//        {
-//            Plugin* plugin = (Plugin*)pl;
-//            if( strcmp(plugin->class->type, "launchbar") == 0 )
-//            {
-//                /* FIXME: should we let the users choose which launcherbar to add the btn? */
-//                break;
-//#if 0
-//                int n = launchbar_get_n_btns(plugin);
-//                if( n > n_btns )
-//                {
-//                    lb = plugin;
-//                    n_btns = n;
-//                }
-//#endif
-//            }
-//        }
-//    }
-
-//    if( ! lb ) /* lTB_Launchbar is not currently in use */
-//    {
-//        /* FIXME: add a lTB_Launchbar plugin to the panel which has a menu, too. */
-//    }
-
-//    if( lb )
-//    {
-
-//    }
-//}
-//#endif
-
-//static void on_menu_item_properties(GtkMenuItem* item, GtkWidget* mi)
-//{
-//    FmFileInfo *fi = g_object_get_qdata(G_OBJECT(mi), SYS_MENU_ITEM_ID);
-//    FmFileInfoList *files = fm_file_info_list_new();
-
-//    fm_file_info_list_push_tail(files, fi);
-//    fm_show_file_properties(NULL, files);
-//    fm_file_info_list_unref(files);
-//}
-
-//#if 0
-///* This following function restore_grabs is taken from menu.c of
-// * gnome-panel.
-// */
-///*most of this function stolen from the real gtk_menu_popup*/
-//static void restore_grabs(GtkWidget *w, gpointer data)
-//{
-//    GtkWidget *menu_item = data;
-//    GtkMenu *menu = GTK_MENU(gtk_widget_get_parent(menu_item));
-//    GtkWidget *xgrab_shell;
-//    GtkWidget *parent;
-
-//    /* Find the last viewable ancestor, and make an X grab on it
-//    */
-//    parent = GTK_WIDGET (menu);
-//    xgrab_shell = NULL;
-//    while (parent)
-//    {
-//        gboolean viewable = TRUE;
-//        GtkWidget *tmp = parent;
-
-//        while (tmp)
-//        {
-//#if GTK_CHECK_VERSION(2, 24, 0)
-//            if (!gtk_widget_get_mapped(tmp))
-//#else
-//            if (!GTK_WIDGET_MAPPED (tmp))
-//#endif
-//            {
-//                viewable = FALSE;
-//                break;
-//            }
-//            tmp = gtk_widget_get_parent(tmp);
-//        }
-
-//        if (viewable)
-//            xgrab_shell = parent;
-
-//        parent = gtk_widget_get_parent(parent);
-//    }
-
-//    /*only grab if this HAD a grab before*/
-//    if (xgrab_shell && (gtk_widget_has_focus(xgrab_shell)))
-//     {
-//        if (gdk_pointer_grab (gtk_widget_get_window(xgrab_shell), TRUE,
-//                    GDK_BUTTON_PRESS_MASK |
-//                    GDK_BUTTON_RELEASE_MASK |
-//                    GDK_ENTER_NOTIFY_MASK |
-//                    GDK_LEAVE_NOTIFY_MASK,
-//                    NULL, NULL, 0) == 0)
-//        {
-//            if (gdk_keyboard_grab (gtk_widget_get_window(xgrab_shell), TRUE,
-//                    GDK_CURRENT_TIME) == 0)
-//                gtk_widget_grab_focus (xgrab_shell);
-//            else
-//                gdk_pointer_ungrab (GDK_CURRENT_TIME);
-//        }
-//    }
-//    gtk_grab_add (GTK_WIDGET (menu));
-//}
-//#endif
-
-//static void restore_submenu(GtkMenuItem *mi, GtkWidget *submenu)
-//{
-//    g_signal_handlers_disconnect_by_func(mi, restore_submenu, submenu);
-//    gtk_menu_item_set_submenu(mi, submenu);
-//    g_object_set_data(G_OBJECT(mi), "PanelMenuItemSubmenu", NULL);
-//}
-
-//static gboolean on_menu_button_press(GtkWidget* mi, GdkEventButton* evt, menup* m)
-//{
-//    if( evt->button == 3 )  /* right */
-//    {
-//        GtkWidget* item;
-//        GtkMenu* p;
-
-//        /* don't make duplicates */
-//        if (g_signal_handler_find(mi, G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-//            restore_submenu, NULL))
-//        {
-//            return FALSE;
-//        }
-
-//        p = GTK_MENU(gtk_menu_new());
-
-//        item = gtk_menu_item_new_with_label(_("Add to desktop"));
-//        g_signal_connect(item, "activate", G_CALLBACK(on_add_menu_item_to_desktop), mi);
-//        gtk_menu_shell_append(GTK_MENU_SHELL(p), item);
-
-//        item = gtk_separator_menu_item_new();
-//        gtk_menu_shell_append(GTK_MENU_SHELL(p), item);
-
-//        item = gtk_menu_item_new_with_label(_("Properties"));
-//        g_signal_connect(item, "activate", G_CALLBACK(on_menu_item_properties), mi);
-//        gtk_menu_shell_append(GTK_MENU_SHELL(p), item);
-
-//        item = gtk_menu_item_get_submenu(GTK_MENU_ITEM(mi)); /* reuse it */
-//        if (item)
-//        {
-//            /* set object data to keep reference on the submenu we preserve */
-//            g_object_set_data_full(G_OBJECT(mi), "PanelMenuItemSubmenu",
-//                                   g_object_ref(item), g_object_unref);
-//            gtk_menu_popdown(GTK_MENU(item));
-//        }
-//        gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi), GTK_WIDGET(p));
-//        g_signal_connect(mi, "deselect", G_CALLBACK(restore_submenu), item);
-//        gtk_widget_show_all(GTK_WIDGET(p));
-//    }
-//    else if (evt->button == 1) /* allow drag on clicked item */
-//    {
-//        /* disconnect previous menu item */
-//        g_signal_handlers_disconnect_matched(m->ds, G_SIGNAL_MATCH_FUNC, 0, 0,
-//                                             NULL, on_data_get, NULL);
-//        /* remap FmDndSrc onto current item */
-//        fm_dnd_src_set_widget(m->ds, mi);
-//        g_signal_connect(m->ds, "data-get", G_CALLBACK(on_data_get), mi);
-//    }
-//    return FALSE;
-//}
-
-//static GtkWidget* create_item(MenuCacheItem *item, menup *m)
-//{
-//    GtkWidget* mi;
-//    if( menu_cache_item_get_type(item) == MENU_CACHE_TYPE_SEP )
-//    {
-//        mi = gtk_separator_menu_item_new();
-//        g_object_set_qdata(G_OBJECT(mi), SYS_MENU_ITEM_ID, (gpointer)1);
-//    }
-//    else
-//    {
-//        GtkWidget* img;
-//        /* create FmFileInfo for the item, it will be used in callbacks */
-//        char *mpath = menu_cache_dir_make_path(MENU_CACHE_DIR(item));
-//        FmPath *path = fm_path_new_relative(fm_path_get_apps_menu(), mpath+13);
-//                                                    /* skip "/Applications" */
-//        FmFileInfo *fi = fm_file_info_new_from_menu_cache_item(path, item);
-
-//        g_free(mpath);
-//        fm_path_unref(path);
-//        mi = gtk_image_menu_item_new_with_mnemonic( menu_cache_item_get_name(item) );
-//        g_object_set_qdata_full(G_OBJECT(mi), SYS_MENU_ITEM_ID, fi,
-//                                (GDestroyNotify)fm_file_info_unref);
-//        img = gtk_image_new();
-//        gtk_image_menu_item_set_image( GTK_IMAGE_MENU_ITEM(mi), img );
-//        if( menu_cache_item_get_type(item) == MENU_CACHE_TYPE_APP )
-//        {
-//            const char *comment = menu_cache_item_get_comment(item);
-//            if (comment != NULL)
-//                gtk_widget_set_tooltip_text(mi, comment);
-//            g_signal_connect(mi, "activate", G_CALLBACK(on_menu_item), m);
-//        }
-//        g_signal_connect(mi, "map", G_CALLBACK(on_menu_item_map), m);
-//        g_signal_connect(mi, "style-updated", G_CALLBACK(on_menu_item_style_updated), m);
-//        g_signal_connect(mi, "button-press-event", G_CALLBACK(on_menu_button_press), m);
-//        /* allow drag and add empty set for now to allow dragging the item
-//           the rest will be done by FmDndSrc after drag begins */
-//        gtk_drag_source_set(mi, GDK_BUTTON1_MASK, NULL, 0, GDK_ACTION_COPY);
-//    }
-//    gtk_widget_show( mi );
-//    return mi;
-//}
-
-//static int load_menu(menup* m, MenuCacheDir* dir, GtkWidget* menu, int pos )
-//{
-//    GSList * l;
-//    /* number of visible entries */
-//    gint count = 0;
-//#if MENU_CACHE_CHECK_VERSION(0, 4, 0)
-//    GSList *children;
-//# if MENU_CACHE_CHECK_VERSION(0, 5, 0)
-//#  if !MENU_CACHE_CHECK_VERSION(1, 0, 0)
-//    char *kfpath;
-//    GKeyFile *kf;
-//#  endif
-//    if (!menu_cache_dir_is_visible(dir)) /* directory is hidden, ignore children */
-//        return 0;
-//#  if !MENU_CACHE_CHECK_VERSION(1, 0, 0)
-//    /* version 1.0.0 has NoDisplay checked internally */
-//    kfpath = menu_cache_item_get_file_path(MENU_CACHE_ITEM(dir));
-//    kf = g_key_file_new();
-//    /* for version 0.5.0 we enable hidden so should test NoDisplay flag */
-//    if (kfpath && g_key_file_load_from_file(kf, kfpath, 0, NULL) &&
-//        g_key_file_get_boolean(kf, "Desktop Entry", "NoDisplay", NULL))
-//        count = -1;
-//    g_free(kfpath);
-//    g_key_file_free(kf);
-//    if (count < 0) /* directory is hidden, ignore children */
-//        return 0;
-//#  endif /* < 1.0.0 */
-//# endif /* < 0.5.0 */
-//    children = menu_cache_dir_list_children(dir);
-//    for (l = children; l; l = l->next)
-//#else /* < 0.4.0 */
-//    for( l = menu_cache_dir_get_children(dir); l; l = l->next )
-//#endif
-//    {
-//        MenuCacheItem* item = MENU_CACHE_ITEM(l->data);
-
-//        gboolean is_visible = ((menu_cache_item_get_type(item) != MENU_CACHE_TYPE_APP) ||
-//			       (panel_menu_item_evaluate_visibility(item, m->visibility_flags)));
-
-//	if (is_visible)
-//	{
-//            GtkWidget * mi = create_item(item, m);
-//	    count++;
-//            if (mi != NULL)
-//                gtk_menu_shell_insert( (GtkMenuShell*)menu, mi, pos );
-//                if( pos >= 0 )
-//                    ++pos;
-//		/* process subentries */
-//		if (menu_cache_item_get_type(item) == MENU_CACHE_TYPE_DIR)
-//		{
-//                    GtkWidget* sub = gtk_menu_new();
-//		    /*  always pass -1 for position */
-//		    gint s_count = load_menu( m, MENU_CACHE_DIR(item), sub, -1 );
-//                    if (s_count)
-//			gtk_menu_item_set_submenu( GTK_MENU_ITEM(mi), sub );
-//		    else
-//		    {
-//			/* don't keep empty submenus */
-//			gtk_widget_destroy( sub );
-//			gtk_widget_destroy( mi );
-//			if (pos > 0)
-//			    pos--;
-//		    }
-//		}
-//	}
-//    }
-//#if MENU_CACHE_CHECK_VERSION(0, 4, 0)
-//    g_slist_foreach(children, (GFunc)menu_cache_item_unref, NULL);
-//    g_slist_free(children);
-//#endif
-//    return count;
-//}
-
-//static gboolean sys_menu_item_has_data( GtkMenuItem* item )
-//{
-//   return (g_object_get_qdata( G_OBJECT(item), SYS_MENU_ITEM_ID ) != NULL);
-//}
-
-//static void _unload_old_icons(GtkMenu* menu, GtkIconTheme* theme, menup* m)
-//{
-//    GList *children, *child;
-//    GtkMenuItem* item;
-//    GtkWidget* sub_menu=NULL;
-
-//    children = gtk_container_get_children( GTK_CONTAINER(menu) );
-//    for( child = children; child; child = child->next )
-//    {
-//        item = GTK_MENU_ITEM( child->data );
-//        if( sys_menu_item_has_data( item ) )
-//        {
-//            GtkImage* img;
-//            item = GTK_MENU_ITEM( child->data );
-//            if( GTK_IS_IMAGE_MENU_ITEM(item) )
-//            {
-//	        img = GTK_IMAGE(gtk_image_menu_item_get_image(GTK_IMAGE_MENU_ITEM(item)));
-//                gtk_image_clear(img);
-//                if (gtk_widget_get_mapped(GTK_WIDGET(img)))
-//                    on_menu_item_map(GTK_WIDGET(item), m);
-//            }
-//        }
-//        else if( ( sub_menu = gtk_menu_item_get_submenu( item ) ) )
-//        {
-//	    _unload_old_icons(GTK_MENU(sub_menu), theme, m);
-//        }
-//    }
-//    g_list_free( children );
-//}
-
-//static void unload_old_icons(GtkIconTheme* theme, menup* m)
-//{
-//    _unload_old_icons(GTK_MENU(m->menu), theme, m);
-//}
-
-//static void remove_change_handler(gpointer id, GObject* menu)
-//{
-//    g_signal_handler_disconnect(gtk_icon_theme_get_default(), GPOINTER_TO_INT(id));
-//}
-
-///*
-// * Insert application menus into specified menu
-// * menu: The parent menu to which the items should be inserted
-// * pisition: Position to insert items.
-//             Passing -1 in this parameter means append all items
-//             at the end of menu.
-// */
-//static void sys_menu_insert_items( menup* m, GtkMenu* menu, int position )
-//{
-//    MenuCacheDir* dir;
-//    guint change_handler;
-
-//    if( G_UNLIKELY( SYS_MENU_ITEM_ID == 0 ) )
-//        SYS_MENU_ITEM_ID = g_quark_from_static_string( "SysMenuItem" );
-
-//#if MENU_CACHE_CHECK_VERSION(0, 4, 0)
-//    dir = menu_cache_dup_root_dir(m->menu_cache);
-//#else
-//    dir = menu_cache_get_root_dir( m->menu_cache );
-//#endif
-//    if(dir)
-//    {
-//        load_menu( m, dir, GTK_WIDGET(menu), position );
-//#if MENU_CACHE_CHECK_VERSION(0, 4, 0)
-//        menu_cache_item_unref(MENU_CACHE_ITEM(dir));
-//#endif
-//    }
-//    else /* menu content is empty */
-//    {
-//        /* add a place holder */
-//        GtkWidget* mi = gtk_menu_item_new();
-//        g_object_set_qdata( G_OBJECT(mi), SYS_MENU_ITEM_ID, GINT_TO_POINTER(1) );
-//        gtk_menu_shell_insert(GTK_MENU_SHELL(menu), mi, position);
-//    }
-
-//    change_handler = g_signal_connect(gtk_icon_theme_get_default(), "changed", G_CALLBACK(unload_old_icons), m);
-//    g_object_weak_ref( G_OBJECT(menu), remove_change_handler, GINT_TO_POINTER(change_handler) );
-//}
-
-
-//static void
-//reload_system_menu( menup* m, GtkMenu* menu )
-//{
-//    GList *children, *child;
-//    GtkMenuItem* item;
-//    GtkWidget* sub_menu;
-//    gint idx;
-
-//    children = gtk_container_get_children( GTK_CONTAINER(menu) );
-//    for( child = children, idx = 0; child; child = child->next, ++idx )
-//    {
-//        item = GTK_MENU_ITEM( child->data );
-//        if( sys_menu_item_has_data( item ) )
-//        {
-//            do
-//            {
-//                item = GTK_MENU_ITEM( child->data );
-//                child = child->next;
-//                gtk_widget_destroy( GTK_WIDGET(item) );
-//            }while( child && sys_menu_item_has_data( child->data ) );
-//            sys_menu_insert_items( m, menu, idx );
-//            if( ! child )
-//                break;
-//        }
-//        else if( ( sub_menu = gtk_menu_item_get_submenu( item ) ) )
-//        {
-//            reload_system_menu( m, GTK_MENU(sub_menu) );
-//        }
-//    }
-//    g_list_free( children );
-//}
-
 static void show_menu( GtkWidget* widget, MenuModelPlugin* m, int btn, guint32 time )
 {
     GtkMenu* menu = GTK_MENU(gtk_menu_new_from_model(G_MENU_MODEL(m->menu)));
+    gtk_menu_attach_to_widget(menu,widget,NULL);
     gtk_menu_popup(GTK_MENU(menu),
                    NULL, NULL,
                    (GtkMenuPositionFunc)menu_pos, widget,
                    btn, time);
     g_signal_connect(GTK_WIDGET(menu),"focus-out-event",G_CALLBACK(gtk_widget_destroy),NULL);
 }
-
-//static void menu_button_clicked(GtkButton* widget, gpointer data)
-//{
-//    menup* m = (menup*)data;
-//    gtk_menu_popup(GTK_MENU(m->menu),NULL,NULL,(GtkMenuPositionFunc)menu_pos,m->box,0,GDK_CURRENT_TIME);
-//}
 
 static gboolean show_system_menu_idle(gpointer user_data)
 {
@@ -627,390 +159,167 @@ static gboolean show_system_menu_idle(gpointer user_data)
     return FALSE;
 }
 
+static gboolean monitor_update_idle(gpointer user_data)
+{
+    MenuModelPlugin* m = (MenuModelPlugin*)user_data;
+    if (g_source_is_destroyed(g_main_current_source()))
+        return FALSE;
+    menumodel_widget_destroy(m);
+    m->button = menumodel_widget_create(m);
+    m->monitor_update_idle = 0;
+    return FALSE;
+}
+
+
 static void show_system_menu(GtkWidget *p)
 {
     MenuModelPlugin *m = lxpanel_plugin_get_data(p);
 
-    if (m->has_system_menu && m->show_system_menu_idle == 0)
+    if (m && m->system && m->show_system_menu_idle == 0)
         /* FIXME: I've no idea why this doesn't work without timeout
                               under some WMs, like icewm. */
         m->show_system_menu_idle = g_timeout_add(200, show_system_menu_idle, m);
 }
 
-//static GtkWidget *
-//make_button(menup *m, const gchar *fname, const gchar *name, GdkRGBA* tint, GtkWidget *menu)
-//{
-//    char* title = NULL;
-
-//    static const GActionEntry entries[] =
-//    {
-//        {"launch-command", activate_command, "s", NULL, NULL},
-//    };
-//    GSimpleActionGroup* grp;
-//    grp = g_simple_action_group_new();
-//    g_action_map_add_action_entries(G_ACTION_MAP(grp),entries,G_N_ELEMENTS(entries),(gpointer)m);
-//    ENTER;
-//    m->menu = menu;
-//    gtk_menu_attach_to_widget(GTK_MENU(m->menu),m->box,NULL);
-
-//    if( name && strlen(name)>0 )
-//    {
-//        /* load the name from *.directory file if needed */
-//        if( g_str_has_suffix( name, ".directory" ) )
-//        {
-//            GKeyFile* kf = g_key_file_new();
-//            char* dir_file = g_build_filename( "desktop-directories", name, NULL );
-//            if( g_key_file_load_from_data_dirs( kf, dir_file, NULL, 0, NULL ) )
-//            {
-//                title = g_key_file_get_locale_string( kf, "Desktop Entry", "Name", NULL, NULL );
-//            }
-//            g_free( dir_file );
-//            g_key_file_free( kf );
-//        }
-
-//        m->img = simple_panel_button_new_for_icon(m->panel, fname, tint, title ? title : name);
-
-//        g_free( title );
-//    }
-//    else
-//    {
-//        m->img = simple_panel_button_new_for_icon(m->panel, fname, tint, NULL);
-//    }
-
-//    gtk_widget_show(m->img);
-//    gtk_container_add(GTK_CONTAINER(m->box),m->img);
-
-//    m->ds = fm_dnd_src_new(NULL);
-//    gtk_widget_insert_action_group(m->box,"menu",G_ACTION_GROUP(grp));
-//    g_signal_connect(m->img,"clicked",G_CALLBACK(menu_button_clicked),m);
-//    RET(m->img);
-//}
-
-///* those were in configurator.c initially but it's safer to have those here */
-//typedef struct {
-//    char *name;
-//    char *disp_name;
-//    char *action;
-//} Command;
-
-//static Command commands[] = {
-//    //{ "configure", N_("Preferences"), "win.configure(0)" },
-//    { "run", N_("Run"), "app.run" },
-//    { "logout", N_("Logout"), "app.logout" },
-//    { "shutdown", N_("Shutdown"), "app.shutdown" },
-//    { NULL, NULL },
-//};
-
-//static GtkWidget *
-//read_item(menup *m, const gchar* name, const gchar* fname, const gchar* action)
-//{
-//    GtkWidget *item;
-//    Command *cmd_entry = NULL;
-//    gchar* tmp;
-
-
-//    if (!g_ascii_strcasecmp("command", action))
-//    {
-//        Command *tmp;
-
-//        for (tmp = commands; tmp->name; tmp++) {
-//            if (!g_ascii_strcasecmp(name, tmp->name)) {
-//                cmd_entry = tmp;
-//                break;
-//            }
-//        }
-//    }
-//    /* menu button */
-//    if( cmd_entry ) /* built-in commands */
-//    {
-//        item = gtk_image_menu_item_new_with_label(cmd_entry->disp_name);
-//        gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(item),cmd_entry->action);
-//    }
-//    else if (action)
-//    {
-//        tmp = g_strdup_printf("menu.launch-command(%s)",action);
-//        item = gtk_image_menu_item_new_with_label(name ? name : "");
-//        gtk_actionable_set_detailed_action_name(GTK_ACTIONABLE(item),tmp);
-//        g_object_weak_ref(G_OBJECT(item), (GWeakNotify)g_free, tmp);
-//    }
-//    else
-//        goto error;
-//    if (fname) {
-//        GIcon *img;
-//        GtkWidget* image;
-//        tmp = expand_tilda(fname);
-//        img = g_icon_new_for_string(tmp,NULL);
-//        image = gtk_image_new_from_gicon(img,GTK_ICON_SIZE_MENU);
-//        gtk_widget_show(image);
-//        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),image);
-//        g_free(tmp);
-//        g_object_unref(img);
-//    }
-//    return item;
-
-// error:
-//    return NULL;
-//}
-
-//static GtkWidget *
-//read_separator(menup *m)
-//{
-//    return gtk_separator_menu_item_new();
-//}
-
-//static void on_reload_menu(MenuCache* cache, gpointer menu_pointer)
-//{
-//    menup *m = menu_pointer;
-//    /* g_debug("reload system menu!!"); */
-//    reload_system_menu( m, GTK_MENU(m->menu) );
-//}
-
-//static void
-//read_system_menu(GtkMenu *menu, menup *m)
-//{
-//    if (m->menu_cache == NULL)
-//    {
-//        guint32 flags;
-//        m->menu_cache = panel_menu_cache_new(&flags);
-//        if (m->menu_cache == NULL)
-//        {
-//            g_warning("error loading applications menu");
-//            return;
-//        }
-//        m->visibility_flags = flags;
-//        m->reload_notify = menu_cache_add_reload_notify(m->menu_cache, on_reload_menu, m);
-//        sys_menu_insert_items( m, menu, -1 );
-//    }
-
-//    m->has_system_menu = TRUE;
-//}
-
-//#if 0
-//static void
-//read_include(Plugin *p, char **fp)
-//{
-//    ENTER;
-//    gchar *name;
-//    line s;
-//    menup *m = (menup *)p->priv;
-//    /* FIXME: this is disabled */
-//    ENTER;
-//    s.len = 256;
-//    name = NULL;
-//    if( fp )
-//    {
-//        while (lxpanel_get_line(fp, &s) != LINE_BLOCK_END) {
-//            if (s.type == LINE_VAR) {
-//                if (!g_ascii_strcasecmp(s.t[0], "name"))
-//                    name = expand_tilda(s.t[1]);
-//                else  {
-//                    ERR( "menu/include: unknown var %s\n", s.t[0]);
-//                    RET();
-//                }
-//            }
-//        }
-//    }
-//    if ((fp = fopen(name, "r"))) {
-//        LOG(LOG_INFO, "Including %s\n", name);
-//        m->files = g_slist_prepend(m->files, fp);
-//        p->fp = fp;
-//    } else {
-//        ERR("Can't include %s\n", name);
-//    }
-//    if (name) g_free(name);
-//    RET();
-//}
-//#endif
-
-//static GtkWidget* read_menumodel(menup* m, const gchar* command, const gchar* icon, const gchar* action)
-//{
-//    GtkBuilder* builder;
-//    GtkWidget* item, *menuw;
-//    builder = gtk_builder_new();
-//    gtk_builder_add_from_file(builder,command,NULL);
-//    GMenuModel* menu = G_MENU_MODEL(gtk_builder_get_object(builder,action));
-//    menuw = gtk_menu_new_from_model(menu);
-//    item = gtk_image_menu_item_new_with_label(icon);
-//    gtk_widget_show(menuw);
-//    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item),menuw);
-//    return item;
-//}
-
-//static GtkWidget *
-//read_menu(menup *m, GSettings *s)
-//{
-//    GtkWidget *w;
-//    GtkWidget *menu = NULL;
-//    GtkWidget* mi = NULL;
-//    const gchar *name, *fname, *str;
-//    GdkRGBA color={0.1, 0.1, 0.1, 0.375};
-//    guint i;
-
-//    menu = gtk_menu_new ();
-
-//    fname = NULL;
-//    name = NULL;
-//    g_settings_get(s, MENU_KEY_NAME,"ms",name);
-//    fname = g_settings_get_string(s, MENU_KEY_ICON);
-//    char* color_str = g_settings_get_string(s,MENU_KEY_COLOR);
-//    gdk_rgba_parse(&color,color_str);
-//    g_free(color_str);
-//    GVariantIter iter;
-//    gchar *item_name, *icon, *command, *action;
-//    GVariant* value = g_settings_get_value(s,MENU_KEY_LAYOUT);
-//    g_variant_iter_init(&iter,value);
-//    while (g_variant_iter_next(&iter,"(ssss)",&item_name,&command,&icon,&action))
-//    {
-//        if(!g_ascii_strcasecmp(item_name,"item")) {
-//            mi = read_item(m,command,icon,action);
-//        } else if (!g_ascii_strcasecmp(item_name,"separator")) {
-//            mi = read_separator(m);
-//        } else if (!g_ascii_strcasecmp(item_name,"system")){
-//            read_system_menu(GTK_MENU(menu),m);
-//            continue;
-//        } else if (!g_ascii_strcasecmp(item_name,"gmenumodel")) {
-//            mi = read_menumodel(m,command,icon,action);
-//        } else {
-//            g_warning("menu: unknown block %s", str);
-//            goto error;
-//        }
-//        if (!mi) {
-//            g_warning("menu: can't create menu item");
-//            goto error;
-//        }
-//        g_free(item_name);
-//        g_free(command);
-//        g_free(icon);
-//        g_free(action);
-//        gtk_widget_show(mi);
-//        gtk_menu_shell_append(GTK_MENU_SHELL(menu),mi);
-//    }
-//    g_variant_unref(value);
-//    m->fname = fname ? expand_tilda(fname) : g_strdup(DEFAULT_MENU_ICON);
-//    m->caption = g_strdup(name);
-//    w = make_button(m, m->fname, name, &color, menu);
-
-//    return w;
-
-//error:
-//    // FIXME: we need to recursivly destroy all child menus and their items
-//    gtk_widget_destroy(menu);
-//    RET(NULL);
-//}
-
-static void create_system_menubutton(MenuModelPlugin* m)
+static void monitor_update(MenuModelPlugin* m)
 {
-    g_menu_append_section(m->menu, NULL, do_applications_menu());
-    g_menu_append_section(m->menu, NULL, do_places_menu());
-    g_menu_append_section(m->menu, NULL, do_system_menu());
-    if (m->button)
-        gtk_widget_destroy(m->button);
+    if (m && m->monitor_update_idle == 0)
+        m->monitor_update_idle = g_timeout_add(200, monitor_update_idle, m);
+}
+
+static GMenuModel* read_menumodel(MenuModelPlugin* m)
+{
+    GtkBuilder* builder;
+    builder = gtk_builder_new();
+    gtk_builder_add_from_file(builder,m->model_file,NULL);
+    GMenuModel* menu = G_MENU_MODEL(gtk_builder_get_object(builder,m->model_name));
+    return menu;
+}
+
+
+static GMenuModel* return_menumodel(MenuModelPlugin* m)
+{
+    GMenuModel* ret;
+    if (m->internal)
+    {
+        ret = create_default_menumodel(m->bar,m->icon_str);
+        m->app_monitor = g_app_info_monitor_get();
+        g_signal_connect_swapped(m->app_monitor,"changed",G_CALLBACK(monitor_update),m);
+        m->file_monitor = NULL;
+    }
+    else
+    {
+        GFile* f;
+        if (!m->model_file)
+        {
+            return NULL;
+        }
+        f = g_file_new_for_path(m->model_file);
+        ret = read_menumodel(m);
+        m->app_monitor = NULL;
+        m->file_monitor = g_file_monitor_file(f,G_FILE_MONITOR_SEND_MOVED|G_FILE_MONITOR_WATCH_HARD_LINKS,NULL,NULL);
+        g_object_unref(f);
+        g_signal_connect_swapped(m->file_monitor,"changed",G_CALLBACK(monitor_update),m);
+    }
+    return ret;
+}
+
+static GtkWidget* menumodel_widget_create(MenuModelPlugin* m)
+{
+    m->menu = return_menumodel(m);
+    if (m->bar)
+        return create_menubar(m);
+    else
+        return create_menubutton(m);
+}
+
+static GtkWidget* create_menubutton(MenuModelPlugin* m)
+{
     m->button = gtk_menu_button_new();
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(m->button),G_MENU_MODEL(m->menu));
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(m->button),FALSE);
+    GtkWidget* img;
+    m->icon = img = simple_panel_image_new_for_icon(m->panel,m->icon_str,-1);
+    gtk_widget_show(img);
+    g_settings_get(m->settings,MENUMODEL_KEY_CAPTION,"ms",&m->caption);
+    gtk_button_set_image(GTK_BUTTON(m->button),img);
+    gtk_button_set_label(GTK_BUTTON(m->button),m->caption);
+    gtk_button_set_always_show_image(GTK_BUTTON(m->button),TRUE);
     gtk_button_set_relief(GTK_BUTTON(m->button),GTK_RELIEF_NONE);
-    css_apply_with_class(m->button,css,"-panel-menu",FALSE);
+    css_apply_with_class(m->button,panel_button_css,"-panel-menu",FALSE);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
+    gtk_widget_show(m->button);
+    return m->button;
 }
 
-static void create_system_menubar(MenuModelPlugin* m)
+static GtkWidget* create_menubar(MenuModelPlugin* m)
 {
-    GMenuItem* item;
-    GIcon* icon;
-    icon = g_icon_new_for_string(g_settings_get_string(m->settings,MENUMODEL_KEY_ICON),NULL);
-    item = g_menu_item_new_submenu(_("Applications"),do_applications_menu());
-    g_menu_item_set_icon(item,icon);
-    g_object_unref(icon);
-    g_menu_append_item(m->menu,item);
-    g_menu_append_submenu(m->menu, _("Places"), do_places_menu());
-    g_menu_append_submenu(m->menu, _("System"), do_system_menu());
-    if (m->button)
-        gtk_widget_destroy(m->button);
     m->button = gtk_menu_bar_new_from_model(G_MENU_MODEL(m->menu));
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
+    gtk_widget_show(m->button);
+    g_signal_connect(m->panel,"notify::edge",G_CALLBACK(panel_edge_changed),m);
+    return m->button;
 }
 
 static GtkWidget* menumodel_constructor(SimplePanel *panel, GSettings *settings)
 {
     MenuModelPlugin* plugin;
     gint type;
-    gboolean system;
+    gboolean system,internal;
     plugin = g_new0(MenuModelPlugin,1);
     g_return_val_if_fail(m != NULL, 0);
-    plugin->menu = g_menu_new();
     plugin->panel = panel;
     plugin->settings = settings;
-    type = g_settings_get_enum(settings,MENUMODEL_KEY_MENU_TYPE);
+    system = plugin->system = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_SYSTEM_MENU);
+    internal = plugin->internal = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_INTERNAL_MENU);
+    plugin->bar = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_MENU_BAR);
+    plugin->icon_str = g_settings_get_string(settings,MENUMODEL_KEY_ICON);
+    plugin->model_name = g_settings_get_string(settings,MENUMODEL_KEY_MODEL_NAME);
+    g_settings_get(plugin->settings,MENUMODEL_KEY_MODEL_FILE,"ms",&plugin->model_file);
+    g_settings_get(plugin->settings,MENUMODEL_KEY_CAPTION,"ms",&plugin->caption);
     plugin->box = gtk_event_box_new();
     gtk_event_box_set_visible_window(GTK_EVENT_BOX(plugin->box), FALSE);
-    system = plugin->has_system_menu = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_SYSTEM_MENU);
-    if (system && type == MENU_TYPE_BAR)
-    {
-        create_system_menubar(plugin);
-    }
-    else if (system && type == MENU_TYPE_BUTTON)
-    {
-        create_system_menubutton(plugin);
-    }
-
+    plugin->button = menumodel_widget_create(plugin);
+    lxpanel_plugin_set_data(plugin->box, plugin, menumodel_destructor);
+    gtk_widget_show(plugin->box);
+    return plugin->box;
 }
 
-//static GtkWidget *
-//menu_constructor(SimplePanel *panel, GSettings *settings)
-//{
-//    menup *m;
-//    int iw, ih;
-
-//    m = g_new0(menup, 1);
-//    g_return_val_if_fail(m != NULL, 0);
-
-//    gtk_icon_size_lookup( GTK_ICON_SIZE_MENU, &iw, &ih );
-//    m->iconsize = MAX(iw, ih);
-
-//    m->box = gtk_event_box_new();
-//    gtk_widget_set_has_window(m->box, FALSE);
-//    lxpanel_plugin_set_data(m->box, m, menu_destructor);
-
-//    /* Save construction pointers */
-//    m->panel = panel;
-//    m->settings = settings;
-//    m->img = read_menu(m, m->settings);
-//    if (!m->img) {
-//        g_warning("menu: plugin init failed");
-//        gtk_widget_destroy(m->box);
-//        return NULL;
-//    }
-//    return m->box;
-//}
-
-//static gboolean apply_config(gpointer user_data)
-//{
-//    GtkWidget *p = user_data;
-//    menup* m = lxpanel_plugin_get_data(p);
-
-//    if( m->fname ) {
-//        simple_panel_button_set_icon(m->img, m->fname,-1);
-//    }
-//    g_settings_set_string(m->settings, MENU_KEY_ICON, m->fname);
-//    g_settings_set(m->settings, MENU_KEY_NAME,"ms", m->caption);
-//    return FALSE;
-//}
+static gboolean apply_config(gpointer user_data)
+{
+    GtkWidget *p = user_data;
+    MenuModelPlugin* m = lxpanel_plugin_get_data(p);
+    g_settings_set_string(m->settings, MENUMODEL_KEY_ICON, m->icon_str);
+    g_settings_set(m->settings, MENUMODEL_KEY_CAPTION,"ms", m->caption);
+    g_settings_set_string(m->settings, MENUMODEL_KEY_MODEL_NAME, m->model_name);
+    g_settings_set(m->settings, MENUMODEL_KEY_MODEL_FILE,"ms", m->model_file);
+    g_settings_set_boolean(m->settings,MENUMODEL_KEY_IS_INTERNAL_MENU,m->internal);
+    g_settings_set_boolean(m->settings,MENUMODEL_KEY_IS_SYSTEM_MENU,m->system);
+    g_settings_set_boolean(m->settings,MENUMODEL_KEY_IS_MENU_BAR,m->bar);
+    menumodel_widget_destroy(m);
+    menumodel_widget_create(m);
+    return FALSE;
+}
 
 static GtkWidget *menumodel_config(SimplePanel *panel, GtkWidget *p)
 {
     MenuModelPlugin* menu = lxpanel_plugin_get_data(p);
-    return NULL;
-//    return lxpanel_generic_config_dlg(_("Menu"), panel, apply_config, p,
-//                                      _("Type"), &menu->fname, CONF_TYPE_,
-//                                      _("Icon"), &menu->fname, CONF_TYPE_FILE_ENTRY,
-//                                      _("Caption"), &menu->caption, CONF_TYPE_STR,
-//                                      NULL);
+
+    return lxpanel_generic_config_dlg(_("Custom Menu"), panel, apply_config, p,
+                                      _("If internal menu is enabled, menu file will not be used, predefeined menu will be used instead."),NULL, CONF_TYPE_TRIM,
+                                      _("Is internal menu"), &menu->internal, CONF_TYPE_BOOL,
+                                      _("Is system menu (can be keybound)"), &menu->system, CONF_TYPE_BOOL,
+                                      _("Is Menubar"), &menu->bar, CONF_TYPE_BOOL,
+                                      _("Icon (for button only)"), &menu->icon_str, CONF_TYPE_FILE_ENTRY,
+                                      _("Caption (for button only)"), &menu->caption, CONF_TYPE_STR,
+                                      _("Menu file name"), &menu->model_file, CONF_TYPE_FILE_ENTRY,
+                                      _("Menu name in file"), &menu->model_name, CONF_TYPE_STR,
+                                      NULL);
 }
 
 SimplePanelPluginInit lxpanel_static_plugin_menumodel = {
-    .name = N_("Menu"),
-    .description = N_("Applications Menu"),
-
+    .name = N_("Custom Menu"),
+    .description = N_("Any custom menu in GMenuModel XML format. Also supports setting it as application menu."),
     .new_instance = menumodel_constructor,
     .config = menumodel_config,
     .show_system_menu = show_system_menu,

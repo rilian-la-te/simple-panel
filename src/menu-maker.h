@@ -24,8 +24,11 @@
 
 G_BEGIN_DECLS
 
-GMenu* g_menu_from_system ();
-GMenuModel* do_applications_menu();
+GMenuModel* do_applications_menumodel();
+GMenuModel* do_places_menumodel();
+GMenuModel* do_system_menumodel();
+GMenuModel* create_default_menumodel(gboolean as_submenus, const gchar *icon_str);
+gchar* g_menu_make_xml (GMenuModel *model);
 
 G_END_DECLS
 

@@ -41,7 +41,8 @@ void simple_panel_add_prop_as_action(GActionMap* map,const char* prop);
 void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,const char* prop);
 void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop);
 void activate_menu_launch_id (GSimpleAction* action,GVariant* param, gpointer user_data);
-gchar* g_menu_make_xml (GMenuModel *model);
+void activate_menu_launch_uri (GSimpleAction* action,GVariant* param, gpointer user_data);
+void activate_menu_launch_command (GSimpleAction* action,GVariant* param, gpointer user_data);
 G_END_DECLS
 
 #endif

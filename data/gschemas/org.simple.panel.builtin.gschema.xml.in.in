@@ -59,11 +59,17 @@
     <key name="is-system-menu" type="b">
       <default>true</default>
     </key>
-    <key name="menu-type" enum="org.simple.panel.MenuTypeEnum">
-      <default>'bar'</default>
+    <key name="is-internal-menu" type="b">
+      <default>true</default>
+    </key>
+    <key name="is-menu-bar" type="b">
+      <default>true</default>
     </key>
     <key name="model-file" type="ms">
       <default>nothing</default>
+    </key>
+    <key name="model-name" type="s">
+      <default>'appmenu'</default>
     </key>
   </schema>
 </schemalist>

@@ -40,6 +40,7 @@
 #include "app-misc.h"
 #include "panel-enum-types.h"
 #include "misc.h"
+#include "menu-maker.h"
 
 enum
 {
@@ -69,6 +70,9 @@ const GActionEntry app_action_entries[] =
     {"terminal", activate_terminal, "s", NULL, NULL},
     {"preferences", activate_preferences, NULL, NULL, NULL},
     {"about", activate_about, NULL, NULL, NULL},
+    {"launch-id", activate_menu_launch_id, "s", NULL, NULL},
+    {"launch-uri", activate_menu_launch_uri, "s", NULL, NULL},
+    {"launch-command", activate_menu_launch_command, "s", NULL, NULL},
     {"run", activate_run, NULL, NULL, NULL},
     {"logout", activate_logout, NULL, NULL, NULL},
     {"shutdown", activate_shutdown, NULL, NULL, NULL},
@@ -449,7 +453,7 @@ void panel_app_class_init(PanelAppClass *klass)
                     "css",
                     "CSS File",
                     "Custom CSS Style of this panel",
-                    "",
+                    NULL,
                     G_PARAM_READWRITE));
     g_object_class_install_property (
                 gobject_class,

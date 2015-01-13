@@ -31,6 +31,11 @@
 #include "css.h"
 #include "dbg.h"
 
+const gchar *panel_button_css = ".-panel-menu {\n"
+        "padding: 0px 0px 0px 0px;\n"
+        "margin: 0px 0px 0px 0px;\n"
+        "}\n";
+
 void css_apply_with_class (GtkWidget* widget,const gchar* css, gchar* klass ,gboolean remove)
 {
     GtkStyleContext* context;
