@@ -37,7 +37,6 @@
 #include "private.h"
 #include "misc.h"
 #include "css.h"
-#include "dbg.h"
 #include "panel-enum-types.h"
 
 enum
@@ -1037,7 +1036,6 @@ mouse_watch(SimplePanel *panel)
     if (g_source_is_destroyed(g_main_current_source()))
         return FALSE;
 
-    ENTER;
     GdkDeviceManager *device_manager = gdk_display_get_device_manager (gdk_display_get_default());
     GdkDevice *device = gdk_device_manager_get_client_pointer (device_manager);
     gdk_device_get_position (device,NULL, &x, &y);
@@ -1079,7 +1077,7 @@ mouse_watch(SimplePanel *panel)
     p->ah_far = ((x < cx) || (x > cx + cw) || (y < cy) || (y > cy + ch));
 
     ah_state_set(panel, p->ah_state);
-    RET(TRUE);
+    return TRUE;
 }
 
 static gboolean ah_state_hide_timeout(gpointer p)
@@ -1097,7 +1095,6 @@ static void ah_state_set(SimplePanel *panel, PanelAHState ah_state)
     Panel *p = panel->priv;
     GdkRectangle rect;
 
-    ENTER;
     if (p->ah_state != ah_state) {
         p->ah_state = ah_state;
         switch (ah_state) {
@@ -1162,22 +1159,18 @@ static void ah_state_set(SimplePanel *panel, PanelAHState ah_state)
             ah_state_set(panel, AH_STATE_VISIBLE);
         }
     }
-    RET();
 }
 
 /* starts autohide behaviour */
 static void ah_start(SimplePanel *p)
 {
-    ENTER;
     if (!p->priv->mouse_timeout)
         p->priv->mouse_timeout = g_timeout_add(PERIOD, (GSourceFunc) mouse_watch, p);
-    RET();
 }
 
 /* stops autohide */
 static void ah_stop(SimplePanel *p)
 {
-    ENTER;
     if (p->priv->mouse_timeout) {
         g_source_remove(p->priv->mouse_timeout);
         p->priv->mouse_timeout = 0;
@@ -1186,7 +1179,6 @@ static void ah_stop(SimplePanel *p)
         g_source_remove(p->priv->hide_timeout);
         p->priv->hide_timeout = 0;
     }
-    RET();
 }
 /* end of the autohide code
  * ------------------------------------------------------------- */

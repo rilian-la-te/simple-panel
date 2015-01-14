@@ -6,7 +6,7 @@ Simple-panel TODO and Guidelines
 1. ~~Made it GSettings-compatible.~~ (done)
 2. ~~Split any X usage to plugins.~~ (done)
 3. ~~Made compositor-usable panel library.~~ (done)
-4. Replace menu-cache usage by gnome-menus.
+4. ~~Replace menu-cache usage by gnome-menus.~~ (done to GLib AppInfos)
 5. Configurable volumealsa plugin.
 6. New icon-based battery plugin.
 7. New run window interface (GtkEntry-based).

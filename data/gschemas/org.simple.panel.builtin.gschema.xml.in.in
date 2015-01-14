@@ -53,7 +53,7 @@
     <key name="menu-name" type="ms">
       <default>nothing</default>
     </key>
-    <key name="icon-name" type="s">
+    <key name="icon-name" type="ms">
       <default>'start-here-symbolic'</default>
     </key>
     <key name="is-system-menu" type="b">

@@ -37,7 +37,6 @@
 
 #include "misc.h"
 #include "plugin.h"
-#include "menu-policy.h"
 #include "menu-maker.h"
 #include "css.h"
 
@@ -51,7 +50,7 @@
 
 
 typedef struct {
-    GtkWidget *box, *button, *icon;
+    GtkWidget *box, *button;
     char* caption;
     SimplePanel *panel;
     GSettings *settings;
@@ -238,13 +237,15 @@ static GtkWidget* create_menubutton(MenuModelPlugin* m)
     m->button = gtk_menu_button_new();
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(m->button),G_MENU_MODEL(m->menu));
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(m->button),FALSE);
-    GtkWidget* img;
-    m->icon = img = simple_panel_image_new_for_icon(m->panel,m->icon_str,-1);
-    gtk_widget_show(img);
-    g_settings_get(m->settings,MENUMODEL_KEY_CAPTION,"ms",&m->caption);
-    gtk_button_set_image(GTK_BUTTON(m->button),img);
+    if(m->icon_str)
+    {
+        GtkWidget* img;
+        img = simple_panel_image_new_for_icon(m->panel,m->icon_str,-1);
+        gtk_widget_show(img);
+        gtk_button_set_image(GTK_BUTTON(m->button),img);
+        gtk_button_set_always_show_image(GTK_BUTTON(m->button),TRUE);
+    }
     gtk_button_set_label(GTK_BUTTON(m->button),m->caption);
-    gtk_button_set_always_show_image(GTK_BUTTON(m->button),TRUE);
     gtk_button_set_relief(GTK_BUTTON(m->button),GTK_RELIEF_NONE);
     css_apply_with_class(m->button,panel_button_css,"-panel-menu",FALSE);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
@@ -273,10 +274,10 @@ static GtkWidget* menumodel_constructor(SimplePanel *panel, GSettings *settings)
     system = plugin->system = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_SYSTEM_MENU);
     internal = plugin->internal = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_INTERNAL_MENU);
     plugin->bar = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_MENU_BAR);
-    plugin->icon_str = g_settings_get_string(settings,MENUMODEL_KEY_ICON);
     plugin->model_name = g_settings_get_string(settings,MENUMODEL_KEY_MODEL_NAME);
     g_settings_get(plugin->settings,MENUMODEL_KEY_MODEL_FILE,"ms",&plugin->model_file);
     g_settings_get(plugin->settings,MENUMODEL_KEY_CAPTION,"ms",&plugin->caption);
+    g_settings_get(plugin->settings,MENUMODEL_KEY_ICON,"ms",&plugin->icon_str);
     plugin->box = gtk_event_box_new();
     gtk_event_box_set_visible_window(GTK_EVENT_BOX(plugin->box), FALSE);
     plugin->button = menumodel_widget_create(plugin);
@@ -289,7 +290,7 @@ static gboolean apply_config(gpointer user_data)
 {
     GtkWidget *p = user_data;
     MenuModelPlugin* m = lxpanel_plugin_get_data(p);
-    g_settings_set_string(m->settings, MENUMODEL_KEY_ICON, m->icon_str);
+    g_settings_set(m->settings, MENUMODEL_KEY_ICON,"ms", m->icon_str);
     g_settings_set(m->settings, MENUMODEL_KEY_CAPTION,"ms", m->caption);
     g_settings_set_string(m->settings, MENUMODEL_KEY_MODEL_NAME, m->model_name);
     g_settings_set(m->settings, MENUMODEL_KEY_MODEL_FILE,"ms", m->model_file);

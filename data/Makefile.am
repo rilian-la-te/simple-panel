@@ -45,6 +45,7 @@ ui_in_files= \
 	ui/panel-pref.glade \
 	ui/panel-menus.glade \
 	ui/app-pref.glade \
+	ui/app-run.glade \
 	ui/launchtaskbar.glade \
 	ui/netstatus.glade
 

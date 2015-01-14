@@ -29,7 +29,6 @@
 #include <gdk/gdk.h>
 
 #include "css.h"
-#include "dbg.h"
 
 const gchar *panel_button_css = ".-panel-menu {\n"
         "padding: 0px 0px 0px 0px;\n"

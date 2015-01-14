@@ -35,7 +35,6 @@
 #include <libfm/fm-gtk.h>
 
 //#define DEBUG
-#include "dbg.h"
 
 //static void plugin_class_unref(PluginClass * pc);
 

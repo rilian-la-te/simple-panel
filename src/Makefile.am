@@ -70,15 +70,10 @@ simple_panel_SOURCES = \
 	app.c \
 	app-actions.c \
 	app-misc.c \
-        $(MENU_SOURCES) \
-        $(GMENU_SOURCES)
+        $(MENU_SRC)
 
 if ENABLE_MENU_CACHE
-MENU_SOURCES = menu-policy.c
-endif
-
-if ENABLE_GNOME_MENUS
-GMENU_SOURCES = gmenu-maker.c
+MENU_SRC = menu-policy.c
 endif
 
 simple_panel_includedir = $(includedir)/simple-panel
@@ -94,8 +89,7 @@ simple_panel_LDADD = \
 		libsimplepanel.la \
 		$(BUILTIN_PLUGINS) \
 		$(PACKAGE_LIBS) \
-		$(INTLLIBS) \
-		$(GNOME_MENUS_LIBS)
+		$(INTLLIBS)
 ##		$(X11_LIBS) \
 
 xdg_menumodel_maker_CFLAGS = $(simple_panel_CFLAGS) -DSTANDALONE_MAKER=1

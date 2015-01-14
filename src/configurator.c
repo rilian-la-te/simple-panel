@@ -35,7 +35,6 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 
-#include "dbg.h"
 #include "app.h"
 #include "panel.h"
 
@@ -695,7 +694,6 @@ update_opt_menu(GtkWidget *w, int ind)
 {
     int i;
 
-    ENTER;
     /* this trick will trigger "changed" signal even if active entry is
      * not actually changing */
     i = gtk_combo_box_get_active(GTK_COMBO_BOX(w));
@@ -704,7 +702,6 @@ update_opt_menu(GtkWidget *w, int ind)
         gtk_combo_box_set_active(GTK_COMBO_BOX(w), i);
     }
     gtk_combo_box_set_active(GTK_COMBO_BOX(w), ind);
-    RET();
 }
 
 void panel_configure( SimplePanel* panel, const gchar* sel_page )

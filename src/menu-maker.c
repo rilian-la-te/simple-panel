@@ -27,6 +27,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #define DESKTOP_ENTRY "Desktop Entry"
 #define DESKTOP_FILES_DIR "applications"
 #define CATEGORIES "Categories"
@@ -97,7 +101,7 @@ g_menu_print_string (GString    *string,
             if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
             {
                 gchar *str;
-                str = g_markup_printf_escaped (" %s='%s'", name, g_variant_get_string (value, NULL));
+                str = g_markup_printf_escaped (" %s=\"%s\"", name, g_variant_get_string (value, NULL));
                 g_string_append (attrs, str);
                 g_free (str);
             }
@@ -110,7 +114,7 @@ g_menu_print_string (GString    *string,
 
                 printed = g_variant_print (value, TRUE);
                 type = g_variant_type_peek_string (g_variant_get_type (value));
-                str = g_markup_printf_escaped ("<attribute name='%s' type='%s'>%s</attribute>\n", name, type, printed);
+                str = g_markup_printf_escaped ("<attribute name=\"%s\" type=\"%s\">%s</attribute>\n", name, type, printed);
                 indent_string (contents, indent + tabstop);
                 g_string_append (contents, str);
                 g_free (printed);
@@ -130,7 +134,7 @@ g_menu_print_string (GString    *string,
             if (contents->str[0])
                 g_string_append_c (contents, '\n');
 
-            str = g_markup_printf_escaped ("<link name='%s'>\n", name);
+            str = g_markup_printf_escaped ("<link name=\"%s\">\n", name);
             indent_string (contents, indent + tabstop);
             g_string_append (contents, str);
             g_free (str);
@@ -219,6 +223,7 @@ static void add_app_info(gpointer data_info, gpointer data_menu)
             {
                 menu_link = G_MENU(g_menu_model_get_item_link(G_MENU_MODEL(menu),i,G_MENU_LINK_SUBMENU));
                 g_menu_append_item(menu_link,item);
+                g_object_unref(menu_link);
                 break;
             }
         }
@@ -226,6 +231,7 @@ static void add_app_info(gpointer data_info, gpointer data_menu)
         {
             menu_link = G_MENU(g_menu_model_get_item_link(G_MENU_MODEL(menu),other_num,G_MENU_LINK_SUBMENU));
             g_menu_append_item(menu_link,item);
+            g_object_unref(menu_link);
         }
     }
 out:
@@ -252,12 +258,16 @@ GMenuModel* do_applications_menumodel(gboolean for_settings)
     for (i = 0; i < G_N_ELEMENTS(main_cats); i++)
     {
         submenu = g_menu_new();
+        GIcon* icon;
+        GVariant* val;
         item = g_menu_item_new_submenu(main_cats[i].local_name ?
                                            main_cats[i].local_name : main_cats[i].name,G_MENU_MODEL(submenu));
-        g_menu_item_set_icon(item,g_icon_new_for_string(main_cats[i].icon,NULL));
+        icon = g_icon_new_for_string(main_cats[i].icon,NULL);
+        g_menu_item_set_icon(item,icon);
         g_menu_item_set_attribute(item,MENU_CAT,"s",main_cats[i].name);
         g_menu_append_item(menu,item);
         g_object_unref(item);
+        g_object_unref(icon);
     }
     g_list_foreach(app_infos_list,(add_app_info),menu);
     g_list_free_full(app_infos_list,(GDestroyNotify)g_object_unref);
@@ -434,6 +444,7 @@ GMenuModel* do_system_menumodel()
 GMenuModel* create_default_menumodel(gboolean as_submenus, const gchar* icon_str)
 {
     GMenu* menu = g_menu_new();
+    GMenu* section;
     if (as_submenus)
     {
         GMenuItem* item;
@@ -448,10 +459,15 @@ GMenuModel* create_default_menumodel(gboolean as_submenus, const gchar* icon_str
     }
     else
     {
-        g_menu_append_section(menu, _("Applications"), do_applications_menumodel(FALSE));
-        g_menu_append_section(menu, _("Places"), do_places_menumodel());
-        g_menu_append_section(menu, _("System"), do_system_menumodel());
+        g_menu_append(menu,_("Simple Panel v"VERSION),NULL);
+        g_menu_append_section(menu, NULL, do_applications_menumodel(FALSE));
+        section = g_menu_new();
+        g_menu_append_submenu(section, _("Places"), do_places_menumodel());
+        g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
+        g_object_unref(section);
+        g_menu_append_section(menu, NULL, do_system_menumodel());
     }
+    g_menu_freeze(menu);
     return G_MENU_MODEL(menu);
 }
 

@@ -22,21 +22,25 @@
 #endif
 
 #include <gtk/gtk.h>
+#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n.h>
 #include <string.h>
 #include <unistd.h>
 
-#ifndef DISABLE_MENU
-#include <menu-cache.h>
-#endif
-#include <libfm/fm-gtk.h>
-
+#include "css.h"
 static GtkWidget* win = NULL; /* the run dialog */
-#ifndef DISABLE_MENU
-static MenuCache* menu_cache = NULL;
-static GSList* app_list = NULL; /* all known apps in menu cache */
-static gpointer reload_notify_id = NULL;
-#endif
+static GAppInfoMonitor* monitor = NULL; /* apps monitor*/
+static GList* app_list = NULL; /* all known apps in cache */
+static gboolean terminal;
+
+const gchar* css = ".-panel-run-dialog {"
+        "border-radius: 6px;"
+        "border: none;"
+        "}"
+        ".-panel-run-header {"
+        "background-image: none;"
+        "background-color: transparent;"
+        "}";
 
 typedef struct _ThreadData
 {
@@ -47,11 +51,11 @@ typedef struct _ThreadData
 
 static ThreadData* thread_data = NULL; /* thread data used to load availble programs in PATH */
 
-#ifndef DISABLE_MENU
-static MenuCacheApp* match_app_by_exec(const char* exec)
+
+static GDesktopAppInfo* match_app_by_exec(const char* exec)
 {
-    GSList* l;
-    MenuCacheApp* ret = NULL;
+    GList* l;
+    GDesktopAppInfo* ret = NULL;
     char* exec_path = g_find_program_in_path(exec);
     const char* pexec;
     int path_len, exec_len, len;
@@ -64,8 +68,8 @@ static MenuCacheApp* match_app_by_exec(const char* exec)
 
     for( l = app_list; l; l = l->next )
     {
-        MenuCacheApp* app = MENU_CACHE_APP(l->data);
-        const char* app_exec = menu_cache_app_get_exec(app);
+        GAppInfo* app = G_APP_INFO(l->data);
+        const char* app_exec = g_app_info_get_executable(app);
         if ( ! app_exec)
             continue;
 #if 0   /* This is useless and incorrect. */
@@ -100,21 +104,8 @@ static MenuCacheApp* match_app_by_exec(const char* exec)
             /* exact match has the highest priority */
             if( app_exec[len] == '\0' )
             {
-                ret = app;
+                ret = G_DESKTOP_APP_INFO(app);
                 break;
-            }
-            /* those matches the pattern: exe_name %F|%f|%U|%u have higher priority */
-            if( app_exec[len] == ' ' )
-            {
-                if( app_exec[len + 1] == '%' )
-                {
-                    if( strchr( "FfUu", app_exec[len + 2] ) )
-                    {
-                        ret = app;
-                        break;
-                    }
-                }
-                ret = app;
             }
         }
     }
@@ -143,11 +134,9 @@ static MenuCacheApp* match_app_by_exec(const char* exec)
             }
         }
     }
-
     g_free(exec_path);
     return ret;
 }
-#endif
 
 static void setup_auto_complete_with_data(ThreadData* data)
 {
@@ -247,27 +236,37 @@ static void setup_auto_complete( GtkEntry* entry )
     }
 }
 
-#ifndef DISABLE_MENU
-static void reload_apps(MenuCache* cache, gpointer user_data)
+static void reload_apps(GAppInfoMonitor* cache, gpointer user_data)
 {
     g_debug("reload apps!");
     if(app_list)
-    {
-        g_slist_foreach(app_list, (GFunc)menu_cache_item_unref, NULL);
-        g_slist_free(app_list);
-    }
-    app_list = menu_cache_list_all_apps(cache);
+        g_list_free_full(app_list,(GDestroyNotify)g_object_unref);
+    app_list = g_app_info_get_all();
 }
-#endif
 
 static void on_response( GtkDialog* dlg, gint response, gpointer user_data )
 {
     GtkEntry* entry = (GtkEntry*)user_data;
     if( G_LIKELY(response == GTK_RESPONSE_OK) )
     {
-        if (!fm_launch_command_simple(GTK_WINDOW(dlg), NULL, 0, gtk_entry_get_text(entry), NULL))
+        GAppInfo* app_info;
+        GError* err = NULL;
+        app_info = g_app_info_create_from_commandline(gtk_entry_get_text(entry),NULL,G_APP_INFO_CREATE_SUPPORTS_STARTUP_NOTIFICATION,&err);
+        if (err)
         {
             g_signal_stop_emission_by_name( dlg, "response" );
+            g_object_unref(app_info);
+            g_clear_error(&err);
+            return;
+        }
+        gboolean launch = g_app_info_launch(app_info,NULL,
+                                            G_APP_LAUNCH_CONTEXT(gdk_display_get_app_launch_context(gdk_display_get_default())),&err);
+        if (!launch || err)
+        {
+            g_signal_stop_emission_by_name( dlg, "response" );
+            g_object_unref(app_info);
+            if (err)
+                g_clear_error(&err);
             return;
         }
     }
@@ -279,94 +278,88 @@ static void on_response( GtkDialog* dlg, gint response, gpointer user_data )
     gtk_widget_destroy( (GtkWidget*)dlg );
     win = NULL;
 
-#ifndef DISABLE_MENU
     /* free app list */
-    g_slist_foreach(app_list, (GFunc)menu_cache_item_unref, NULL);
-    g_slist_free(app_list);
+    g_list_free_full(app_list,(GDestroyNotify)g_object_unref);
     app_list = NULL;
 
     /* free menu cache */
-    menu_cache_remove_reload_notify(menu_cache, reload_notify_id);
-    reload_notify_id = NULL;
-    menu_cache_unref(menu_cache);
-    menu_cache = NULL;
-#endif
+    g_signal_handlers_disconnect_matched(monitor,G_SIGNAL_MATCH_FUNC,0,0,NULL,reload_apps,NULL);
+    g_object_unref(monitor);
+    monitor = NULL;
 }
 
-#ifndef DISABLE_MENU
-static void on_entry_changed( GtkEntry* entry, GtkImage* img )
+static void on_entry_changed( GtkEntry* entry, gpointer user_data)
 {
     const char* str = gtk_entry_get_text(entry);
-    MenuCacheApp* app = NULL;
+    GDesktopAppInfo* app = NULL;
     if( str && *str )
         app = match_app_by_exec(str);
 
     if( app )
     {
-        int w, h;
-        const char *name = menu_cache_item_get_icon(MENU_CACHE_ITEM(app));
-        FmIcon * fm_icon;
-        GdkPixbuf* pix;
-
-        gtk_icon_size_lookup(GTK_ICON_SIZE_DIALOG, &w, &h);
-        fm_icon = fm_icon_from_name(name ? name : "application-x-executable");
-        pix = fm_pixbuf_from_icon_with_fallback(fm_icon, h, "application-x-executable");
-        g_object_unref(fm_icon);
-        gtk_image_set_from_pixbuf(img, pix);
-        g_object_unref(pix);
+        gtk_entry_set_icon_from_gicon(entry,GTK_ENTRY_ICON_PRIMARY,g_app_info_get_icon(G_APP_INFO(app)));
     }
     else
     {
-        gtk_image_set_from_icon_name(img, "application-x-executable", GTK_ICON_SIZE_DIALOG);
+        gtk_entry_set_icon_from_icon_name(entry,GTK_ENTRY_ICON_PRIMARY, "application-x-executable");
     }
 }
-#endif
+
+static void on_entry_activated(GtkEntry* entry, GtkDialog* dlg)
+{
+    gtk_dialog_response(dlg,GTK_RESPONSE_OK);
+}
+
+static void on_icon_activated(GtkEntry* entry, GtkEntryIconPosition pos, GdkEventButton* event, GtkDialog* dlg)
+{
+    if (pos == GTK_ENTRY_ICON_SECONDARY)
+    {
+        if (event->button == 1)
+            gtk_dialog_response(dlg, GTK_RESPONSE_OK);
+    }
+}
 
 void gtk_run()
 {
-    GtkWidget *entry, *hbox, *img, *dlg_vbox;
+    GtkWidget *entry ,*h;
+    GtkBuilder* builder;
+    GError* err = NULL;
 
     if(!win)
     {
-        win = gtk_dialog_new_with_buttons( _("Run"),
-                                           NULL,
-                                           0,
-                                           _("_Cancel"), GTK_RESPONSE_CANCEL,
-                                           _("_Run"), GTK_RESPONSE_OK,
-                                           NULL );
+        builder = gtk_builder_new();
+        if( !gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/app-run.ui", &err) )
+        {
+            if (err)
+            {
+                g_print("%s\n",err->message);
+                g_clear_error(&err);
+            }
+            g_object_unref(builder);
+            return;
+        }
+        win = GTK_WIDGET(gtk_builder_get_object(builder,"app-run"));
         gtk_dialog_set_default_response( (GtkDialog*)win, GTK_RESPONSE_OK );
-        entry = gtk_entry_new();
+        gtk_window_set_keep_above(GTK_WINDOW(win),TRUE);
+        css_apply_with_class(win,css,"-panel-run-dialog",FALSE);
+        entry = GTK_WIDGET(gtk_builder_get_object(builder,"main-entry"));
 
-        gtk_entry_set_activates_default( (GtkEntry*)entry, TRUE );
-        dlg_vbox = gtk_dialog_get_content_area((GtkDialog*)win);
-
-        hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2 );
-        img = gtk_image_new_from_icon_name("application-x-executable", GTK_ICON_SIZE_DIALOG );
-        gtk_box_pack_start( (GtkBox*)hbox, img,
-                             FALSE, FALSE, 4 );
-        gtk_box_pack_start( (GtkBox*)hbox, entry, TRUE, TRUE, 4 );
-        gtk_box_pack_start( (GtkBox*)dlg_vbox,
-                             hbox, FALSE, FALSE, 8 );
         g_signal_connect( win, "response", G_CALLBACK(on_response), entry );
-        gtk_window_set_position( (GtkWindow*)win, GTK_WIN_POS_CENTER );
-        gtk_window_set_default_size( (GtkWindow*)win, 360, -1 );
-        gtk_window_set_resizable((GtkWindow*)win,FALSE);
+        h = GTK_WIDGET(gtk_builder_get_object(builder,"main-box"));
+        css_apply_with_class(h,css,"-panel-run-header",FALSE);
+        gtk_widget_grab_focus(entry);
         gtk_widget_show_all( win );
 
         setup_auto_complete( (GtkEntry*)entry );
         gtk_widget_show(win);
 
-#ifndef DISABLE_MENU
-        g_signal_connect(entry ,"changed", G_CALLBACK(on_entry_changed), img);
+        g_signal_connect(entry ,"changed", G_CALLBACK(on_entry_changed), NULL);
+        g_signal_connect(entry, "activate", G_CALLBACK(on_entry_activated), GTK_DIALOG(win));
+        g_signal_connect(entry, "icon-press", G_CALLBACK(on_icon_activated), GTK_DIALOG(win));
 
         /* get all apps */
-        menu_cache = menu_cache_lookup_sync(g_getenv("XDG_MENU_PREFIX") ? "applications.menu" : "lxde-applications.menu" );
-        if( menu_cache )
-        {
-            app_list = menu_cache_list_all_apps(menu_cache);
-            reload_notify_id = menu_cache_add_reload_notify(menu_cache, reload_apps, NULL);
-        }
-#endif
+        monitor = g_app_info_monitor_get();
+        app_list = g_app_info_get_all();
     }
 
     gtk_window_present(GTK_WINDOW(win));

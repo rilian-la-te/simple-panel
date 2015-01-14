@@ -32,8 +32,6 @@
 #include "private.h"
 #include "css.h"
 
-#include "dbg.h"
-
 /* data used by themed images buttons */
 typedef struct {
     GIcon *icon;
@@ -78,7 +76,6 @@ calculate_width(int scrw, int wtype, int align, int margin,
             *x = 0;
     } else if (align == PANEL_ALIGN_CENTER)
         *x += (scrw - *panw) / 2;
-    RET();
 }
 
 
@@ -139,8 +136,7 @@ void calculate_position(SimplePanel *np)
 gchar *
 expand_tilda(const gchar *file)
 {
-    ENTER;
-    RET((file[0] == '~') ?
+    return ((file[0] == '~') ?
         g_strdup_printf("%s%s", getenv("HOME"), file+1)
         : g_strdup(file));
 
@@ -351,7 +347,6 @@ void
 get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name)
 {
     GtkWidget *b;
-    ENTER;
     b = gtk_button_new();
     gtk_widget_set_name(GTK_WIDGET(b), name);
     gtk_widget_set_can_focus(b, FALSE);
@@ -365,7 +360,7 @@ get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name)
     gtk_widget_get_preferred_size(b, req, NULL);
 
     gtk_widget_destroy(b);
-    RET();
+    return;
 }
 
 gboolean spawn_command_async(GtkWindow *parent_window, gchar const* workdir,

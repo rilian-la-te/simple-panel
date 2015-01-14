@@ -75,17 +75,6 @@ AC_SUBST(MENU_CACHE_CFLAGS)
 AC_SUBST(MENU_CACHE_LIBS)
 AM_CONDITIONAL(ENABLE_MENU_CACHE, test x"$enable_menu_cache" = x"yes")
 
-pkg_modules="libgnome-menu-3.0"
-PKG_CHECK_MODULES(GNOME_MENUS, [$pkg_modules],
-		  enable_gnome_menus=yes, enable_gnome_menus=no)
-if test x"$enable_gnome_menus" = "xno"; then
-	AC_WARN([No gnome-menus found.  All menu related routines are not built.])
-	AC_DEFINE(DISABLE_GMENU, [1], [Disable menu related routines])
-fi
-AC_SUBST(GNOME_MENUS_CFLAGS)
-AC_SUBST(GNOME_MENUS_LIBS)
-AM_CONDITIONAL(ENABLE_GNOME_MENUS, test x"$enable_gnome_menus" = x"yes")
-
 AC_ARG_ENABLE(more_warnings,
        [AC_HELP_STRING([--enable-more-warnings],
                [Add more warnings @<:@default=no@:>@])],

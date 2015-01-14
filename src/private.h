@@ -135,7 +135,6 @@ struct _Panel {
 #define STATIC_LAUNCHBAR
 #define STATIC_DCLOCK
 #define STATIC_DIRMENU
-#define STATIC_MENU
 #define STATIC_MENUMODEL
 #define STATIC_SPACE
 #define STATIC_ICONS
