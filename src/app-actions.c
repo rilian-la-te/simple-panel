@@ -101,25 +101,25 @@ void activate_logout(GSimpleAction* simple, GVariant* param, gpointer data)
 {
     gchar* command;
     GVariant* par;
-    GtkApplication* app;
+    GtkApplication* app = GTK_APPLICATION(data);
 
     g_object_get(app,"logout-command",&command,NULL);
     par = g_variant_new_string(command);
-    g_free(command);
     activate_menu_launch_command(NULL,par,NULL);
     g_variant_unref(par);
+    g_free(command);
 }
 
 void activate_shutdown(GSimpleAction* simple, GVariant* param, gpointer data)
 {
     gchar* command;
     GVariant* par;
-    GtkApplication* app;
+    GtkApplication* app = GTK_APPLICATION(data);
 
     g_object_get(app,"shutdown-command",&command,NULL);
     par = g_variant_new_string(command);
-    g_free(command);
     activate_menu_launch_command(NULL,par,NULL);
+    g_free(command);
     g_variant_unref(par);
 }
 
