@@ -514,8 +514,8 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     PANEL_PROP_EDGE,
                     "Edge",
                     "Edge of the screen where panel attached",
-                    PANEL_EDGE_TYPE,
-                    PANEL_EDGE_TOP,
+                    gtk_position_type_get_type(),
+                    GTK_POS_TOP,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(
                 gobject_class,
@@ -778,12 +778,12 @@ gboolean _panel_edge_can_strut(SimplePanel *panel, int edge, gint monitor, gulon
         s = p->height_when_hidden;
     else switch (edge)
     {
-    case PANEL_EDGE_LEFT:
-    case PANEL_EDGE_RIGHT:
+    case GTK_POS_LEFT:
+    case GTK_POS_RIGHT:
         s = p->aw;
         break;
-    case PANEL_EDGE_TOP:
-    case PANEL_EDGE_BOTTOM:
+    case GTK_POS_TOP:
+    case GTK_POS_BOTTOM:
         s = p->ah;
         break;
     default: /* error! */
@@ -804,22 +804,22 @@ gboolean _panel_edge_can_strut(SimplePanel *panel, int edge, gint monitor, gulon
     gdk_screen_get_monitor_geometry(screen, monitor, &rect);
     switch (edge)
     {
-        case PANEL_EDGE_LEFT:
+        case GTK_POS_LEFT:
             rect.width = rect.x;
             rect.x = 0;
             s += rect.width;
             break;
-        case PANEL_EDGE_RIGHT:
+        case GTK_POS_RIGHT:
             rect.x += rect.width;
             rect.width = gdk_screen_get_width(screen) - rect.x;
             s += rect.width;
             break;
-        case PANEL_EDGE_TOP:
+        case GTK_POS_TOP:
             rect.height = rect.y;
             rect.y = 0;
             s += rect.height;
             break;
-        case PANEL_EDGE_BOTTOM:
+        case GTK_POS_BOTTOM:
             rect.y += rect.height;
             rect.height = gdk_screen_get_height(screen) - rect.y;
             s += rect.height;
@@ -866,22 +866,22 @@ void _panel_set_wm_strut(SimplePanel *panel)
     /* Dispatch on edge to set up strut parameters. */
     switch (p->edge)
     {
-        case PANEL_EDGE_LEFT:
+        case GTK_POS_LEFT:
             index = 0;
             strut_lower = p->ay;
             strut_upper = p->ay + p->ah;
             break;
-        case PANEL_EDGE_RIGHT:
+        case GTK_POS_RIGHT:
             index = 1;
             strut_lower = p->ay;
             strut_upper = p->ay + p->ah;
             break;
-        case PANEL_EDGE_TOP:
+        case GTK_POS_TOP:
             index = 2;
             strut_lower = p->ax;
             strut_upper = p->ax + p->aw;
             break;
-        case PANEL_EDGE_BOTTOM:
+        case GTK_POS_BOTTOM:
             index = 3;
             strut_lower = p->ax;
             strut_upper = p->ax + p->aw;
@@ -1058,17 +1058,17 @@ mouse_watch(SimplePanel *panel)
     if (p->ah_state == AH_STATE_HIDDEN) {
         gap = MAX(p->height_when_hidden, GAP);
         switch (p->edge) {
-        case PANEL_EDGE_LEFT:
+        case GTK_POS_LEFT:
             cw = gap;
             break;
-        case PANEL_EDGE_RIGHT:
+        case GTK_POS_RIGHT:
             cx = cx + cw - gap;
             cw = gap;
             break;
-        case PANEL_EDGE_TOP:
+        case GTK_POS_TOP:
             ch = gap;
             break;
-        case PANEL_EDGE_BOTTOM:
+        case GTK_POS_BOTTOM:
             cy = cy + ch - gap;
             ch = gap;
             break;
@@ -1232,16 +1232,16 @@ static gboolean _panel_set_monitor(SimplePanel* panel, int monitor)
 }
 /* FIXME: Potentially we can support multiple panels at the same edge,
  * but currently this cannot be done due to some positioning problems. */
-static char* gen_panel_name( PanelEdgeType edge, gint mon)
+static char* gen_panel_name( GtkPositionType edge, gint mon)
 {
     const gchar* edge_str;
-    if (edge == PANEL_EDGE_TOP)
+    if (edge == GTK_POS_TOP)
         edge_str="top";
-    if (edge == PANEL_EDGE_BOTTOM)
+    if (edge == GTK_POS_BOTTOM)
         edge_str="bottom";
-    if (edge == PANEL_EDGE_LEFT)
+    if (edge == GTK_POS_LEFT)
         edge_str="left";
-    if (edge == PANEL_EDGE_RIGHT)
+    if (edge == GTK_POS_RIGHT)
         edge_str="right";
     char* name = NULL;
     char* dir = _user_config_file_name("panels", NULL);
@@ -1270,7 +1270,8 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
 {
     SimplePanel* panel = (SimplePanel*) data;
     gint m, monitors;
-    PanelEdgeType e;
+    GtkWidget* msg;
+    gint e;
     GdkScreen *screen;
     SimplePanel *new_panel = panel_allocate(panel->priv->app);
     Panel *p = new_panel->priv;
@@ -1292,7 +1293,7 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
         gdk_device_get_position(device,&screen, &x, &y);
         m = gdk_screen_get_monitor_at_point(screen, x, y);
     }
-    for (e = PANEL_EDGE_TOP; e < PANEL_EDGE_RIGHT; ++e)
+    for (e = 3; e >= 0; e--)
     {
         if (panel_edge_available(p, e, m))
         {
@@ -1305,7 +1306,7 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     for(m=0; m<monitors; ++m)
     {
         /* try each of the four edges */
-        for(e=PANEL_EDGE_TOP; e<=PANEL_EDGE_RIGHT; ++e)
+        for(e = 3; e >= 0; e--)
         {
             if(panel_edge_available(p,e,m)) {
                 p->edge = e;
@@ -1317,7 +1318,15 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
 
     gtk_widget_destroy(GTK_WIDGET(new_panel));
     g_warning("Error adding panel: There is no room for another panel. All the edges are taken.");
-    fm_show_error(NULL, NULL, _("There is no room for another panel. All the edges are taken."));
+    msg = gtk_message_dialog_new
+            (GTK_WINDOW(panel),
+             GTK_DIALOG_DESTROY_WITH_PARENT,
+             GTK_MESSAGE_ERROR,GTK_BUTTONS_CLOSE,
+             "There is no room for another panel. All the edges are taken.");
+    panel_apply_icon(GTK_WINDOW(msg));
+    gtk_window_set_title( (GtkWindow*)msg, _("Error") );
+    gtk_dialog_run(GTK_DIALOG(msg));
+    gtk_widget_destroy(msg);
     return;
 
 found_edge:
@@ -1328,7 +1337,7 @@ found_edge:
     panel_add_actions(new_panel);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
-    panel_configure(new_panel, 0);
+    panel_configure(new_panel, "geometry");
     gtk_widget_show_all(GTK_WIDGET(new_panel));
     gtk_widget_queue_draw(GTK_WIDGET(new_panel));
 }
@@ -1560,7 +1569,7 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     GList *plugins, *l;
 
     GtkOrientation previous_orientation = p->orientation;
-    p->orientation = (p->edge == PANEL_EDGE_TOP || p->edge == PANEL_EDGE_BOTTOM)
+    p->orientation = (p->edge == GTK_POS_TOP || p->edge == GTK_POS_BOTTOM)
         ? GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
     /* either first run or orientation was changed */
     if (!p->initialized || previous_orientation != p->orientation)
@@ -1733,17 +1742,11 @@ GtkIconTheme *panel_get_icon_theme(SimplePanel *panel)
 
 GtkPositionType panel_get_edge(SimplePanel *panel)
 {
-    switch (panel->priv->edge)
-    {
-    case PANEL_EDGE_BOTTOM:
-        return GTK_POS_BOTTOM;
-    case PANEL_EDGE_TOP:
-        return GTK_POS_TOP;
-    case PANEL_EDGE_LEFT:
-        return GTK_POS_LEFT;
-    case PANEL_EDGE_RIGHT:
-        return GTK_POS_RIGHT;
-    }
+    return panel->priv->edge;
+}
+GtkApplication* panel_get_application(SimplePanel *panel)
+{
+    return panel->priv->app;
 }
 
 gboolean panel_is_dynamic(SimplePanel *panel)

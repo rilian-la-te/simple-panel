@@ -25,12 +25,13 @@
 #include "app.h"
 
 G_BEGIN_DECLS
+void activate_menu(GSimpleAction* simple, GVariant* param, gpointer data);
 void activate_about(GSimpleAction* simple, GVariant* param, gpointer data);
 void activate_run(GSimpleAction* simple, GVariant* param, gpointer data);
 void activate_exit(GSimpleAction* simple, GVariant* param, gpointer data);
 void activate_logout(GSimpleAction* simple, GVariant* param, gpointer data);
 void activate_shutdown(GSimpleAction* simple, GVariant* param, gpointer data);
-void activate_terminal(GSimpleAction* simple, GVariant* param, gpointer data);
+void activate_panel_preferences(GSimpleAction* simple, GVariant* param, gpointer data);
 GSettings *load_global_config_gsettings(PanelApp* app, GSettingsBackend **config);
 void apply_styling(PanelApp* app);
 

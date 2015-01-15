@@ -97,16 +97,16 @@ static void edge_changed(SimplePanel* panel, GParamSpec* spec, GtkWidget* w)
     gchar* str = NULL;
     switch (edge)
     {
-    case PANEL_EDGE_BOTTOM:
+    case GTK_POS_BOTTOM:
         str = _("Edge: Bottom");
         break;
-    case PANEL_EDGE_TOP:
+    case GTK_POS_TOP:
         str = _("Edge: Top");
         break;
-    case PANEL_EDGE_LEFT:
+    case GTK_POS_LEFT:
         str = _("Edge: Left");
         break;
-    case PANEL_EDGE_RIGHT:
+    case GTK_POS_RIGHT:
         str = _("Edge: Right");
         break;
     };
@@ -214,7 +214,7 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
         g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,100);
         break;
     case PANEL_SIZE_PIXEL:
-        if ((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM))
+        if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
         {
             simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_width());
             g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,gdk_screen_width());
@@ -789,7 +789,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     if( p->widthtype == PANEL_SIZE_PERCENT)
         upper = 100;
     else if( p->widthtype == PANEL_SIZE_PIXEL)
-        upper = (((p->edge == PANEL_EDGE_TOP) || (p->edge == PANEL_EDGE_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
+        upper = (((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
     simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),0,upper);
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->width );
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_WIDTH,w,"value",G_SETTINGS_BIND_DEFAULT);

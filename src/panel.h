@@ -107,6 +107,7 @@ extern GtkPositionType panel_get_edge(SimplePanel *panel);
 extern gboolean panel_is_dynamic(SimplePanel *panel);
 extern GtkWidget *panel_box_new(SimplePanel *panel, gint spacing);
 extern GtkWidget *panel_separator_new(SimplePanel *panel);
+extern GtkApplication* panel_get_application(SimplePanel* panel);
 
 G_END_DECLS
 

@@ -59,20 +59,18 @@ G_DEFINE_TYPE_WITH_PRIVATE(PanelApp, panel_app, GTK_TYPE_APPLICATION)
 
 #define PANEL_APP_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SIMPLE_TYPE_PANEL_APP, PanelAppPrivate))
 
-static gchar *ccommand = NULL;
 static gboolean is_started;
+
 static void activate_preferences (GSimpleAction* simple, GVariant* param, gpointer data);
-
-static const gchar* panel_commands = "run menu config exit ";
-
 const GActionEntry app_action_entries[] =
 {
-    {"terminal", activate_terminal, "s", NULL, NULL},
     {"preferences", activate_preferences, NULL, NULL, NULL},
+    {"panel-preferences", activate_panel_preferences, "s", NULL, NULL},
     {"about", activate_about, NULL, NULL, NULL},
     {"launch-id", activate_menu_launch_id, "s", NULL, NULL},
     {"launch-uri", activate_menu_launch_uri, "s", NULL, NULL},
     {"launch-command", activate_menu_launch_command, "s", NULL, NULL},
+    {"menu", activate_menu, NULL, NULL, NULL},
     {"run", activate_run, NULL, NULL, NULL},
     {"logout", activate_logout, NULL, NULL, NULL},
     {"shutdown", activate_shutdown, NULL, NULL, NULL},
@@ -197,44 +195,6 @@ void panel_app_activate(GApplication* app)
             apply_styling(PANEL_APP(app));
         }
     }
-    if (ccommand!=NULL)
-    {
-        if (!g_strcmp0(ccommand,"menu"))
-        {
-#ifndef DISABLE_MENU
-            GList* l;
-            GList* all_panels = gtk_application_get_windows(GTK_APPLICATION(app));
-            for( l = all_panels; l; l = l->next )
-            {
-                SimplePanel* p = (SimplePanel*)l->data;
-                GList *plugins, *pl;
-
-                plugins = gtk_container_get_children(GTK_CONTAINER(p->priv->box));
-                for (pl = plugins; pl; pl = pl->next)
-                {
-                    const SimplePanelPluginInit *init = PLUGIN_CLASS(pl->data);
-                    if (init->show_system_menu)
-                    /* queue to show system menu */
-                        init->show_system_menu(pl->data);
-                }
-                g_list_free(plugins);
-            }
-#endif
-        }
-        else if (!g_strcmp0(ccommand,"run"))
-            gtk_run(app);
-        else if (!g_strcmp0(ccommand,"config"))
-        {
-            GList* all_panels = gtk_application_get_windows(GTK_APPLICATION(app));
-            SimplePanel * p = ((all_panels != NULL) ? all_panels->data : NULL);
-            if (p != NULL)
-                panel_configure(p, "geometry");
-        }
-//        else if (!g_strcmp0(ccommand,"restart"))
-//            restart();
-        else if (!g_strcmp0(ccommand,"exit"))
-            g_application_quit(G_APPLICATION(app));
-    }
 }
 
 static gint panel_app_handle_local_options(GApplication *application, GVariantDict *options)
@@ -249,28 +209,41 @@ static gint panel_app_handle_local_options(GApplication *application, GVariantDi
 
 int panel_app_command_line(GApplication* application,GApplicationCommandLine* commandline)
 {
-    static gchar* profile_name = NULL;
-    static gchar* command = NULL;
+    const gchar* profile_name = NULL;
     GVariantDict *options;
+    const gchar* ccommand = NULL;
     options = g_application_command_line_get_options_dict(commandline);
     if (g_variant_dict_lookup (options, "profile", "&s", &profile_name))
         g_object_set(G_OBJECT(application),"profile",profile_name,NULL);
-    if (g_variant_dict_lookup (options, "command", "&s", &command))
+    if (g_variant_dict_lookup (options, "command", "&s", &ccommand))
     {
-        if (g_strrstr(panel_commands,command))
+        if (g_action_map_lookup_action(G_ACTION_MAP(application),ccommand))
         {
-            ccommand = g_strdup(command);
+            gchar* name;
+            GVariant* param;
+            GError* err = NULL;
+            g_action_parse_detailed_name(ccommand,&name,&param,&err);
+            if(err)
+            {
+                g_warning("%s\n",err->message);
+                g_clear_error(&err);
+            }
+            else
+                g_action_group_activate_action(G_ACTION_GROUP(application),name,param);
+            if (name)
+                g_free(name);
+            if (param)
+                g_variant_unref(param);
         }
         else
         {
+            gchar ** listv = g_action_group_list_actions(G_ACTION_GROUP(application));
+            gchar* list = g_strjoinv(" ",listv);
+            g_strfreev(listv);
             g_application_command_line_printerr (commandline,
-                                 _("%s: invalid command - %s. Doing nothing. Valid commands: %s\n"),
-                                 g_get_application_name(),command,panel_commands);
-            if (ccommand)
-            {
-                g_free(ccommand);
-                ccommand = NULL;
-            }
+                                 _("%s: invalid command - %s. Doing nothing.\nValid commands: %s\n"),
+                                 g_get_application_name(),ccommand,list);
+            g_free(list);
         }
     }
     g_application_activate(application);

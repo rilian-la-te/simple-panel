@@ -26,7 +26,6 @@ SIMPLE_PANEL_HEADER_FILES = \
 
 SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	dbg.h \
-	menu-policy.h \
 	private.h \
 	app.h \
 	app-actions.h \
@@ -69,12 +68,7 @@ simple_panel_SOURCES = \
 	main.c  \
 	app.c \
 	app-actions.c \
-	app-misc.c \
-        $(MENU_SRC)
-
-if ENABLE_MENU_CACHE
-MENU_SRC = menu-policy.c
-endif
+        app-misc.c
 
 simple_panel_includedir = $(includedir)/simple-panel
 simple_panel_include_HEADERS = $(SIMPLE_PANEL_HEADER_FILES)

@@ -102,13 +102,13 @@ void _calculate_position(SimplePanel *panel, GdkRectangle* rect)
         marea.width = 0;
         marea.height = 0;
     }
-    if (np->edge == PANEL_EDGE_TOP || np->edge == PANEL_EDGE_BOTTOM) {
+    if (np->edge == GTK_POS_TOP || np->edge == GTK_POS_BOTTOM) {
         rect->width = np->width;
         rect->x = marea.x;
         calculate_width(marea.width, np->widthtype, np->align, np->margin,
               &rect->width, &rect->x);
         rect->height = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
-        rect->y = marea.y + ((np->edge == PANEL_EDGE_TOP) ? 0 : (marea.height - rect->height));
+        rect->y = marea.y + ((np->edge == GTK_POS_TOP) ? 0 : (marea.height - rect->height));
 
     } else {
         rect->height = np->width;
@@ -116,7 +116,7 @@ void _calculate_position(SimplePanel *panel, GdkRectangle* rect)
         calculate_width(marea.height, np->widthtype, np->align, np->margin,
               &rect->height, &rect->y);
         rect->width = ((( ! np->autohide) || (np->visible)) ? np->height : np->height_when_hidden);
-        rect->x = marea.x + ((np->edge == PANEL_EDGE_LEFT) ? 0 : (marea.width - rect->width));
+        rect->x = marea.x + ((np->edge == GTK_POS_LEFT) ? 0 : (marea.width - rect->width));
     }
     return;
 }

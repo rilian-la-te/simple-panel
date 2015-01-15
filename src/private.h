@@ -51,13 +51,6 @@ typedef enum {
     PANEL_BACKGROUND_CUSTOM_IMAGE
 } PanelBackgroundType;
 
-typedef enum {
-    PANEL_EDGE_TOP=0,
-    PANEL_EDGE_BOTTOM,
-    PANEL_EDGE_LEFT,
-    PANEL_EDGE_RIGHT,
-} PanelEdgeType;
-
 #define PANEL_ICON_SIZE               24	/* Default size of panel icons */
 #define PANEL_HEIGHT_DEFAULT          26	/* Default height of horizontal panel */
 #define PANEL_WIDTH_DEFAULT           150	/* Default "height" of vertical panel */
@@ -89,7 +82,7 @@ struct _Panel {
     int ax, ay, aw, ah;  /* prefferd allocation of a panel */
     int cx, cy, cw, ch;  /* current allocation (as reported by configure event) allocation */
     int align, margin;
-    PanelEdgeType edge;
+    GtkPositionType edge;
     GtkOrientation orientation;
     PanelBackgroundType background;
     int widthtype, width;

@@ -99,42 +99,69 @@ void activate_exit(GSimpleAction* simple, GVariant* param, gpointer data)
 
 void activate_logout(GSimpleAction* simple, GVariant* param, gpointer data)
 {
-    PanelApp* app = (PanelApp*)data;
-    const char* l_logout_cmd = app->priv->logout_cmd;
-    /* If LXSession is running, _LXSESSION_PID will be set */
-    if( ! l_logout_cmd && getenv("_LXSESSION_PID") )
-        l_logout_cmd = "lxsession-logout";
+    gchar* command;
+    GVariant* par;
+    GtkApplication* app;
 
-    if( l_logout_cmd )
-        fm_launch_command_simple(NULL, NULL, 0, l_logout_cmd, NULL);
-    else
-        fm_show_error(NULL, NULL, _("Logout command is not set"));
+    g_object_get(app,"logout-command",&command,NULL);
+    par = g_variant_new_string(command);
+    g_free(command);
+    activate_menu_launch_command(NULL,par,NULL);
+    g_variant_unref(par);
 }
 
 void activate_shutdown(GSimpleAction* simple, GVariant* param, gpointer data)
 {
-    PanelApp* app = (PanelApp*)data;
-    const char* l_logout_cmd = app->priv->shutdown_cmd;
-    /* If LXSession is running, _LXSESSION_PID will be set */
-    if( ! l_logout_cmd && getenv("_LXSESSION_PID") )
-        l_logout_cmd = "lxsession-logout";
+    gchar* command;
+    GVariant* par;
+    GtkApplication* app;
 
-    if( l_logout_cmd )
-        fm_launch_command_simple(NULL, NULL, 0, l_logout_cmd, NULL);
-    else
-        fm_show_error(NULL, NULL, _("Shutdown command is not set"));
+    g_object_get(app,"shutdown-command",&command,NULL);
+    par = g_variant_new_string(command);
+    g_free(command);
+    activate_menu_launch_command(NULL,par,NULL);
+    g_variant_unref(par);
 }
 
-void activate_terminal(GSimpleAction* simple, GVariant* param, gpointer data)
+void activate_panel_preferences(GSimpleAction* simple, GVariant* param, gpointer data)
 {
-    PanelApp* app = PANEL_APP(data);
-    gchar** argv;
-    const gchar* dir;
-    GPid pid;
-    dir = g_variant_get_string(param,NULL);
-    g_shell_parse_argv(app->priv->terminal_cmd,NULL,&argv,NULL);
-    g_spawn_async(dir,argv,NULL,G_SPAWN_SEARCH_PATH,NULL,NULL,&pid,NULL);
-    g_strfreev(argv);
+    GtkApplication* app = (GtkApplication*)data;
+    const gchar* par = g_variant_get_string(param, NULL);
+    GList* all_panels = gtk_application_get_windows(app);
+    GList* l;
+    for( l = all_panels; l; l = l->next )
+    {
+        gchar* name;
+        SimplePanel* p = (SimplePanel*)l->data;
+        g_object_get(p,"name",&name,NULL);
+        if (!g_strcmp0(par,name))
+            panel_configure(p, "geometry");
+        else
+            g_warning("No panel with this name found.\n");
+        g_free(name);
+    }
+}
+
+void activate_menu(GSimpleAction* simple, GVariant* param, gpointer data)
+{
+    GtkApplication* app = GTK_APPLICATION(data);
+    GList* l;
+    GList* all_panels = gtk_application_get_windows(app);
+    for( l = all_panels; l; l = l->next )
+    {
+        SimplePanel* p = (SimplePanel*)l->data;
+        GList *plugins, *pl;
+
+        plugins = gtk_container_get_children(GTK_CONTAINER(p->priv->box));
+        for (pl = plugins; pl; pl = pl->next)
+        {
+            const SimplePanelPluginInit *init = PLUGIN_CLASS(pl->data);
+            if (init->show_system_menu)
+            /* queue to show system menu */
+                init->show_system_menu(pl->data);
+        }
+        g_list_free(plugins);
+    }
 }
 
 GSettings* load_global_config_gsettings(PanelApp* app, GSettingsBackend** config)
