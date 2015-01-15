@@ -313,7 +313,7 @@ static void volumealsa_update_current_icon(VolumeALSAPlugin * vol,int level)
     /* Change icon, fallback to default icon if theme doesn't exsit */
     simple_panel_image_change_gicon(vol->tray_icon,vol->icon);
     /* Display current level in tooltip. */
-    char * tooltip = g_strdup_printf("%s:%d", vol->channel, level);
+    char * tooltip = g_strdup_printf("%s: %d", vol->channel, level);
     gtk_widget_set_tooltip_text(vol->plugin, tooltip);
     g_free(tooltip);
 }
