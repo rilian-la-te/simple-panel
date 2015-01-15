@@ -42,7 +42,7 @@ typedef struct {
     GtkWidget * tray_icon;			/* Displayed image */
     GtkWidget * popup_window;			/* Top level window for popup */
     GtkWidget * volume_scale;			/* Scale for volume */
-    GtkWidget * mute_check;			/* Checkbox for mute state */
+    gboolean mute;			/* mute state */
     gchar* channel,*card_id, *mixer_command;
     gboolean symbolic;
     gboolean alsa_is_init;
@@ -70,6 +70,7 @@ static void asound_deinitialize(VolumeALSAPlugin * vol);
 static void volumealsa_update_display(VolumeALSAPlugin * vol);
 static void volumealsa_destructor(gpointer user_data);
 static void alsa_init(VolumeALSAPlugin* vol);
+static void volumealsa_toggle_muted(VolumeALSAPlugin * vol);
 
 /*** ALSA ***/
 
@@ -283,17 +284,17 @@ static void asound_set_volume(VolumeALSAPlugin * vol, int volume)
 
 /*** Graphics ***/
 
-static void volumealsa_lookup_current_icon(VolumeALSAPlugin * vol, gboolean mute, int level)
+static void volumealsa_lookup_current_icon(VolumeALSAPlugin * vol, int level)
 {
-    if (mute)
+    if (vol->mute || level == 0)
     {
         vol->icon = g_themed_icon_new_with_default_fallbacks(vol->symbolic ? "audio-volume-muted-symbolic" : "audio-volume-muted-panel");
     }
-    else if (level >= 75)
+    else if (level >= 66)
     {
         vol->icon = g_themed_icon_new_with_default_fallbacks(vol->symbolic ? "audio-volume-high-symbolic" : "audio-volume-high-panel");
     }
-    else if (level >= 50)
+    else if (level >= 33)
     {
         vol->icon = g_themed_icon_new_with_default_fallbacks(vol->symbolic ? "audio-volume-medium-symbolic" : "audio-volume-medium-panel");
     }
@@ -304,16 +305,15 @@ static void volumealsa_lookup_current_icon(VolumeALSAPlugin * vol, gboolean mute
 }
 
 /* Do a full redraw of the display. */
-static void volumealsa_update_current_icon(VolumeALSAPlugin * vol, gboolean mute, int level)
+static void volumealsa_update_current_icon(VolumeALSAPlugin * vol,int level)
 {
 
-    volumealsa_lookup_current_icon(vol,mute,level);
+    volumealsa_lookup_current_icon(vol,level);
 
     /* Change icon, fallback to default icon if theme doesn't exsit */
     simple_panel_image_change_gicon(vol->tray_icon,vol->icon);
-
     /* Display current level in tooltip. */
-    char * tooltip = g_strdup_printf("%s %d", _("Volume control"), level);
+    char * tooltip = g_strdup_printf("%s:%d", vol->channel, level);
     gtk_widget_set_tooltip_text(vol->plugin, tooltip);
     g_free(tooltip);
 }
@@ -325,10 +325,6 @@ static void volumealsa_update_current_icon(VolumeALSAPlugin * vol, gboolean mute
  */
 static void volumealsa_update_display(VolumeALSAPlugin * vol)
 {
-    /* Mute. */
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(vol->mute_check), asound_is_muted(vol));
-    gtk_widget_set_sensitive(vol->mute_check, (asound_has_mute(vol)));
-
     /* Volume. */
     if (vol->volume_scale != NULL)
     {
@@ -358,7 +354,8 @@ static gboolean volumealsa_button_press_event(GtkWidget * widget, GdkEventButton
     /* Middle-click.  Toggle the mute status. */
     if (event->button == 2)
     {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(vol->mute_check), ! gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(vol->mute_check)));
+        vol->mute = !vol->mute;
+        volumealsa_toggle_muted(vol);
     }
     /* Right-click.  Launch mixer. */
     else if (event->button = 3)
@@ -390,7 +387,6 @@ static void volumealsa_popup_map(GtkWidget * widget, VolumeALSAPlugin * vol)
 static void volumealsa_popup_scale_changed(GtkRange * range, VolumeALSAPlugin * vol)
 {
     int level = gtk_range_get_value(GTK_RANGE(vol->volume_scale));
-    gboolean mute = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(vol->mute_check));
     /* Reflect the value of the control to the sound system. */
     asound_set_volume(vol, level);
 
@@ -399,7 +395,7 @@ static void volumealsa_popup_scale_changed(GtkRange * range, VolumeALSAPlugin * 
      * Scale and check button do not need to be updated, as these are always
      * in sync with user's actions.
      */
-    volumealsa_update_current_icon(vol, mute, level);
+    volumealsa_update_current_icon(vol, level);
 }
 
 /* Handler for "scroll-event" signal on popup window vertical scale. */
@@ -409,27 +405,31 @@ static void volumealsa_popup_scale_scrolled(GtkScale * scale, GdkEventScroll * e
     gdouble val = gtk_range_get_value(GTK_RANGE(vol->volume_scale));
 
     /* Dispatch on scroll direction to update the value. */
-    if ((evt->direction == GDK_SCROLL_UP) || (evt->direction == GDK_SCROLL_LEFT))
+    if (evt->direction == GDK_SCROLL_UP)
         val += 2;
-    else
+    else if (evt->direction == GDK_SCROLL_DOWN)
         val -= 2;
+    else if (evt->direction = GDK_SCROLL_SMOOTH)
+    {
+      val -= evt->delta_y * 2;
+      val = CLAMP (val, 0,100);
+    }
 
     /* Reset the state of the vertical scale.  This provokes a "value_changed" event. */
     gtk_range_set_value(GTK_RANGE(vol->volume_scale), CLAMP((int)val, 0, 100));
 }
 
 /* Handler for "toggled" signal on popup window mute checkbox. */
-static void volumealsa_popup_mute_toggled(GtkWidget * widget, VolumeALSAPlugin * vol)
+static void volumealsa_toggle_muted(VolumeALSAPlugin * vol)
 {
     /* Get the state of the mute toggle. */
     int level = gtk_range_get_value(GTK_RANGE(vol->volume_scale));
-    gboolean mute = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(vol->mute_check));
     /* Reflect the mute toggle to the sound system. */
     if (vol->master_element != NULL)
     {
         int chn;
         for (chn = 0; chn <= SND_MIXER_SCHN_LAST; chn++)
-            snd_mixer_selem_set_playback_switch(vol->master_element, chn, ((mute) ? 0 : 1));
+            snd_mixer_selem_set_playback_switch(vol->master_element, chn, ((vol->mute) ? 0 : 1));
     }
 
     /*
@@ -437,7 +437,7 @@ static void volumealsa_popup_mute_toggled(GtkWidget * widget, VolumeALSAPlugin *
      * Scale and check button do not need to be updated, as these are always
      * in sync with user's actions.
      */
-    volumealsa_update_current_icon(vol, mute, level);
+    volumealsa_update_current_icon(vol, level);
 }
 
 /* Build the window that appears when the top level widget is clicked. */
@@ -448,11 +448,13 @@ static void volumealsa_build_popup_window(GtkWidget *p)
     /* Create a new window. */
     vol->popup_window = gtk_window_new(GTK_WINDOW_POPUP);
     gtk_window_set_decorated(GTK_WINDOW(vol->popup_window), FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(vol->popup_window), 5);
-    gtk_window_set_default_size(GTK_WINDOW(vol->popup_window), 80, 140);
+    gtk_container_set_border_width(GTK_CONTAINER(vol->popup_window), 0);
     gtk_window_set_skip_taskbar_hint(GTK_WINDOW(vol->popup_window), TRUE);
     gtk_window_set_skip_pager_hint(GTK_WINDOW(vol->popup_window), TRUE);
+    gtk_window_set_default_size(GTK_WINDOW(vol->popup_window),-1,145);
     gtk_window_set_type_hint(GTK_WINDOW(vol->popup_window), GDK_WINDOW_TYPE_HINT_UTILITY);
+    gtk_widget_add_events(vol->popup_window,GDK_FOCUS_CHANGE_MASK);
+    gtk_window_set_attached_to(GTK_WINDOW(vol->popup_window),vol->plugin);
 
     /* Connect signals. */
     g_signal_connect(G_OBJECT(vol->popup_window), "focus-out-event", G_CALLBACK(volumealsa_popup_focus_out), vol);
@@ -470,18 +472,12 @@ static void volumealsa_build_popup_window(GtkWidget *p)
     /* Create a viewport as the child of the scrolled window. */
     GtkWidget * viewport = gtk_viewport_new(NULL, NULL);
     gtk_container_add(GTK_CONTAINER(scrolledwindow), viewport);
-    gtk_viewport_set_shadow_type(GTK_VIEWPORT(viewport), GTK_SHADOW_NONE);
+    gtk_viewport_set_shadow_type(GTK_VIEWPORT(viewport), GTK_SHADOW_IN);
     gtk_widget_show(viewport);
-
-    /* Create a frame as the child of the viewport. */
-    GtkWidget * frame = gtk_frame_new(_("Volume"));
-    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
-    gtk_container_add(GTK_CONTAINER(viewport), frame);
 
     /* Create a vertical box as the child of the frame. */
     GtkWidget * box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(frame), box);
-//      gtk_container_add(GTK_CONTAINER(viewport), box);
+    gtk_container_add(GTK_CONTAINER(viewport), box);
 
     /* Create a vertical scale as the child of the vertical box. */
     vol->volume_scale = gtk_scale_new(GTK_ORIENTATION_VERTICAL,GTK_ADJUSTMENT(gtk_adjustment_new(100, 0, 100, 0, 0, 0)));
@@ -492,13 +488,6 @@ static void volumealsa_build_popup_window(GtkWidget *p)
     /* Value-changed and scroll-event signals. */
     vol->volume_scale_handler = g_signal_connect(vol->volume_scale, "value-changed", G_CALLBACK(volumealsa_popup_scale_changed), vol);
     g_signal_connect(vol->volume_scale, "scroll-event", G_CALLBACK(volumealsa_popup_scale_scrolled), vol);
-
-    /* Create a check button as the child of the vertical box. */
-    vol->mute_check = gtk_check_button_new_with_label(_("Mute"));
-    gtk_box_pack_end(GTK_BOX(box), vol->mute_check, FALSE, FALSE, 0);
-    vol->mute_check_handler = g_signal_connect(vol->mute_check, "toggled", G_CALLBACK(volumealsa_popup_mute_toggled), vol);
-
-    /* Set background to default. */
 }
 
 static void alsa_init(VolumeALSAPlugin* vol)
@@ -506,13 +495,19 @@ static void alsa_init(VolumeALSAPlugin* vol)
     if (asound_initialize(vol))
     {
         vol->alsa_is_init = TRUE;
+        volumealsa_build_popup_window(vol->plugin);
         /* Connect signals. */
         g_signal_connect(G_OBJECT(vol->plugin), "scroll-event", G_CALLBACK(volumealsa_popup_scale_scrolled), vol );
         /* Update the display, show the widget, and return. */
         volumealsa_update_display(vol);
+        int level = gtk_range_get_value(GTK_RANGE(vol->volume_scale));
+        volumealsa_update_current_icon(vol,level);
     }
     else
+    {
+        gtk_widget_set_tooltip_text(vol->plugin, _("ALSA is not connected."));
         vol->alsa_is_init = FALSE;
+    }
 
 }
 
@@ -520,11 +515,13 @@ static void alsa_deinit(VolumeALSAPlugin* vol)
 {
     if (vol->alsa_is_init)
     {
+        if (vol->popup_window)
+            gtk_widget_destroy(vol->popup_window);
         g_signal_handlers_disconnect_by_func(vol->plugin,volumealsa_popup_scale_scrolled,vol);
         asound_deinitialize(vol);
-        g_object_unref(vol->icon);
         vol->icon = g_icon_new_for_string(vol->symbolic ? "dialog-error-symbolic" : "dialog-error",NULL);
         simple_panel_image_change_gicon(vol->tray_icon,vol->icon);
+        gtk_widget_set_tooltip_text(vol->plugin, _("ALSA is not connected."));
         vol->alsa_is_init = FALSE;
     }
 }
@@ -546,17 +543,15 @@ static GtkWidget *volumealsa_constructor(SimplePanel *panel, GSettings *settings
     /* Allocate top level widget and set into Plugin widget pointer. */
     vol->plugin = p = gtk_event_box_new();
     lxpanel_plugin_set_data(p, vol, volumealsa_destructor);
-    gtk_widget_set_tooltip_text(p, _("Volume control"));
     b = gtk_toggle_button_new();
     css_apply_with_class(b,panel_button_css,"-panel-menu",FALSE);
     gtk_container_add(GTK_CONTAINER(vol->plugin),b);
+    gtk_widget_add_events(GTK_WIDGET(b), GDK_SCROLL_MASK);
     g_signal_connect(b,"toggled",G_CALLBACK(on_button_toggled),vol);
     vol->icon = g_themed_icon_new_with_default_fallbacks(vol->symbolic ? "dialog-error-symbolic" : "dialog-error");
     vol->tray_icon = simple_panel_image_new_for_gicon(panel,vol->icon,-1);
     gtk_button_set_image(GTK_BUTTON(b),vol->tray_icon);
     gtk_button_set_relief(GTK_BUTTON(b),GTK_RELIEF_NONE);
-
-    volumealsa_build_popup_window(vol->plugin);
     /* Initialize ALSA.  If that fails, present missing icon. */
     alsa_init(vol);
 
