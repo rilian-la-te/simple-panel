@@ -67,6 +67,7 @@
 #include "css.h"
 #include "icon.xpm"
 #include "icon-grid.h"
+#define DISABLE_MENU
 #ifndef DISABLE_MENU
 # include "menu-policy.h"
 #endif

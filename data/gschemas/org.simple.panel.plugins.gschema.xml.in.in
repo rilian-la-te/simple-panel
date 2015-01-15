@@ -121,4 +121,18 @@
       <default>['applications']</default>
     </key>
   </schema>
+  <schema id="org.simple.panel.toplevel.volumealsa">
+    <key name="card-id" type="s">
+      <default>'default'</default>
+    </key>
+    <key name="channel-id" type="s">
+      <default>'Master'</default>
+    </key>
+    <key name="mixer" type="s">
+      <default>'gnome-alsamixer'</default>
+    </key>
+    <key name="use-symbolic-icons" type="b">
+      <default>true</default>
+    </key>
+  </schema>
 </schemalist>

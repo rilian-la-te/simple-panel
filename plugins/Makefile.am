@@ -197,8 +197,7 @@ launchtaskbar_la_CFLAGS = \
 launchtaskbar_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
 # pager
-pager_la_SOURCES = X/pager.c \
-	X/x-misc.c
+pager_la_SOURCES = X/pager.c
 pager_la_CFLAGS = $(WNCK_CFLAGS)
 pager_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 

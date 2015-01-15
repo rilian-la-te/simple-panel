@@ -1,4 +1,10 @@
 <schemalist gettext-domain="@GETTEXT_PACKAGE@">
+  <enum id="GtkPositionType">
+    <value nick="left" value="0"/>
+    <value nick="right" value="1"/>
+    <value nick="top" value="2"/>
+    <value nick="bottom" value="3"/>
+  </enum>
   <schema id="org.simple.panel.toplevel">
     <key name="name" type="s">
       <default>''</default>
@@ -10,7 +16,7 @@
       <_summary>Xinerama monitor where the panel is displayed</_summary>
       <_description>In a Xinerama setup, you may have panels on each individual monitor. This key identifies the current monitor the panel is displayed on.</_description>
     </key>
-    <key name="edge" enum="org.simple.panel.PanelEdgeType">
+    <key name="edge" enum="GtkPositionType">
       <default>'top'</default>
       <_summary>Panel edge</_summary>
       <_description>The edge of the panel. Possible values are "top", "bottom", "left", "right". The key specifies which screen edge the panel is on.</_description>

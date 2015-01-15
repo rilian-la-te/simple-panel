@@ -27,7 +27,6 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 
-#include <menu-cache.h>
 #include <libfm/fm-gtk.h>
 
 #include <sys/types.h>

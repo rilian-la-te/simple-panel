@@ -63,10 +63,6 @@ typedef struct {
     guint monitor_update_idle;
 } MenuModelPlugin;
 
-//static guint idle_loader = 0;
-
-//GQuark SYS_MENU_ITEM_ID = 0;
-
 static GMenuModel* return_menumodel(MenuModelPlugin* m);
 static GMenuModel* read_menumodel(MenuModelPlugin *m);
 static GtkWidget* create_menubutton(MenuModelPlugin* m);
@@ -98,7 +94,8 @@ static void menumodel_widget_destroy(MenuModelPlugin* m)
                                          panel_edge_changed, NULL);
     if (m->menu)
         g_object_unref(m->menu);
-    gtk_container_remove(GTK_CONTAINER(m->box),m->button);
+    if (m->button)
+        gtk_container_remove(GTK_CONTAINER(m->box),m->button);
 }
 
 static void
@@ -120,7 +117,8 @@ menumodel_destructor(gpointer user_data)
 
 static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, MenuModelPlugin* menu)
 {
-    int edge = panel_get_edge(panel);
+    int edge;
+    g_object_get(panel,PANEL_PROP_EDGE,&edge,NULL);
     int orient;
     orient = (edge == GTK_POS_TOP || edge == GTK_POS_BOTTOM) ? GTK_PACK_DIRECTION_LTR : GTK_PACK_DIRECTION_TTB;
     if (menu->bar)
@@ -265,7 +263,6 @@ static GtkWidget* create_menubar(MenuModelPlugin* m)
 static GtkWidget* menumodel_constructor(SimplePanel *panel, GSettings *settings)
 {
     MenuModelPlugin* plugin;
-    gint type;
     gboolean system,internal;
     plugin = g_new0(MenuModelPlugin,1);
     g_return_val_if_fail(m != NULL, 0);
