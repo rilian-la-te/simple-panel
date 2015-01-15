@@ -88,7 +88,8 @@ void activate_about(GSimpleAction* simple, GVariant* param, gpointer data)
 
 void activate_run(GSimpleAction* simple, GVariant* param, gpointer data)
 {
-    gtk_run();
+    GtkApplication* app = GTK_APPLICATION(data);
+    gtk_run(app);
 }
 
 void activate_exit(GSimpleAction* simple, GVariant* param, gpointer data)

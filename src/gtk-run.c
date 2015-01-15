@@ -31,7 +31,8 @@
 static GtkWidget* win = NULL; /* the run dialog */
 static GAppInfoMonitor* monitor = NULL; /* apps monitor*/
 static GList* app_list = NULL; /* all known apps in cache */
-static gboolean terminal;
+static GAppInfoCreateFlags terminal;
+static GtkApplication* application;
 
 const gchar* css = ".-panel-run-dialog {"
         "border-radius: 6px;"
@@ -251,7 +252,7 @@ static void on_response( GtkDialog* dlg, gint response, gpointer user_data )
     {
         GAppInfo* app_info;
         GError* err = NULL;
-        app_info = g_app_info_create_from_commandline(gtk_entry_get_text(entry),NULL,G_APP_INFO_CREATE_SUPPORTS_STARTUP_NOTIFICATION,&err);
+        app_info = g_app_info_create_from_commandline(gtk_entry_get_text(entry),NULL,terminal,&err);
         if (err)
         {
             g_signal_stop_emission_by_name( dlg, "response" );
@@ -261,10 +262,10 @@ static void on_response( GtkDialog* dlg, gint response, gpointer user_data )
         }
         gboolean launch = g_app_info_launch(app_info,NULL,
                                             G_APP_LAUNCH_CONTEXT(gdk_display_get_app_launch_context(gdk_display_get_default())),&err);
+        g_object_unref(app_info);
         if (!launch || err)
         {
             g_signal_stop_emission_by_name( dlg, "response" );
-            g_object_unref(app_info);
             if (err)
                 g_clear_error(&err);
             return;
@@ -319,7 +320,12 @@ static void on_icon_activated(GtkEntry* entry, GtkEntryIconPosition pos, GdkEven
     }
 }
 
-void gtk_run()
+static void on_terminal_toggled (GtkToggleButton* btn, gpointer user_data)
+{
+    terminal = gtk_toggle_button_get_active(btn) ? G_APP_INFO_CREATE_NEEDS_TERMINAL : 0;
+}
+
+void gtk_run(GtkApplication * app)
 {
     GtkWidget *entry ,*h;
     GtkBuilder* builder;
@@ -356,6 +362,11 @@ void gtk_run()
         g_signal_connect(entry ,"changed", G_CALLBACK(on_entry_changed), NULL);
         g_signal_connect(entry, "activate", G_CALLBACK(on_entry_activated), GTK_DIALOG(win));
         g_signal_connect(entry, "icon-press", G_CALLBACK(on_icon_activated), GTK_DIALOG(win));
+        h = GTK_WIDGET(gtk_builder_get_object(builder,"terminal-button"));
+        g_signal_connect(h ,"toggled", G_CALLBACK(on_terminal_toggled), NULL);
+
+        application = app;
+        on_terminal_toggled(GTK_TOGGLE_BUTTON(h),NULL);
 
         /* get all apps */
         monitor = g_app_info_monitor_get();

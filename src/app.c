@@ -222,7 +222,7 @@ void panel_app_activate(GApplication* app)
 #endif
         }
         else if (!g_strcmp0(ccommand,"run"))
-            gtk_run();
+            gtk_run(app);
         else if (!g_strcmp0(ccommand,"config"))
         {
             GList* all_panels = gtk_application_get_windows(GTK_APPLICATION(app));
