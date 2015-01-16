@@ -34,28 +34,6 @@
 #define DESKTOP_ENTRY "Desktop Entry"
 #define DESKTOP_FILES_DIR "applications"
 #define CATEGORIES "Categories"
-#define MENU_CAT "x-simplepanel-menu-category"
-
-typedef struct {
-    gchar *name;
-    gchar *icon;
-    gchar *local_name;
-} cat_info;
-
-static cat_info main_cats[] = {
-    { "AudioVideo", "applications-multimedia", N_("Audio & Video") },
-    { "Education",  "applications-science", N_("Education")},
-    { "Game",       "applications-games", N_("Game")},
-    { "Graphics",   "applications-graphics", N_("Graphics")},
-    { "Network",    "applications-internet", N_("Network")},
-    { "Office",     "applications-office", N_("Office")},
-    { "Settings",   "preferences-system", N_("Settings")},
-    { "System",     "applications-system", N_("System")},
-    { "Utility",    "applications-utilities", N_("Utility")},
-    { "Development","applications-development", N_("Development")},
-    { "Other","applications-other", N_("Other")},
-
-};
 
 static void
 indent_string (GString *string,
@@ -181,20 +159,15 @@ gchar* g_menu_make_xml (GMenuModel *model)
     return g_string_free (string, FALSE);
 }
 
-static void add_app_info(gpointer data_info, gpointer data_menu)
+static void add_app_info(GDesktopAppInfo* info, GtkBuilder* builder)
 {
-    GMenu* menu, *menu_link;
-    GDesktopAppInfo* info;
+    GMenu *menu_link;
     GMenuItem* item = NULL;
     GIcon *icon,*missing;
-    gchar *name, *action;
+    char *name, *action, *cname;
     char **cats, **tmp;
-    gint i;
-    gint other_num = -1;
     gboolean found = FALSE;
-    info = G_DESKTOP_APP_INFO(data_info);
-    menu = G_MENU(data_menu);
-    name = action = NULL;
+    name = cname = action = NULL;
     icon = missing = NULL;
     cats = tmp = NULL;
     if (g_app_info_should_show(G_APP_INFO(info)))
@@ -206,35 +179,22 @@ static void add_app_info(gpointer data_info, gpointer data_menu)
         g_menu_item_set_icon(item, icon ? icon : missing );
         cats = g_strsplit_set(g_desktop_app_info_get_categories(G_DESKTOP_APP_INFO(info)) != NULL
                 ? g_desktop_app_info_get_categories(G_DESKTOP_APP_INFO(info)) : "",";",0);
-        for (i = 0; i < g_menu_model_get_n_items(G_MENU_MODEL(menu)); i++)
+        for (tmp = cats; cats && *tmp; tmp++)
         {
-            g_menu_model_get_item_attribute(G_MENU_MODEL(menu),i,MENU_CAT,"s",&name);
-            if (!g_strcmp0(name,"Other"))
-                other_num = i;
-            for (tmp = cats; cats && *tmp; tmp++)
-                if (!g_strcmp0(name,*tmp))
-                {
-                    found = TRUE;
-                    break;
-                }
-            if (found)
+            cname = g_ascii_strdown(*tmp,-1);
+            menu_link = G_MENU(gtk_builder_get_object(builder,cname));
+            if (menu_link)
             {
-                menu_link = G_MENU(g_menu_model_get_item_link(G_MENU_MODEL(menu),i,G_MENU_LINK_SUBMENU));
-                g_menu_append_item(menu_link,item);
-                g_object_unref(menu_link);
+                found = TRUE;
                 break;
             }
+            g_free(cname);
         }
         if (!found)
-        {
-            menu_link = G_MENU(g_menu_model_get_item_link(G_MENU_MODEL(menu),other_num,G_MENU_LINK_SUBMENU));
-            g_menu_append_item(menu_link,item);
-            g_object_unref(menu_link);
-        }
+            menu_link = G_MENU(gtk_builder_get_object(builder,"other"));
+        g_menu_append_item(menu_link,item);
+        menu_link = NULL;
     }
-out:
-    if (item)
-        g_object_unref(item);
     if (missing)
         g_object_unref(missing);
     if (name)
@@ -247,27 +207,15 @@ out:
 GMenuModel* do_applications_menumodel(gboolean for_settings)
 {
     GMenu* menu, *submenu;
-    GMenuItem* item;
-    GList* app_infos_list;
+    GtkBuilder* builder;
+    GList* app_infos_list, *l;
     char* tmp;
     gint i,j;
     app_infos_list = g_app_info_get_all();
-    menu = g_menu_new();
-    for (i = 0; i < G_N_ELEMENTS(main_cats); i++)
-    {
-        submenu = g_menu_new();
-        GIcon* icon;
-        GVariant* val;
-        item = g_menu_item_new_submenu(main_cats[i].local_name ?
-                                           main_cats[i].local_name : main_cats[i].name,G_MENU_MODEL(submenu));
-        icon = g_icon_new_for_string(main_cats[i].icon,NULL);
-        g_menu_item_set_icon(item,icon);
-        g_menu_item_set_attribute(item,MENU_CAT,"s",main_cats[i].name);
-        g_menu_append_item(menu,item);
-        g_object_unref(item);
-        g_object_unref(icon);
-    }
-    g_list_foreach(app_infos_list,(add_app_info),menu);
+    builder = gtk_builder_new_from_resource("/org/simple/panel/lib/system-menus.ui");
+    menu = G_MENU(gtk_builder_get_object(builder,"categories"));
+    for (l = app_infos_list; l != NULL; l = l->next)
+        add_app_info(l->data,builder);
     g_list_free_full(app_infos_list,(GDestroyNotify)g_object_unref);
     for (i = 0; i < g_menu_model_get_n_items(G_MENU_MODEL(menu));i++)
     {
@@ -279,105 +227,59 @@ GMenuModel* do_applications_menumodel(gboolean for_settings)
             i--;
         }
         j = (i < 0) ? 0 : i;
-        g_menu_model_get_item_attribute(G_MENU_MODEL(menu),j,MENU_CAT,"s",&tmp);
-        if ((g_strcmp0(tmp,"Settings") != 0) == for_settings) {
+        g_menu_model_get_item_attribute(G_MENU_MODEL(menu),j,"x-cat","s",&tmp);
+        if ((g_strcmp0(tmp,"settings") != 0) == for_settings) {
             g_menu_remove(menu,j);
             i--;
         }
         g_free(tmp);
     }
-    g_menu_freeze(menu);
+    g_object_ref(menu);
+    g_object_unref(builder);
     return G_MENU_MODEL(menu);
 }
 
 GMenuModel* do_places_menumodel()
 {
-    GMenu* menu = g_menu_new();
-    GMenu* section = NULL;
+    GMenu* menu, *section;
     GMenuItem* item = NULL;
-    char *path, *dir;
-    GIcon* icon;
-    gint i;
+    GtkBuilder* builder;
+    char *path;
     GDesktopAppInfo* app_info;
-    section = g_menu_new();
+    builder = gtk_builder_new_from_resource("/org/simple/panel/lib/system-menus.ui");
+    menu = G_MENU(gtk_builder_get_object(builder,"places-menu"));
+    section = G_MENU(gtk_builder_get_object(builder,"folders-section"));
+
+    item = g_menu_item_new(_("Home"),NULL);
     path = g_filename_to_uri(g_get_home_dir(),NULL,NULL);
-    dir = g_strdup_printf(LAUNCH_URI_ACTION,path);
-    g_free(path);
-    item = g_menu_item_new(_("Home"),dir);
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("user-home"));
-    g_menu_item_set_icon(item,icon);
+    g_menu_item_set_attribute(item,"icon","s","user-home");
+    g_menu_item_set_action_and_target_value(item,"app.launch-uri",g_variant_new_string(path));
     g_menu_append_item(section,item);
-    g_free(dir);
-    g_object_unref(icon);
     g_object_unref(item);
+    g_free(path);
+    item = g_menu_item_new(_("Desktop"),NULL);
     path = g_filename_to_uri(g_get_user_special_dir(G_USER_DIRECTORY_DESKTOP),NULL,NULL);
-    dir = g_strdup_printf(LAUNCH_URI_ACTION,path);
+    g_menu_item_set_attribute(item,"icon","s","user-desktop");
+    g_menu_item_set_action_and_target_value(item,"app.launch-uri",g_variant_new_string(path));
+    g_menu_append_item(section,item);
+    g_object_unref(item);
     g_free(path);
-    item = g_menu_item_new(_("Desktop"),dir);
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("user-desktop"));
-    g_menu_item_set_icon(item,icon);
-    g_menu_append_item(section,item);
-    g_free(dir);
-    g_object_unref(icon);
-    g_object_unref(item);
-    g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
-    g_object_unref(section);
-    section = g_menu_new();
-    dir = g_strdup_printf(LAUNCH_URI_ACTION,"computer:///");
-    item = g_menu_item_new(_("Computer"),dir);
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("computer"));
-    g_menu_item_set_icon(item,icon);
-    g_menu_append_item(section,item);
-    g_free(dir);
-    g_object_unref(icon);
-    g_object_unref(item);
-    dir = g_strdup_printf(LAUNCH_URI_ACTION,"trash:///");
-    item = g_menu_item_new(_("Trash"),dir);
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("user-trash"));
-    g_menu_item_set_icon(item,icon);
-    g_menu_append_item(section,item);
-    g_free(dir);
-    g_object_unref(icon);
-    g_object_unref(item);
-    g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
-    g_object_unref(section);
-    section = g_menu_new();
-    dir = g_strdup_printf(LAUNCH_URI_ACTION,"network:///");
-    item = g_menu_item_new(_("Network"),dir);
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("network-workgroup"));
-    g_menu_item_set_icon(item,icon);
-    g_menu_append_item(section,item);
-    g_free(dir);
-    g_object_unref(icon);
-    g_object_unref(item);
-    dir = g_strdup_printf(LAUNCH_ID_ACTION,"nautilus-connect-server.desktop");
-    item = g_menu_item_new(_("Connect to server..."),dir);
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("network-server"));
-    g_menu_item_set_icon(item,icon);
-    g_menu_append_item(section,item);
-    g_free(dir);
-    g_object_unref(icon);
-    g_object_unref(item);
-    g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
-    g_object_unref(section);
-    section = g_menu_new();
+    section = G_MENU(gtk_builder_get_object(builder,"recent-section"));
     app_info = g_desktop_app_info_new("gnome-search-tool.desktop");
     if (!app_info) app_info = g_desktop_app_info_new("mate-search-tool.desktop");
     if (app_info)
     {
-        dir = g_strdup_printf(LAUNCH_ID_ACTION,g_app_info_get_id(G_APP_INFO(app_info)));
-        item = g_menu_item_new(_("Search..."),dir);
-        icon = G_ICON(g_themed_icon_new_with_default_fallbacks("system-search"));
-        g_menu_item_set_icon(item,icon);
-        g_menu_append_item(section,item);
-        g_free(dir);
-        g_object_unref(icon);
+        item = g_menu_item_new(_("Search..."),NULL);
+        g_menu_item_set_attribute(item,"icon","s","system-search");
+        g_menu_item_set_action_and_target_value(item,"app.launch-id",g_variant_new_string(g_app_info_get_id(G_APP_INFO(app_info))));
+        g_menu_prepend_item(section,item);
         g_object_unref(item);
         g_object_unref(app_info);
     }
-    g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
-    g_object_unref(section);
-    g_menu_freeze(menu);
+    section = G_MENU(gtk_builder_get_object(builder,"recent-section"));
+    g_menu_remove(section,1);
+    g_object_ref(menu);
+    g_object_unref(builder);
     return G_MENU_MODEL(menu);
 }
 
@@ -398,16 +300,17 @@ void menu_load_system(GSimpleAction* action, GVariant* param, gpointer data)
 
 GMenuModel* do_system_menumodel()
 {
+    GtkBuilder* builder;
     GMenu* menu,*section;
     GMenuItem* item;
     GDesktopAppInfo* app_info;
     GIcon* icon;
     gchar* dir;
-    menu = g_menu_new();
+    builder = gtk_builder_new_from_resource("/org/simple/panel/lib/system-menus.ui");
+    menu = G_MENU(gtk_builder_get_object(builder,"settings-section"));
     section = G_MENU(do_applications_menumodel(TRUE));
     g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
     g_object_unref(section);
-    section = g_menu_new();
     app_info = g_desktop_app_info_new("gnome-control-center.desktop");
     if (!app_info) app_info = g_desktop_app_info_new("mate-control-center.desktop");
     if (!app_info) app_info = g_desktop_app_info_new("cinnamon-settings.desktop");
@@ -415,42 +318,16 @@ GMenuModel* do_system_menumodel()
     if (!app_info) app_info = g_desktop_app_info_new("kdesystemsettings.desktop");
     if (app_info)
     {
-        dir = g_strdup_printf(LAUNCH_ID_ACTION,g_app_info_get_id(G_APP_INFO(app_info)));
-        item = g_menu_item_new(_("Control center"),dir);
-        icon = G_ICON(g_themed_icon_new_with_default_fallbacks("preferences-system"));
-        g_menu_item_set_icon(item,icon);
-        g_menu_append_item(section,item);
-        g_free(dir);
-        g_object_unref(icon);
+        item = g_menu_item_new(_("Control center"),NULL);
+        g_menu_item_set_attribute(item,"icon","s","preferences-system");
+        g_menu_item_set_action_and_target_value(item,"app.launch-id",g_variant_new_string(g_app_info_get_id(G_APP_INFO(app_info))));
+        g_menu_append_item(menu,item);
         g_object_unref(item);
         g_object_unref(app_info);
     }
-    g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
-    g_object_unref(section);
-    section = g_menu_new();
-    item = g_menu_item_new(_("Run..."),"app.run");
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("system-run"));
-    g_menu_item_set_icon(item,icon);
-    g_menu_append_item(section,item);
-    g_object_unref(icon);
-    g_object_unref(item);
-    g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
-    g_object_unref(section);
-    section = g_menu_new();
-    item = g_menu_item_new(_("Log Out..."),"app.logout");
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("system-log-out"));
-    g_menu_item_set_icon(item,icon);
-    g_menu_append_item(section,item);
-    g_object_unref(icon);
-    g_object_unref(item);
-    item = g_menu_item_new(_("Shutdown..."),"app.shutdown");
-    icon = G_ICON(g_themed_icon_new_with_default_fallbacks("system-shutdown"));
-    g_menu_item_set_icon(item,icon);
-    g_menu_append_item(section,item);
-    g_object_unref(icon);
-    g_object_unref(item);
-    g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
-    g_menu_freeze(menu);
+    menu = G_MENU(gtk_builder_get_object(builder,"system-menu"));
+    g_object_ref(menu);
+    g_object_unref(builder);
     return G_MENU_MODEL(menu);
 }
 
