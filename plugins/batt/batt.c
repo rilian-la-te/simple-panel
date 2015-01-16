@@ -395,10 +395,7 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
                                                           ?"battery-missing-symbolic"
                                                           :"battery-missing-panel");
     lx_b->img = simple_panel_image_new_for_gicon(lx_b->panel,lx_b->icon,-1);
-    gtk_button_set_image(GTK_BUTTON(lx_b->button),lx_b->img);
-    gtk_button_set_relief(GTK_BUTTON(lx_b->button),GTK_RELIEF_NONE);
-    gtk_button_set_always_show_image(GTK_BUTTON(lx_b->button),TRUE);
-    css_apply_with_class(lx_b->button,panel_button_css,"-panel-menu",FALSE);
+    simple_panel_setup_button(lx_b->button,lx_b->img,NULL);
     gtk_actionable_set_action_name(GTK_ACTIONABLE(lx_b->button),"app.launch-command");
     target = g_variant_new_string(lx_b->pm_command);
     gtk_actionable_set_action_target_value(GTK_ACTIONABLE(lx_b->button),target);

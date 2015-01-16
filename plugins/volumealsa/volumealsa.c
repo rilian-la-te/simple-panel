@@ -545,14 +545,12 @@ static GtkWidget *volumealsa_constructor(SimplePanel *panel, GSettings *settings
     vol->plugin = p = gtk_event_box_new();
     lxpanel_plugin_set_data(p, vol, volumealsa_destructor);
     b = gtk_toggle_button_new();
-    css_apply_with_class(b,panel_button_css,"-panel-menu",FALSE);
     gtk_container_add(GTK_CONTAINER(vol->plugin),b);
     gtk_widget_add_events(GTK_WIDGET(b), GDK_SCROLL_MASK);
     g_signal_connect(b,"toggled",G_CALLBACK(on_button_toggled),vol);
     vol->icon = g_themed_icon_new_with_default_fallbacks(vol->symbolic ? "dialog-error-symbolic" : "dialog-error");
     vol->tray_icon = simple_panel_image_new_for_gicon(panel,vol->icon,-1);
-    gtk_button_set_image(GTK_BUTTON(b),vol->tray_icon);
-    gtk_button_set_relief(GTK_BUTTON(b),GTK_RELIEF_NONE);
+    simple_panel_setup_button(b,vol->tray_icon,NULL);
     /* Initialize ALSA.  If that fails, present missing icon. */
     alsa_init(vol);
 

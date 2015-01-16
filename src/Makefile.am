@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-bin_PROGRAMS = simple-panel xdg-menumodel-maker
+bin_PROGRAMS = simple-panel
 
 simple_panel_CPPFLAGS = \
 	-I$(top_srcdir) \

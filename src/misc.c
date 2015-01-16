@@ -215,6 +215,23 @@ void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, gint size)
     _simple_panel_button_set_icon(btn, g_icon_new_for_string(name,NULL), size);
 }
 
+inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img, gchar* label)
+{
+    const gchar *css = ".-panel-button {\n"
+            "padding: 0px 0px 0px 0px;\n"
+            "margin: 0px 0px 0px 0px;\n"
+            "}\n";
+    if (img)
+    {
+        gtk_button_set_image(GTK_BUTTON(b),img);
+        gtk_button_set_always_show_image(GTK_BUTTON(b),TRUE);
+    }
+    if (label)
+        gtk_button_set_label(GTK_BUTTON(b),label);
+    gtk_button_set_relief(GTK_BUTTON(b),GTK_RELIEF_NONE);
+    css_apply_with_class(b,css,"-panel-button",FALSE);
+}
+
 GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gint height)
 {
     return gtk_image_new_for_gicon(p,g_icon_new_for_string(name,NULL),height);

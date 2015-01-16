@@ -3,6 +3,12 @@
     <key name="alarm-command" type="s">
       <default>'xmessage "Battery Low"'</default>
     </key>
+    <key name="battery-name" type="s">
+      <default>'BAT1'</default>
+    </key>
+    <key name="pm-command" type="s">
+      <default>'gnome-control-center power'</default>
+    </key>
     <key name="alarm-time" type="u">
       <default>5</default>
     </key>
@@ -15,23 +21,14 @@
     <key name="show-extended-info" type="b">
       <default>false</default>
     </key>
-    <key name="size" type="u">
-      <default>3</default>
+    <key name="show-percentage" type="b">
+      <default>false</default>
     </key>
-    <key name="background-color" type="s">
-      <default>'transparent'</default>
+    <key name="show-remaining" type="b">
+      <default>false</default>
     </key>
-    <key name="charging-color-1" type="s">
-      <default>'#28f200'</default>
-    </key>
-    <key name="charging-color-2" type="s">
-      <default>'#22cc00'</default>
-    </key>
-    <key name="discharging-color-1" type="s">
-      <default>'#ffee00'</default>
-    </key>
-    <key name="discharging-color-2" type="s">
-      <default>'#d9ca00'</default>
+    <key name="use-symbolic-icons" type="b">
+      <default>false</default>
     </key>
   </schema>
   <schema id="org.simple.panel.toplevel.netstatus">

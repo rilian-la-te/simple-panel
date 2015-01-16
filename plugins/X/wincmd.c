@@ -157,7 +157,9 @@ static GtkWidget *wincmd_constructor(SimplePanel *panel, GSettings *settings)
     wc->settings = settings;
 
     /* Allocate top level widget and set into Plugin widget pointer. */
-    p = simple_panel_button_new_for_icon(panel, wc->image, NULL, NULL);
+    p = gtk_button_new();
+    GtkWidget* img = simple_panel_image_new_for_icon(panel,wc->image,-1);
+    simple_panel_setup_button(p,img,NULL);
     lxpanel_plugin_set_data(p, wc, wincmd_destructor);
     gtk_widget_set_tooltip_text(p, _("Left click to iconify all windows.  Middle click to shade them."));
 
@@ -182,8 +184,8 @@ static gboolean wincmd_apply_configuration(gpointer user_data)
     /* Just save settings */
     g_settings_set_enum(wc->settings,WINCMD_KEY_LEFT,wc->button_1_command);
     g_settings_set_enum(wc->settings,WINCMD_KEY_MIDDLE,wc->button_2_command);
-    g_settings_set_boolean(wc->settings,WINCMD_KEY_IMAGE,wc->toggle_preference);
-    g_settings_set_string(wc->settings,WINCMD_KEY_TOGGLE,wc->image);
+    g_settings_set_string(wc->settings,WINCMD_KEY_IMAGE,wc->image);
+    g_settings_set_boolean(wc->settings,WINCMD_KEY_TOGGLE,wc->toggle_preference);
     simple_panel_image_change_icon(p,wc->image);
     return FALSE;
 }

@@ -38,7 +38,6 @@
 #include "misc.h"
 #include "plugin.h"
 #include "menu-maker.h"
-#include "css.h"
 
 #define MENUMODEL_KEY_ICON "icon-name"
 #define MENUMODEL_KEY_CAPTION "menu-name"
@@ -92,10 +91,10 @@ static void menumodel_widget_destroy(MenuModelPlugin* m)
     if (m->bar)
         g_signal_handlers_disconnect_matched(m->panel, G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
                                          panel_edge_changed, NULL);
-    if (m->menu)
-        g_object_unref(m->menu);
     if (m->button)
         gtk_container_remove(GTK_CONTAINER(m->box),m->button);
+    if (m->menu)
+        g_object_unref(m->menu);
 }
 
 static void
@@ -232,20 +231,16 @@ static GtkWidget* menumodel_widget_create(MenuModelPlugin* m)
 
 static GtkWidget* create_menubutton(MenuModelPlugin* m)
 {
+    GtkWidget* img;
     m->button = gtk_menu_button_new();
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(m->button),G_MENU_MODEL(m->menu));
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(m->button),FALSE);
     if(m->icon_str)
     {
-        GtkWidget* img;
         img = simple_panel_image_new_for_icon(m->panel,m->icon_str,-1);
         gtk_widget_show(img);
-        gtk_button_set_image(GTK_BUTTON(m->button),img);
-        gtk_button_set_always_show_image(GTK_BUTTON(m->button),TRUE);
     }
-    gtk_button_set_label(GTK_BUTTON(m->button),m->caption);
-    gtk_button_set_relief(GTK_BUTTON(m->button),GTK_RELIEF_NONE);
-    css_apply_with_class(m->button,panel_button_css,"-panel-menu",FALSE);
+    simple_panel_setup_button(m->button,img,m->caption ? m->caption : NULL);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
     gtk_widget_show(m->button);
     return m->button;

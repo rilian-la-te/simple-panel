@@ -14,7 +14,8 @@ config.status
 config.sub
 configure
 data/default/panels/panel
-data/ui/*.ui
+data/ui/launchtaskbar.ui
+data/ui/netstatus.ui
 depcomp
 install-sh
 intltool-extract.in

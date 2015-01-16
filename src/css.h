@@ -32,7 +32,6 @@
 #include <gtk/gtk.h>
 #include "panel.h"
 
-extern const gchar* panel_button_css;
 inline void css_apply_with_class (GtkWidget* widget,const gchar* css, gchar* klass ,gboolean remove);
 inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboolean no_image);
 inline gchar* css_generate_panel_icon_button(GdkRGBA color);
