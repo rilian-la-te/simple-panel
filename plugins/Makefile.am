@@ -100,15 +100,6 @@ indicator_la_CFLAGS = \
 	-DINDICATOR_ICONS_DIR=\""$(INDICATORICONSDIR)"\" \
 	$(APPLET_CFLAGS)
 indicator_la_LIBADD = $(APPLET_LIBS)
-
-# appmenu
-appmenu_la_SOURCES = indicator/appmenu.c
-appmenu_la_CFLAGS = \
-	-DINDICATOR_DIR=\""$(INDICATORDIR)"\" \
-	-DINDICATOR_ICONS_DIR=\""$(INDICATORICONSDIR)"\" \
-	$(APPLET_CFLAGS)
-appmenu_la_LIBADD = $(APPLET_LIBS)
-
 # gmenu
 #gmenu_la_SOURCES = \
 #	gmenu/gdk-get-func.h \
@@ -168,7 +159,6 @@ volume_la_CFLAGS = -I$(srcdir)/volume
 
 # volumealsa
 volumealsa_la_SOURCES = volumealsa/volumealsa.c
-volumealsa_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
 volumealsa_la_LIBADD = -lasound
 
 # weather

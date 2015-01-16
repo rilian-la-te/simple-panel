@@ -55,6 +55,7 @@ typedef struct battery {
 } battery;
 
 battery *battery_get();
+battery *battery_get_by_name(const gchar* name);
 battery *battery_update( battery *b );
 void battery_print(battery *b, int show_capacity);
 gboolean battery_is_charging( battery *b );

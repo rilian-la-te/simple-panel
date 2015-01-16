@@ -35,6 +35,7 @@ PKG_CHECK_MODULES(PACKAGE, [$pkg_modules])
 AC_SUBST(PACKAGE_CFLAGS)
 AC_SUBST(PACKAGE_LIBS)
 AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
+AC_PATH_PROG(GLIB_COMPILE_RESOURCES, glib-compile-resources)
 GLIB_GSETTINGS
 
 ###########################
@@ -415,6 +416,8 @@ AC_CONFIG_FILES([
     simple-panel.pc
     Makefile
     src/Makefile
+    src/libsimplepanel.gresource.xml
+    src/simple-panel.gresource.xml
     plugins/Makefile
     po/Makefile.in
     data/Makefile

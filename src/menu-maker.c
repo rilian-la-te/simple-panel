@@ -34,8 +34,6 @@
 #define DESKTOP_ENTRY "Desktop Entry"
 #define DESKTOP_FILES_DIR "applications"
 #define CATEGORIES "Categories"
-#define LAUNCH_ID_ACTION "app.launch-id('%s')"
-#define LAUNCH_URI_ACTION "app.launch-uri('%s')"
 #define MENU_CAT "x-simplepanel-menu-category"
 
 typedef struct {
@@ -381,6 +379,21 @@ GMenuModel* do_places_menumodel()
     g_object_unref(section);
     g_menu_freeze(menu);
     return G_MENU_MODEL(menu);
+}
+
+void menu_load_applications(GSimpleAction* action, GVariant* param, gpointer data)
+{
+
+}
+
+void menu_load_places(GSimpleAction* action, GVariant* param, gpointer data)
+{
+
+}
+
+void menu_load_system(GSimpleAction* action, GVariant* param, gpointer data)
+{
+
 }
 
 GMenuModel* do_system_menumodel()

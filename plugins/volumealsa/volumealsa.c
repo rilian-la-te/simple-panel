@@ -440,6 +440,14 @@ static void volumealsa_toggle_muted(VolumeALSAPlugin * vol)
     volumealsa_update_current_icon(vol, level);
 }
 
+static void volumealsa_set_menu_command(GtkWidget* p, GMenu* menu)
+{
+    VolumeALSAPlugin * vol = lxpanel_plugin_get_data(p);
+    gchar* action = g_strdup_printf(LAUNCH_COMMAND_ACTION,vol->mixer_command);
+    g_menu_prepend(menu,_("Sound settings..."),action);
+    g_free(action);
+}
+
 /* Build the window that appears when the top level widget is clicked. */
 static void volumealsa_build_popup_window(GtkWidget *p)
 {
@@ -452,7 +460,7 @@ static void volumealsa_build_popup_window(GtkWidget *p)
     gtk_window_set_skip_taskbar_hint(GTK_WINDOW(vol->popup_window), TRUE);
     gtk_window_set_skip_pager_hint(GTK_WINDOW(vol->popup_window), TRUE);
     gtk_window_set_default_size(GTK_WINDOW(vol->popup_window),-1,145);
-    gtk_window_set_type_hint(GTK_WINDOW(vol->popup_window), GDK_WINDOW_TYPE_HINT_UTILITY);
+    gtk_window_set_type_hint(GTK_WINDOW(vol->popup_window), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
     gtk_widget_add_events(vol->popup_window,GDK_FOCUS_CHANGE_MASK);
     gtk_window_set_attached_to(GTK_WINDOW(vol->popup_window),vol->plugin);
 
@@ -623,6 +631,7 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .description = N_("Display and control volume for ALSA"),
 
     .new_instance = volumealsa_constructor,
+    .update_context_menu = volumealsa_set_menu_command,
     .config = volumealsa_configure,
     .reconfigure = volumealsa_panel_configuration_changed,
     .button_press_event = volumealsa_button_press_event,

@@ -198,7 +198,6 @@ GSettings* load_global_config_gsettings(PanelApp* app, GSettingsBackend** config
     settings = g_settings_new_with_backend_and_path("org.simple.panel",b,"/org/simple/panel/");
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"logout-command");
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"shutdown-command");
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"terminal-command");
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"css");
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"is-dark");
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(app),settings,"is-custom");

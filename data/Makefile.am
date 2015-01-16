@@ -42,10 +42,6 @@ gsettings_SCHEMAS = $(panel_gschemas_in:.xml.in=.xml)
 
 uidir=$(datadir)/simple-panel/ui
 ui_in_files= \
-	ui/panel-pref.glade \
-	ui/panel-menus.glade \
-	ui/app-pref.glade \
-	ui/app-run.glade \
 	ui/launchtaskbar.glade \
 	ui/netstatus.glade
 
@@ -62,7 +58,6 @@ CLEANFILES = \
 
 simple_panel_images_DATA = \
 	images/my-computer.png \
-	images/stock_volume.png \
 	images/file-manager.png \
 	images/gnome-fs-desktop.png \
 	images/gnome-logout.png \
@@ -77,11 +72,6 @@ simple_panel_images_DATA = \
 	images/gnome-netstatus-txrx.png \
 	images/gnome-netstatus-tx.png \
 	images/background.png \
-	images/volume.png \
-	images/volume-low.png \
-	images/volume-medium.png \
-	images/volume-high.png \
-	images/mute.png \
 	images/ns-bothrs.png \
 	images/ns-connected.png \
 	images/ns-disconnect.png \

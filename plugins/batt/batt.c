@@ -48,56 +48,44 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
 
-#include "dbg.h" /* for ENTER and RET macros */
 #include "batt_sys.h"
 #include "plugin.h" /* all other APIs including panel configuration */
 
 #define BATT_KEY_HIDE "hide-if-no-battery"
+#define BATT_KEY_NAME "battery-name"
+#define BATT_KEY_PM_COMMAND "pm-command"
 #define BATT_KEY_ALARM_COMMAND "alarm-command"
 #define BATT_KEY_ALARM_TIME "alarm-time"
-#define BATT_KEY_BORDER_WIDTH "border-width"
-#define BATT_KEY_SIZE "size"
-#define BATT_KEY_BACKGROUND "background-color"
-#define BATT_KEY_CH1 "charging-color-1"
-#define BATT_KEY_CH2 "charging-color-2"
-#define BATT_KEY_DIS1 "discharging-color-1"
-#define BATT_KEY_DIS2 "discharging-color-2"
 #define BATT_KEY_EXTENDED "show-extended-info"
+#define BATT_KEY_USE_SYMBOLIC "use-symbolic-icons"
+#define BATT_KEY_SHOW_PERCENTAGE "show-percentage"
+#define BATT_KEY_SHOW_REMAINING "show-remaining"
+#define BATT_KEY_BATTERY_NAME "battery-name"
 /* The last MAX_SAMPLES samples are averaged when charge rates are evaluated.
    This helps prevent spikes in the "time left" values the user sees. */
 #define MAX_SAMPLES 10
 
 typedef struct {
     char *alarmCommand,
-        *backgroundColor,
-        *chargingColor1,
-        *chargingColor2,
-        *dischargingColor1,
-        *dischargingColor2;
-    GdkRGBA background,
-        charging1,
-        charging2,
-        discharging1,
-        discharging2;
-    cairo_surface_t *pixmap;
-    GtkContainer *box;
-    GtkWidget *drawingArea;
-    GtkOrientation orientation;
+        *pm_command,
+        *batt_name;
+    GtkWidget *box;
+    GtkWidget *button;
+    GtkWidget *popup;
+    GtkWidget* img;
+    GIcon* icon;
     unsigned int alarmTime,
-        border,
-        height,
-        length,
         numSamples,
-        requestedBorder,
         *rateSamples,
         rateSamplesSum,
-        thickness,
         timer,
         state_elapsed_time,
         info_elapsed_time,
-        wasCharging,
-        width,
-        hide_if_no_battery;
+        wasCharging;
+    gboolean symbolic,
+        hide_if_no_battery,
+        show_percentage,
+        show_remaining;
     sem_t alarmProcessLock;
     battery* b;
     gboolean has_ac_adapter;
@@ -113,7 +101,8 @@ typedef struct {
 } Alarm;
 
 static void destructor(gpointer data);
-static void update_display(lx_battery *lx_b, gboolean repaint);
+static void update_display(lx_battery *lx_b);
+static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, lx_battery* b);
 
 /* alarmProcess takes the address of a dynamically allocated alarm struct (which
    it must free). It ensures that alarm commands do not run concurrently. */
@@ -219,41 +208,30 @@ static void set_tooltip_text(lx_battery* lx_b)
         return;
     gboolean isCharging = battery_is_charging(lx_b->b);
     gchar *tooltip = make_tooltip(lx_b, isCharging);
-    gtk_widget_set_tooltip_text(lx_b->drawingArea, tooltip);
+    gtk_widget_set_tooltip_text(lx_b->button, tooltip);
     g_free(tooltip);
 }
 
-/* FIXME:
-   Don't repaint if percentage of remaining charge and remaining time aren't changed. */
-void update_display(lx_battery *lx_b, gboolean repaint) {
-    cairo_t *cr;
+void update_display(lx_battery *lx_b) {
     battery *b = lx_b->b;
     /* unit: mW */
     int rate;
     gboolean isCharging;
-
-    if (! lx_b->pixmap )
-        return;
-
-    cr = cairo_create(lx_b->pixmap);
-    cairo_set_line_width (cr, 1.0);
-
-    /* draw background */
-    gdk_cairo_set_source_rgba(cr, &lx_b->background);
-    cairo_rectangle(cr, 0, 0, lx_b->width, lx_b->height);
-    cairo_fill(cr);
+    gchar *char_str = NULL;
 
     /* no battery is found */
     if( b == NULL )
     {
-        gtk_widget_set_tooltip_text( lx_b->drawingArea, _("No batteries found") );
+        gtk_widget_set_tooltip_text( lx_b->button, _("No batteries found") );
         if (lx_b->hide_if_no_battery)
         {
-            gtk_widget_hide(gtk_widget_get_parent(lx_b->drawingArea));
-            repaint = FALSE;
+            gtk_widget_hide(gtk_widget_get_parent(lx_b->button));
         }
+        lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-missing-symbolic" : "battery-missing-panel");
         goto update_done;
+        char_str = g_strdup_printf("");
     }
+
 
     /* fixme: only one battery supported */
 
@@ -285,52 +263,67 @@ void update_display(lx_battery *lx_b, gboolean repaint) {
     }
 
     set_tooltip_text(lx_b);
-
-    int chargeLevel = lx_b->b->percentage * lx_b->length / 100;
-
-    if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL) {
-
-        /* Draw the battery bar vertically, using color 1 for the left half and
-           color 2 for the right half */
-        gdk_cairo_set_source_rgba(cr,
-                isCharging ? &lx_b->charging1 : &lx_b->discharging1);
-        cairo_rectangle(cr, 0, lx_b->height - chargeLevel,
-                        lx_b->width / 2, chargeLevel);
-        cairo_fill(cr);
-        gdk_cairo_set_source_rgba(cr,
-                isCharging ? &lx_b->charging2 : &lx_b->discharging2);
-        cairo_rectangle(cr, lx_b->width / 2, lx_b->height - chargeLevel,
-                        (lx_b->width + 1) / 2, chargeLevel);
-        cairo_fill(cr);
+    if (isCharging)
+    {
+        if (lx_b->b->percentage == 100)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-full-charged-symbolic" : "battery-full-charged-panel");
+        }
+        else if (lx_b->b->percentage >= 80)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-full-charging-symbolic" : "battery-full-charging-panel");
+        }
+        else if (lx_b->b->percentage >= 50)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-good-charging-symbolic" : "battery-good-charging-panel");
+        }
+        else if (lx_b->b->percentage >= 30)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-low-charging-symbolic" : "battery-low-charging-panel");
+        }
+        else if (lx_b->b->percentage >= 10)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-caution-charging-symbolic" : "battery-caution-charging-panel");
+        }
     }
-    else {
-
-        /* Draw the battery bar horizontally, using color 1 for the top half and
-           color 2 for the bottom half */
-        gdk_cairo_set_source_rgba(cr,
-                isCharging ? &lx_b->charging1 : &lx_b->discharging1);
-        cairo_rectangle(cr, 0, 0, chargeLevel, lx_b->height / 2);
-        cairo_fill(cr);
-        gdk_cairo_set_source_rgba(cr,
-                isCharging ? &lx_b->charging2 : &lx_b->discharging2);
-        cairo_rectangle(cr, 0, (lx_b->height + 1) / 2,
-                        chargeLevel, lx_b->height / 2);
-        cairo_fill(cr);
-        cairo_paint(cr);
-
+    else
+    {
+        if (lx_b->b->percentage >= 80)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-full-symbolic" : "battery-full-panel");
+        }
+        else if (lx_b->b->percentage >= 50)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-good-symbolic" : "battery-good-panel");
+        }
+        else if (lx_b->b->percentage >= 30)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-low-symbolic" : "battery-low-panel");
+        }
+        else if (lx_b->b->percentage >= 10)
+        {
+            lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic ? "battery-caution-symbolic" : "battery-caution-panel");
+        }
     }
-    gtk_widget_show(gtk_widget_get_parent(lx_b->drawingArea));
+    int hours = lx_b->b->seconds / 3600;
+    int left_seconds = lx_b->b->seconds - 3600 * hours;
+    int minutes = left_seconds / 60;
+    if (lx_b->show_percentage && lx_b->show_remaining && lx_b->b->percentage != 100)
+        char_str = g_strdup_printf(_("%d%% (%d:%02d remaining)"),lx_b->b->percentage,hours,minutes);
+    else if (lx_b->show_percentage)
+        char_str = g_strdup_printf("%d%%",lx_b->b->percentage);
+    else if (lx_b->show_remaining && lx_b->b->percentage != 100)
+        char_str = g_strdup_printf("%d:%02d",lx_b->b->percentage,hours,minutes);
+    else char_str = g_strdup_printf("");
 
 update_done:
-    if( repaint )
-        gtk_widget_queue_draw( lx_b->drawingArea );
-
-    check_cairo_status(cr);
-    cairo_destroy(cr);
+    gtk_button_set_label(GTK_BUTTON(lx_b->button),char_str);
+    simple_panel_image_change_gicon(lx_b->img,lx_b->icon);
+    g_free(char_str);
 }
 
 /* This callback is called every 3 seconds */
-static int update_timout(lx_battery *lx_b) {
+static int update_timeout(lx_battery *lx_b) {
     battery *bat;
     if (g_source_is_destroyed(g_main_current_source()))
         return FALSE;
@@ -343,129 +336,45 @@ static int update_timout(lx_battery *lx_b) {
         battery_free(lx_b->b);
 
         /* maybe in the mean time a battery has been inserted. */
-        lx_b->b = battery_get();
+        lx_b->b = battery_get_by_name(lx_b->batt_name);
     }
 
-    update_display( lx_b, TRUE );
+    update_display( lx_b );
 
     return TRUE;
 }
 
-/* An update will be performed whenever the user clicks on the charge bar */
-static gboolean buttonPressEvent(GtkWidget *p, GdkEventButton *event,
-                                 SimplePanel *panel)
-{
-    lx_battery *lx_b = lxpanel_plugin_get_data(p);
-
-    update_display(lx_b, TRUE);
-    /* FIXME: open some application for lid/power management may be? */
-
-    return FALSE;
-}
-
-
-static gint configureEvent(GtkWidget *widget, GdkEventConfigure *event,
-        lx_battery *lx_b)
-{
-    GtkAllocation allocation;
-
-    ENTER;
-
-    gtk_widget_get_allocation(widget, &allocation);
-    if (allocation.width <= 1 && allocation.height <= 1)
-    {
-        /* If plugin is hidden currently then we get 1x1 here */
-        RET(TRUE);
-    }
-
-    if (lx_b->pixmap)
-        cairo_surface_destroy(lx_b->pixmap);
-
-    /* Update the plugin's dimensions */
-    lx_b->width = allocation.width;
-    lx_b->height = allocation.height;
-    if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL) {
-        lx_b->length = lx_b->height;
-    }
-    else {
-        lx_b->length = lx_b->width;
-    }
-
-    lx_b->pixmap = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, allocation.width,
-                                               allocation.height);
-    check_cairo_surface_status(&lx_b->pixmap);
-
-    /* Perform an update so the bar will look right in its new orientation */
-    update_display(lx_b, FALSE);
-    /* we enforce border width here as it seems GtkEventBox doesn't apply it initially */
-    gtk_container_set_border_width(lx_b->box, lx_b->border);
-
-    RET(TRUE);
-}
-
-
-static gint draw(GtkWidget *widget, cairo_t *cr, lx_battery *lx_b) {
-
-    ENTER;
-    cairo_set_source_rgba(cr,0,0,0,0);
-    cairo_fill(cr);
-    cairo_set_source_surface(cr, lx_b->pixmap, 0, 0);
-    cairo_paint(cr);
-
-    check_cairo_status(cr);
-
-    RET(FALSE);
-}
-
-/* updates length, border, and height/width appropriate to orientation */
-static void updateSizes(lx_battery *b)
-{
-    b->length = panel_get_height(b->panel);
-    b->border = MIN(b->requestedBorder, (MAX(1, b->length) - 1) / 2);
-    b->length -= 2 * b->border;
-    if (b->orientation == GTK_ORIENTATION_HORIZONTAL)
-        b->height = b->length;
-    else
-        b->width = b->length;
-}
-
-
-
 static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
 {
-    ENTER;
-
     lx_battery *lx_b;
     GtkWidget *p;
-    int tmp_int;
+    GVariant* target;
 
     lx_b = g_new0(lx_battery, 1);
 
     /* get available battery */
-    lx_b->b = battery_get ();
+    lx_b->batt_name = g_settings_get_string(settings,BATT_KEY_BATTERY_NAME);
 
-    p = gtk_event_box_new();
+    lx_b->b = battery_get_by_name (lx_b->batt_name);
+
+    p =lx_b->box= gtk_event_box_new();
     lxpanel_plugin_set_data(p, lx_b, destructor);
     gtk_widget_set_has_window(p, FALSE);
-    lx_b->box = GTK_CONTAINER(p);
 
-    lx_b->drawingArea = gtk_drawing_area_new();
-    gtk_widget_add_events( lx_b->drawingArea, GDK_BUTTON_PRESS_MASK );
+    lx_b->button = gtk_button_new();
 
-    gtk_container_add(lx_b->box, lx_b->drawingArea);
 
-    lx_b->orientation = panel_get_orientation(panel);
+    gtk_container_add(GTK_CONTAINER(lx_b->box), lx_b->button);
 
-    gtk_widget_show(lx_b->drawingArea);
+
+    gtk_widget_show(lx_b->button);
 
     sem_init(&(lx_b->alarmProcessLock), 0, 1);
 
-    lx_b->alarmCommand = lx_b->backgroundColor = lx_b->chargingColor1 = lx_b->chargingColor2
-            = lx_b->dischargingColor1 = lx_b->dischargingColor2 = NULL;
+    lx_b->alarmCommand = NULL;
 
     /* Set default values for integers */
     lx_b->alarmTime = 5;
-    lx_b->requestedBorder = 1;
 
     /* remember instance data */
     lx_b->panel = panel;
@@ -475,153 +384,78 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
 
     lx_b->hide_if_no_battery = g_settings_get_boolean(settings,BATT_KEY_HIDE);
     lx_b->show_extended_information = g_settings_get_boolean(settings,BATT_KEY_EXTENDED);
-    updateSizes(lx_b);
-    if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL)
-    {
-        lx_b->width = lx_b->thickness;
-        gtk_widget_set_size_request(lx_b->drawingArea, lx_b->width, -1);
-    }
-    else
-    {
-        lx_b->height = lx_b->thickness;
-        gtk_widget_set_size_request(lx_b->drawingArea, -1, lx_b->height);
-    }
-    gtk_container_set_border_width(lx_b->box, lx_b->border);
-    g_signal_connect (G_OBJECT (lx_b->drawingArea),"configure-event",
-          G_CALLBACK (configureEvent), (gpointer) lx_b);
-    g_signal_connect (G_OBJECT (lx_b->drawingArea), "draw",
-          G_CALLBACK (draw), (gpointer) lx_b);
+    lx_b->symbolic = g_settings_get_boolean(settings,BATT_KEY_USE_SYMBOLIC);
     lx_b->alarmCommand = g_settings_get_string(settings,BATT_KEY_ALARM_COMMAND);
+    lx_b->pm_command = g_settings_get_string(settings,BATT_KEY_PM_COMMAND);
     lx_b->alarmTime = g_settings_get_uint(settings,BATT_KEY_ALARM_TIME);
-    lx_b->requestedBorder = g_settings_get_uint(settings,BATT_KEY_BORDER_WIDTH);
-    lx_b->thickness = g_settings_get_uint(settings,BATT_KEY_SIZE);
-    lx_b->backgroundColor = g_settings_get_string(settings,BATT_KEY_BACKGROUND);
-    lx_b->chargingColor1 = g_settings_get_string(settings,BATT_KEY_CH1);
-    lx_b->chargingColor2 = g_settings_get_string(settings,BATT_KEY_CH2);
-    lx_b->dischargingColor1 = g_settings_get_string(settings,BATT_KEY_DIS1);
-    lx_b->dischargingColor2 = g_settings_get_string(settings,BATT_KEY_DIS2);
-        lx_b->thickness = MAX(1, lx_b->thickness);
-        if (lx_b->orientation == GTK_ORIENTATION_HORIZONTAL)
-            lx_b->width = lx_b->thickness;
-        else
-            lx_b->height = lx_b->thickness;
-        gtk_widget_set_size_request(lx_b->drawingArea, lx_b->width,
-                                    lx_b->height);
+    lx_b->show_percentage = g_settings_get_boolean(settings,BATT_KEY_SHOW_PERCENTAGE);
+    lx_b->show_remaining = g_settings_get_boolean(settings,BATT_KEY_SHOW_REMAINING);
 
-    /* Make sure the border value is acceptable */
-    lx_b->border = MIN(lx_b->requestedBorder,
-                       (MAX(1, MIN(lx_b->length, lx_b->thickness)) - 1) / 2);
-
-
-    gdk_rgba_parse(&lx_b->background,lx_b->backgroundColor);
-    gdk_rgba_parse(&lx_b->charging1,lx_b->chargingColor1);
-    gdk_rgba_parse(&lx_b->charging2,lx_b->chargingColor2);
-    gdk_rgba_parse(&lx_b->discharging1,lx_b->dischargingColor1);
-    gdk_rgba_parse(&lx_b->discharging2,lx_b->dischargingColor2);
+    lx_b->icon = g_themed_icon_new_with_default_fallbacks(lx_b->symbolic
+                                                          ?"battery-missing-symbolic"
+                                                          :"battery-missing-panel");
+    lx_b->img = simple_panel_image_new_for_gicon(lx_b->panel,lx_b->icon,-1);
+    gtk_button_set_image(GTK_BUTTON(lx_b->button),lx_b->img);
+    gtk_button_set_relief(GTK_BUTTON(lx_b->button),GTK_RELIEF_NONE);
+    gtk_button_set_always_show_image(GTK_BUTTON(lx_b->button),TRUE);
+    css_apply_with_class(lx_b->button,panel_button_css,"-panel-menu",FALSE);
+    gtk_actionable_set_action_name(GTK_ACTIONABLE(lx_b->button),"app.launch-command");
+    target = g_variant_new_string(lx_b->pm_command);
+    gtk_actionable_set_action_target_value(GTK_ACTIONABLE(lx_b->button),target);
+    g_signal_connect(lx_b->panel,"notify::edge",G_CALLBACK(panel_edge_changed),lx_b);
+    update_display(lx_b);
 
     /* Start the update loop */
-    lx_b->timer = g_timeout_add_seconds( 9, (GSourceFunc) update_timout, (gpointer) lx_b);
+    lx_b->timer = g_timeout_add_seconds( 9, (GSourceFunc) update_timeout, (gpointer) lx_b);
     gtk_widget_show(p);
 
-    RET(p);
+    return p;
+}
+
+static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, lx_battery* b)
+{
+    int edge;
+    g_object_get(panel,PANEL_PROP_EDGE,&edge,NULL);
+    edge = (edge == GTK_POS_TOP || edge == GTK_POS_BOTTOM) ? GTK_POS_LEFT : GTK_POS_BOTTOM;
+    gtk_button_set_image_position(GTK_BUTTON(b->button),edge);
 }
 
 
 static void
 destructor(gpointer data)
 {
-    ENTER;
-
     lx_battery *b = (lx_battery *)data;
 
     if (b->b != NULL)
         battery_free(b->b);
-
-    if (b->pixmap)
-        cairo_surface_destroy(b->pixmap);
-
+    if (b->img)
+        gtk_widget_destroy(b->img);
+    if (b->button)
+        gtk_widget_destroy(b->button);
+    if (b->popup)
+        gtk_widget_destroy(b->popup);
+    if (b->icon)
+        g_object_unref(b->icon);
     g_free(b->alarmCommand);
-    g_free(b->backgroundColor);
-    g_free(b->chargingColor1);
-    g_free(b->chargingColor2);
-    g_free(b->dischargingColor1);
-    g_free(b->dischargingColor2);
-
     g_free(b->rateSamples);
+    g_free(b->batt_name);
+    g_free(b->pm_command);
     sem_destroy(&(b->alarmProcessLock));
     if (b->timer)
         g_source_remove(b->timer);
     g_free(b);
 
-    RET();
+    return;
 
 }
-
-
-static void orientation(SimplePanel *panel, GtkWidget *p) {
-
-    ENTER;
-
-    lx_battery *b = lxpanel_plugin_get_data(p);
-
-    if (b->orientation != panel_get_orientation(panel)) {
-        b->orientation = panel_get_orientation(panel);
-        updateSizes(b);
-        if (b->orientation == GTK_ORIENTATION_HORIZONTAL)
-        {
-            b->width = b->thickness;
-            gtk_widget_set_size_request(b->drawingArea, b->width, -1);
-        }
-        else
-        {
-            b->height = b->thickness;
-            gtk_widget_set_size_request(b->drawingArea, -1, b->height);
-        }
-        gtk_widget_queue_resize(GTK_WIDGET(b));
-    }
-
-    RET();
-}
-
 
 static gboolean applyConfig(gpointer user_data)
 {
-    ENTER;
-
     lx_battery *b = lxpanel_plugin_get_data(user_data);
+    GVariant* target;
 
-    /* Update colors */
-    if (b->backgroundColor &&
-            gdk_rgba_parse(&b->background,b->backgroundColor))
-        g_settings_set_string(b->settings, BATT_KEY_BACKGROUND, b->backgroundColor);
-    if (b->chargingColor1 && gdk_rgba_parse(&b->charging1,b->chargingColor1))
-        g_settings_set_string(b->settings, BATT_KEY_CH1, b->chargingColor1);
-    if (b->chargingColor2 && gdk_rgba_parse(&b->charging2,b->chargingColor2))
-        g_settings_set_string(b->settings, BATT_KEY_CH2, b->chargingColor2);
-    if (b->dischargingColor1 &&
-            gdk_rgba_parse(&b->discharging1,b->dischargingColor1))
-        g_settings_set_string(b->settings, BATT_KEY_DIS1, b->dischargingColor1);
-    if (b->dischargingColor2 &&
-            gdk_rgba_parse(&b->discharging2,b->dischargingColor2))
-        g_settings_set_string(b->settings, BATT_KEY_DIS2, b->dischargingColor2);
-
-    /* Make sure the border value is acceptable */
-    b->requestedBorder = MIN(b->requestedBorder, 6);
-    updateSizes(b);
-
-    /* Resize the widget */
-    gtk_container_set_border_width(b->box, b->border);
-    if (b->orientation == GTK_ORIENTATION_HORIZONTAL)
-    {
-        b->width = b->thickness;
-        gtk_widget_set_size_request(b->drawingArea, b->width, -1);
-    }
-    else
-    {
-        b->height = b->thickness;
-        gtk_widget_set_size_request(b->drawingArea, -1, b->height);
-    }
-    gtk_widget_set_size_request(b->drawingArea, b->width, b->height);
+    battery_free(b->b);
+    b->b = battery_get_by_name(b->batt_name);
     /* ensure visibility if requested */
     if (!b->hide_if_no_battery)
         gtk_widget_show(user_data);
@@ -630,16 +464,22 @@ static gboolean applyConfig(gpointer user_data)
 
     /* update tooltip */
     set_tooltip_text(b);
-
+    gtk_actionable_set_action_name(GTK_ACTIONABLE(b->button),"app.launch-command");
+    target = g_variant_new_string(b->pm_command);
+    gtk_actionable_set_action_target_value(GTK_ACTIONABLE(b->button),target);
     /* update settings */
+    g_settings_set_string(b->settings, BATT_KEY_NAME, b->batt_name);
     g_settings_set_boolean(b->settings, BATT_KEY_HIDE, b->hide_if_no_battery);
     g_settings_set_string(b->settings, BATT_KEY_ALARM_COMMAND, b->alarmCommand);
     g_settings_set_uint(b->settings, BATT_KEY_ALARM_TIME, b->alarmTime);
-    g_settings_set_uint(b->settings, BATT_KEY_BORDER_WIDTH, b->requestedBorder);
-    g_settings_set_uint(b->settings, BATT_KEY_SIZE, b->thickness);
+    g_settings_set_string(b->settings, BATT_KEY_PM_COMMAND, b->pm_command);
+    g_settings_set_boolean(b->settings, BATT_KEY_USE_SYMBOLIC, b->symbolic);
+    g_settings_set_boolean(b->settings, BATT_KEY_SHOW_PERCENTAGE, b->show_percentage);
+    g_settings_set_boolean(b->settings, BATT_KEY_SHOW_REMAINING, b->show_remaining);
     g_settings_set_boolean(b->settings, BATT_KEY_EXTENDED,
                          b->show_extended_information);
-    RET(FALSE);
+    update_display(b);
+    return FALSE;
 }
 
 
@@ -647,33 +487,28 @@ static GtkWidget *config(SimplePanel *panel, GtkWidget *p) {
     lx_battery *b = lxpanel_plugin_get_data(p);
     return lxpanel_generic_config_dlg(_("Battery Monitor"),
             panel, applyConfig, p,
+            _("Battery name"), &b->batt_name, CONF_TYPE_STR,
             _("Hide if there is no battery"), &b->hide_if_no_battery, CONF_TYPE_BOOL,
             _("Alarm command"), &b->alarmCommand, CONF_TYPE_STR,
             _("Alarm time (minutes left)"), &b->alarmTime, CONF_TYPE_INT,
-            _("Background color"), &b->backgroundColor, CONF_TYPE_STR,
-            _("Charging color 1"), &b->chargingColor1, CONF_TYPE_STR,
-            _("Charging color 2"), &b->chargingColor2, CONF_TYPE_STR,
-            _("Discharging color 1"), &b->dischargingColor1, CONF_TYPE_STR,
-            _("Discharging color 2"), &b->dischargingColor2, CONF_TYPE_STR,
-            _("Border width"), &b->requestedBorder, CONF_TYPE_INT,
-            _("Size"), &b->thickness, CONF_TYPE_INT,
+            _("Use symbolic icons"), &b->symbolic, CONF_TYPE_BOOL,
+            _("Settings command"), &b->pm_command, CONF_TYPE_STR,
+            _("Show remaining time on panel"), &b->show_remaining, CONF_TYPE_BOOL,
+            _("Show percentage on panel"), &b->show_percentage, CONF_TYPE_BOOL,
             _("Show Extended Information"), &b->show_extended_information, CONF_TYPE_BOOL,
             NULL);
 }
 
 
-FM_DEFINE_MODULE(lxpanel_gtk, batt)
+FM_DEFINE_MODULE(lxpanel_gtk, batt);
 
 /* Plugin descriptor. */
 SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name        = N_("Battery Monitor"),
     .description = N_("Display battery status using ACPI"),
-
     .new_instance = constructor,
     .config      = config,
     .has_config  = TRUE,
-    .reconfigure = orientation,
-    .button_press_event = buttonPressEvent
 };
 
 

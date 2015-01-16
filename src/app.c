@@ -50,7 +50,6 @@ enum
     PROP_CSS,
     PROP_LOGOUT,
     PROP_SHUTDOWN,
-    PROP_TERMINAL,
     PROP_PROFILE,
     PROP_COUNT
 };
@@ -62,20 +61,29 @@ G_DEFINE_TYPE_WITH_PRIVATE(PanelApp, panel_app, GTK_TYPE_APPLICATION)
 static gboolean is_started;
 
 static void activate_preferences (GSimpleAction* simple, GVariant* param, gpointer data);
-const GActionEntry app_action_entries[] =
+static const GActionEntry app_action_entries[] =
 {
     {"preferences", activate_preferences, NULL, NULL, NULL},
     {"panel-preferences", activate_panel_preferences, "s", NULL, NULL},
     {"about", activate_about, NULL, NULL, NULL},
-    {"launch-id", activate_menu_launch_id, "s", NULL, NULL},
-    {"launch-uri", activate_menu_launch_uri, "s", NULL, NULL},
-    {"launch-command", activate_menu_launch_command, "s", NULL, NULL},
     {"menu", activate_menu, NULL, NULL, NULL},
     {"run", activate_run, NULL, NULL, NULL},
     {"logout", activate_logout, NULL, NULL, NULL},
     {"shutdown", activate_shutdown, NULL, NULL, NULL},
     {"quit", activate_exit, NULL, NULL, NULL},
 };
+
+
+const GActionEntry menu_action_entries[] =
+{
+    {"launch-id", activate_menu_launch_id, "s", NULL, NULL},
+    {"launch-uri", activate_menu_launch_uri, "s", NULL, NULL},
+    {"launch-command", activate_menu_launch_command, "s", NULL, NULL},
+    {"load-apps-menu", menu_load_applications, "b", NULL, NULL},
+    {"load-places-menu", menu_load_places, "b", NULL, NULL},
+    {"load-system-menu", menu_load_system, "b", NULL, NULL},
+};
+
 static const GOptionEntry entries[] =
 {
   { "version", 'v', 0, G_OPTION_ARG_NONE, NULL, N_("Print version and exit"), NULL },
@@ -108,19 +116,13 @@ static void activate_preferences (GSimpleAction* simple, GVariant* param, gpoint
         return;
     }
     GtkBuilder* builder = gtk_builder_new();
-    if( !gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/app-pref.ui", NULL) )
-    {
-        g_object_unref(builder);
-        return;
-    }
+    gtk_builder_add_from_resource(builder,"/org/simple/panel/app/pref.ui",NULL);
     app->priv->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "app-pref" );
     gtk_application_add_window(GTK_APPLICATION(app),GTK_WINDOW(app->priv->pref_dialog));
     g_object_add_weak_pointer( G_OBJECT(app->priv->pref_dialog), (gpointer) &app->priv->pref_dialog );
     gtk_window_set_position( GTK_WINDOW(app->priv->pref_dialog), GTK_WIN_POS_CENTER );
     panel_apply_icon(GTK_WINDOW(app->priv->pref_dialog));
 
-    w = (GtkWidget*)gtk_builder_get_object( builder, "term" );
-    g_settings_bind(app->priv->config,"terminal-command",w,"text",G_SETTINGS_BIND_DEFAULT);
     w = (GtkWidget*)gtk_builder_get_object( builder, "logout" );
     g_settings_bind(app->priv->config,"logout-command",w,"text",G_SETTINGS_BIND_DEFAULT);
     w = (GtkWidget*)gtk_builder_get_object( builder, "shutdown" );
@@ -152,6 +154,7 @@ static void panel_app_startup(GApplication* app)
 
     /* add actions for all panels */
     g_action_map_add_action_entries(G_ACTION_MAP(app),app_action_entries,G_N_ELEMENTS(app_action_entries),app);
+    g_action_map_add_action_entries(G_ACTION_MAP(app),menu_action_entries,G_N_ELEMENTS(menu_action_entries),app);
 }
 
 static void panel_app_shutdown(GApplication* gapp)
@@ -167,8 +170,6 @@ static void panel_app_shutdown(GApplication* gapp)
         g_free(app->priv->custom_css);
     if (app->priv->logout_cmd)
         g_free(app->priv->logout_cmd);
-    if (app->priv->terminal_cmd)
-        g_free(app->priv->terminal_cmd);
     if (app->priv->shutdown_cmd)
         g_free(app->priv->shutdown_cmd);
     g_free(app->priv->profile);
@@ -217,34 +218,32 @@ int panel_app_command_line(GApplication* application,GApplicationCommandLine* co
         g_object_set(G_OBJECT(application),"profile",profile_name,NULL);
     if (g_variant_dict_lookup (options, "command", "&s", &ccommand))
     {
-        if (g_action_map_lookup_action(G_ACTION_MAP(application),ccommand))
+
+        gchar* name;
+        GVariant* param;
+        GError* err = NULL;
+        g_action_parse_detailed_name(ccommand,&name,&param,&err);
+        if(err)
         {
-            gchar* name;
-            GVariant* param;
-            GError* err = NULL;
-            g_action_parse_detailed_name(ccommand,&name,&param,&err);
-            if(err)
-            {
-                g_warning("%s\n",err->message);
-                g_clear_error(&err);
-            }
-            else
-                g_action_group_activate_action(G_ACTION_GROUP(application),name,param);
-            if (name)
-                g_free(name);
-            if (param)
-                g_variant_unref(param);
+            g_warning("%s\n",err->message);
+            g_clear_error(&err);
         }
+        else if (g_action_map_lookup_action(G_ACTION_MAP(application),name))
+            g_action_group_activate_action(G_ACTION_GROUP(application),name,param);
         else
         {
             gchar ** listv = g_action_group_list_actions(G_ACTION_GROUP(application));
             gchar* list = g_strjoinv(" ",listv);
             g_strfreev(listv);
             g_application_command_line_printerr (commandline,
-                                 _("%s: invalid command - %s. Doing nothing.\nValid commands: %s\n"),
-                                 g_get_application_name(),ccommand,list);
+                                                 _("%s: invalid command - %s. Doing nothing.\nValid commands: %s\n"),
+                                                 g_get_application_name(),ccommand,list);
             g_free(list);
         }
+        if (name)
+            g_free(name);
+        if (param)
+            g_variant_unref(param);
     }
     g_application_activate(application);
     return 0;
@@ -292,9 +291,6 @@ static void panel_app_set_property(GObject      *object,
         app->priv->custom_css = g_strdup(g_value_get_string(value));
         apply_styling(app);
         break;
-    case PROP_TERMINAL:
-        app->priv->terminal_cmd = g_strdup(g_value_get_string(value));
-        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -331,9 +327,6 @@ static void panel_app_get_property(GObject      *object,
         break;
     case PROP_CSS:
         g_value_set_string(value,app->priv->custom_css);
-        break;
-    case PROP_TERMINAL:
-        g_value_set_string(value,app->priv->terminal_cmd);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -389,8 +382,6 @@ void panel_app_dispose(GObject* object)
         g_free(app->priv->custom_css);
     if (app->priv->logout_cmd)
         g_free(app->priv->logout_cmd);
-    if (app->priv->terminal_cmd)
-        g_free(app->priv->terminal_cmd);
     if (app->priv->shutdown_cmd)
         g_free(app->priv->shutdown_cmd);
     g_free(app->priv->profile);
@@ -445,15 +436,6 @@ void panel_app_class_init(PanelAppClass *klass)
                     "Shutdown command",
                     "Command for shutdown used by this panel",
                     "lxsession-logout",
-                    G_PARAM_READWRITE));
-    g_object_class_install_property (
-                gobject_class,
-                PROP_TERMINAL,
-                g_param_spec_string (
-                    "terminal-command",
-                    "Terminal",
-                    "Terminal emulator used by this panel",
-                    "sakura",
                     G_PARAM_READWRITE));
     g_object_class_install_property(
                 gobject_class,

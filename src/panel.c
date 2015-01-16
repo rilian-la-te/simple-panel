@@ -1389,17 +1389,18 @@ void panel_apply_icon( GtkWindow *w )
 
 GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
 {
-    GMenu *gmenu, *gmenusection;
+    GMenu *gmenu, *gmenusection, *ret_menu;
     GtkMenu *ret;
     const SimplePanelPluginInit *init;
-    char* tmp;
-    gmenu = g_menu_new();
+    GtkBuilder* builder;
+    g_action_map_remove_action(G_ACTION_MAP(panel),"remove-plugin");
+    g_action_map_remove_action(G_ACTION_MAP(panel),"config-plugin");
+    builder = gtk_builder_new_from_resource("/org/simple/panel/lib/menus.ui");
+    gmenu = G_MENU(gtk_builder_get_object(builder,"panel-context-menu"));
     if (plugin)
     {
         init = PLUGIN_CLASS(plugin);
         /* create single item - plugin instance settings */
-        g_action_map_remove_action(G_ACTION_MAP(panel),"remove-plugin");
-        g_action_map_remove_action(G_ACTION_MAP(panel),"config-plugin");
         const GActionEntry plugin_entries[] = {
             {"remove-plugin",activate_remove_plugin,NULL,NULL,NULL},
             {"config-plugin",activate_config_plugin,NULL,NULL,NULL},
@@ -1407,53 +1408,17 @@ GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
         g_action_map_add_action_entries(G_ACTION_MAP(panel),plugin_entries,
                                         G_N_ELEMENTS(plugin_entries),
                                         (gpointer)plugin);
-        gmenusection = g_menu_new();
-        tmp = g_strdup_printf( _("\"%s\" Settings"), _(init->name) );
-        g_menu_append(gmenusection,tmp,"win.config-plugin");
-        g_free( tmp );
-        if(! init->config )
-            g_action_map_remove_action(G_ACTION_MAP(panel),"config-plugin");
-        tmp = g_strdup_printf( _("Remove \"%s\" From Panel"), _(init->name) );
-        g_menu_append(gmenusection,tmp,"win.remove-plugin");
-        g_free( tmp );
-        /* add custom items by plugin if requested */
+        gmenusection = G_MENU(gtk_builder_get_object(builder,"plugin-section"));
         if (init->update_context_menu != NULL)
-        {
-            tmp = g_strdup_printf("%s", _(init->name) );
-            g_menu_append_submenu(gmenusection,tmp,G_MENU_MODEL(init->update_context_menu(plugin)));
-            g_free( tmp );
-        }
-        g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
-        g_object_unref(gmenusection);
+            init->update_context_menu(plugin,gmenusection);
     }
-    gmenusection = g_menu_new();
-    g_menu_append(gmenusection,_("Add / Remove Panel Items"),"win.panel-settings('plugins')");
-    g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
-    g_object_unref(gmenusection);
-    gmenusection = g_menu_new();
-    g_menu_append(gmenusection,_("Panel Settings"),"win.panel-settings('appearance')");
-    g_menu_append(gmenusection,_("Create New Panel"),"win.new-panel");
-    gboolean enabled = g_list_length(gtk_application_get_windows(panel->priv->app))>1;
-    g_simple_action_set_enabled (
-                G_SIMPLE_ACTION(g_action_map_lookup_action(G_ACTION_MAP(panel),"remove-panel")),
-                enabled
-                );
-    g_menu_append(gmenusection,_("Delete This Panel"),"win.remove-panel");
-    g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
-    g_object_unref(gmenusection);
-    gmenusection = g_menu_new();
-    g_menu_append(gmenusection,_("Application Settings"),"app.preferences");
-    g_menu_append(gmenusection,_("About"),"app.about");
-    g_menu_append_section(gmenu,NULL,G_MENU_MODEL(gmenusection));
-    g_object_unref(gmenusection);
-
     ret = GTK_MENU(gtk_menu_new_from_model(G_MENU_MODEL(gmenu)));
     if (plugin)
         gtk_menu_attach_to_widget(ret,GTK_WIDGET(plugin),NULL);
     else
         gtk_menu_attach_to_widget(ret,GTK_WIDGET(panel),NULL);
     gtk_widget_show_all(GTK_WIDGET(ret));
-    g_object_unref(gmenu);
+    g_object_unref(builder);
     return ret;
 }
 

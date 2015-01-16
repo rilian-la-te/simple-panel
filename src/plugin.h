@@ -25,6 +25,7 @@
 #include "conf-gsettings.h"
 #include "css.h"
 #include "misc.h"
+#include "menu-maker.h"
 
 G_BEGIN_DECLS
 
@@ -100,7 +101,7 @@ typedef struct {
     void (*reconfigure)(SimplePanel *panel, GtkWidget *instance);
     gboolean (*button_press_event)(GtkWidget *widget, GdkEventButton *event, SimplePanel *panel);
     void (*show_system_menu)(GtkWidget *widget);
-    GMenu* (*update_context_menu)(GtkWidget *plugin);
+    void (*update_context_menu)(GtkWidget *plugin, GMenu* parent_menu);
     gboolean (*control)(GtkWidget *plugin, const char *cmd); /* not implemented */
     /*< private >*/
     gpointer _reserved1;

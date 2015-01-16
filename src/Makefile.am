@@ -35,17 +35,30 @@ SIMPLE_PANEL_NOINST_HEADER_FILES = \
 SIMPLE_PANEL_ENUM_FILES = $(SIMPLE_PANEL_HEADER_FILES)
 SIMPLE_PANEL_ENUM_FILES += $(SIMPLE_PANEL_NOINST_HEADER_FILES)
 
+libsimplpanel_la_resdeps = $(shell $(GLIB_COMPILE_RESOURCES) --generate-dependencies libsimplepanel.gresource.xml)
+
+libsimplepanel-resources.c: libsimplepanel.gresource.xml $(libsimplpanel_la_resdeps)
+	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target=$@ --sourcedir=$(srcdir) --generate-source libsimplepanel.gresource.xml
+
+simple_panel_resdeps = $(shell $(GLIB_COMPILE_RESOURCES) --generate-dependencies simple-panel.gresource.xml)
+
+simple-panel-resources.c: simple-panel.gresource.xml $(simple_panel_resdeps)
+	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target=$@ --sourcedir=$(srcdir) --generate-source simple-panel.gresource.xml
+
 panel-enum-types.h: panel-enum-types.h.template $(SIMPLE_PANEL_ENUM_FILES) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template panel-enum-types.h.template $(SIMPLE_PANEL_ENUM_FILES)) > $@
 
 panel-enum-types.c: panel-enum-types.c.template $(SIMPLE_PANEL_ENUM_FILES) $(GLIB_MKENUMS)
 	$(AM_V_GEN) (cd $(srcdir) && $(GLIB_MKENUMS) --template panel-enum-types.c.template $(SIMPLE_PANEL_ENUM_FILES)) > $@
 
-simple_panel_built_sources =			\
-	panel-enum-types.c	\
-	panel-enum-types.h
+BUILT_SOURCES = \
+	panel-enum-types.c \
+	panel-enum-types.h \
+	libsimplepanel-resources.c \
+	simple-panel-resources.c
 
 libsimplepanel_la_CPPFLAGS = $(simple_panel_CPPFLAGS)
+nodist_libsimplepanel_la_SOURCES = libsimplepanel-resources.c
 libsimplepanel_la_SOURCES = \
 	misc.c \
 	css.c \
@@ -63,6 +76,7 @@ libsimplepanel_la_LIBADD = $(PACKAGE_LIBS)
 libsimplepanel_la_LDFLAGS = \
        -no-undefined
 
+nodist_simple_panel_SOURCES = simple-panel-resources.c
 simple_panel_SOURCES = \
 	gtk-run.c \
 	main.c  \
@@ -94,8 +108,12 @@ xdg_menumodel_maker_LDADD = $(PACKAGE_LIBS)
 EXTRA_DIST = $(SIMPLE_PANEL_NOINST_HEADER_FILES) \
 	panel-enum-types.h
 
-BUILT_SOURCES = $(simple_panel_built_sources)
-CLEANFILES = panel-enum-types.c panel-enum-types.h
+CLEANFILES = panel-enum-types.c \
+	panel-enum-types.h \
+	libsimplepanel-resources.c \
+	simple-panel-resources.c \
+	libsimplepanel.gresource.xml \
+	simple-panel.gresource.xml
 
 $(top_builddir)/plugins/libbuiltin_plugins.a: $(simple_panel_include_HEADERS)
 	cd $(top_builddir)/plugins && $(MAKE) libbuiltin_plugins.a

@@ -72,16 +72,16 @@ static void update_icon (GtkWidget *p, volume_t *vol)
 	icon_size = panel_get_icon_size(vol->panel);
 
 	if (curr_volume <= 0) {
-		info = gtk_icon_theme_lookup_icon( theme, "stock_volume-mute", icon_size, 0 );
+        info = gtk_icon_theme_lookup_icon( theme, "audio-volume-muted-panel", icon_size, 0 );
 	}
 	else if (curr_volume > 0 && curr_volume <= 50) {
-		info = gtk_icon_theme_lookup_icon( theme, "stock_volume-min", icon_size, 0 );
+        info = gtk_icon_theme_lookup_icon( theme, "audio-volume-low-panel", icon_size, 0 );
 	}
 	else if (curr_volume > 50 && curr_volume <= 75) {
-		info = gtk_icon_theme_lookup_icon( theme, "stock_volume-med", icon_size, 0 );
+        info = gtk_icon_theme_lookup_icon( theme, "audio-volume-medium-panel", icon_size, 0 );
 	}
 	else /* curr_volume > 75 */ {
-		info = gtk_icon_theme_lookup_icon( theme, "stock_volume-max", icon_size, 0 );
+        info = gtk_icon_theme_lookup_icon( theme, "audio-volume-high-panel", icon_size, 0 );
 	}
 
 	if (info ) {

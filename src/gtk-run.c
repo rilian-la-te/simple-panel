@@ -334,16 +334,7 @@ void gtk_run(GtkApplication * app)
     if(!win)
     {
         builder = gtk_builder_new();
-        if( !gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/app-run.ui", &err) )
-        {
-            if (err)
-            {
-                g_print("%s\n",err->message);
-                g_clear_error(&err);
-            }
-            g_object_unref(builder);
-            return;
-        }
+        gtk_builder_add_from_resource(builder,"/org/simple/panel/app/run.ui",NULL);
         win = GTK_WIDGET(gtk_builder_get_object(builder,"app-run"));
         gtk_dialog_set_default_response( (GtkDialog*)win, GTK_RESPONSE_OK );
         gtk_window_set_keep_above(GTK_WINDOW(win),TRUE);

@@ -24,12 +24,17 @@
 
 G_BEGIN_DECLS
 
+#define LAUNCH_ID_ACTION "app.launch-id('%s')"
+#define LAUNCH_URI_ACTION "app.launch-uri('%s')"
+#define LAUNCH_COMMAND_ACTION "app.launch-command('%s')"
+
 GMenuModel* do_applications_menumodel();
 GMenuModel* do_places_menumodel();
 GMenuModel* do_system_menumodel();
 GMenuModel* create_default_menumodel(gboolean as_submenus, const gchar *icon_str);
-gchar* g_menu_make_xml (GMenuModel *model);
-
+void menu_load_applications(GSimpleAction* action, GVariant* param, gpointer data);
+void menu_load_places(GSimpleAction* action, GVariant* param, gpointer data);
+void menu_load_system(GSimpleAction* action, GVariant* param, gpointer data);
 G_END_DECLS
 
 #endif // GMENUMAKER_H

@@ -313,6 +313,33 @@ battery *battery_get() {
     return b;
 }
 
+battery *battery_get_by_name(const gchar* name) {
+    GError * error = NULL;
+    const gchar *entry;
+    GDir * dir = g_dir_open( ACPI_PATH_SYS_POWER_SUPPY, 0, &error );
+    battery *b = NULL;
+    if ( dir == NULL )
+    {
+        g_warning( "NO ACPI/sysfs support in kernel: %s", error->message );
+        return NULL;
+    }
+    while ( ( entry = g_dir_read_name (dir) ) != NULL )
+    {
+        b = battery_new();
+        b->path = g_strdup( entry );
+        battery_update ( b );
+        if ( b->type_battery == TRUE && !g_strcmp0(name,b->path))
+            break;
+        /* ignore non-batteries */
+        else {
+            g_free(b);
+            b = NULL;
+        }
+    }
+    g_dir_close( dir );
+    return b;
+}
+
 void battery_free(battery* bat)
 {
     if (bat) {

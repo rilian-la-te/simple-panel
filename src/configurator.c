@@ -723,12 +723,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
 
     back_type = p->background;
     builder = gtk_builder_new();
-    if( !gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/panel-pref.ui", NULL) )
-    {
-        g_object_unref(builder);
-        return;
-    }
-
+    gtk_builder_add_from_resource(builder,"/org/simple/panel/lib/pref.ui",NULL);
     p->pref_dialog = (GtkWidget*)gtk_builder_get_object( builder, "panel-pref" );
     gtk_window_set_transient_for(GTK_WINDOW(p->pref_dialog), GTK_WINDOW(panel));
     g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), panel);

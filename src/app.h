@@ -40,7 +40,6 @@ struct _PanelAppPrivate
     gchar* logout_cmd;
     gchar* shutdown_cmd;
     gchar* custom_css;
-    gchar* terminal_cmd;
     gchar* profile;
     GtkWidget* pref_dialog;
 };
