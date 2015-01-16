@@ -187,6 +187,7 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     {
         p->aw = a->width;
         p->ah = a->height;
+        gtk_widget_set_size_request(GTK_WIDGET(panel),p->aw,p->ah);
         gtk_window_move(GTK_WINDOW(widget), p->ax, p->ay);
         _panel_set_wm_strut(LXPANEL(widget));
     }

@@ -43,26 +43,19 @@ typedef struct
 /* command to configure desktop, it will be set by .config callback */
 static const char *configure_command = NULL;
 
-static void on_realize(GtkWidget *p, SimplePanel *panel)
+static void on_params_change_callback(SimplePanel* panel, GParamSpec* param, PagerData* d)
 {
-    PagerData *d = lxpanel_plugin_get_data(p);
-    int rows, r, h = panel_get_height(panel) - 2 * d->border;
-
+    int rows, r,h;
+    g_object_get(panel,"height",&h,NULL);
+    h -= 2 * d->border;
     /* set geometry */
     wnck_pager_set_orientation(d->pager, panel_get_orientation(panel));
     if (panel_get_orientation(panel) == GTK_ORIENTATION_VERTICAL)
         h *= ((gfloat) gdk_screen_height() / (gfloat) gdk_screen_width());
     rows = h / (panel_get_icon_size(panel) * 2) + 1; /* min */
     r = (h - 2) / panel_get_icon_size(panel); /* max */
-    /* g_debug("pager for height %d and icon size %d: %d to %d",panel_get_height(panel),panel_get_icon_size(panel),r,rows); */
     rows = MAX(rows, r);
     wnck_pager_set_n_rows(d->pager, rows);
-}
-
-static void on_size_allocate(GtkWidget *p, GdkRectangle *allocation, SimplePanel *panel)
-{
-    /* g_debug("pager: on_size_allocate(): %dx%d", allocation->width, allocation->height); */
-    on_realize(p, panel);
 }
 
 static GtkWidget *pager_constructor(SimplePanel *panel, GSettings *settings)
@@ -83,8 +76,9 @@ static GtkWidget *pager_constructor(SimplePanel *panel, GSettings *settings)
     lxpanel_plugin_set_data(p, d, g_free);
 
     /* we cannot configure pager until it added into widgets hierarchy */
-    g_signal_connect(p, "realize", G_CALLBACK(on_realize), panel);
-    g_signal_connect(p, "size-allocate", G_CALLBACK(on_size_allocate), panel);
+    g_signal_connect(panel,"notify::edge",G_CALLBACK(on_params_change_callback),d);
+    g_signal_connect(panel,"notify::width",G_CALLBACK(on_params_change_callback),d);
+    g_signal_connect(panel,"notify::height",G_CALLBACK(on_params_change_callback),d);
     wnck_pager_set_display_mode(d->pager, WNCK_PAGER_DISPLAY_CONTENT);
 
     gtk_widget_show(w);
@@ -94,6 +88,7 @@ static GtkWidget *pager_constructor(SimplePanel *panel, GSettings *settings)
     gtk_widget_set_has_window(w, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(w), border);
     gtk_container_add(GTK_CONTAINER(w), (GtkWidget*)d->pager);
+    on_params_change_callback(panel,NULL,d);
     gtk_widget_show(w);
     gtk_container_add(GTK_CONTAINER(p), w);
 
@@ -154,11 +149,6 @@ static gboolean pager_update_context_menu(GtkWidget *plugin, GtkMenu *menu)
     return FALSE;
 }
 
-static void pager_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
-{
-    on_realize(p, panel);
-}
-
 FM_DEFINE_MODULE(lxpanel_gtk, pager)
 
 SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
@@ -168,5 +158,4 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .new_instance = pager_constructor,
     .config = pager_configure,
 //    .update_context_menu = pager_update_context_menu,
-    .reconfigure = pager_panel_configuration_changed
 };

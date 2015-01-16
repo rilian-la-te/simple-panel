@@ -357,13 +357,6 @@ static gboolean volumealsa_button_press_event(GtkWidget * widget, GdkEventButton
         vol->mute = !vol->mute;
         volumealsa_toggle_muted(vol);
     }
-    /* Right-click.  Launch mixer. */
-    else if (event->button = 3)
-    {
-        GVariant* var = g_variant_new_string(vol->mixer_command);
-        activate_menu_launch_command(NULL,var,NULL);
-        g_variant_unref(var);
-    }
     return TRUE;
 }
 
