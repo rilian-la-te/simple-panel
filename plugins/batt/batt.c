@@ -313,7 +313,7 @@ void update_display(lx_battery *lx_b) {
     else if (lx_b->show_percentage)
         char_str = g_strdup_printf("%d%%",lx_b->b->percentage);
     else if (lx_b->show_remaining && lx_b->b->percentage != 100)
-        char_str = g_strdup_printf("%d:%02d",lx_b->b->percentage,hours,minutes);
+        char_str = g_strdup_printf("%d:%02d",hours,minutes);
     else char_str = g_strdup_printf("");
 
 update_done:

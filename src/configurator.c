@@ -145,7 +145,7 @@ static void simple_panel_notify_scale_cb(SimplePanel* panel, GParamSpec* param, 
         retn = PANEL_PROP_ICON_SIZE;
     if (g_intern_static_string(PANEL_PROP_AUTOHIDE_SIZE) == name)
         retn = PANEL_PROP_AUTOHIDE_SIZE;
-    g_object_get(panel,retn,&val);
+    g_object_get(panel,retn,&val,NULL);
     gchar* str = g_strdup_printf("%d",val);
     gtk_button_set_label(GTK_BUTTON(scale),str);
     g_free(str);
