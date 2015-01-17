@@ -60,7 +60,6 @@ simple_panel_images_DATA = \
 	images/my-computer.png \
 	images/file-manager.png \
 	images/gnome-fs-desktop.png \
-	images/gnome-logout.png \
 	images/gnome-netstatus-0-24.png \
 	images/gnome-netstatus-25-49.png \
 	images/gnome-netstatus-50-74.png \

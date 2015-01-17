@@ -31,7 +31,7 @@ msgstr "SimplePanel"
 
 #: ../src/app-actions.c:74
 msgid "Copyright (C) 2008-2015"
-msgstr ""Copyright (C) 2008-2015"
+msgstr "Copyright (C) 2008-2015"
 
 #: ../src/app-actions.c:75
 msgid " Simple desktop panel."
@@ -68,7 +68,7 @@ msgstr "cmd"
 #: ../src/app.c:246
 #, c-format
 msgid "%s - Version %s\n"
-msgstr "%s - Версия %s"
+msgstr "%s - Версия %s\n"
 
 #: ../src/app.c:269
 #, c-format

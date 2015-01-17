@@ -344,7 +344,6 @@ void gtk_run(GtkApplication * app)
         g_signal_connect( win, "response", G_CALLBACK(on_response), entry );
         h = GTK_WIDGET(gtk_builder_get_object(builder,"main-box"));
         css_apply_with_class(h,css,"-panel-run-header",FALSE);
-        gtk_widget_grab_focus(entry);
         gtk_widget_show_all( win );
 
         setup_auto_complete( (GtkEntry*)entry );

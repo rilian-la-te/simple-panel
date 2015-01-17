@@ -189,7 +189,10 @@ void panel_app_activate(GApplication* app)
                 GDK_SUBSTRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK);
         init_plugin_class_list();
         if( G_UNLIKELY( ! start_all_panels(PANEL_APP(app)) ) )
+        {
             g_warning( "Config files are not found.\n" );
+            g_application_quit(app);
+        }
         else
         {
             is_started = TRUE;

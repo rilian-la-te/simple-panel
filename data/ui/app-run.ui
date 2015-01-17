@@ -13,6 +13,7 @@
     <property name="window_position">center</property>
     <property name="deletable">False</property>
     <property name="decorated">False</property>
+    <initial-focus name="main-entry"/>
     <property name="title" translatable="yes">Run...</property>
     <child internal-child="vbox">
 	<object class="GtkBox" id="main-box">
