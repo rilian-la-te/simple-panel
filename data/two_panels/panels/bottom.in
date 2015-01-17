@@ -1,50 +1,38 @@
 [toplevel-settings]
-    edge='bottom'
-    allignment='left'
-    margin=0
-    size-type='percent'
-    width=100
-    height=26
-
-[0]
-plugin-type = 'space'
-size=4
+edge='bottom'
+monitor=-1
+height=26
+auto-hide=false
+background-type='gnome'
 
 [1]
-    type = wincmd
-    Config {
-        Button1=iconify
-        Button2=shade
-    }
-}
+plugin-type='wincmd'
+has-schema=true
+is-expanded=false
+position=0
+left-button-command='iconify'
+middle-button-command='shade'
+image='gnome-window-manager'
+toggle-iconify-and-shade=true
 
 [2]
-    type = space
-    Config {
-        Size=4
-    }
-}
-
-Plugin {
-    type = taskbar
-    expand=1
-    Config {
-        tooltips=1
-        IconsOnly=0
-        AcceptSkipPager=1
-        ShowIconified=1
-        ShowMapped=1
-        ShowAllDesks=0
-        UseMouseWheel=1
-        UseUrgencyHint=1
-        FlatButton=0
-        MaxTaskWidth=150
-        spacing=1
-    }
-}
+plugin-type='space'
+has-schema=true
+is-expanded=false
+position=1
+size=4
 
 [3]
-type = dirmenu
+plugin-type='launchtaskbar'
+has-schema=true
+can-expand=true
+launch-buttons=[]
+position=2
+is-expanded=true
+mode='taskbar'
 
-}
-
+[4]
+plugin-type='pager'
+has-schema=false
+is-expanded=false
+position=3

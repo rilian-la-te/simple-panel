@@ -250,6 +250,7 @@ static GtkWidget* create_menubar(MenuModelPlugin* m)
 {
     m->button = gtk_menu_bar_new_from_model(G_MENU_MODEL(m->menu));
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
+    plugin_widget_set_background(m->button,m->panel);
     gtk_widget_show(m->button);
     g_signal_connect(m->panel,"notify::edge",G_CALLBACK(panel_edge_changed),m);
     return m->button;

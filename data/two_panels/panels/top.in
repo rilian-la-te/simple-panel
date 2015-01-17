@@ -1,94 +1,83 @@
-# lxpanel <profile> config file. Manually editing is not recommended.
-# Use preference dialog in lxpanel to adjust config when you can.
+[toplevel-settings]
+monitor=0
+background-type='gnome'
+edge='top'
+height=26
+auto-hide=false
+alignment='center'
+background-file='@prefix@/share/simple-panel/images/background.png'
+enable-font-size=false
 
-Global {
-    edge=top
-    allign=left
-    margin=0
-    widthtype=percent
-    width=100
-    height=24
-    transparent=0
-    tintcolor=#000000
-    alpha=0
-    setdocktype=1
-    setpartialstrut=1
-    usefontcolor=0
-    fontcolor=#ffffff
-    usefontsize=0
-    fontsize=10    
-    background=0
-    backgroundfile=@prefix@/share/lxpanel/images/background.png
-}
+[0]
+plugin-type='space'
+has-schema=true
+is-expanded=false
+position=0
+size=2
 
-Plugin {
-    type = space
-    Config {
-        Size=2
-    }
-}
+[1]
+plugin-type='menumodel'
+has-schema=true
+is-expanded=false
+position=1
+icon-name='start-here-symbolic'
+is-internal-menu=true
+is-system-menu=true
+is-menu-bar=true
 
-Plugin {
-    type = menu
-    Config {
-        image = @prefix@/share/lxpanel/images/my-computer.svg
-        system {
-        }
-        separator {
-        }
-        item {
-            command = run
-        }
-        separator {
-        }
-        item {
-            image = gnome-logout
-            command = logout
-        }
-    }
-}
+[2]
+plugin-type='launchtaskbar'
+has-schema=true
+can-expand=true
+launch-buttons=['menu://applications/System/pcmanfm.desktop', 'menu://applications/System/gnome-terminal.desktop', 'menu://applications/Internet/firefox.desktop']
+position=2
+mode='launchbar'
 
-Plugin {
-    type = launchbar
-    Config {
-        Button {
-            id=pcmanfm.desktop
-        }
-        Button {
-            id=gnome-terminal.desktop
-        }
-        Button {
-            id=firefox.desktop
-        }
-    }
-}
+[3]
+plugin-type='space'
+has-schema=true
+can-expand=true
+is-expanded=true
+size=2
+position=3
 
-Plugin {
-    type = space
-    expand=1
-    Config {
-        Size=2
-    }
-}
+[4]
+plugin-type='netstat'
+has-schema=true
+is-expanded=false
+position=4
 
-Plugin {
-    type = netstat
-}
+[5]
+plugin-type='volumealsa'
+has-schema=true
+is-expanded=false
+position=5
+card-id='default'
+channel-id='Master'
+mixer='gnome-alsamixer'
+use-symbolic-icons=false
 
-Plugin {
-    type = volumealsa
-}
+[6]
+plugin-type='batt'
+has-schema=true
+is-expanded=false
+position=6
+show-percentage=true
 
-Plugin {
-    type = tray
-}
+[7]
+plugin-type='tray'
+has-schema=false
+is-expanded=false
+position=7
 
-Plugin {
-    type = dclock
-    Config {
-        ClockFmt=%R
-        TooltipFmt=%A %x
-        BoldFont=0
-    }
-}
+[8]
+plugin-type='dclock'
+has-schema=true
+is-expanded=false
+clock-format='%R'
+tooltip-format='%A %x'
+bold-font=false
+icon-only=false
+center-text=true
+position=8
 

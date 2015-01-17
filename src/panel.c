@@ -1390,7 +1390,7 @@ void panel_apply_icon( GtkWindow *w )
 
 GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
 {
-    GMenu *gmenu, *gmenusection, *ret_menu;
+    GMenu *gmenu, *gmenusection;
     GtkMenu *ret;
     const SimplePanelPluginInit *init;
     GtkBuilder* builder;
@@ -1402,12 +1402,18 @@ GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
     {
         init = PLUGIN_CLASS(plugin);
         /* create single item - plugin instance settings */
-        const GActionEntry plugin_entries[] = {
-            {"remove-plugin",activate_remove_plugin,NULL,NULL,NULL},
+        const GActionEntry config_entry[] = {
             {"config-plugin",activate_config_plugin,NULL,NULL,NULL},
         };
-        g_action_map_add_action_entries(G_ACTION_MAP(panel),plugin_entries,
-                                        G_N_ELEMENTS(plugin_entries),
+        const GActionEntry remove_entry[] = {
+            {"remove-plugin",activate_remove_plugin,NULL,NULL,NULL},
+        };
+        g_action_map_add_action_entries(G_ACTION_MAP(panel),remove_entry,
+                                        G_N_ELEMENTS(remove_entry),
+                                        (gpointer)plugin);
+        if (init->config)
+            g_action_map_add_action_entries(G_ACTION_MAP(panel),config_entry,
+                                        G_N_ELEMENTS(config_entry),
                                         (gpointer)plugin);
         gmenusection = G_MENU(gtk_builder_get_object(builder,"plugin-section"));
         if (init->update_context_menu != NULL)
