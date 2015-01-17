@@ -21,21 +21,21 @@ msgstr ""
 #. TRANSLATORS: Replace this string with your names, one name per line.
 #: ../src/app-actions.c:55
 msgid "translator-credits"
-msgstr ""
+msgstr "переводчики"
 "HsH <hsh@runtu.org>\n"
 "Alexander Kazancev <kazancas@mandiriva.ru>"
 
 #: ../src/app-actions.c:59
 msgid "SimplePanel"
-msgstr ""
+msgstr "SimplePanel"
 
 #: ../src/app-actions.c:74
 msgid "Copyright (C) 2008-2015"
-msgstr ""
+msgstr ""Copyright (C) 2008-2015"
 
 #: ../src/app-actions.c:75
 msgid " Simple desktop panel."
-msgstr ""
+msgstr "Простая панель для рабочего стола."
 
 #: ../src/app-actions.c:110
 msgid "Logout command is not set"
@@ -43,19 +43,19 @@ msgstr "Команда выхода из сеанса не задана"
 
 #: ../src/app-actions.c:124
 msgid "Shutdown command is not set"
-msgstr ""
+msgstr "Команда выключения не задана"
 
 #: ../src/app.c:81
 msgid "Print version and exit"
-msgstr ""
+msgstr "Показать версию и выйти"
 
 #: ../src/app.c:82
 msgid "Use specified profile"
-msgstr ""
+msgstr "Использовать специфичный профиль"
 
 #: ../src/app.c:82
 msgid "profile"
-msgstr ""
+msgstr "профиль"
 
 #: ../src/app.c:83
 msgid "Run command on already opened panel"
@@ -63,12 +63,12 @@ msgstr ""
 
 #: ../src/app.c:83
 msgid "cmd"
-msgstr ""
+msgstr "cmd"
 
 #: ../src/app.c:246
 #, c-format
 msgid "%s - Version %s\n"
-msgstr ""
+msgstr "%s - Версия %s"
 
 #: ../src/app.c:269
 #, c-format
@@ -153,11 +153,11 @@ msgstr ""
 #: ../plugins/weather/weatherwidget.c:1453
 #: ../plugins/weather/weatherwidget.c:1825
 msgid "_OK"
-msgstr ""
+msgstr "_ОК"
 
 #: ../src/configurator.c:1023 ../plugins/xkb/xkb-plugin.c:1218
 msgid "_Close"
-msgstr ""
+msgstr "_Закрыть"
 
 #: ../src/configurator.c:1105
 msgid "_Browse"
