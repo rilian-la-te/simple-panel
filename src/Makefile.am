@@ -100,11 +100,6 @@ simple_panel_LDADD = \
 		$(INTLLIBS)
 ##		$(X11_LIBS) \
 
-xdg_menumodel_maker_CFLAGS = $(simple_panel_CFLAGS) -DSTANDALONE_MAKER=1
-xdg_menumodel_maker_CPPFLAGS = $(simple_panel_CPPFLAGS) -DSTANDALONE_MAKER=1
-xdg_menumodel_maker_SOURCES = menu-maker.c menu-maker.h
-xdg_menumodel_maker_LDADD = $(PACKAGE_LIBS)
-
 EXTRA_DIST = $(SIMPLE_PANEL_NOINST_HEADER_FILES) \
 	panel-enum-types.h
 
