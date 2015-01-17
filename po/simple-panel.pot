@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-12 20:29+0600\n"
+"POT-Creation-Date: 2015-01-18 01:43+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,116 +35,109 @@ msgstr ""
 msgid " Simple desktop panel."
 msgstr ""
 
-#: ../src/app-actions.c:110
-msgid "Logout command is not set"
-msgstr ""
-
-#: ../src/app-actions.c:124
-msgid "Shutdown command is not set"
-msgstr ""
-
-#: ../src/app.c:81
+#: ../src/app.c:89
 msgid "Print version and exit"
 msgstr ""
 
-#: ../src/app.c:82
+#: ../src/app.c:90
 msgid "Use specified profile"
 msgstr ""
 
-#: ../src/app.c:82
+#: ../src/app.c:90
 msgid "profile"
 msgstr ""
 
-#: ../src/app.c:83
+#: ../src/app.c:91
 msgid "Run command on already opened panel"
 msgstr ""
 
-#: ../src/app.c:83
+#: ../src/app.c:91
 msgid "cmd"
 msgstr ""
 
-#: ../src/app.c:246
+#: ../src/app.c:208
 #, c-format
 msgid "%s - Version %s\n"
 msgstr ""
 
-#: ../src/app.c:269
+#: ../src/app.c:242
 #, c-format
-msgid "%s: invalid command - %s. Doing nothing. Valid commands: %s\n"
+msgid ""
+"%s: invalid command - %s. Doing nothing.\n"
+"Valid commands: %s\n"
 msgstr ""
 
-#: ../src/configurator.c:83
+#: ../src/configurator.c:82
 msgid "Monitor: All"
 msgstr ""
 
-#: ../src/configurator.c:83
+#: ../src/configurator.c:82
 #, c-format
 msgid "Monitor: %d"
 msgstr ""
 
-#: ../src/configurator.c:102
+#: ../src/configurator.c:101
 msgid "Edge: Bottom"
 msgstr ""
 
-#: ../src/configurator.c:105
+#: ../src/configurator.c:104
 msgid "Edge: Top"
 msgstr ""
 
-#: ../src/configurator.c:108
+#: ../src/configurator.c:107
 msgid "Edge: Left"
 msgstr ""
 
-#: ../src/configurator.c:111
+#: ../src/configurator.c:110
 msgid "Edge: Right"
 msgstr ""
 
-#: ../src/configurator.c:124
+#: ../src/configurator.c:123
 msgid "Align: Start"
 msgstr ""
 
-#: ../src/configurator.c:127
+#: ../src/configurator.c:126
 msgid "Align: Center"
 msgstr ""
 
-#: ../src/configurator.c:130
+#: ../src/configurator.c:129
 msgid "Align: End"
 msgstr ""
 
-#: ../src/configurator.c:346
+#: ../src/configurator.c:345
 msgid "Currently loaded plugins"
 msgstr ""
 
-#: ../src/configurator.c:355
+#: ../src/configurator.c:354
 msgid "Stretch"
 msgstr ""
 
-#: ../src/configurator.c:477
+#: ../src/configurator.c:476
 msgid "Available plugins"
 msgstr ""
 
-#: ../src/configurator.c:758
+#: ../src/configurator.c:750
 msgid "All"
 msgstr ""
 
-#: ../src/configurator.c:956
+#: ../src/configurator.c:948
 msgid "Select a directory"
 msgstr ""
 
-#: ../src/configurator.c:956 ../src/configurator.c:1072
+#: ../src/configurator.c:948 ../src/configurator.c:1064
 msgid "Select a file"
 msgstr ""
 
-#: ../src/configurator.c:959 ../src/gtk-run.c:334
-#: ../plugins/xkb/xkb-plugin.c:598 ../plugins/xkb/xkb-plugin.c:721
-#: ../plugins/xkb/xkb-plugin.c:893 ../plugins/netstat/passwd_gui.c:91
-#: ../plugins/weather/weatherwidget.c:797
+#: ../src/configurator.c:951 ../plugins/xkb/xkb-plugin.c:598
+#: ../plugins/xkb/xkb-plugin.c:721 ../plugins/xkb/xkb-plugin.c:893
+#: ../plugins/netstat/passwd_gui.c:91 ../plugins/weather/weatherwidget.c:797
 #: ../plugins/weather/weatherwidget.c:1138
 #: ../plugins/weather/weatherwidget.c:1702
 #: ../plugins/weather/weatherwidget.c:1826
 msgid "_Cancel"
 msgstr ""
 
-#: ../src/configurator.c:960 ../plugins/xkb/xkb-plugin.c:599
+#: ../src/configurator.c:952 ../plugins/xkb/xkb-plugin.c:599
 #: ../plugins/xkb/xkb-plugin.c:722 ../plugins/xkb/xkb-plugin.c:894
 #: ../plugins/netstat/passwd_gui.c:90 ../plugins/weather/weatherwidget.c:796
 #: ../plugins/weather/weatherwidget.c:1137
@@ -153,77 +146,35 @@ msgstr ""
 msgid "_OK"
 msgstr ""
 
-#: ../src/configurator.c:1023 ../plugins/xkb/xkb-plugin.c:1218
+#: ../src/configurator.c:1015 ../plugins/xkb/xkb-plugin.c:1218
 msgid "_Close"
 msgstr ""
 
-#: ../src/configurator.c:1105
+#: ../src/configurator.c:1097
 msgid "_Browse"
 msgstr ""
 
-#: ../src/panel.c:1328
-msgid "There is no room for another panel. All the edges are taken."
+#: ../src/panel.c:1328 ../plugins/netstatus/netstatus-iface.c:191
+#: ../plugins/netstatus/netstatus-util.c:167
+msgid "Error"
 msgstr ""
 
-#: ../src/panel.c:1353
+#: ../src/panel.c:1355
 msgid ""
 "Really delete this panel?\n"
 "<b>Warning: This can not be recovered.</b>"
 msgstr ""
 
-#: ../src/panel.c:1355
+#: ../src/panel.c:1357
 msgid "Confirm"
 msgstr ""
 
-#: ../src/panel.c:1410
-#, c-format
-msgid "\"%s\" Settings"
-msgstr ""
-
-#: ../src/panel.c:1415
-#, c-format
-msgid "Remove \"%s\" From Panel"
-msgstr ""
-
-#: ../src/panel.c:1429
-msgid "Add / Remove Panel Items"
-msgstr ""
-
-#: ../src/panel.c:1433
-msgid "Panel Settings"
-msgstr ""
-
-#: ../src/panel.c:1434
-msgid "Create New Panel"
-msgstr ""
-
-#: ../src/panel.c:1440
-msgid "Delete This Panel"
-msgstr ""
-
-#: ../src/panel.c:1444
-msgid "Application Settings"
-msgstr ""
-
-#: ../src/panel.c:1445
-msgid "About"
-msgstr ""
-
-#: ../src/plugin.c:252
+#: ../src/plugin.c:249
 msgid "No file manager is configured."
 msgstr ""
 
-#. { "configure", N_("Preferences"), "win.configure(0)" },
-#: ../src/gtk-run.c:331 ../plugins/menu.c:700
-msgid "Run"
-msgstr ""
-
-#: ../src/gtk-run.c:335
-msgid "_Run"
-msgstr ""
-
 #. vim: set sw=4 et sts=4 ts=4 :
-#: ../data/ui/launchtaskbar.glade.h:1 ../plugins/X/launchtaskbar.c:3505
+#: ../data/ui/launchtaskbar.glade.h:1 ../plugins/X/launchtaskbar.c:3506
 msgid "Application Launch and Task Bar"
 msgstr ""
 
@@ -378,184 +329,6 @@ msgstr ""
 msgid "Support"
 msgstr ""
 
-#: ../data/ui/panel-pref.glade.h:1
-msgid "Top"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:2
-msgid "Bottom"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:3
-msgid "Left"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:4
-msgid "Right"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:5
-msgid "_Start"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:6
-msgid "_Center"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:7
-msgid "_End"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:8
-msgid "Dynamic"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:9
-msgid "Pixels"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:10
-msgid "Percent"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:11
-msgid "Normal"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:12
-msgid "Gnome Panel"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:13
-msgid "Custom Color"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:14 ../plugins/xkb/xkb-plugin.c:1434
-msgid "Custom Image"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:16
-#, no-c-format
-msgid "% Percent"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:17
-msgid "Margin:"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:18
-msgid "1"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:19
-msgid "<b>Position</b>"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:20
-msgid "x"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:21
-msgid "<b>Size</b>"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:22
-msgid "Minimize panel when not in use with size: "
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:23
-msgid "Autohide"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:24
-msgid "Make window managers treat the panel as dock"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:25
-msgid "Reserve space, and not covered by maximized windows"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:26
-msgid "<b>Properties</b>"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:27
-msgid "Geometry"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:28
-msgid "GTK Window"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:29
-msgid "Custom color"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:30
-msgid "Custom image"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:31
-msgid "Select an image file"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:32
-msgid "<b>Background</b>"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:33 ../plugins/space.c:84
-#: ../plugins/batt/batt.c:659
-msgid "Size"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:34
-msgid "10"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:35
-msgid "<b>Font</b>"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:36
-msgid "Appearance"
-msgstr ""
-
-#: ../data/ui/panel-pref.glade.h:37
-msgid "Plugins"
-msgstr ""
-
-#: ../data/ui/app-pref.glade.h:1
-msgid "Terminal..."
-msgstr ""
-
-#: ../data/ui/app-pref.glade.h:2
-msgid "Logout manager..."
-msgstr ""
-
-#: ../data/ui/app-pref.glade.h:3
-msgid "Shutdown application..."
-msgstr ""
-
-#: ../data/ui/app-pref.glade.h:4
-msgid "Preferred Applications:"
-msgstr ""
-
-#: ../data/ui/app-pref.glade.h:5
-msgid "Use dark theme"
-msgstr ""
-
-#: ../data/ui/app-pref.glade.h:6
-msgid "Use custom CSS"
-msgstr ""
-
-#: ../data/ui/app-pref.glade.h:7
-msgid "Select a CSS File"
-msgstr ""
-
-#: ../data/ui/app-pref.glade.h:8
-msgid "Widget Style"
-msgstr ""
-
 #: ../plugins/cpu/cpu.c:282
 msgid "CPU Usage Monitor"
 msgstr ""
@@ -580,86 +353,86 @@ msgstr ""
 msgid "Display workspace number, by cmeury@users.sf.net"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:1383 ../plugins/X/launchtaskbar.c:3473
+#: ../plugins/X/launchtaskbar.c:1384 ../plugins/X/launchtaskbar.c:3474
 msgid "Application Launch Bar"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:1386 ../plugins/X/launchtaskbar.c:3483
+#: ../plugins/X/launchtaskbar.c:1387 ../plugins/X/launchtaskbar.c:3484
 msgid "Task Bar (Window List)"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:2463
+#: ../plugins/X/launchtaskbar.c:2464
 msgid "_Close all windows"
 msgstr ""
 
 #. Add Raise menu item.
-#: ../plugins/X/launchtaskbar.c:3331
+#: ../plugins/X/launchtaskbar.c:3332
 msgid "_Raise"
 msgstr ""
 
 #. Add Restore menu item.
-#: ../plugins/X/launchtaskbar.c:3336
+#: ../plugins/X/launchtaskbar.c:3337
 msgid "R_estore"
 msgstr ""
 
 #. Add Maximize menu item.
-#: ../plugins/X/launchtaskbar.c:3341
+#: ../plugins/X/launchtaskbar.c:3342
 msgid "Ma_ximize"
 msgstr ""
 
 #. Add Iconify menu item.
-#: ../plugins/X/launchtaskbar.c:3346
+#: ../plugins/X/launchtaskbar.c:3347
 msgid "Ico_nify"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3365
+#: ../plugins/X/launchtaskbar.c:3366
 #, c-format
 msgid "Workspace _%d"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3370
+#: ../plugins/X/launchtaskbar.c:3371
 #, c-format
 msgid "Workspace %d"
 msgstr ""
 
 #. Add "move to all workspaces" item.  This causes the window to be visible no matter what desktop is active.
-#: ../plugins/X/launchtaskbar.c:3386
+#: ../plugins/X/launchtaskbar.c:3387
 msgid "_All workspaces"
 msgstr ""
 
 #. Add Move to Workspace menu item as a submenu.
-#: ../plugins/X/launchtaskbar.c:3392
+#: ../plugins/X/launchtaskbar.c:3393
 msgid "_Move to Workspace"
 msgstr ""
 
 #. Add Close menu item.  By popular demand, we place this menu item closest to the cursor.
-#: ../plugins/X/launchtaskbar.c:3398
+#: ../plugins/X/launchtaskbar.c:3399
 msgid "_Close Window"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3400
+#: ../plugins/X/launchtaskbar.c:3401
 msgid "A_dd to Launcher"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3401
+#: ../plugins/X/launchtaskbar.c:3402
 msgid "Rem_ove from Launcher"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3402
+#: ../plugins/X/launchtaskbar.c:3403
 msgid "_New Instance"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3474
+#: ../plugins/X/launchtaskbar.c:3475
 msgid "Bar with buttons to launch application"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3484
+#: ../plugins/X/launchtaskbar.c:3485
 msgid ""
 "Taskbar shows all opened windows and allow to iconify them, shade or get "
 "focus"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3506
+#: ../plugins/X/launchtaskbar.c:3507
 msgid "Bar with buttons to launch application and/or show all opened windows"
 msgstr ""
 
@@ -696,35 +469,40 @@ msgstr ""
 msgid "Display digital clock and tooltip"
 msgstr ""
 
-#: ../plugins/menu.c:341
+#: ../plugins/menu.c:340
 msgid "Add to desktop"
 msgstr ""
 
-#: ../plugins/menu.c:348
+#: ../plugins/menu.c:347
 msgid "Properties"
 msgstr ""
 
-#: ../plugins/menu.c:701
+#. { "configure", N_("Preferences"), "win.configure(0)" },
+#: ../plugins/menu.c:699
+msgid "Run"
+msgstr ""
+
+#: ../plugins/menu.c:700
 msgid "Logout"
 msgstr ""
 
-#: ../plugins/menu.c:702
+#: ../plugins/menu.c:701
 msgid "Shutdown"
 msgstr ""
 
-#: ../plugins/menu.c:947 ../plugins/menu.c:954
+#: ../plugins/menu.c:946 ../plugins/menu.c:953
 msgid "Menu"
 msgstr ""
 
-#: ../plugins/menu.c:948 ../plugins/dirmenu.c:348
+#: ../plugins/menu.c:947 ../plugins/dirmenu.c:348
 msgid "Icon"
 msgstr ""
 
-#: ../plugins/menu.c:949
+#: ../plugins/menu.c:948
 msgid "Caption"
 msgstr ""
 
-#: ../plugins/menu.c:955
+#: ../plugins/menu.c:954
 msgid "Application Menu"
 msgstr ""
 
@@ -736,20 +514,24 @@ msgstr ""
 msgid "Add a separator to the panel"
 msgstr ""
 
-#: ../plugins/X/pager.c:111
+#: ../plugins/X/pager.c:106
 msgid "Sorry, there was no window manager configuration program found."
 msgstr ""
 
-#: ../plugins/X/pager.c:165
+#: ../plugins/X/pager.c:155
 msgid "Desktop Pager"
 msgstr ""
 
-#: ../plugins/X/pager.c:166
+#: ../plugins/X/pager.c:156
 msgid "Simple pager plugin"
 msgstr ""
 
 #: ../plugins/space.c:82 ../plugins/space.c:91
 msgid "Spacer"
+msgstr ""
+
+#: ../plugins/space.c:84
+msgid "Size"
 msgstr ""
 
 #: ../plugins/space.c:92
@@ -849,6 +631,10 @@ msgstr ""
 msgid "Image"
 msgstr ""
 
+#: ../plugins/xkb/xkb-plugin.c:1434
+msgid "Custom Image"
+msgstr ""
+
 #: ../plugins/xkb/xkb-plugin.c:1435
 msgid "Text"
 msgstr ""
@@ -861,19 +647,19 @@ msgstr ""
 msgid "Handle keyboard layouts"
 msgstr ""
 
-#: ../plugins/X/wincmd.c:162
+#: ../plugins/X/wincmd.c:164
 msgid "Left click to iconify all windows.  Middle click to shade them."
 msgstr ""
 
-#: ../plugins/X/wincmd.c:195 ../plugins/X/wincmd.c:206
+#: ../plugins/X/wincmd.c:197 ../plugins/X/wincmd.c:208
 msgid "Minimize All Windows"
 msgstr ""
 
-#: ../plugins/X/wincmd.c:197
+#: ../plugins/X/wincmd.c:199
 msgid "Alternately iconify/shade and raise"
 msgstr ""
 
-#: ../plugins/X/wincmd.c:207
+#: ../plugins/X/wincmd.c:209
 msgid ""
 "Sends commands to all desktop windows.\n"
 "Supported commands are 1) iconify and 2) shade"
@@ -961,33 +747,45 @@ msgid "Display CPU frequency and allow to change governors and frequency"
 msgstr ""
 
 #. FIXME: display current level in tooltip. ex: "Volume Control: 80%"
-#. Display current level in tooltip.
-#: ../plugins/volume/volume.c:277 ../plugins/volumealsa/volumealsa.c:316
-#: ../plugins/volumealsa/volumealsa.c:519
+#: ../plugins/volume/volume.c:277
 msgid "Volume control"
 msgstr ""
 
-#: ../plugins/volume/volume.c:285 ../plugins/volumealsa/volumealsa.c:632
+#: ../plugins/volume/volume.c:285 ../plugins/volumealsa/volumealsa.c:601
+#: ../plugins/volumealsa/volumealsa.c:621
 msgid "Volume Control"
 msgstr ""
 
-#. Create a frame as the child of the viewport.
-#: ../plugins/volume/volume-impl.c:109 ../plugins/volumealsa/volumealsa.c:471
+#: ../plugins/volume/volume-impl.c:109
 msgid "Volume"
 msgstr ""
 
-#. Create a check button as the child of the vertical box.
-#: ../plugins/volumealsa/volumealsa.c:491
-msgid "Mute"
+#: ../plugins/volumealsa/volumealsa.c:440
+msgid "Sound settings..."
 msgstr ""
 
-#: ../plugins/volumealsa/volumealsa.c:613
-msgid ""
-"Error, you need to install an application to configure the sound "
-"(pavucontrol, alsamixer ...)"
+#: ../plugins/volumealsa/volumealsa.c:509
+#: ../plugins/volumealsa/volumealsa.c:525
+msgid "ALSA is not connected."
 msgstr ""
 
-#: ../plugins/volumealsa/volumealsa.c:633
+#: ../plugins/volumealsa/volumealsa.c:602 ../plugins/batt/batt.c:491
+msgid "Use symbolic icons"
+msgstr ""
+
+#: ../plugins/volumealsa/volumealsa.c:603
+msgid "ALSA Card"
+msgstr ""
+
+#: ../plugins/volumealsa/volumealsa.c:604
+msgid "ALSA Channel"
+msgstr ""
+
+#: ../plugins/volumealsa/volumealsa.c:605
+msgid "Mixer launch command"
+msgstr ""
+
+#: ../plugins/volumealsa/volumealsa.c:622
 msgid "Display and control volume for ALSA"
 msgstr ""
 
@@ -1225,11 +1023,6 @@ msgstr ""
 msgid "Wireless signal strength percentage"
 msgstr ""
 
-#: ../plugins/netstatus/netstatus-iface.c:191
-#: ../plugins/netstatus/netstatus-util.c:167
-msgid "Error"
-msgstr ""
-
 #: ../plugins/netstatus/netstatus-iface.c:192
 msgid "The current error condition"
 msgstr ""
@@ -1440,133 +1233,130 @@ msgstr ""
 msgid "Sending/Receiving"
 msgstr ""
 
-#: ../plugins/batt/batt.c:166
+#: ../plugins/batt/batt.c:155
 #, c-format
 msgid "Battery: %d%% charged, %d:%02d until full"
 msgstr ""
 
-#: ../plugins/batt/batt.c:177
+#: ../plugins/batt/batt.c:166
 #, c-format
 msgid "Battery: %d%% charged, %d:%02d left"
 msgstr ""
 
-#: ../plugins/batt/batt.c:183
+#: ../plugins/batt/batt.c:172
 #, c-format
 msgid "Battery: %d%% charged"
 msgstr ""
 
-#: ../plugins/batt/batt.c:193
+#: ../plugins/batt/batt.c:182
 #, c-format
 msgid ""
 "\n"
 "%sEnergy full design:\t\t%5d mWh"
 msgstr ""
 
-#: ../plugins/batt/batt.c:195
+#: ../plugins/batt/batt.c:184
 #, c-format
 msgid ""
 "\n"
 "%sEnergy full:\t\t\t%5d mWh"
 msgstr ""
 
-#: ../plugins/batt/batt.c:197
+#: ../plugins/batt/batt.c:186
 #, c-format
 msgid ""
 "\n"
 "%sEnergy now:\t\t\t%5d mWh"
 msgstr ""
 
-#: ../plugins/batt/batt.c:199
+#: ../plugins/batt/batt.c:188
 #, c-format
 msgid ""
 "\n"
 "%sPower now:\t\t\t%5d mW"
 msgstr ""
 
-#: ../plugins/batt/batt.c:202
+#: ../plugins/batt/batt.c:191
 #, c-format
 msgid ""
 "\n"
 "%sCharge full design:\t%5d mAh"
 msgstr ""
 
-#: ../plugins/batt/batt.c:204
+#: ../plugins/batt/batt.c:193
 #, c-format
 msgid ""
 "\n"
 "%sCharge full:\t\t\t%5d mAh"
 msgstr ""
 
-#: ../plugins/batt/batt.c:206
+#: ../plugins/batt/batt.c:195
 #, c-format
 msgid ""
 "\n"
 "%sCharge now:\t\t\t%5d mAh"
 msgstr ""
 
-#: ../plugins/batt/batt.c:208
+#: ../plugins/batt/batt.c:197
 #, c-format
 msgid ""
 "\n"
 "%sCurrent now:\t\t\t%5d mA"
 msgstr ""
 
-#: ../plugins/batt/batt.c:211
+#: ../plugins/batt/batt.c:200
 #, c-format
 msgid ""
 "\n"
 "%sCurrent Voltage:\t\t%.3lf V"
 msgstr ""
 
-#: ../plugins/batt/batt.c:249
+#: ../plugins/batt/batt.c:225
 msgid "No batteries found"
 msgstr ""
 
-#: ../plugins/batt/batt.c:648 ../plugins/batt/batt.c:669
+#: ../plugins/batt/batt.c:312
+#, c-format
+msgid "%d%% (%d:%02d remaining)"
+msgstr ""
+
+#: ../plugins/batt/batt.c:485 ../plugins/batt/batt.c:504
 msgid "Battery Monitor"
 msgstr ""
 
-#: ../plugins/batt/batt.c:650
+#: ../plugins/batt/batt.c:487
+msgid "Battery name"
+msgstr ""
+
+#: ../plugins/batt/batt.c:488
 msgid "Hide if there is no battery"
 msgstr ""
 
-#: ../plugins/batt/batt.c:651
+#: ../plugins/batt/batt.c:489
 msgid "Alarm command"
 msgstr ""
 
-#: ../plugins/batt/batt.c:652
+#: ../plugins/batt/batt.c:490
 msgid "Alarm time (minutes left)"
 msgstr ""
 
-#: ../plugins/batt/batt.c:653
-msgid "Background color"
+#: ../plugins/batt/batt.c:492
+msgid "Settings command"
 msgstr ""
 
-#: ../plugins/batt/batt.c:654
-msgid "Charging color 1"
+#: ../plugins/batt/batt.c:493
+msgid "Show remaining time on panel"
 msgstr ""
 
-#: ../plugins/batt/batt.c:655
-msgid "Charging color 2"
+#: ../plugins/batt/batt.c:494
+msgid "Show percentage on panel"
 msgstr ""
 
-#: ../plugins/batt/batt.c:656
-msgid "Discharging color 1"
-msgstr ""
-
-#: ../plugins/batt/batt.c:657
-msgid "Discharging color 2"
-msgstr ""
-
-#: ../plugins/batt/batt.c:658
-msgid "Border width"
-msgstr ""
-
-#: ../plugins/batt/batt.c:660
+#: ../plugins/batt/batt.c:495
 msgid "Show Extended Information"
 msgstr ""
 
-#: ../plugins/batt/batt.c:670
+#: ../plugins/batt/batt.c:505
 msgid "Display battery status using ACPI"
 msgstr ""
 

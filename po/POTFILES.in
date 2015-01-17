@@ -8,8 +8,11 @@ src/plugin.c
 src/gtk-run.c
 data/ui/launchtaskbar.glade
 data/ui/netstatus.glade
-data/ui/panel-pref.glade
-data/ui/app-pref.glade
+data/ui/panel-pref.ui
+data/ui/app-pref.ui
+data/ui/panel-menus.ui
+data/ui/app-run.ui
+data/ui/system-menus.ui
 
 # Putting translation of plugins in main catalog is not a good idea...
 plugins/cpu/cpu.c
