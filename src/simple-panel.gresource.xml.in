@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gresources>
+  <gresource prefix="/org/simple/panel/app">
+    <file alias="pref.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/app-pref.ui</file>
+    <file alias="run.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/app-run.ui</file>
+  </gresource>
+</gresources>
