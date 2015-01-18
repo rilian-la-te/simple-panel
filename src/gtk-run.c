@@ -336,6 +336,9 @@ void gtk_run(GtkApplication * app)
         builder = gtk_builder_new();
         gtk_builder_add_from_resource(builder,"/org/simple/panel/app/run.ui",NULL);
         win = GTK_WIDGET(gtk_builder_get_object(builder,"app-run"));
+        GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(win));
+        GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
+        gtk_widget_set_visual(GTK_WIDGET(win), visual);
         gtk_dialog_set_default_response( (GtkDialog*)win, GTK_RESPONSE_OK );
         gtk_window_set_keep_above(GTK_WINDOW(win),TRUE);
         css_apply_with_class(win,css,"-panel-run-dialog",FALSE);

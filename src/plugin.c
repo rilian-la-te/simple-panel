@@ -359,7 +359,7 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
 {
     const SimplePanelPluginInit *init;
     GtkWidget *widget;
-    gint expand, padding = 0, border = 0, i;
+    gint expand, padding = 0;
     gboolean has_config = FALSE;
 
     CHECK_MODULES();
@@ -396,10 +396,9 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
         g_error("simple-panel: Plugin \"%s\" is invalid",init->name);
     }
     gtk_widget_set_name(widget, settings->config_path_appender);
-    gtk_box_pack_start(GTK_BOX(p->priv->box), widget, expand, TRUE, padding);
+    gtk_box_pack_start(GTK_BOX(p->priv->box), widget, expand, TRUE, 0);
     g_settings_set_uint(settings->default_settings,DEFAULT_PLUGIN_KEY_POSITION,pack_pos);
     gtk_box_reorder_child(GTK_BOX(p->priv->box),widget,pack_pos);
-    gtk_container_set_border_width(GTK_CONTAINER(widget), border);
     g_signal_connect(widget, "size-allocate", G_CALLBACK(on_size_allocate), p);
     gtk_widget_show(widget);
     g_object_set_qdata(G_OBJECT(widget), lxpanel_plugin_qconf, settings);

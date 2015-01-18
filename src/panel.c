@@ -1486,6 +1486,7 @@ panel_start_gui(SimplePanel *panel)
 
     // main layout manager as a single child of panel
     p->box = panel_box_new(panel, 0);
+    gtk_box_set_baseline_position(GTK_BOX(p->box),GTK_BASELINE_POSITION_CENTER);
     gtk_container_set_border_width(GTK_CONTAINER(p->box), 0);
     gtk_container_add(GTK_CONTAINER(panel), p->box);
     gtk_widget_show(p->box);
