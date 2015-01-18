@@ -85,8 +85,6 @@ static void panel_icon_grid_size_allocate(GtkWidget *widget,
     int child_height;
     GtkTextDirection direction;
     guint border;
-    int limit;
-    int x_initial;
     int x_delta;
     int x, y;
     guint next_coord;

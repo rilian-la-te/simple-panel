@@ -50,6 +50,7 @@ void css_apply_with_class (GtkWidget* widget,const gchar* css, gchar* klass ,gbo
         gtk_style_context_add_provider (context,
                                         GTK_STYLE_PROVIDER (provider),
                                         GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        g_object_unref(provider);
     }
 }
 
@@ -72,6 +73,7 @@ gchar* css_apply_from_file (GtkWidget* widget, gchar* file)
     gtk_style_context_add_provider (context,
                                     GTK_STYLE_PROVIDER (provider),
                                     GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    g_object_unref(provider);
     return NULL;
 }
 
@@ -91,6 +93,7 @@ gchar* css_apply_from_file_to_app (gchar* file)
     gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
                                     GTK_STYLE_PROVIDER (provider),
                                     GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    g_object_unref(provider);
     return NULL;
 }
 
@@ -114,21 +117,27 @@ inline gchar* css_generate_panel_icon_button(GdkRGBA color){
 inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboolean no_image)
 {
 	gchar* returnie;
+    gchar* str = gdk_rgba_to_string(&color);
 	if (no_image) returnie = g_strdup_printf(".-simple-panel-background{\n"
 					" background-color: %s;\n"
 					" background-image: none;\n"
-					"}",gdk_rgba_to_string(&color));
+                    "}",str);
 	else returnie = g_strdup_printf(".-simple-panel-background{\n"
                          " background-color: transparent;\n"
                          " background-image: url('%s');\n"
                          "}",filename);
+    g_free(str);
 	return returnie;
 }
 
 inline gchar* css_generate_font_color(GdkRGBA color){
-    return g_strdup_printf(".-simple-panel-font-color{\n"
+    gchar* color_str = gdk_rgba_to_string(&color);
+    gchar* ret;
+    ret = g_strdup_printf(".-simple-panel-font-color{\n"
                     " color: %s;\n"
-                    "}",gdk_rgba_to_string(&color));
+                    "}",color_str);
+    g_free(color_str);
+    return ret;
 }
 inline gchar* css_generate_font_size(gint size){
     return g_strdup_printf(".-simple-panel-font-size{\n"
@@ -144,6 +153,8 @@ inline gchar* css_generate_font_weight(gboolean is_bold){
 inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
     gchar* returnie;
     GdkRGBA color, active_color;
+    gchar* c_str = gdk_rgba_to_string(&color);
+    gchar* act_str = gdk_rgba_to_string(&active_color);
     gtk_style_context_get_color(
                 gtk_widget_get_style_context(GTK_WIDGET(panel)),
                 gtk_widget_get_state_flags(GTK_WIDGET(panel)),
@@ -185,6 +196,8 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
                                "border-style: solid;"
                                "border-width: %s;"
                                "border-color: %s;"
-                               "}\n",edge,edge,gdk_rgba_to_string(&active_color),edge,gdk_rgba_to_string(&color));
+                               "}\n",edge,edge,act_str,edge,c_str);
+    g_free(act_str);
+    g_free(c_str);
     return returnie;
 }

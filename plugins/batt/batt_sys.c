@@ -85,9 +85,13 @@ static gchar* parse_info_file(battery *b, char *sys_file)
 static gint get_gint_from_infofile(battery *b, gchar *sys_file)
 {
     gchar *file_content = parse_info_file(b, sys_file);
-
+    gint ret;
     if (file_content != NULL)
-        return atoi(file_content) / 1000;
+    {
+        ret = atoi(file_content) / 1000;
+        g_free(file_content);
+        return ret;
+    }
 
     return -1;
 }
@@ -195,6 +199,8 @@ battery* battery_update(battery *b)
 
     gctmp = get_gchar_from_infofile(b, "type");
     b->type_battery = gctmp ? (strcasecmp(gctmp, "battery") == 0) : TRUE;
+    if (gctmp)
+        g_free(gctmp);
 
     b->state = get_gchar_from_infofile(b, "status");
     if (!b->state)

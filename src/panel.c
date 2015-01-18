@@ -68,6 +68,7 @@ enum
 
 static GtkApplication* win_grp;
 static gulong monitors_handler = 0;
+
 GList* all_panels = NULL;
 
 gboolean is_restarting = FALSE;
@@ -103,6 +104,14 @@ static inline char *_user_config_file_name(const char *name1, const char *name2)
                             name2, NULL);
 }
 
+static inline GList* get_all_panels(SimplePanel* panel)
+{
+    return gtk_application_get_windows(
+                gtk_window_get_application(
+                    GTK_WINDOW(panel)
+                    ));
+}
+
 static void lxpanel_finalize(GObject *object)
 {
     SimplePanel *self = LXPANEL(object);
@@ -122,6 +131,7 @@ static void lxpanel_finalize(GObject *object)
 static void panel_stop_gui(SimplePanel *self)
 {
     Panel *p = self->priv;
+    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(self));
 
     if (p->autohide)
         ah_stop(self);
@@ -140,8 +150,8 @@ static void panel_stop_gui(SimplePanel *self)
     }
     if (p->initialized)
     {
-        gtk_application_remove_window(GTK_APPLICATION(win_grp), GTK_WINDOW(self));
-        all_panels = gtk_application_get_windows(GTK_APPLICATION(p->app));
+        gtk_application_remove_window(app, GTK_WINDOW(self));
+        all_panels = get_all_panels(self);
         gdk_flush();
         p->initialized = FALSE;
     }
@@ -284,7 +294,7 @@ static void simple_panel_set_property(GObject      *object,
     gboolean geometry,background,configuration,fonts, updatestrut;
     switch (prop_id) {
     case PROP_NAME:
-        toplevel->priv->name = g_strdup(g_value_get_string(value));
+        toplevel->priv->name = g_value_dup_string(value);
         break;
     case PROP_EDGE:
         toplevel->priv->edge = g_value_get_enum (value);
@@ -351,7 +361,7 @@ static void simple_panel_set_property(GObject      *object,
     case PROP_BACKGROUNDFILE:
         if (toplevel->priv->background_file)
             g_free(toplevel->priv->background_file);
-        toplevel->priv->background_file = g_strdup(g_value_get_string(value));
+        toplevel->priv->background_file = g_value_dup_string(value);
         background=TRUE;
         break;
     case PROP_TINTCOLOR:
@@ -736,6 +746,7 @@ static SimplePanel* panel_allocate(GtkApplication* app)
                         "skip-taskbar-hint", TRUE,
                         "skip-pager-hint", TRUE,
                         "accept-focus", FALSE,
+                        "application", app,
                         NULL);
 }
 
@@ -1274,10 +1285,10 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     GtkWidget* msg;
     gint e;
     GdkScreen *screen;
-    SimplePanel *new_panel = panel_allocate(panel->priv->app);
+    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(app));
+    SimplePanel *new_panel = panel_allocate(app);
     Panel *p = new_panel->priv;
-    p->app = panel->priv->app;
-    g_object_get(G_OBJECT(new_panel->priv->app),"profile",&cprofile,NULL);
+    g_object_get(G_OBJECT(app),"profile",&cprofile,NULL);
 
     /* Allocate the edge. */
     screen = gdk_screen_get_default();
@@ -1468,7 +1479,7 @@ void _panel_establish_autohide(SimplePanel *p)
 static void
 panel_start_gui(SimplePanel *panel)
 {
-    gulong val, position;
+    gulong position;
     Panel *p = panel->priv;
     GtkWidget *w = GTK_WIDGET(panel);
     GSList* l;
@@ -1479,7 +1490,7 @@ panel_start_gui(SimplePanel *panel)
     gtk_window_stick(GTK_WINDOW(panel));
 
     gtk_application_add_window(win_grp, (GtkWindow*)panel);
-    all_panels = gtk_application_get_windows(p->app);
+    all_panels = get_all_panels(panel);
     gtk_widget_add_events( w, GDK_BUTTON_PRESS_MASK );
 
     gtk_widget_realize(w);
@@ -1664,10 +1675,9 @@ SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char*
     {
         panel = panel_allocate(app);
         panel->priv->name = g_strdup(config_name);
-        panel->priv->app = app;
         win_grp=app;
-        all_panels = gtk_application_get_windows(panel->priv->app);
-        g_object_get(G_OBJECT(panel->priv->app),"profile",&cprofile,NULL);
+        all_panels = get_all_panels(panel);
+        g_object_get(G_OBJECT(app),"profile",&cprofile,NULL);
         g_debug("starting panel from file %s",config_file);
         panel->priv->settings = panel_gsettings_create(config_file);
         if (!panel_start(panel))
@@ -1707,10 +1717,6 @@ GtkIconTheme *panel_get_icon_theme(SimplePanel *panel)
 GtkPositionType panel_get_edge(SimplePanel *panel)
 {
     return panel->priv->edge;
-}
-GtkApplication* panel_get_application(SimplePanel *panel)
-{
-    return panel->priv->app;
 }
 
 gboolean panel_is_dynamic(SimplePanel *panel)

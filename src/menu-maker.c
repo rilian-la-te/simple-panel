@@ -65,6 +65,7 @@ static void add_app_info(GDesktopAppInfo* info, GtkBuilder* builder)
         if (!found)
             menu_link = G_MENU(gtk_builder_get_object(builder,"other"));
         g_menu_append_item(menu_link,item);
+        g_object_unref(item);
         menu_link = NULL;
         g_object_unref(missing);
         g_free(action);
@@ -204,29 +205,35 @@ GMenuModel* create_default_menumodel(gboolean as_submenus, const gchar* icon_str
 {
     GMenu* menu = g_menu_new();
     GMenu* section;
+    GMenuModel* apps, *places, *system;
+    apps = do_applications_menumodel(FALSE);
+    places = do_places_menumodel();
+    system = do_system_menumodel();
     if (as_submenus)
     {
         GMenuItem* item;
         GIcon* icon;
         icon = g_icon_new_for_string(icon_str,NULL);
-        item = g_menu_item_new_submenu(_("Applications"),do_applications_menumodel(FALSE));
+        item = g_menu_item_new_submenu(_("Applications"),apps);
         g_menu_item_set_icon(item,icon);
         g_object_unref(icon);
         g_menu_append_item(menu,item);
-        g_menu_append_submenu(menu, _("Places"), do_places_menumodel());
-        g_menu_append_submenu(menu, _("System"), do_system_menumodel());
+        g_menu_append_submenu(menu, _("Places"), places);
+        g_menu_append_submenu(menu, _("System"), system);
     }
     else
     {
         g_menu_append(menu,_("Simple Panel v"VERSION),NULL);
-        g_menu_append_section(menu, NULL, do_applications_menumodel(FALSE));
+        g_menu_append_section(menu, NULL,apps);
         section = g_menu_new();
-        g_menu_append_submenu(section, _("Places"), do_places_menumodel());
+        g_menu_append_submenu(section, _("Places"), places);
         g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
         g_object_unref(section);
-        g_menu_append_section(menu, NULL, do_system_menumodel());
+        g_menu_append_section(menu, NULL, system);
     }
-    g_menu_freeze(menu);
+    g_object_unref(apps);
+    g_object_unref(places);
+    g_object_unref(system);
     return G_MENU_MODEL(menu);
 }
 

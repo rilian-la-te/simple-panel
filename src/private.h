@@ -67,7 +67,6 @@ typedef enum {
 struct _Panel {
     char* name;
     SimplePanel * topgwin;			/* Main panel window */
-    GtkApplication* app; /* Panels holding application path */
     GdkDisplay * display;		/* Main panel's GdkDisplay */
     GtkIconTheme* icon_theme; /*Default icon theme*/
 

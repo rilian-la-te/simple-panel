@@ -63,7 +63,8 @@ static gboolean _on_entry_focus_out_do_work(GtkWidget* edit, gpointer user_data)
 gboolean panel_edge_available(Panel* p, int edge, gint monitor)
 {
     GList* l;
-    for (l = gtk_application_get_windows(p->app); l != NULL; l = l->next)
+    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(p->topgwin));
+    for (l = gtk_application_get_windows(app); l != NULL; l = l->next)
         {
         SimplePanel* pl = (SimplePanel*) l->data;
         if ((pl->priv != p) && (pl->priv->edge == edge) && ((pl->priv->monitor == monitor)||pl->priv->monitor<0))
@@ -713,6 +714,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     GdkScreen *screen;
     gint monitors, back_type;
     GMenu* menu;
+    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(panel));
     GSimpleActionGroup* configurator = g_simple_action_group_new();
 
     if( p->pref_dialog )
@@ -875,7 +877,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     g_object_unref(builder);
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"conf",G_ACTION_GROUP(configurator));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));
-    gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"app",G_ACTION_GROUP(panel->priv->app));
+    gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"app",G_ACTION_GROUP(app));
     gtk_widget_show(GTK_WIDGET(p->pref_dialog));
     g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE,back_type);
 }
