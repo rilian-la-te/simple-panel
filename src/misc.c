@@ -218,8 +218,8 @@ void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, gint size)
 inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img, gchar* label)
 {
     const gchar *css = ".-panel-button {\n"
-            "padding: 0px 0px 0px 0px;\n"
             "margin: 0px 0px 0px 0px;\n"
+            "padding: 0px 0px 0px 0px;\n"
             "}\n";
     if (img)
     {

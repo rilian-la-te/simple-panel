@@ -182,7 +182,7 @@ GMenuModel* do_system_menumodel()
     g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
     g_object_unref(section);
     app_info = g_desktop_app_info_new("gnome-control-center.desktop");
-    if (!app_info) app_info = g_desktop_app_info_new("mate-control-center.desktop");
+    if (!app_info) app_info = g_desktop_app_info_new("matecc.desktop");
     if (!app_info) app_info = g_desktop_app_info_new("cinnamon-settings.desktop");
     if (!app_info) app_info = g_desktop_app_info_new("xfce4-settings-manager.desktop");
     if (!app_info) app_info = g_desktop_app_info_new("kdesystemsettings.desktop");
