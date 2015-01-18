@@ -127,30 +127,30 @@ static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, MenuModelP
 }
 
 static void
-menu_pos(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, GtkWidget *widget)
+menumodel_menu_pos(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, GtkWidget *widget)
 {
     MenuModelPlugin *m = lxpanel_plugin_get_data(widget);
     lxpanel_plugin_popup_set_position_helper(m->panel, widget, GTK_WIDGET(menu), x, y);
     *push_in = TRUE;
 }
 
-static void show_menu( GtkWidget* widget, MenuModelPlugin* m, int btn, guint32 time )
+static void menumodel_show_menu( GtkWidget* widget, MenuModelPlugin* m, int btn, guint32 time )
 {
     GtkMenu* menu = GTK_MENU(gtk_menu_new_from_model(G_MENU_MODEL(m->menu)));
     gtk_menu_attach_to_widget(menu,widget,NULL);
     gtk_menu_popup(GTK_MENU(menu),
                    NULL, NULL,
-                   (GtkMenuPositionFunc)menu_pos, widget,
+                   (GtkMenuPositionFunc)menumodel_menu_pos, widget,
                    btn, time);
     g_signal_connect(GTK_WIDGET(menu),"focus-out-event",G_CALLBACK(gtk_widget_destroy),NULL);
 }
 
-static gboolean show_system_menu_idle(gpointer user_data)
+static gboolean menumodel_show_system_menu_idle(gpointer user_data)
 {
     MenuModelPlugin* m = (MenuModelPlugin*)user_data;
     if (g_source_is_destroyed(g_main_current_source()))
         return FALSE;
-    show_menu( m->box, m, 0, GDK_CURRENT_TIME );
+    menumodel_show_menu( m->box, m, 0, GDK_CURRENT_TIME );
     m->show_system_menu_idle = 0;
     return FALSE;
 }
@@ -167,14 +167,14 @@ static gboolean monitor_update_idle(gpointer user_data)
 }
 
 
-static void show_system_menu(GtkWidget *p)
+static void menumodel_show_system_menu(GtkWidget *p)
 {
     MenuModelPlugin *m = lxpanel_plugin_get_data(p);
 
     if (m && m->system && m->show_system_menu_idle == 0)
         /* FIXME: I've no idea why this doesn't work without timeout
                               under some WMs, like icewm. */
-        m->show_system_menu_idle = g_timeout_add(200, show_system_menu_idle, m);
+        m->show_system_menu_idle = g_timeout_add(200, menumodel_show_system_menu_idle, m);
 }
 
 static void monitor_update(MenuModelPlugin* m)
@@ -189,6 +189,8 @@ static GMenuModel* read_menumodel(MenuModelPlugin* m)
     builder = gtk_builder_new();
     gtk_builder_add_from_file(builder,m->model_file,NULL);
     GMenuModel* menu = G_MENU_MODEL(gtk_builder_get_object(builder,m->model_name));
+    g_object_ref(menu);
+    g_object_unref(builder);
     return menu;
 }
 
@@ -316,7 +318,7 @@ SimplePanelPluginInit lxpanel_static_plugin_menumodel = {
     .description = N_("Any custom menu in GMenuModel XML format. Also supports setting it as application menu."),
     .new_instance = menumodel_constructor,
     .config = menumodel_config,
-    .show_system_menu = show_system_menu,
+    .show_system_menu = menumodel_show_system_menu,
     .has_config = TRUE
 };
 

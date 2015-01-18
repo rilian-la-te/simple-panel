@@ -65,7 +65,7 @@
     <section id="local-mounts">
         <item>
           <attribute name="label" translatable="yes">Computer</attribute>
-          <attribute name="icon">computer-laptop</attribute>
+          <attribute name="icon">computer</attribute>
           <attribute name="action">app.launch-uri</attribute>
           <attribute name="target">computer:///</attribute>
         </item>

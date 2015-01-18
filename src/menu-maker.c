@@ -31,21 +31,15 @@
 #include <config.h>
 #endif
 
-#define DESKTOP_ENTRY "Desktop Entry"
-#define DESKTOP_FILES_DIR "applications"
-#define CATEGORIES "Categories"
-
-static void add_app_info_widget(GDesktopAppInfo* info, GtkBuilder* builder);
-
 static void add_app_info(GDesktopAppInfo* info, GtkBuilder* builder)
 {
-    GMenu *menu_link;
+    GMenu *menu_link = NULL;
     GMenuItem* item = NULL;
     GIcon *icon,*missing;
-    char *name, *action, *cname;
+    char *action, *cname;
     char **cats, **tmp;
     gboolean found = FALSE;
-    name = cname = action = NULL;
+    cname = action = NULL;
     icon = missing = NULL;
     cats = tmp = NULL;
     if (g_app_info_should_show(G_APP_INFO(info)))
@@ -72,14 +66,11 @@ static void add_app_info(GDesktopAppInfo* info, GtkBuilder* builder)
             menu_link = G_MENU(gtk_builder_get_object(builder,"other"));
         g_menu_append_item(menu_link,item);
         menu_link = NULL;
-    }
-    if (missing)
         g_object_unref(missing);
-    if (name)
-        g_free(name);
-    g_free(action);
-    if (cats)
-        g_strfreev(cats);
+        g_free(action);
+        if (cats)
+            g_strfreev(cats);
+    }
 }
 
 GMenuModel* do_applications_menumodel(gboolean for_settings)

@@ -1472,7 +1472,6 @@ panel_start_gui(SimplePanel *panel)
     Panel *p = panel->priv;
     GtkWidget *w = GTK_WIDGET(panel);
     GSList* l;
-    GdkRectangle rect;
 
     p->display = gdk_display_get_default();
     p->ax = p->ay = p->aw = p->ah = 0;
@@ -1502,13 +1501,6 @@ panel_start_gui(SimplePanel *panel)
         simple_panel_add_plugin(panel,l->data,position);
     }
     update_positions_on_panel(panel);
-
-    val = G_MAXULONG;
-    gdk_property_change(gtk_widget_get_window(w),
-                        gdk_atom_intern_static_string("_NET_WM_DESKTOP"),
-                        gdk_atom_intern_static_string("CARDINAL"),
-                        32, GDK_PROP_MODE_REPLACE, (guchar*)&val, 1);
-
     gtk_window_present(GTK_WINDOW(panel));
     g_object_set(G_OBJECT(panel),PANEL_PROP_AUTOHIDE,p->autohide,NULL);
     g_object_set(G_OBJECT(panel),PANEL_PROP_STRUT,p->setstrut,NULL);

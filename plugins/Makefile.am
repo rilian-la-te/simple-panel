@@ -24,19 +24,12 @@ libbuiltin_plugins_a_CFLAGS = \
 	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
 
-#if ENABLE_MENU_CACHE
-#MENU_SOURCES = \
-#        menu.c
-#endif
-
 PLUGINS_SOURCES = \
 	dclock.c \
 	dirmenu.c \
 	separator.c \
         space.c \
-	menumodel.c \
-	menubar.c \
-        $(MENU_SOURCES)
+	menumodel.c
 
 libbuiltin_plugins_a_SOURCES = \
 	$(PLUGINS_SOURCES)
@@ -61,6 +54,7 @@ EXTRA_LTLIBRARIES = \
 	indicator.la \
 	appmenu.la \
 	kbled.la \
+	menu.la \
 	monitors.la \
 	netstat.la \
 	netstatus.la \
@@ -118,6 +112,11 @@ indicator_la_LIBADD = $(APPLET_LIBS)
 kbled_la_SOURCES = kbled/kbled.c
 kbled_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
 kbled_la_LIBADD = $(X11_LIBS)
+
+# menu
+menu_la_SOURCES = menu/menu.c \
+	menu/panel-image-menu-item.c
+menu_la_CFLAGS = -I$(srcdir)/menu
 
 # monitors
 monitors_la_SOURCES = monitors/monitors.c
