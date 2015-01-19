@@ -44,11 +44,15 @@ static void add_app_info(GDesktopAppInfo* info, GtkBuilder* builder)
     cats = tmp = NULL;
     if (g_app_info_should_show(G_APP_INFO(info)))
     {
+        const gchar* tooltip;
         action = g_strdup_printf(LAUNCH_ID_ACTION,g_app_info_get_id(G_APP_INFO(info)));
         item = g_menu_item_new(g_app_info_get_name(G_APP_INFO(info)),(const gchar*)action);
         icon = g_app_info_get_icon(G_APP_INFO(info));
         missing = g_icon_new_for_string("application-x-executable",NULL);
         g_menu_item_set_icon(item, icon ? icon : missing );
+        tooltip = g_app_info_get_description(G_APP_INFO(info));
+        if (tooltip)
+            g_menu_item_set_attribute(item,"tooltip","s",tooltip);
         cats = g_strsplit_set(g_desktop_app_info_get_categories(G_DESKTOP_APP_INFO(info)) != NULL
                 ? g_desktop_app_info_get_categories(G_DESKTOP_APP_INFO(info)) : "",";",0);
         for (tmp = cats; cats && *tmp; tmp++)
@@ -153,21 +157,6 @@ GMenuModel* do_places_menumodel()
     return G_MENU_MODEL(menu);
 }
 
-void menu_load_applications(GSimpleAction* action, GVariant* param, gpointer data)
-{
-
-}
-
-void menu_load_places(GSimpleAction* action, GVariant* param, gpointer data)
-{
-
-}
-
-void menu_load_system(GSimpleAction* action, GVariant* param, gpointer data)
-{
-
-}
-
 GMenuModel* do_system_menumodel()
 {
     GtkBuilder* builder;
@@ -201,6 +190,26 @@ GMenuModel* do_system_menumodel()
     return G_MENU_MODEL(menu);
 }
 
+void g_menu_append_all_sections(GMenu *menu, GMenuModel* append)
+{
+    gint i;
+    gint num = g_menu_model_get_n_items(append);
+    gchar* label = NULL;
+    GMenuModel* link;
+    for(i = 0; i< num; i++)
+    {
+        link = g_menu_model_get_item_link(G_MENU_MODEL(append),i,"section");
+        g_menu_model_get_item_attribute(append,i,"label","s",&label);
+        if (link)
+        {
+            g_menu_append_section(menu,label,link);
+            g_object_unref(link);
+        }
+        if (label)
+            g_free(label);
+    }
+}
+
 GMenuModel* create_default_menumodel(gboolean as_submenus, const gchar* icon_str)
 {
     GMenu* menu = g_menu_new();
@@ -212,12 +221,10 @@ GMenuModel* create_default_menumodel(gboolean as_submenus, const gchar* icon_str
     if (as_submenus)
     {
         GMenuItem* item;
-        GIcon* icon;
-        icon = g_icon_new_for_string(icon_str,NULL);
         item = g_menu_item_new_submenu(_("Applications"),apps);
-        g_menu_item_set_icon(item,icon);
-        g_object_unref(icon);
+        g_menu_item_set_attribute(item,"icon","s",icon_str);
         g_menu_append_item(menu,item);
+        g_object_unref(item);
         g_menu_append_submenu(menu, _("Places"), places);
         g_menu_append_submenu(menu, _("System"), system);
     }
@@ -229,22 +236,10 @@ GMenuModel* create_default_menumodel(gboolean as_submenus, const gchar* icon_str
         g_menu_append_submenu(section, _("Places"), places);
         g_menu_append_section(menu,NULL,G_MENU_MODEL(section));
         g_object_unref(section);
-        g_menu_append_section(menu, NULL, system);
+        g_menu_append_all_sections(menu, system);
     }
     g_object_unref(apps);
     g_object_unref(places);
     g_object_unref(system);
     return G_MENU_MODEL(menu);
 }
-
-#ifdef STANDALONE_MAKER
-int main(int argc, char** argv, char** envp)
-{
-    setlocale(LC_CTYPE, "");
-    gchar* menu;
-    menu = g_menu_make_xml(create_default_menumodel(TRUE,"start-here-symbolic"));
-    g_print("%s\n",menu);
-    g_free(menu);
-    return 0;
-}
-#endif

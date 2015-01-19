@@ -441,6 +441,54 @@ void activate_menu_launch_command (GSimpleAction* action,GVariant* param, gpoint
     g_clear_error(&err);
 }
 
+gint simple_panel_apply_properties_to_menu(GList* widgets, GMenuModel* menu)
+{
+    GList* l;
+    GMenuModel* menu_link;
+    GtkWidget* menuw;
+    gchar* str = NULL;
+    GIcon* icon;
+    int len = g_menu_model_get_n_items(menu);
+    int i, j ,ret;
+    for (i=0, l=widgets; (i<len) && (l!= NULL); i++,l = l->next)
+    {
+        while (GTK_IS_SEPARATOR_MENU_ITEM(l->data))
+            l = l->next;
+        menuw = gtk_menu_item_get_submenu(GTK_MENU_ITEM(l->data));
+        menu_link = g_menu_model_get_item_link(menu,i,"submenu");
+        if (menuw && menu_link)
+        {
+            simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menuw)),menu_link);
+            g_menu_model_get_item_attribute(menu,i,"icon","s",&str);
+            if (str)
+            {
+                icon = g_icon_new_for_string(str,NULL);
+                g_object_set(G_OBJECT(l->data),"icon",icon,NULL);
+                g_free(str);
+                g_object_unref(icon);
+            }
+            g_object_unref(menu_link);
+        }
+        str = NULL;
+        menu_link = g_menu_model_get_item_link(menu,i,"section");
+        if (menu_link)
+        {
+            ret = simple_panel_apply_properties_to_menu(l,menu_link);
+            for (j = 0; j < ret; j++)
+                l=l->next;
+            g_object_unref(menu_link);
+        }
+        g_menu_model_get_item_attribute(menu,i,"tooltip","s",&str);
+        if (str)
+        {
+            gtk_widget_set_tooltip_text(GTK_WIDGET(l->data),str);
+            g_free(str);
+        }
+    }
+    return i-1;
+}
+
+
 void start_panels_from_dir(GtkApplication* app,const char *panel_dir)
 {
     GDir* dir = g_dir_open( panel_dir, 0, NULL );

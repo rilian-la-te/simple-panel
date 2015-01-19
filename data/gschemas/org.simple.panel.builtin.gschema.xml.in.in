@@ -35,22 +35,8 @@
       <default>2</default>
     </key>
   </schema>
-  <schema id="org.simple.panel.toplevel.menu">
-    <key name="name" type="ms">
-      <default>nothing</default>
-    </key>
-    <key name="icon" type="s">
-      <default>'start-here-symbolic'</default>
-    </key>
-    <key name="highlight-color" type="s">
-      <default>'rgba(50,50,50,0.37)'</default>
-    </key>
-    <key name="layout" type="a(ssss)">
-      <default>[("system","","",""),("separator","","",""),("item","run","application-x-executable","command"),("separator","","",""),("item","logout","gnome-logout","command"),("item","shutdown","gnome-shutdown","command")]</default>
-    </key>
-  </schema>
   <schema id="org.simple.panel.toplevel.menumodel">
-    <key name="menu-name" type="ms">
+    <key name="menu-caption" type="ms">
       <default>nothing</default>
     </key>
     <key name="icon-name" type="ms">
@@ -67,9 +53,6 @@
     </key>
     <key name="model-file" type="ms">
       <default>nothing</default>
-    </key>
-    <key name="model-name" type="s">
-      <default>'appmenu'</default>
     </key>
   </schema>
 </schemalist>

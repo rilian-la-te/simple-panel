@@ -40,12 +40,18 @@
 #include "menu-maker.h"
 
 #define MENUMODEL_KEY_ICON "icon-name"
-#define MENUMODEL_KEY_CAPTION "menu-name"
+#define MENUMODEL_KEY_CAPTION "menu-caption"
 #define MENUMODEL_KEY_IS_MENU_BAR "is-menu-bar"
 #define MENUMODEL_KEY_IS_SYSTEM_MENU "is-system-menu"
 #define MENUMODEL_KEY_IS_INTERNAL_MENU "is-internal-menu"
 #define MENUMODEL_KEY_MODEL_FILE "model-file"
-#define MENUMODEL_KEY_MODEL_NAME "model-name"
+
+typedef enum {
+    MENU_INTERNAL_APPLICATIONS,
+    MENU_INTERNAL_SETTINGS,
+    MENU_INTERNAL_MOUNTS,
+    MENU_INTERNAL_RECENT
+} MenuInternalEnum;
 
 
 typedef struct {
@@ -54,13 +60,14 @@ typedef struct {
     SimplePanel *panel;
     GSettings *settings;
     GMenuModel* menu;
-    gchar* icon_str, *model_file, *model_name;
+    gchar* icon_str, *model_file;
     GAppInfoMonitor* app_monitor;
     GFileMonitor* file_monitor;
     gboolean system,internal,bar;
     guint show_system_menu_idle;
     guint monitor_update_idle;
 } MenuModelPlugin;
+
 
 static GMenuModel* return_menumodel(MenuModelPlugin* m);
 static GMenuModel* read_menumodel(MenuModelPlugin *m);
@@ -106,8 +113,6 @@ menumodel_destructor(gpointer user_data)
         g_free(m->icon_str);
     if (m->model_file)
         g_free(m->model_file);
-    if (m->model_name)
-        g_free(m->model_name);
     if (m->caption)
         g_free(m->caption);
     g_free(m);
@@ -183,12 +188,43 @@ static void monitor_update(MenuModelPlugin* m)
         m->monitor_update_idle = g_timeout_add(200, monitor_update_idle, m);
 }
 
+static void load_internal_menus(GMenu* menu, gint enum_id)
+{
+    GMenuModel* section;
+
+    if (enum_id == MENU_INTERNAL_APPLICATIONS)
+    {
+        section = do_applications_menumodel(FALSE);
+        g_menu_append_section(menu,NULL,section);
+        g_object_unref(section);
+    }
+    if (enum_id == MENU_INTERNAL_SETTINGS)
+    {
+        section = do_applications_menumodel(TRUE);
+        g_menu_append_section(menu,NULL,section);
+        g_object_unref(section);
+    }
+}
+
 static GMenuModel* read_menumodel(MenuModelPlugin* m)
 {
+    GMenu* gotten;
     GtkBuilder* builder;
     builder = gtk_builder_new();
     gtk_builder_add_from_file(builder,m->model_file,NULL);
-    GMenuModel* menu = G_MENU_MODEL(gtk_builder_get_object(builder,m->model_name));
+    GMenuModel* menu = G_MENU_MODEL(gtk_builder_get_object(builder,"simplepanel-menu"));
+    gotten = G_MENU(gtk_builder_get_object(builder,"simplepanel-internal-applications"));
+    if (gotten)
+        load_internal_menus(gotten,MENU_INTERNAL_APPLICATIONS);
+    gotten = G_MENU(gtk_builder_get_object(builder,"simplepanel-internal-settings"));
+    if (gotten)
+        load_internal_menus(gotten,MENU_INTERNAL_SETTINGS);
+    gotten = G_MENU(gtk_builder_get_object(builder,"simplepanel-internal-mounts"));
+    if (gotten)
+        load_internal_menus(gotten,MENU_INTERNAL_MOUNTS);
+    gotten = G_MENU(gtk_builder_get_object(builder,"simplepanel-internal-recent"));
+    if (gotten)
+        load_internal_menus(gotten,MENU_INTERNAL_RECENT);
     g_object_ref(menu);
     g_object_unref(builder);
     return menu;
@@ -222,49 +258,6 @@ static GMenuModel* return_menumodel(MenuModelPlugin* m)
     return ret;
 }
 
-static gboolean apply_properties_to_menu(GList* widgets, GMenuModel* menu)
-{
-    GList* l;
-    GMenuModel* menu_link;
-    GtkWidget* menuw;
-    gchar* str;
-    GIcon* icon;
-    int len = g_menu_model_get_n_items(menu);
-    int i, j ,ret;
-    for (i=0, l=widgets; (i<len) && (l->next != NULL); i++,l = l->next)
-    {
-        while (GTK_IS_SEPARATOR_MENU_ITEM(l->data))
-            l = l->next;
-        if (!l->next)
-                return i;
-        menuw = gtk_menu_item_get_submenu(GTK_MENU_ITEM(l->data));
-        menu_link = g_menu_model_get_item_link(menu,i,"submenu");
-        if (menuw && menu_link)
-        {
-            apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menuw)),menu_link);
-            g_menu_model_get_item_attribute(menu,i,"icon","s",&str);
-            icon = g_icon_new_for_string(str,NULL);
-            g_object_set(G_OBJECT(l->data),"icon",icon,NULL);
-            g_free(str);
-            g_object_unref(icon);
-            g_object_unref(menu_link);
-        }
-        menu_link = g_menu_model_get_item_link(menu,i,"section");
-        if (menu_link && l->next != NULL)
-        {
-            ret = apply_properties_to_menu(l,menu_link);
-            for (j = 0; j < ret; j++)
-                l=l->next;
-            g_object_unref(menu_link);
-        }
-        g_menu_model_get_item_attribute(menu,i,"tooltip","s",&str);
-        gtk_widget_set_tooltip_text(GTK_WIDGET(l->data),str);
-        g_object_set(menuw,"icon",icon,NULL);
-        g_free(str);
-    }
-    return i;
-}
-
 static GtkWidget* menumodel_widget_create(MenuModelPlugin* m)
 {
     m->menu = return_menumodel(m);
@@ -276,9 +269,12 @@ static GtkWidget* menumodel_widget_create(MenuModelPlugin* m)
 
 static GtkWidget* create_menubutton(MenuModelPlugin* m)
 {
-    GtkWidget* img;
+    GtkWidget* img, *menu;
     m->button = gtk_menu_button_new();
-    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(m->button),G_MENU_MODEL(m->menu));
+    menu = gtk_menu_new_from_model(m->menu);
+    simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menu)),m->menu);
+    gtk_widget_show_all(menu);
+    gtk_menu_button_set_popup(GTK_MENU_BUTTON(m->button),menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(m->button),FALSE);
     if(m->icon_str)
     {
@@ -294,7 +290,7 @@ static GtkWidget* create_menubutton(MenuModelPlugin* m)
 static GtkWidget* create_menubar(MenuModelPlugin* m)
 {
     m->button = gtk_menu_bar_new_from_model(G_MENU_MODEL(m->menu));
-    apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(m->button)),m->menu);
+    simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(m->button)),m->menu);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
     plugin_widget_set_background(m->button,m->panel);
     gtk_widget_show(m->button);
@@ -313,7 +309,6 @@ static GtkWidget* menumodel_constructor(SimplePanel *panel, GSettings *settings)
     system = plugin->system = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_SYSTEM_MENU);
     internal = plugin->internal = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_INTERNAL_MENU);
     plugin->bar = g_settings_get_boolean(settings,MENUMODEL_KEY_IS_MENU_BAR);
-    plugin->model_name = g_settings_get_string(settings,MENUMODEL_KEY_MODEL_NAME);
     g_settings_get(plugin->settings,MENUMODEL_KEY_MODEL_FILE,"ms",&plugin->model_file);
     g_settings_get(plugin->settings,MENUMODEL_KEY_CAPTION,"ms",&plugin->caption);
     g_settings_get(plugin->settings,MENUMODEL_KEY_ICON,"ms",&plugin->icon_str);
@@ -331,7 +326,6 @@ static gboolean apply_config(gpointer user_data)
     MenuModelPlugin* m = lxpanel_plugin_get_data(p);
     g_settings_set(m->settings, MENUMODEL_KEY_ICON,"ms", m->icon_str);
     g_settings_set(m->settings, MENUMODEL_KEY_CAPTION,"ms", m->caption);
-    g_settings_set_string(m->settings, MENUMODEL_KEY_MODEL_NAME, m->model_name);
     g_settings_set(m->settings, MENUMODEL_KEY_MODEL_FILE,"ms", m->model_file);
     g_settings_set_boolean(m->settings,MENUMODEL_KEY_IS_INTERNAL_MENU,m->internal);
     g_settings_set_boolean(m->settings,MENUMODEL_KEY_IS_SYSTEM_MENU,m->system);
@@ -350,10 +344,9 @@ static GtkWidget *menumodel_config(SimplePanel *panel, GtkWidget *p)
                                       _("Is internal menu"), &menu->internal, CONF_TYPE_BOOL,
                                       _("Is system menu (can be keybound)"), &menu->system, CONF_TYPE_BOOL,
                                       _("Is Menubar"), &menu->bar, CONF_TYPE_BOOL,
-                                      _("Icon (for button only)"), &menu->icon_str, CONF_TYPE_FILE_ENTRY,
+                                      _("Icon"), &menu->icon_str, CONF_TYPE_FILE_ENTRY,
                                       _("Caption (for button only)"), &menu->caption, CONF_TYPE_STR,
                                       _("Menu file name"), &menu->model_file, CONF_TYPE_FILE_ENTRY,
-                                      _("Menu name in file"), &menu->model_name, CONF_TYPE_STR,
                                       NULL);
 }
 

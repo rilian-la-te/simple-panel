@@ -79,9 +79,6 @@ const GActionEntry menu_action_entries[] =
     {"launch-id", activate_menu_launch_id, "s", NULL, NULL},
     {"launch-uri", activate_menu_launch_uri, "s", NULL, NULL},
     {"launch-command", activate_menu_launch_command, "s", NULL, NULL},
-    {"load-apps-menu", menu_load_applications, "b", NULL, NULL},
-    {"load-places-menu", menu_load_places, "b", NULL, NULL},
-    {"load-system-menu", menu_load_system, "b", NULL, NULL},
 };
 
 static const GOptionEntry entries[] =

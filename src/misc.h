@@ -41,6 +41,7 @@ void start_panels_from_dir(GtkApplication* app,const char *panel_dir);
 void simple_panel_add_prop_as_action(GActionMap* map,const char* prop);
 void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,const char* prop);
 void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop);
+gint simple_panel_apply_properties_to_menu(GList* widgets, GMenuModel* menu);
 void activate_menu_launch_id (GSimpleAction* action,GVariant* param, gpointer user_data);
 void activate_menu_launch_uri (GSimpleAction* action,GVariant* param, gpointer user_data);
 void activate_menu_launch_command (GSimpleAction* action,GVariant* param, gpointer user_data);
