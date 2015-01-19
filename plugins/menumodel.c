@@ -222,6 +222,47 @@ static GMenuModel* return_menumodel(MenuModelPlugin* m)
     return ret;
 }
 
+static gboolean apply_properties_to_menu(GList* widgets, GMenuModel* menu)
+{
+    GList* l;
+    GMenuModel* menu_link;
+    GtkWidget* menuw;
+    gchar* str;
+    GIcon* icon;
+    int len = g_menu_model_get_n_items(menu);
+    int i, j ,ret;
+    for (i=0, l=widgets; (i<len) && (l->next != NULL); i++,l = l->next)
+    {
+        while (GTK_IS_SEPARATOR_MENU_ITEM(l->data))
+            l = l->next;
+        menuw = gtk_menu_item_get_submenu(GTK_MENU_ITEM(l->data));
+        menu_link = g_menu_model_get_item_link(menu,i,"submenu");
+        if (menuw && menu_link)
+        {
+            apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menuw)),menu_link);
+            g_menu_model_get_item_attribute(menu,i,"icon","s",&str);
+            icon = g_icon_new_for_string(str,NULL);
+            g_object_set(menuw,"icon",icon,NULL);
+            g_free(str);
+            g_object_unref(icon);
+            g_object_unref(menu_link);
+        }
+        menu_link = g_menu_model_get_item_link(menu,i,"section");
+        if (menu_link)
+        {
+            ret = apply_properties_to_menu(l,menu_link);
+            for (j = 0; j < ret; j++)
+                l=l->next;
+            g_object_unref(menu_link);
+        }
+        g_menu_model_get_item_attribute(menu,i,"tooltip","s",&str);
+        gtk_widget_set_tooltip_markup(GTK_WIDGET(l->data),str);
+        g_object_set(menuw,"icon",icon,NULL);
+        g_free(str);
+    }
+    return i;
+}
+
 static GtkWidget* menumodel_widget_create(MenuModelPlugin* m)
 {
     m->menu = return_menumodel(m);
@@ -251,6 +292,7 @@ static GtkWidget* create_menubutton(MenuModelPlugin* m)
 static GtkWidget* create_menubar(MenuModelPlugin* m)
 {
     m->button = gtk_menu_bar_new_from_model(G_MENU_MODEL(m->menu));
+    apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(m->button)),m->menu);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
     plugin_widget_set_background(m->button,m->panel);
     gtk_widget_show(m->button);

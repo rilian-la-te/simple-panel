@@ -52,9 +52,7 @@ EXTRA_LTLIBRARIES = \
 	cpufreq.la \
 	deskno.la \
 	indicator.la \
-	appmenu.la \
 	kbled.la \
-	menu.la \
 	monitors.la \
 	netstat.la \
 	netstatus.la \
@@ -112,11 +110,6 @@ indicator_la_LIBADD = $(APPLET_LIBS)
 kbled_la_SOURCES = kbled/kbled.c
 kbled_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
 kbled_la_LIBADD = $(X11_LIBS)
-
-# menu
-menu_la_SOURCES = menu/menu.c \
-	menu/panel-image-menu-item.c
-menu_la_CFLAGS = -I$(srcdir)/menu
 
 # monitors
 monitors_la_SOURCES = monitors/monitors.c
