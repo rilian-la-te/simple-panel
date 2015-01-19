@@ -235,6 +235,8 @@ static gboolean apply_properties_to_menu(GList* widgets, GMenuModel* menu)
     {
         while (GTK_IS_SEPARATOR_MENU_ITEM(l->data))
             l = l->next;
+        if (!l->next)
+                return i;
         menuw = gtk_menu_item_get_submenu(GTK_MENU_ITEM(l->data));
         menu_link = g_menu_model_get_item_link(menu,i,"submenu");
         if (menuw && menu_link)
@@ -242,13 +244,13 @@ static gboolean apply_properties_to_menu(GList* widgets, GMenuModel* menu)
             apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menuw)),menu_link);
             g_menu_model_get_item_attribute(menu,i,"icon","s",&str);
             icon = g_icon_new_for_string(str,NULL);
-            g_object_set(menuw,"icon",icon,NULL);
+            g_object_set(G_OBJECT(l->data),"icon",icon,NULL);
             g_free(str);
             g_object_unref(icon);
             g_object_unref(menu_link);
         }
         menu_link = g_menu_model_get_item_link(menu,i,"section");
-        if (menu_link)
+        if (menu_link && l->next != NULL)
         {
             ret = apply_properties_to_menu(l,menu_link);
             for (j = 0; j < ret; j++)
@@ -256,7 +258,7 @@ static gboolean apply_properties_to_menu(GList* widgets, GMenuModel* menu)
             g_object_unref(menu_link);
         }
         g_menu_model_get_item_attribute(menu,i,"tooltip","s",&str);
-        gtk_widget_set_tooltip_markup(GTK_WIDGET(l->data),str);
+        gtk_widget_set_tooltip_text(GTK_WIDGET(l->data),str);
         g_object_set(menuw,"icon",icon,NULL);
         g_free(str);
     }
