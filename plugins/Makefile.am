@@ -9,8 +9,8 @@ AM_CPPFLAGS = \
 
 AM_LDFLAGS = \
 	-module -avoid-version -shared -export-dynamic \
-	-no-undefined -rpath $(libdir)/simple-panel/plugins \
-	$(top_builddir)/src/libsimplepanel.la \
+	-no-undefined -rpath $(pkglibdir)/plugins \
+	$(pkglibdir)/../libsimplepanel.la \
 	$(PACKAGE_LIBS)
 
 #$(top_builddir)/src/libsimplepanel.la:

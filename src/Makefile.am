@@ -29,8 +29,8 @@ SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	private.h \
 	app.h \
 	app-actions.h \
-        app-misc.h \
-        menu-maker.h
+	app-misc.h \
+	menu-maker.h
 
 SIMPLE_PANEL_ENUM_FILES = $(SIMPLE_PANEL_HEADER_FILES)
 SIMPLE_PANEL_ENUM_FILES += $(SIMPLE_PANEL_NOINST_HEADER_FILES)
@@ -70,12 +70,12 @@ libsimplepanel_la_SOURCES = \
 	plugin.c \
 	conf-gsettings.c \
 	panel-enum-types.c
-
-libsimplepanel_la_LIBADD = $(PACKAGE_LIBS)
-
+	
 libsimplepanel_la_LDFLAGS = \
        -no-undefined \
-       -rpath '$(pkglibdir)'
+       -rpath $(pkglibdir)
+       
+libsimplepanel_la_LIBADD = $(PACKAGE_LIBS)
 
 nodist_simple_panel_SOURCES = simple-panel-resources.c
 simple_panel_SOURCES = \
