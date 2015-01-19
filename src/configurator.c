@@ -94,59 +94,56 @@ static void state_configure_monitor(GSimpleAction *action,GVariant* param, gpoin
 
 static void edge_changed(SimplePanel* panel, GParamSpec* spec, GtkWidget* w)
 {
-    int edge = panel->priv->edge;
+    int edge;
+    const gchar* print_format = _("Edge: %s");
     gchar* str = NULL;
+    g_object_get(panel,PANEL_PROP_EDGE,&edge,NULL);
     switch (edge)
     {
     case GTK_POS_BOTTOM:
-        str = _("Edge: Bottom");
+        str = g_strdup_printf(print_format,_("Bottom"));
         break;
     case GTK_POS_TOP:
-        str = _("Edge: Top");
+        str = g_strdup_printf(print_format,_("Top"));
         break;
     case GTK_POS_LEFT:
-        str = _("Edge: Left");
+        str = g_strdup_printf(print_format,_("Left"));
         break;
     case GTK_POS_RIGHT:
-        str = _("Edge: Right");
+        str = g_strdup_printf(print_format,_("Right"));
         break;
     };
     gtk_button_set_label(GTK_BUTTON(w),str);
+    g_free(str);
 }
 
 static void alignment_changed(SimplePanel* panel, GParamSpec* spec, GtkWidget* w)
 {
-    int alignment = panel->priv->align;
+    int alignment;
+    const gchar* print_format = _("Align: %s");
     gchar* str = NULL;
+    g_object_get(panel,PANEL_PROP_ALIGNMENT,&alignment,NULL);
     switch (alignment)
     {
     case PANEL_ALIGN_LEFT:
-        str = _("Align: Start");
+        str = g_strdup_printf(print_format,_("Start"));
         break;
     case PANEL_ALIGN_CENTER:
-        str = _("Align: Center");
+        str = g_strdup_printf(print_format,_("Center"));
         break;
     case PANEL_ALIGN_RIGHT:
-        str = _("Align: End");
+        str = g_strdup_printf(print_format,_("End"));
         break;
     };
     gtk_button_set_label(GTK_BUTTON(w),str);
+    g_free(str);
 }
 
 static void simple_panel_notify_scale_cb(SimplePanel* panel, GParamSpec* param, GtkScaleButton* scale)
 {
     const gchar* name = g_param_spec_get_name(param);
-    const gchar* retn;
     int val;
-    if (g_intern_static_string(PANEL_PROP_WIDTH) == name)
-        retn = PANEL_PROP_WIDTH;
-    if (g_intern_static_string(PANEL_PROP_HEIGHT) == name)
-        retn = PANEL_PROP_HEIGHT;
-    if (g_intern_static_string(PANEL_PROP_ICON_SIZE) == name)
-        retn = PANEL_PROP_ICON_SIZE;
-    if (g_intern_static_string(PANEL_PROP_AUTOHIDE_SIZE) == name)
-        retn = PANEL_PROP_AUTOHIDE_SIZE;
-    g_object_get(panel,retn,&val,NULL);
+    g_object_get(panel,name,&val,NULL);
     gchar* str = g_strdup_printf("%d",val);
     gtk_button_set_label(GTK_BUTTON(scale),str);
     g_free(str);

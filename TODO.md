@@ -15,7 +15,6 @@ Simple-panel TODO and Guidelines
 10. Remove libfm dependency.
 11. New GAction-based plugin system.
 
-
 ##Guidelines
 
 1. Use GNOME HIG.

@@ -35,7 +35,7 @@ gsettings_SCHEMAS = $(panel_gschemas_in:.xml.in=.xml)
 
 %.gschema.xml.in: %.gschema.xml.in.in Makefile
 	$(AM_V_GEN) $(SED) -e 's^\@GETTEXT_PACKAGE\@^$(GETTEXT_PACKAGE)^g' < $< > $@
-
+	
 @INTLTOOL_XML_NOMERGE_RULE@
 @GSETTINGS_RULES@
 

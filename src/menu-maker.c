@@ -150,7 +150,6 @@ GMenuModel* do_places_menumodel()
         g_object_unref(item);
         g_object_unref(app_info);
     }
-    section = G_MENU(gtk_builder_get_object(builder,"recent-section"));
     g_menu_remove(section,1);
     g_object_ref(menu);
     g_object_unref(builder);

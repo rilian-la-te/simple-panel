@@ -66,17 +66,6 @@ fi
 	AC_SUBST(INDICATORICONSDIR)
 fi
 
-pkg_modules="libmenu-cache"
-PKG_CHECK_MODULES(MENU_CACHE, [$pkg_modules],
-		  enable_menu_cache=yes, enable_menu_cache=no)
-if test x"$enable_menu_cache" = "xno"; then
-	AC_WARN([No libmenu-cache found.  All menu related routines are not built.])
-	AC_DEFINE(DISABLE_MENU, [1], [Disable menu related routines])
-fi
-AC_SUBST(MENU_CACHE_CFLAGS)
-AC_SUBST(MENU_CACHE_LIBS)
-AM_CONDITIONAL(ENABLE_MENU_CACHE, test x"$enable_menu_cache" = x"yes")
-
 AC_ARG_ENABLE(more_warnings,
        [AC_HELP_STRING([--enable-more-warnings],
                [Add more warnings @<:@default=no@:>@])],
@@ -269,7 +258,6 @@ fi
 dnl Exclude indicator support when there is no support.
 if test x"$indicator_support" = "xno"; then
     plugin_indicator=
-	plugin_appmenu=
 fi
 
 wnck="libwnck-3.0"
@@ -359,13 +347,6 @@ AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([bzero memset mkdir setlocale strchr])
-
-dnl check for menu-cache versions 0.4.x since no macro MENU_CACHE_CHECK_VERSION
-dnl is available in those versions
-LIBS_save="${LIBS}"
-LIBS="${LIBS} ${MENU_CACHE_LIBS}"
-AC_CHECK_FUNCS(menu_cache_dir_list_children)
-LIBS="${LIBS_save}"
 
 # Generate po/LINGUAS on the fly rather than relying on translators
 # to maintain it manually. This also overcome the problem that Transifex
@@ -497,10 +478,4 @@ if test x"$sysconfdir" != x'/etc'; then
     echo 'Warning: sysconfdir is not /etc. It might be not what you want.'
     echo 'Please consider passing --sysconfdir=/etc to configure.'
 fi
-
-echo
-echo 'LXPanel requires menu-cache and lxmenu-data packages since'
-echo 'version 0.4.0. Please make sure they are correctly installed.'
-echo 'Otherwise, you will not be able to use applications menu.'
-echo
 

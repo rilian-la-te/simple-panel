@@ -44,7 +44,6 @@ enum
     PROP_0,
     PROP_NAME,
     PROP_EDGE,
-    PROP_ORIENTATION,
     PROP_HEIGHT,
     PROP_WIDTH,
     PROP_SIZE_TYPE,
@@ -429,9 +428,6 @@ static void simple_panel_get_property(GObject      *object,
     case PROP_EDGE:
         g_value_set_enum (value,toplevel->priv->edge);
         break;
-    case PROP_ORIENTATION:
-        g_value_set_enum(value,toplevel->priv->orientation);
-        break;
     case PROP_HEIGHT:
         g_value_set_int (value, toplevel->priv->height);
         break;
@@ -517,7 +513,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Name",
                     "The name of this panel",
                     NULL,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_EDGE,
@@ -527,17 +523,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Edge of the screen where panel attached",
                     gtk_position_type_get_type(),
                     GTK_POS_TOP,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-    g_object_class_install_property(
-                gobject_class,
-                PROP_ORIENTATION,
-                g_param_spec_enum(
-                    "orientation",
-                    "Orientation",
-                    "Orientation of the panel",
-                    gtk_orientation_get_type(),
-                    GTK_ORIENTATION_HORIZONTAL,
-                    G_PARAM_READABLE));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_HEIGHT,
@@ -548,7 +534,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     PANEL_HEIGHT_MIN,
                     PANEL_HEIGHT_MAX,
                     PANEL_HEIGHT_DEFAULT,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_WIDTH,
@@ -559,7 +545,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     0,
                     G_MAXINT,
                     100,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_SIZE_TYPE,
@@ -569,7 +555,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Type of panel size counting",
                     PANEL_SIZE_TYPE,
                     PANEL_SIZE_PERCENT,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_ALIGNMENT,
@@ -579,7 +565,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Panel alignment side",
                     PANEL_ALIGN_TYPE,
                     PANEL_ALIGN_CENTER,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_MARGIN,
@@ -590,7 +576,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     0,
                     G_MAXINT,
                     0,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_MONITOR,
@@ -601,7 +587,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     -1,
                     G_MAXINT,
                     G_MAXINT,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_AUTOHIDE,
@@ -610,7 +596,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Auto hide",
                     "Automatically hide the panel when the mouse leaves the panel",
                     FALSE,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_AUTOHIDE_SIZE,
@@ -621,7 +607,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     0,
                     10,
                     PANEL_AUTOHIDE_SIZE,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_BACKGROUNDTYPE,
@@ -631,7 +617,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Type of panel background",
                     PANEL_BACKGROUND_TYPE,
                     PANEL_BACKGROUND_GTK,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_ENABLEFONTCOLOR,
@@ -640,7 +626,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Enable font color",
                     "Enable custom font color",
                     FALSE,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_ENABLEFONTSIZE,
@@ -649,7 +635,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Enable font size",
                     "Enable custom font size",
                     FALSE,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_ICON_SIZE,
@@ -660,7 +646,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     PANEL_HEIGHT_MIN,
                     PANEL_HEIGHT_MAX,
                     PANEL_HEIGHT_DEFAULT,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_BACKGROUNDFILE,
@@ -669,7 +655,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Background file",
                     "Background file of this panel",
                     NULL,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_TINTCOLOR,
@@ -678,7 +664,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Background color",
                     "Background color of this panel",
                     "white",
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_FONTCOLOR,
@@ -687,7 +673,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Font color",
                     "Font color color of this panel",
                     "black",
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
                 PROP_FONTSIZE,
@@ -698,7 +684,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     PANEL_FONT_MIN,
                     PANEL_FONT_MAX,
                     PANEL_FONT_DEFAULT,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_STRUT,
@@ -707,7 +693,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "Set strut",
                     "Set strut to crop it from maximized windows",
                     TRUE,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
                 PROP_DOCK,
@@ -716,7 +702,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
                     "As dock",
                     "Make window managers treat panel as dock",
                     TRUE,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
 
 }
 

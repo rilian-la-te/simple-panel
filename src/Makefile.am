@@ -74,7 +74,8 @@ libsimplepanel_la_SOURCES = \
 libsimplepanel_la_LIBADD = $(PACKAGE_LIBS)
 
 libsimplepanel_la_LDFLAGS = \
-       -no-undefined
+       -no-undefined \
+       -rpath '$(pkglibdir)'
 
 nodist_simple_panel_SOURCES = simple-panel-resources.c
 simple_panel_SOURCES = \
@@ -82,7 +83,7 @@ simple_panel_SOURCES = \
 	main.c  \
 	app.c \
 	app-actions.c \
-        app-misc.c
+	app-misc.c
 
 simple_panel_includedir = $(includedir)/simple-panel
 simple_panel_include_HEADERS = $(SIMPLE_PANEL_HEADER_FILES)
