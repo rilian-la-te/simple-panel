@@ -57,14 +57,21 @@ static gboolean deskno_name_update(WnckScreen* screen, WnckWorkspace* space,gpoi
 {
     DesknoPlugin * dc = (DesknoPlugin*)data;
     WnckWorkspace* workspace = wnck_screen_get_active_workspace(screen);
-    const gchar* name;
+    gchar* name;
+    gboolean const_name;
     if (dc->wm_labels)
-        name = wnck_workspace_get_name(workspace);
+    {
+        name = (gchar*)wnck_workspace_get_name(workspace);
+        const_name = TRUE;
+    }
     else
     {
         name = g_strdup_printf("%d",wnck_workspace_get_number(workspace)+1);
+        const_name = FALSE;
     }
-    lxpanel_draw_label_text(dc->panel, dc->label, name, dc->bold, 1, TRUE);
+    simple_panel_draw_label_text(dc->label, name, dc->bold, 1);
+    if (!const_name)
+        g_free(name);
     return FALSE;
 }
 

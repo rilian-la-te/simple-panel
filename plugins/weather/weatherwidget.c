@@ -118,7 +118,6 @@ struct _GtkWeatherPrivate
   gpointer    previous_location;
   gpointer    location;
   gpointer    forecast;
-  SimplePanel* panel;
 
   /* Data for location and forecast retrieval threads */
   LocationThreadData location_data;
@@ -236,13 +235,13 @@ gtk_weather_get_type(void)
  * @return A new instance of this widget type.
  */
 GtkWidget *
-gtk_weather_new(SimplePanel* panel)
+gtk_weather_new(gboolean standalone)
 {
   GObject * object = g_object_new(gtk_weather_get_type(), NULL);
 
   GtkWeatherPrivate * priv = GTK_WEATHER_GET_PRIVATE(GTK_WEATHER(object));
 
-  priv->panel=panel;
+  priv->standalone=standalone;
 
   return GTK_WIDGET(object);
 }
@@ -316,6 +315,11 @@ gtk_weather_init(GtkWeather * weather)
   LXW_LOG(LXW_DEBUG, "GtkWeather::init()");
 
   GtkWeatherPrivate * priv = GTK_WEATHER_GET_PRIVATE(weather);
+  const gchar* css = ".-weather-font{\n"
+                       " font-weight: bold;\n"
+                       "}";
+  GtkStyleContext* context;
+  GtkCssProvider* provider;
 
   /* Box layout internals */
   priv->hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
@@ -338,6 +342,15 @@ gtk_weather_init(GtkWeather * weather)
 
   gtk_container_add(GTK_CONTAINER(weather), priv->hbox);
 
+  context = gtk_widget_get_style_context(priv->hbox);
+  provider = gtk_css_provider_new ();
+  gtk_css_provider_load_from_data (provider, css,
+                                  -1, NULL);
+  gtk_style_context_add_class (context, "-weather-font");
+  gtk_style_context_add_provider (context,
+                                  GTK_STYLE_PROVIDER (provider),
+                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  g_object_unref(provider);
   gtk_container_set_border_width(GTK_CONTAINER(weather), 2);
 
   priv->forecast_data.timerid = 0;
@@ -509,8 +522,7 @@ gtk_weather_render(GtkWeather * weather)
                                             forecast->iTemperature_,
                                             forecast->units_.pcTemperature_);
 
-     if (priv->panel)
-        lxpanel_draw_label_text(priv->panel, priv->label, temperature, TRUE, 1, TRUE);
+      gtk_label_set_text(GTK_LABEL(priv->label),temperature);
 
       //gtk_widget_show_all(priv->hbox);
 
@@ -531,9 +543,7 @@ gtk_weather_render(GtkWeather * weather)
                                    "dialog-warning",
                                    GTK_ICON_SIZE_BUTTON);
         }
-      if (priv->panel)
-        lxpanel_draw_label_text(priv->panel, priv->label, GTK_WEATHER_NOT_AVAILABLE_LABEL, TRUE, 1, TRUE);
-
+          gtk_label_set_text(GTK_LABEL(priv->label),GTK_WEATHER_NOT_AVAILABLE_LABEL);
     }
 
   /* update tooltip with proper data... */

@@ -280,7 +280,9 @@ update_display(thermal *th)
         color = th->cl_normal;
 
     if(temp == -1)
-        lxpanel_draw_label_text(th->panel, th->namew, "NA", TRUE, 1, TRUE);
+    {
+        simple_panel_draw_label_text(th->namew, "NA", TRUE, 1);
+    }
     else
     {
         snprintf(buffer, sizeof(buffer), "<span color=\"#%06x\"><b>%02d</b></span>",

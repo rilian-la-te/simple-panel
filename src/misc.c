@@ -215,15 +215,35 @@ void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, gint size)
     _simple_panel_button_set_icon(btn, g_icon_new_for_string(name,NULL), size);
 }
 
+static void widget_center(GtkWidget* w, gpointer data)
+{
+    if (GTK_IS_WIDGET(w))
+    {
+        gtk_widget_set_halign(w, GTK_ALIGN_FILL);
+        gtk_widget_set_valign(w, GTK_ALIGN_FILL);
+    }
+}
+
+static void button_center(GtkWidget* b, GParamSpec* pspec, gpointer data)
+{
+    GtkWidget* w = gtk_bin_get_child(GTK_BIN(b));
+    if (GTK_IS_CONTAINER(w))
+    {
+        GtkWidget* ch = (GTK_IS_BIN(w)) ? gtk_bin_get_child(GTK_BIN(w)) : w;
+        if (GTK_IS_CONTAINER(ch))
+            gtk_container_foreach(GTK_CONTAINER(ch),widget_center, data);
+        widget_center(ch,b);
+    }
+}
+
 inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img, gchar* label)
 {
     const gchar *css = ".-panel-button {\n"
             "margin: 0px 0px 0px 0px;\n"
             "padding: 0px 0px 0px 0px;\n"
-#if 0
-            "vertical-align: center;\n" //Property is unsupported for now.
-#endif
             "}\n";
+    g_signal_connect(b,"notify::image",G_CALLBACK(button_center),NULL);
+    g_signal_connect(b,"notify::label",G_CALLBACK(button_center),NULL);
     if (img)
     {
         gtk_button_set_image(GTK_BUTTON(b),img);

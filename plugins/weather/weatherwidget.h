@@ -22,7 +22,6 @@
 
 #ifndef __WEATHERWIDGET_H__
 #define __WEATHERWIDGET_H__
-#include "plugin.h"
 
 #include <gtk/gtk.h>
 #include <glib.h>
@@ -56,7 +55,7 @@ struct _GtkWeatherClass
 };
 
 GType       gtk_weather_get_type(void) G_GNUC_CONST;
-GtkWidget * gtk_weather_new(SimplePanel *panel);
+GtkWidget * gtk_weather_new(gboolean standalone);
 void        gtk_weather_run_preferences_dialog(GtkWidget * widget);
 void        gtk_weather_run_conditions_dialog(GtkWidget * widget);
 gchar *     gtk_weather_get_tooltip_text(GtkWidget * widget);

@@ -29,6 +29,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 
+#include "plugin.h"
 /* Need to maintain count for bookkeeping */
 static gint g_iCount = 0;
 
@@ -95,7 +96,7 @@ weather_constructor(SimplePanel *pPanel, GSettings *pConfig)
 
   LXW_LOG(LXW_DEBUG, "weather_constructor()");
   
-  GtkWidget * pWidg = gtk_weather_new(pPanel);
+  GtkWidget * pWidg = gtk_weather_new(FALSE);
 
   pPriv->pWeather_ = pWidg;
 

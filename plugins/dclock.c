@@ -45,7 +45,7 @@ typedef struct {
     GtkWidget * plugin;				/* Back pointer to plugin */
     SimplePanel * panel;
     GSettings* settings;
-    GtkWidget * clock_label;			/* Label containing clock value */
+    GtkWidget* btn;
     GtkWidget * calendar_window;		/* Calendar window, if it is being displayed */
     char * clock_format;			/* Format string for clock value */
     char * tooltip_format;			/* Format string for tooltip value */
@@ -66,11 +66,10 @@ static gboolean dclock_update_display(DClockPlugin * dc);
 static void dclock_destructor(gpointer user_data);
 static gboolean dclock_apply_configuration(gpointer user_data);
 
-static void dclock_style_updated(GtkWidget* widget, DClockPlugin* pl)
-{
-    gchar* css = css_generate_flat_button(widget,pl->panel);
-    css_apply_with_class(GTK_WIDGET(pl->clock_label),css,"-panel-flat-button",FALSE);
-    g_free (css);
+inline gchar* dclock_gen_css(gboolean is_bold){
+    return g_strdup_printf(".-simple-panel-font-weight{\n"
+                    " font-weight: %s;\n"
+                    "}",is_bold ? "bold" : "normal");
 }
 
 /* Display a window containing the standard calendar widget. */
@@ -195,7 +194,7 @@ static gboolean dclock_update_display(DClockPlugin * dc)
         gchar * utf8 = g_locale_to_utf8(((newlines_converted != NULL) ? newlines_converted : clock_value), -1, NULL, NULL, NULL);
         if (utf8 != NULL)
         {
-            lxpanel_draw_label_text(dc->panel, dc->clock_label, utf8, dc->bold, 1, TRUE);
+            gtk_button_set_label(GTK_BUTTON(dc->btn),utf8);
             g_free(utf8);
         }
         g_free(newlines_converted);
@@ -283,19 +282,13 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
     lxpanel_plugin_set_data(p, dc, dclock_destructor);
 
 
-    w = gtk_toggle_button_new();
+    dc->btn = w = gtk_toggle_button_new();
     g_signal_connect(w, "toggled", G_CALLBACK(dclock_toggled),dc);
     gtk_container_add(GTK_CONTAINER(p), w);
     gtk_widget_show(w);
-    /* Allocate a horizontal box as the child of the top level. */
-    GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_container_add(GTK_CONTAINER(w), hbox);
-    gtk_widget_show(hbox);
 
     /* Create a label and an image as children of the horizontal box.
      * Only one of these is visible at a time, controlled by user preference. */
-    dc->clock_label = gtk_label_new(NULL);
-    gtk_container_add(GTK_CONTAINER(hbox), dc->clock_label);
     simple_panel_setup_button(w,NULL,NULL);
 
     /* Initialize the clock display. */
@@ -304,7 +297,6 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
     if (dc->tooltip_format == NULL)
         dc->tooltip_format = g_strdup(_(DEFAULT_TIP_FORMAT));
     dclock_apply_configuration(p);
-    g_signal_connect(dc->panel, "style-updated", G_CALLBACK(dclock_style_updated),(gpointer) dc);
 
     /* Show the widget and return. */
     return p;
@@ -342,10 +334,6 @@ static gboolean dclock_apply_configuration(gpointer user_data)
     if (dc->timer)
         g_source_remove(dc->timer);
 
-    /* Set up the icon or the label as the displayable widget. */
-    gtk_widget_show(dc->clock_label);
-    gtk_label_set_justify(GTK_LABEL(dc->clock_label), GTK_JUSTIFY_CENTER);
-
     /* Rerun the experiment to determine update interval and update the display. */
     g_free(dc->prev_clock_value);
     g_free(dc->prev_tooltip_value);
@@ -361,6 +349,10 @@ static gboolean dclock_apply_configuration(gpointer user_data)
         gtk_widget_destroy(dc->calendar_window);
         dc->calendar_window = NULL;
     }
+
+    gchar* css = dclock_gen_css(dc->bold);
+    css_apply_with_class(dc->btn,css,"-simple-panel-font-weight",FALSE);
+    g_free(css);
 
     /* Save configuration */
     g_settings_set_string(dc->settings, DCLOCK_KEY_CLOCK_FORMAT, dc->clock_format);

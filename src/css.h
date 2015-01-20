@@ -37,7 +37,7 @@ inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboole
 inline gchar* css_generate_panel_icon_button(GdkRGBA color);
 inline gchar* css_generate_font_color(GdkRGBA color);
 inline gchar* css_generate_font_size(gint size);
-inline gchar* css_generate_font_weight(gboolean is_bold);
+inline gchar* css_generate_font_label(gfloat size, gboolean is_bold);
 inline gchar* css_apply_from_file (GtkWidget* widget, gchar* file);
 inline gchar* css_apply_from_file_to_app (gchar* file);
 inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel);

@@ -28,6 +28,8 @@
 #include <glib-object.h>
 #include <gdk/gdk.h>
 
+#include <math.h>
+
 #include "css.h"
 
 void css_apply_with_class (GtkWidget* widget,const gchar* css, gchar* klass ,gboolean remove)
@@ -144,10 +146,13 @@ inline gchar* css_generate_font_size(gint size){
                     " font-size: %dpx;\n"
                     "}",size);
 }
-inline gchar* css_generate_font_weight(gboolean is_bold){
-    return g_strdup_printf(".-simple-panel-font-weight{\n"
+inline gchar* css_generate_font_label(gfloat size, gboolean is_bold)
+{
+    gint size_factor = (gint)round(size*100);
+    return g_strdup_printf(".-simple-panel-font-label{\n"
+                    " font-size: %d%%;\n"
                     " font-weight: %s;\n"
-                    "}",is_bold ? "bold" : "normal");
+                    "}",size_factor,is_bold ? "bold" : "normal");
 }
 
 inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){

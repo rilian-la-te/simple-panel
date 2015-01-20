@@ -1506,22 +1506,13 @@ panel_start_gui(SimplePanel *panel)
 }
 
 /* Draw text into a label, with the user preference color and optionally bold. */
-void panel_draw_label_text(Panel * p, GtkWidget * label, const char * text,
-                           gboolean bold, float custom_size_factor,
-                           gboolean custom_color)
+void simple_panel_draw_label_text(GtkWidget * label, const char * text,
+                           gboolean bold, float custom_size_factor)
 {
     gtk_label_set_text(GTK_LABEL(label),text);
-    gchar* css = css_generate_font_weight(bold);
-    css_apply_with_class(label,css,"-simple-panel-font-weight",FALSE);
+    gchar* css = css_generate_font_label(custom_size_factor,bold);
+    css_apply_with_class(label,css,"-simple-panel-font-label",FALSE);
     g_free(css);
-}
-
-
-void lxpanel_draw_label_text(SimplePanel * p, GtkWidget * label, const char * text,
-                           gboolean bold, float custom_size_factor,
-                           gboolean custom_color)
-{
-    panel_draw_label_text(p->priv, label, text, bold, custom_size_factor, custom_color);
 }
 
 
@@ -1534,7 +1525,7 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     p->orientation = (p->edge == GTK_POS_TOP || p->edge == GTK_POS_BOTTOM)
         ? GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
     /* either first run or orientation was changed */
-    if (!p->initialized || previous_orientation != p->orientation)
+    if (previous_orientation != p->orientation)
     {
         g_settings_set_int(p->settings->toplevel_settings,
                                PANEL_PROP_HEIGHT,

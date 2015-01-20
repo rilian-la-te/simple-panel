@@ -81,20 +81,18 @@ struct _SimplePanelClass
 extern void panel_apply_icon(GtkWindow *w);
 
 /**
- * lxpanel_draw_label_text
+ * simple_panel_draw_label_text
  * @p: a panel instance
  * @label: a label widget
  * @text: (allow-none): text for the label
  * @bold: %TRUE if text should be bold
  * @custom_size_factor: scale factor for font size
- * @custom_color: %TRUE to use font color from panel settings
  *
  * Changes @label to contain @text with appropriate attributes using the
  * panel @p settings.
  */
-extern void lxpanel_draw_label_text(SimplePanel * p, GtkWidget * label, const char * text,
-                                    gboolean bold, float custom_size_factor,
-                                    gboolean custom_color);
+extern void simple_panel_draw_label_text(GtkWidget * label, const char * text,
+                                    gboolean bold, float custom_size_factor);
 
 #define PANEL_ORIENT_HORIZONTAL(orient) \
     ((orient == GTK_POS_TOP) || (orient == GTK_POS_BOTTOM))

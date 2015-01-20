@@ -177,8 +177,8 @@ void xkb_redraw(XkbPlugin *p_xkb)
         char *group_name = (char *)xkb_get_current_symbol_name(p_xkb);
         if (group_name != NULL)
         {
-            lxpanel_draw_label_text(p_xkb->panel, p_xkb->p_label, group_name,
-                    TRUE, size*4/(5*10.0), TRUE);
+            simple_panel_draw_label_text(p_xkb->p_label, group_name,
+                    TRUE, size*4/(5*10.0));
             gtk_widget_hide(p_xkb->p_image);
             gtk_widget_show(p_xkb->p_label);
             gtk_widget_set_tooltip_text(p_xkb->p_plugin, xkb_get_current_group_name(p_xkb));
@@ -248,16 +248,6 @@ static GtkWidget *xkb_constructor(SimplePanel *panel, GSettings *settings)
     p_xkb->settings = settings;
 
     /* Initialize to defaults. */
-    p_xkb->display_type = DISP_TYPE_IMAGE;
-    //p_xkb->enable_perwin = FALSE;
-    //p_xkb->do_not_reset_opt = FALSE;
-    p_xkb->keep_system_layouts = TRUE;
-    //p_xkb->kbd_model = NULL;
-    //p_xkb->kbd_layouts = NULL;
-    //p_xkb->kbd_variants = NULL;
-    //p_xkb->kbd_change_option = NULL;
-    //p_xkb->kbd_advanced_options = NULL;
-    p_xkb->flag_size = 3;
     p_xkb->cust_dir_exists = g_file_test(FLAGSCUSTDIR,  G_FILE_TEST_IS_DIR);
 
     /* Load parameters from the configuration file. */

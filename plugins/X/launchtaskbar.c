@@ -1560,9 +1560,7 @@ static void task_draw_label(Task * tk)
     if (tk->tb->tooltips)
         gtk_widget_set_tooltip_text(tk->button, label);
 
-    lxpanel_draw_label_text(tk->tb->panel, tk->label, label, FALSE, 1,
-            tk->tb->flat_button);
-
+    gtk_label_set_text(GTK_LABEL(tk->label),label);
     g_free(label);
 }
 

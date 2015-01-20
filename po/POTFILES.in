@@ -19,6 +19,7 @@ plugins/cpu/cpu.c
 plugins/deskno/deskno.c
 plugins/X/launchtaskbar.c
 plugins/dclock.c
+plugins/menumodel.c
 plugins/separator.c
 plugins/X/pager.c
 plugins/space.c
