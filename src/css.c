@@ -173,7 +173,7 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
     act_str = gdk_rgba_to_string(&active_color);
     const gchar* edge;
     GtkPositionType direction;
-    g_object_get(panel,PANEL_PROP_EDGE,&edge,NULL);
+    g_object_get(panel,PANEL_PROP_EDGE,&direction,NULL);
     if (direction==GTK_POS_BOTTOM)
         edge="0px 0px 2px 0px";
     if (direction==GTK_POS_TOP)
