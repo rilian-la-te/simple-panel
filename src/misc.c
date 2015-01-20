@@ -220,6 +220,9 @@ inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img, gchar* label
     const gchar *css = ".-panel-button {\n"
             "margin: 0px 0px 0px 0px;\n"
             "padding: 0px 0px 0px 0px;\n"
+#if 0
+            "vertical-align: center;\n" //Property is unsupported for now.
+#endif
             "}\n";
     if (img)
     {
@@ -502,7 +505,7 @@ void start_panels_from_dir(GtkApplication* app,const char *panel_dir)
     while((name = g_dir_read_name(dir)) != NULL)
     {
         char* panel_config = g_build_filename( panel_dir, name, NULL );
-        if (strchr(panel_config, '~') == NULL)    /* Skip editor backup files in case user has hand edited in this directory */
+        if ((strchr(panel_config, '~') == NULL) && (name[0] != '.'))    /* Skip editor backup files in case user has hand edited in this directory */
         {
             SimplePanel* panel = panel_load(app,panel_config, name );
             if( panel )

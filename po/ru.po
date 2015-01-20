@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: lxpanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-01-20 15:25+0600\n"
-"PO-Revision-Date: 2015-01-20 15:54+0600\n"
+"PO-Revision-Date: 2015-01-20 16:04+0600\n"
 "Last-Translator: Andriy Grytsenko <andrej@rep.kiev.ua>\n"
 "Language-Team: Russian <hsh@runtu.org>\n"
 "Language: ru\n"
@@ -575,7 +575,7 @@ msgstr "Графика"
 
 #: ../data/ui/system-menus.ui.h:5
 msgid "Network"
-msgstr "Интернет"
+msgstr "Сети"
 
 #: ../data/ui/system-menus.ui.h:6
 msgid "Office"
@@ -1027,7 +1027,7 @@ msgstr "ALSA не подключена."
 
 #: ../plugins/volumealsa/volumealsa.c:602 ../plugins/batt/batt.c:491
 msgid "Use symbolic icons"
-msgstr "Использовать монохромные значки."
+msgstr "Использовать монохромные значки"
 
 #: ../plugins/volumealsa/volumealsa.c:603
 msgid "ALSA Card"

@@ -28,7 +28,7 @@
 #include <string.h>
 #include <glib/gi18n.h>
 
-#include "dbg.h"
+#include "misc.h"
 #include "css.h"
 
 #define DEFAULT_TIP_FORMAT    "%A %x"
@@ -37,7 +37,6 @@
 #define DCLOCK_KEY_CLOCK_FORMAT     "clock-format"
 #define DCLOCK_KEY_TOOLTIP_FORMAT     "tooltip-format"
 #define DCLOCK_KEY_CENTER_TEXT     "center-text"
-#define DCLOCK_KEY_ACTION     "click-action"
 #define DCLOCK_KEY_ICON_ONLY     "icon-only"
 #define DCLOCK_KEY_BOLD_FONT     "bold-font"
 
@@ -47,14 +46,10 @@ typedef struct {
     SimplePanel * panel;
     GSettings* settings;
     GtkWidget * clock_label;			/* Label containing clock value */
-    GtkWidget * clock_icon;			/* Icon when icon_only */
     GtkWidget * calendar_window;		/* Calendar window, if it is being displayed */
     char * clock_format;			/* Format string for clock value */
     char * tooltip_format;			/* Format string for tooltip value */
-    char * action;				/* Command to execute on a click */
     gboolean bold;				/* True if bold font */
-    gboolean icon_only;				/* True if icon only (no clock value) */
-    gboolean center_text;
     guint timer;				/* Timer for periodic update */
     enum {
 	AWAITING_FIRST_CHANGE,			/* Experimenting to determine interval, waiting for first change */
@@ -75,7 +70,6 @@ static void dclock_style_updated(GtkWidget* widget, DClockPlugin* pl)
 {
     gchar* css = css_generate_flat_button(widget,pl->panel);
     css_apply_with_class(GTK_WIDGET(pl->clock_label),css,"-panel-flat-button",FALSE);
-    css_apply_with_class(GTK_WIDGET(pl->clock_icon),css,"-panel-flat-button",FALSE);
     g_free (css);
 }
 
@@ -109,30 +103,18 @@ static GtkWidget * dclock_create_calendar(DClockPlugin * dc)
     return win;
 }
 
-/* Handler for "button-press-event" event from main widget. */
-static gboolean dclock_button_press_event(GtkWidget * widget, GdkEventButton * evt, SimplePanel * panel)
+static gboolean dclock_toggled(GtkToggleButton* btn, DClockPlugin* dc)
 {
-    DClockPlugin * dc = lxpanel_plugin_get_data(widget);
-
-    /* If an action is set, execute it. */
-    if (dc->action != NULL)
-        fm_launch_command_simple(NULL, NULL, 0, dc->action, NULL);
-
-    /* If no action is set, toggle the presentation of the calendar. */
+    if (gtk_toggle_button_get_active(btn))
+    {
+        dc->calendar_window = dclock_create_calendar(dc);
+        gtk_widget_show_all(dc->calendar_window);
+    }
     else
     {
-        if (dc->calendar_window == NULL)
-        {
-            dc->calendar_window = dclock_create_calendar(dc);
-            gtk_widget_show_all(dc->calendar_window);
-        }
-        else
-        {
-            gtk_widget_destroy(dc->calendar_window);
-            dc->calendar_window = NULL;
-        }
+        gtk_widget_destroy(dc->calendar_window);
+        dc->calendar_window = NULL;
     }
-    return TRUE;
 }
 
 /* Set the timer. */
@@ -188,8 +170,7 @@ static gboolean dclock_update_display(DClockPlugin * dc)
     /* When we write the clock value, it causes the panel to do a full relayout.
      * Since this function may be called too often while the timing experiment is underway,
      * we take the trouble to check if the string actually changed first. */
-    if (( ! dc->icon_only)
-    && ((dc->prev_clock_value == NULL) || (strcmp(dc->prev_clock_value, clock_value) != 0)))
+    if (((dc->prev_clock_value == NULL) || (strcmp(dc->prev_clock_value, clock_value) != 0)))
     {
         /* Convert "\n" escapes in the user's format string to newline characters. */
         char * newlines_converted = NULL;
@@ -241,7 +222,7 @@ static gboolean dclock_update_display(DClockPlugin * dc)
         }
         else
         {
-            if (((dc->icon_only) || (strcmp(dc->prev_clock_value, clock_value) == 0))
+            if (((strcmp(dc->prev_clock_value, clock_value) == 0))
             && (strcmp(dc->prev_tooltip_value, tooltip_value) == 0))
             {
                 dc->experiment_count += 1;
@@ -287,13 +268,10 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
 {
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     DClockPlugin * dc = g_new0(DClockPlugin, 1);
-    GtkWidget * p;
+    GtkWidget * p, *w;
 
     dc->clock_format = g_settings_get_string(settings,DCLOCK_KEY_CLOCK_FORMAT);
     dc->tooltip_format = g_settings_get_string(settings,DCLOCK_KEY_TOOLTIP_FORMAT);
-    g_settings_get(settings,DCLOCK_KEY_ACTION,"ms",&dc->action);
-    dc->center_text = g_settings_get_boolean(settings,DCLOCK_KEY_CENTER_TEXT);
-    dc->icon_only = g_settings_get_boolean(settings,DCLOCK_KEY_ICON_ONLY);
     dc->bold = g_settings_get_boolean(settings,DCLOCK_KEY_BOLD_FONT);
 
     /* Save construction pointers */
@@ -304,17 +282,21 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
     dc->plugin = p = gtk_event_box_new();
     lxpanel_plugin_set_data(p, dc, dclock_destructor);
 
+
+    w = gtk_toggle_button_new();
+    g_signal_connect(w, "toggled", G_CALLBACK(dclock_toggled),dc);
+    gtk_container_add(GTK_CONTAINER(p), w);
+    gtk_widget_show(w);
     /* Allocate a horizontal box as the child of the top level. */
     GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_container_add(GTK_CONTAINER(p), hbox);
+    gtk_container_add(GTK_CONTAINER(w), hbox);
     gtk_widget_show(hbox);
 
     /* Create a label and an image as children of the horizontal box.
      * Only one of these is visible at a time, controlled by user preference. */
     dc->clock_label = gtk_label_new(NULL);
     gtk_container_add(GTK_CONTAINER(hbox), dc->clock_label);
-    dc->clock_icon = simple_panel_image_new_for_icon(panel,"clock",-1);
-    gtk_container_add(GTK_CONTAINER(hbox), dc->clock_icon);
+    simple_panel_setup_button(w,NULL,NULL);
 
     /* Initialize the clock display. */
     if (dc->clock_format == NULL)
@@ -344,7 +326,6 @@ static void dclock_destructor(gpointer user_data)
     /* Deallocate all memory. */
     g_free(dc->clock_format);
     g_free(dc->tooltip_format);
-    g_free(dc->action);
     g_free(dc->prev_clock_value);
     g_free(dc->prev_tooltip_value);
     g_free(dc);
@@ -362,25 +343,8 @@ static gboolean dclock_apply_configuration(gpointer user_data)
         g_source_remove(dc->timer);
 
     /* Set up the icon or the label as the displayable widget. */
-    if (dc->icon_only)
-    {
-        gtk_widget_show(dc->clock_icon);
-        gtk_widget_hide(dc->clock_label);
-    }
-    else
-    {
-        gtk_widget_show(dc->clock_label);
-        gtk_widget_hide(dc->clock_icon);
-    }
-
-    if (dc->center_text)
-    {
-        gtk_label_set_justify(GTK_LABEL(dc->clock_label), GTK_JUSTIFY_CENTER);
-    }
-    else
-    {
-        gtk_label_set_justify(GTK_LABEL(dc->clock_label), GTK_JUSTIFY_LEFT);
-    }
+    gtk_widget_show(dc->clock_label);
+    gtk_label_set_justify(GTK_LABEL(dc->clock_label), GTK_JUSTIFY_CENTER);
 
     /* Rerun the experiment to determine update interval and update the display. */
     g_free(dc->prev_clock_value);
@@ -401,10 +365,7 @@ static gboolean dclock_apply_configuration(gpointer user_data)
     /* Save configuration */
     g_settings_set_string(dc->settings, DCLOCK_KEY_CLOCK_FORMAT, dc->clock_format);
     g_settings_set_string(dc->settings, DCLOCK_KEY_TOOLTIP_FORMAT, dc->tooltip_format);
-    g_settings_set(dc->settings, DCLOCK_KEY_ACTION,"ms", dc->action);
     g_settings_set_boolean(dc->settings, DCLOCK_KEY_BOLD_FONT, dc->bold);
-    g_settings_set_boolean(dc->settings, DCLOCK_KEY_ICON_ONLY, dc->icon_only);
-    g_settings_set_boolean(dc->settings, DCLOCK_KEY_CENTER_TEXT, dc->center_text);
     return FALSE;
 }
 
@@ -417,10 +378,7 @@ static GtkWidget *dclock_configure(SimplePanel *panel, GtkWidget *p)
         _("Clock Format"), &dc->clock_format, CONF_TYPE_STR,
         _("Tooltip Format"), &dc->tooltip_format, CONF_TYPE_STR,
         _("Format codes: man 3 strftime; %n for line break"), NULL, CONF_TYPE_TRIM,
-        _("Action when clicked (default: display calendar)"), &dc->action, CONF_TYPE_STR,
         _("Bold font"), &dc->bold, CONF_TYPE_BOOL,
-        _("Tooltip only"), &dc->icon_only, CONF_TYPE_BOOL,
-        _("Center text"), &dc->center_text, CONF_TYPE_BOOL,
         NULL);
 }
 
@@ -432,5 +390,4 @@ SimplePanelPluginInit lxpanel_static_plugin_dclock = {
     .new_instance = dclock_constructor,
     .config = dclock_configure,
     .has_config = TRUE,
-    .button_press_event = dclock_button_press_event
 };
