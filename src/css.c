@@ -158,8 +158,8 @@ inline gchar* css_generate_font_label(gfloat size, gboolean is_bold)
 inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
     gchar* returnie;
     GdkRGBA color, active_color;
-    gchar* c_str = gdk_rgba_to_string(&color);
-    gchar* act_str = gdk_rgba_to_string(&active_color);
+    gchar* c_str;
+    gchar* act_str;
     gtk_style_context_get_color(
                 gtk_widget_get_style_context(GTK_WIDGET(panel)),
                 gtk_widget_get_state_flags(GTK_WIDGET(panel)),
@@ -169,6 +169,8 @@ inline gchar* css_generate_flat_button(GtkWidget* widget,SimplePanel* panel){
     active_color.green=color.green;
     active_color.blue=color.blue;
     active_color.alpha =0.5;
+    c_str = gdk_rgba_to_string(&color);
+    act_str = gdk_rgba_to_string(&active_color);
     const gchar* edge;
     GtkPositionType direction;
     g_object_get(panel,PANEL_PROP_EDGE,&edge,NULL);
