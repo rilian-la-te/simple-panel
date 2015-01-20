@@ -2,24 +2,23 @@
 src/app-actions.c
 src/app.c
 src/configurator.c
-src/dbg.c
+src/menu-maker.c
 src/panel.c
 src/plugin.c
 src/gtk-run.c
 data/ui/launchtaskbar.glade
 data/ui/netstatus.glade
-data/ui/panel-pref.ui
-data/ui/app-pref.ui
-data/ui/panel-menus.ui
-data/ui/app-run.ui
-data/ui/system-menus.ui
+[type: gettext/glade]data/ui/panel-pref.ui
+[type: gettext/glade]data/ui/app-pref.ui
+[type: gettext/glade]data/ui/panel-menus.ui
+[type: gettext/glade]data/ui/app-run.ui
+[type: gettext/glade]data/ui/system-menus.ui
 
 # Putting translation of plugins in main catalog is not a good idea...
 plugins/cpu/cpu.c
 plugins/deskno/deskno.c
 plugins/X/launchtaskbar.c
 plugins/dclock.c
-plugins/menu.c
 plugins/separator.c
 plugins/X/pager.c
 plugins/space.c

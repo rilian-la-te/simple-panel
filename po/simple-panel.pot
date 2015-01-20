@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-18 01:43+0600\n"
+"POT-Creation-Date: 2015-01-20 15:25+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,100 +35,110 @@ msgstr ""
 msgid " Simple desktop panel."
 msgstr ""
 
-#: ../src/app.c:89
+#: ../src/app.c:86
 msgid "Print version and exit"
 msgstr ""
 
-#: ../src/app.c:90
+#: ../src/app.c:87
 msgid "Use specified profile"
 msgstr ""
 
-#: ../src/app.c:90
+#: ../src/app.c:87
 msgid "profile"
 msgstr ""
 
-#: ../src/app.c:91
+#: ../src/app.c:88
 msgid "Run command on already opened panel"
 msgstr ""
 
-#: ../src/app.c:91
+#: ../src/app.c:88
 msgid "cmd"
 msgstr ""
 
-#: ../src/app.c:208
+#: ../src/app.c:205
 #, c-format
 msgid "%s - Version %s\n"
 msgstr ""
 
-#: ../src/app.c:242
+#: ../src/app.c:239
 #, c-format
 msgid ""
 "%s: invalid command - %s. Doing nothing.\n"
 "Valid commands: %s\n"
 msgstr ""
 
-#: ../src/configurator.c:82
+#: ../src/configurator.c:83
 msgid "Monitor: All"
 msgstr ""
 
-#: ../src/configurator.c:82
+#: ../src/configurator.c:83
 #, c-format
 msgid "Monitor: %d"
 msgstr ""
 
-#: ../src/configurator.c:101
-msgid "Edge: Bottom"
+#: ../src/configurator.c:98
+#, c-format
+msgid "Edge: %s"
 msgstr ""
 
-#: ../src/configurator.c:104
-msgid "Edge: Top"
+#: ../src/configurator.c:104 ../data/ui/panel-pref.ui.h:2
+msgid "Bottom"
 msgstr ""
 
-#: ../src/configurator.c:107
-msgid "Edge: Left"
+#: ../src/configurator.c:107 ../data/ui/panel-pref.ui.h:1
+msgid "Top"
 msgstr ""
 
-#: ../src/configurator.c:110
-msgid "Edge: Right"
+#: ../src/configurator.c:110 ../data/ui/panel-pref.ui.h:3
+msgid "Left"
+msgstr ""
+
+#: ../src/configurator.c:113 ../data/ui/panel-pref.ui.h:4
+msgid "Right"
 msgstr ""
 
 #: ../src/configurator.c:123
-msgid "Align: Start"
-msgstr ""
-
-#: ../src/configurator.c:126
-msgid "Align: Center"
+#, c-format
+msgid "Align: %s"
 msgstr ""
 
 #: ../src/configurator.c:129
-msgid "Align: End"
+msgid "Start"
 msgstr ""
 
-#: ../src/configurator.c:345
+#: ../src/configurator.c:132
+msgid "Center"
+msgstr ""
+
+#: ../src/configurator.c:135
+msgid "End"
+msgstr ""
+
+#: ../src/configurator.c:343
 msgid "Currently loaded plugins"
 msgstr ""
 
-#: ../src/configurator.c:354
+#: ../src/configurator.c:352
 msgid "Stretch"
 msgstr ""
 
-#: ../src/configurator.c:476
+#: ../src/configurator.c:474
 msgid "Available plugins"
 msgstr ""
 
-#: ../src/configurator.c:750
+#: ../src/configurator.c:749
 msgid "All"
 msgstr ""
 
-#: ../src/configurator.c:948
+#: ../src/configurator.c:947
 msgid "Select a directory"
 msgstr ""
 
-#: ../src/configurator.c:948 ../src/configurator.c:1064
+#: ../src/configurator.c:947 ../src/configurator.c:1063
 msgid "Select a file"
 msgstr ""
 
-#: ../src/configurator.c:951 ../plugins/xkb/xkb-plugin.c:598
+#: ../src/configurator.c:950 ../plugins/xkb/xkb-plugin.c:598
 #: ../plugins/xkb/xkb-plugin.c:721 ../plugins/xkb/xkb-plugin.c:893
 #: ../plugins/netstat/passwd_gui.c:91 ../plugins/weather/weatherwidget.c:797
 #: ../plugins/weather/weatherwidget.c:1138
@@ -137,7 +147,7 @@ msgstr ""
 msgid "_Cancel"
 msgstr ""
 
-#: ../src/configurator.c:952 ../plugins/xkb/xkb-plugin.c:599
+#: ../src/configurator.c:951 ../plugins/xkb/xkb-plugin.c:599
 #: ../plugins/xkb/xkb-plugin.c:722 ../plugins/xkb/xkb-plugin.c:894
 #: ../plugins/netstat/passwd_gui.c:90 ../plugins/weather/weatherwidget.c:796
 #: ../plugins/weather/weatherwidget.c:1137
@@ -146,26 +156,58 @@ msgstr ""
 msgid "_OK"
 msgstr ""
 
-#: ../src/configurator.c:1015 ../plugins/xkb/xkb-plugin.c:1218
+#: ../src/configurator.c:1014 ../plugins/xkb/xkb-plugin.c:1218
 msgid "_Close"
 msgstr ""
 
-#: ../src/configurator.c:1097
+#: ../src/configurator.c:1096
 msgid "_Browse"
 msgstr ""
 
-#: ../src/panel.c:1328 ../plugins/netstatus/netstatus-iface.c:191
+#: ../src/menu-maker.c:127
+msgid "Home"
+msgstr ""
+
+#: ../src/menu-maker.c:134
+msgid "Desktop"
+msgstr ""
+
+#: ../src/menu-maker.c:146
+msgid "Search..."
+msgstr ""
+
+#: ../src/menu-maker.c:179
+msgid "Control center"
+msgstr ""
+
+#: ../src/menu-maker.c:223
+msgid "Applications"
+msgstr ""
+
+#: ../src/menu-maker.c:227 ../src/menu-maker.c:235
+msgid "Places"
+msgstr ""
+
+#: ../src/menu-maker.c:228 ../data/ui/system-menus.ui.h:8
+msgid "System"
+msgstr ""
+
+#: ../src/menu-maker.c:232
+msgid "Simple Panel v"
+msgstr ""
+
+#: ../src/panel.c:1325 ../plugins/netstatus/netstatus-iface.c:191
 #: ../plugins/netstatus/netstatus-util.c:167
 msgid "Error"
 msgstr ""
 
-#: ../src/panel.c:1355
+#: ../src/panel.c:1352
 msgid ""
 "Really delete this panel?\n"
 "<b>Warning: This can not be recovered.</b>"
 msgstr ""
 
-#: ../src/panel.c:1357
+#: ../src/panel.c:1354
 msgid "Confirm"
 msgstr ""
 
@@ -174,7 +216,7 @@ msgid "No file manager is configured."
 msgstr ""
 
 #. vim: set sw=4 et sts=4 ts=4 :
-#: ../data/ui/launchtaskbar.glade.h:1 ../plugins/X/launchtaskbar.c:3506
+#: ../data/ui/launchtaskbar.glade.h:1 ../plugins/X/launchtaskbar.c:3507
 msgid "Application Launch and Task Bar"
 msgstr ""
 
@@ -329,6 +371,251 @@ msgstr ""
 msgid "Support"
 msgstr ""
 
+#: ../data/ui/panel-pref.ui.h:5
+msgid "_Start"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:6
+msgid "_Center"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:7
+msgid "_End"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:8
+msgid "Dynamic"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:9
+msgid "Pixels"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:10
+msgid "Percent"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:12
+#, no-c-format
+msgid "% Percent"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:13
+msgid "Margin:"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:14
+msgid "<b>Position</b>"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:15
+msgid "x"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:16
+msgid "<b>Size</b>"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:17
+msgid "Minimize panel when not in use with size: "
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:18
+msgid "Autohide"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:19
+msgid "Make window managers treat the panel as dock"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:20
+msgid "Reserve space, and not covered by maximized windows"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:21
+msgid "<b>Properties</b>"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:22
+msgid "Geometry"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:23
+msgid "GTK Window"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:24
+msgid "Gnome Panel"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:25
+msgid "Color"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:26 ../plugins/xkb/xkb-plugin.c:1433
+msgid "Image"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:27
+msgid "Select an image file"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:28
+msgid "<b>Background</b>"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:29 ../plugins/space.c:86
+msgid "Size"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:30
+msgid "<b>Font</b>"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:31
+msgid "Appearance"
+msgstr ""
+
+#: ../data/ui/panel-pref.ui.h:32
+msgid "Plugins"
+msgstr ""
+
+#: ../data/ui/app-pref.ui.h:1
+msgid "Logout manager..."
+msgstr ""
+
+#: ../data/ui/app-pref.ui.h:2
+msgid "Shutdown application..."
+msgstr ""
+
+#: ../data/ui/app-pref.ui.h:3
+msgid "Preferred Applications:"
+msgstr ""
+
+#: ../data/ui/app-pref.ui.h:4
+msgid "Use dark theme"
+msgstr ""
+
+#: ../data/ui/app-pref.ui.h:5
+msgid "Use custom CSS"
+msgstr ""
+
+#: ../data/ui/app-pref.ui.h:6
+msgid "Select a CSS File"
+msgstr ""
+
+#: ../data/ui/app-pref.ui.h:7
+msgid "Widget Style"
+msgstr ""
+
+#: ../data/ui/panel-menus.ui.h:1
+msgid "Configure plugin..."
+msgstr ""
+
+#: ../data/ui/panel-menus.ui.h:2
+msgid "Remove plugin"
+msgstr ""
+
+#: ../data/ui/panel-menus.ui.h:3
+msgid "Panel Items..."
+msgstr ""
+
+#: ../data/ui/panel-menus.ui.h:4
+msgid "Panel Settings..."
+msgstr ""
+
+#: ../data/ui/panel-menus.ui.h:5
+msgid "New Panel"
+msgstr ""
+
+#: ../data/ui/panel-menus.ui.h:6
+msgid "Remove this Panel"
+msgstr ""
+
+#: ../data/ui/panel-menus.ui.h:7
+msgid "Application Settings"
+msgstr ""
+
+#: ../data/ui/panel-menus.ui.h:8
+msgid "About"
+msgstr ""
+
+#: ../data/ui/app-run.ui.h:1
+msgid "Run..."
+msgstr ""
+
+#: ../data/ui/app-run.ui.h:2
+msgid "Enter application name..."
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:1
+msgid "Audio and Video"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:2
+msgid "Education"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:3
+msgid "Game"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:4
+msgid "Graphics"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:5
+msgid "Network"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:6
+msgid "Office"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:7
+msgid "Settings"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:9
+msgid "Utility"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:10
+msgid "Development"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:11
+msgid "Other"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:12
+msgid "Computer"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:13
+msgid "Trash"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:14
+msgid "Connect to server..."
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:15
+msgid "Recent documents"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:16
+msgid "Run"
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:17
+msgid "Log Out..."
+msgstr ""
+
+#: ../data/ui/system-menus.ui.h:18
+msgid "Shut down..."
+msgstr ""
+
 #: ../plugins/cpu/cpu.c:282
 msgid "CPU Usage Monitor"
 msgstr ""
@@ -353,11 +640,11 @@ msgstr ""
 msgid "Display workspace number, by cmeury@users.sf.net"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:1384 ../plugins/X/launchtaskbar.c:3474
+#: ../plugins/X/launchtaskbar.c:1384 ../plugins/X/launchtaskbar.c:3475
 msgid "Application Launch Bar"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:1387 ../plugins/X/launchtaskbar.c:3484
+#: ../plugins/X/launchtaskbar.c:1387 ../plugins/X/launchtaskbar.c:3485
 msgid "Task Bar (Window List)"
 msgstr ""
 
@@ -422,17 +709,17 @@ msgstr ""
 msgid "_New Instance"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3475
+#: ../plugins/X/launchtaskbar.c:3476
 msgid "Bar with buttons to launch application"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3485
+#: ../plugins/X/launchtaskbar.c:3486
 msgid ""
 "Taskbar shows all opened windows and allow to iconify them, shade or get "
 "focus"
 msgstr ""
 
-#: ../plugins/X/launchtaskbar.c:3507
+#: ../plugins/X/launchtaskbar.c:3508
 msgid "Bar with buttons to launch application and/or show all opened windows"
 msgstr ""
 
@@ -469,43 +756,6 @@ msgstr ""
 msgid "Display digital clock and tooltip"
 msgstr ""
 
-#: ../plugins/menu.c:340
-msgid "Add to desktop"
-msgstr ""
-
-#: ../plugins/menu.c:347
-msgid "Properties"
-msgstr ""
-
-#. { "configure", N_("Preferences"), "win.configure(0)" },
-#: ../plugins/menu.c:699
-msgid "Run"
-msgstr ""
-
-#: ../plugins/menu.c:700
-msgid "Logout"
-msgstr ""
-
-#: ../plugins/menu.c:701
-msgid "Shutdown"
-msgstr ""
-
-#: ../plugins/menu.c:946 ../plugins/menu.c:953
-msgid "Menu"
-msgstr ""
-
-#: ../plugins/menu.c:947 ../plugins/dirmenu.c:348
-msgid "Icon"
-msgstr ""
-
-#: ../plugins/menu.c:948
-msgid "Caption"
-msgstr ""
-
-#: ../plugins/menu.c:954
-msgid "Application Menu"
-msgstr ""
-
 #: ../plugins/separator.c:51
 msgid "Separator"
 msgstr ""
@@ -526,15 +776,11 @@ msgstr ""
 msgid "Simple pager plugin"
 msgstr ""
 
-#: ../plugins/space.c:82 ../plugins/space.c:91
+#: ../plugins/space.c:84 ../plugins/space.c:93
 msgid "Spacer"
 msgstr ""
 
-#: ../plugins/space.c:84
-msgid "Size"
-msgstr ""
-
-#: ../plugins/space.c:92
+#: ../plugins/space.c:94
 msgid "Allocate space"
 msgstr ""
 
@@ -627,10 +873,6 @@ msgstr ""
 msgid "Show Layout as"
 msgstr ""
 
-#: ../plugins/xkb/xkb-plugin.c:1433
-msgid "Image"
-msgstr ""
-
 #: ../plugins/xkb/xkb-plugin.c:1434
 msgid "Custom Image"
 msgstr ""
@@ -685,6 +927,10 @@ msgstr ""
 
 #: ../plugins/dirmenu.c:347
 msgid "Label"
+msgstr ""
+
+#: ../plugins/dirmenu.c:348
+msgid "Icon"
 msgstr ""
 
 #: ../plugins/dirmenu.c:361

@@ -90,26 +90,6 @@
     <property name="value">10</property>
     <property name="step_increment">1</property>
   </object>
-  <object class="GtkListStore" id="liststore-background">
-    <columns>
-      <!-- column-name item -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">Normal</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Gnome Panel</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Custom Color</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Custom Image</col>
-      </row>
-    </data>
-  </object>
   <object class="GtkListStore" id="liststore-struttype">
     <columns>
       <!-- column-name item -->
@@ -236,7 +216,7 @@
                                     <property name="invisible_char">•</property>
                                     <property name="width_chars">5</property>
                                     <property name="max_width_chars">5</property>
-                                    <property name="text" translatable="yes">1</property>
+                                    <property name="text">1</property>
                                     <property name="primary_icon_activatable">False</property>
                                     <property name="secondary_icon_activatable">False</property>
                                     <property name="input_purpose">digits</property>
@@ -636,7 +616,7 @@
                                     <property name="homogeneous">T</property>
                                     <child>
                                       <object class="GtkRadioButton" id="background-color">
-                                        <property name="label" translatable="yes">Custom color</property>
+                                        <property name="label" translatable="yes">Color</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">T</property>
                                         <property name="active">False</property>
@@ -676,7 +656,7 @@
                                     <property name="spacing">10</property>
                                     <child>
                                       <object class="GtkRadioButton" id="background-image">
-                                        <property name="label" translatable="yes">Custom image</property>
+                                        <property name="label" translatable="yes">Image</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="active">False</property>
@@ -740,7 +720,7 @@
                                     <property name="homogeneous">T</property>
                                     <child>
                                       <object class="GtkCheckButton" id="use_font_clr">
-                                        <property name="label" translatable="yes">Custom color</property>
+                                        <property name="label" translatable="yes">Color</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">False</property>
@@ -802,7 +782,7 @@
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">●</property>
-                                        <property name="text" translatable="yes">10</property>
+                                        <property name="text">10</property>
                                         <property name="primary_icon_activatable">False</property>
                                         <property name="secondary_icon_activatable">False</property>
                                         <property name="adjustment">adjustment6</property>
