@@ -211,7 +211,9 @@ static void _simple_panel_button_set_icon(GtkWidget* btn, GIcon* icon, gint size
 
 void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, gint size)
 {
-    _simple_panel_button_set_icon(btn, g_icon_new_for_string(name,NULL), size);
+    GIcon* icon = g_icon_new_for_string(name,NULL);
+    _simple_panel_button_set_icon(btn, icon, size);
+    g_object_unref(icon);
 }
 
 static void widget_center(GtkWidget* w, gpointer data)
@@ -256,7 +258,10 @@ inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img, gchar* label
 
 GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gint height)
 {
-    return gtk_image_new_for_gicon(p,g_icon_new_for_string(name,NULL),height);
+    GIcon* icon = g_icon_new_for_string(name,NULL);
+    GtkWidget* ret = gtk_image_new_for_gicon(p,icon,height);
+    g_object_unref(icon);
+    return ret;
 }
 
 GtkWidget* simple_panel_image_new_for_gicon(SimplePanel * p,GIcon *icon, gint height)
@@ -278,7 +283,10 @@ static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data)
 
 gboolean simple_panel_image_change_icon(GtkWidget *img, const gchar *name)
 {
-    return simple_panel_image_change_gicon(img,g_icon_new_for_string(name,NULL));
+    GIcon* icon = g_icon_new_for_string(name,NULL);
+    gboolean ret = simple_panel_image_change_gicon(img,icon);
+    g_object_unref(icon);
+    return ret;
 }
 
 gboolean simple_panel_image_change_gicon(GtkWidget *img, GIcon *icon)
