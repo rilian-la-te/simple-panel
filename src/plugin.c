@@ -30,7 +30,7 @@
 #include "misc.h"
 #include <glib-object.h>
 #include <glib/gi18n.h>
-#include <libfm/fm-gtk.h>
+#include <libfm/fm.h>
 
 //#define DEBUG
 

@@ -18,7 +18,7 @@
 
 #include "plugin.h"
 
-#include <libfm/fm-gtk.h>
+#include <libfm/fm.h>
 
 #include <time.h>
 #include <sys/time.h>

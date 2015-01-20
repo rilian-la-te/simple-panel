@@ -30,7 +30,6 @@
 #include <errno.h>
 #include <locale.h>
 #include <string.h>
-#include <libfm/fm-gtk.h>
 
 #include "app.h"
 #include "panel.h"

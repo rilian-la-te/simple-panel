@@ -29,7 +29,6 @@
 #include <errno.h>
 #include <locale.h>
 #include <string.h>
-#include <libfm/fm-gtk.h>
 
 #define __LXPANEL_INTERNALS__
 

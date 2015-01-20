@@ -24,7 +24,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
-#include <libfm/fm-gtk.h>
 
 #include <glib/gi18n.h>
 #ifndef WNCK_I_KNOW_THIS_IS_UNSTABLE

@@ -25,7 +25,6 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <alsa/asoundlib.h>
 #include <poll.h>
-#include <libfm/fm-gtk.h>
 #include "plugin.h"
 
 #define VOLUMEALSA_PROP_CHANNEL "channel-id"

@@ -20,7 +20,6 @@
 #include <unistd.h>
 
 #include <glib/gi18n.h>
-#include <libfm/fm-gtk.h>
 #include <string.h>
 
 #include "misc.h"

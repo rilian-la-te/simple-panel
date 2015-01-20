@@ -23,7 +23,6 @@
 
 #include <glib/gi18n.h>
 #include <glib.h>
-#include <libfm/fm-gtk.h>
 
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>

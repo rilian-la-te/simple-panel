@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <libfm/fm-gtk.h>
+#include <libfm/fm.h>
 
 #include "private.h"
 #include "dbg.h"

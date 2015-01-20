@@ -28,8 +28,6 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 
-#include <libfm/fm-gtk.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
