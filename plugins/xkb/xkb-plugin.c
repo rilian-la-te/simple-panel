@@ -1261,10 +1261,10 @@ static GtkWidget *xkb_configure(SimplePanel *panel, GtkWidget *p)
     gtk_box_pack_start(GTK_BOX(p_hbox_kbd_layouts), p_scrolledwindow_kbd_layouts, TRUE, TRUE, 2);
     GtkWidget * p_vbox_kbd_layouts = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     gtk_box_pack_start(GTK_BOX(p_hbox_kbd_layouts), p_vbox_kbd_layouts, FALSE, TRUE, 4);
-    GtkWidget * p_button_add_layout = gtk_button_new_from_icon_name("list-add",GTK_ICON_SIZE_SMALL_TOOLBAR);
-    GtkWidget * p_button_up_layout = gtk_button_new_from_icon_name("go-up",GTK_ICON_SIZE_SMALL_TOOLBAR);
-    GtkWidget * p_button_down_layout = gtk_button_new_from_icon_name("go-down",GTK_ICON_SIZE_SMALL_TOOLBAR);
-    p_xkb->p_button_rm_layout = gtk_button_new_from_icon_name("list-remove",GTK_ICON_SIZE_SMALL_TOOLBAR);
+    GtkWidget * p_button_add_layout = gtk_button_new_from_icon_name("list-add-symbolic",GTK_ICON_SIZE_SMALL_TOOLBAR);
+    GtkWidget * p_button_up_layout = gtk_button_new_from_icon_name("go-up-symbolic",GTK_ICON_SIZE_SMALL_TOOLBAR);
+    GtkWidget * p_button_down_layout = gtk_button_new_from_icon_name("go-down-symbolic",GTK_ICON_SIZE_SMALL_TOOLBAR);
+    p_xkb->p_button_rm_layout = gtk_button_new_from_icon_name("list-remove-symbolic",GTK_ICON_SIZE_SMALL_TOOLBAR);
     g_signal_connect(p_button_add_layout, "clicked", G_CALLBACK(on_button_add_layout_clicked), p_xkb);
     g_signal_connect(p_xkb->p_button_rm_layout, "clicked", G_CALLBACK(on_button_rm_layout_clicked), p_xkb);
     g_signal_connect(p_button_up_layout, "clicked", G_CALLBACK(on_button_up_layout_clicked), p_xkb);
