@@ -96,19 +96,25 @@ extern void lxpanel_draw_label_text(SimplePanel * p, GtkWidget * label, const ch
                                     gboolean bold, float custom_size_factor,
                                     gboolean custom_color);
 
+#define PANEL_ORIENT_HORIZONTAL(orient) \
+    ((orient == GTK_POS_TOP) || (orient == GTK_POS_BOTTOM))
+
+#define PANEL_ORIENT_VERTICAL(orient) \
+    ((orient == GTK_POS_LEFT) || (orient == GTK_POS_RIGHT))
+
+#define panel_get_orientation_from_edge(edge) \
+    ((edge == GTK_POS_LEFT) || (edge == GTK_POS_RIGHT)) \
+    ? GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL
+
 /* Accessors APIs for Panel* */
 extern GtkOrientation panel_get_orientation(SimplePanel *panel);
 extern gint panel_get_icon_size(SimplePanel *panel);
 extern gint panel_get_height(SimplePanel *panel);
 extern gint panel_get_monitor(SimplePanel *panel);
-extern GtkStyle *panel_get_defstyle(SimplePanel *panel);
 extern GtkIconTheme *panel_get_icon_theme(SimplePanel *panel);
-extern GtkPositionType panel_get_edge(SimplePanel *panel);
 extern gboolean panel_is_dynamic(SimplePanel *panel);
 extern GtkWidget *panel_box_new(SimplePanel *panel, gint spacing);
 extern GtkWidget *panel_separator_new(SimplePanel *panel);
-extern GtkApplication* panel_get_application(SimplePanel* panel);
-
 G_END_DECLS
 
 #endif

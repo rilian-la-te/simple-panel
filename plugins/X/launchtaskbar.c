@@ -3403,8 +3403,9 @@ static void taskbar_make_menu(LaunchTaskBarPlugin * tb)
     tb->p_menuitem_new_instance = gtk_menu_item_new_with_mnemonic(_("_New Instance"));
     tb->p_menuitem_separator = gtk_separator_menu_item_new();
 #endif
-
-    if (panel_get_edge(tb->panel)==GTK_POS_BOTTOM)
+    int edge;
+    g_object_get(tb->panel,PANEL_PROP_EDGE,&edge,NULL);
+    if (edge==GTK_POS_BOTTOM)
         _m_add = gtk_menu_shell_append;
     else
         _m_add = gtk_menu_shell_prepend;

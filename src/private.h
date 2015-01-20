@@ -61,7 +61,6 @@ typedef enum {
 #define PANEL_FONT_DEFAULT          10	/* Default height of horizontal panel */
 #define PANEL_ICON_HIGHLIGHT          0x202020	/* Constant to pass to icon loader */
 #define PANEL_AUTOHIDE_SIZE           2     /* Default autohide size */
-#define GSETTINGS_PREFIX              "conf"
 
 /* Context of a panel on a given edge. */
 struct _Panel {

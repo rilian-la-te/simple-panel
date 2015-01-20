@@ -1701,11 +1701,6 @@ GtkIconTheme *panel_get_icon_theme(SimplePanel *panel)
     return panel->priv->icon_theme;
 }
 
-GtkPositionType panel_get_edge(SimplePanel *panel)
-{
-    return panel->priv->edge;
-}
-
 gboolean panel_is_dynamic(SimplePanel *panel)
 {
     return panel->priv->widthtype == PANEL_SIZE_DYNAMIC;

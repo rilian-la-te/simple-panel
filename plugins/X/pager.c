@@ -46,7 +46,7 @@ static const char *configure_command = NULL;
 static void on_params_change_callback(SimplePanel* panel, GParamSpec* param, PagerData* d)
 {
     int rows, r,h;
-    g_object_get(panel,"height",&h,NULL);
+    g_object_get(panel,PANEL_PROP_HEIGHT,&h,NULL);
     h -= 2 * d->border;
     /* set geometry */
     wnck_pager_set_orientation(d->pager, panel_get_orientation(panel));
