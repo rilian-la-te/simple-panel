@@ -169,22 +169,11 @@ extern void panel_set_dock_type(SimplePanel *p);
 extern void panel_set_panel_configuration_changed(Panel *p);
 extern SimplePanel* panel_load(GtkApplication *app, const char* config_file, const char* config_name);
 
-/* if current window manager is EWMH conforming. */
-extern gboolean is_ewmh_supported;
-
 /* Extracted from misc.h */
-typedef struct _Plugin Plugin;
-
 void calculate_position(SimplePanel *np);
 
 char* translate_exec_to_cmd( const char* exec, const char* icon,
                              const char* title, const char* fpath );
 
 void show_error( GtkWindow* parent_win, const char* msg );
-
-
-/* Parameters: const char* name, gpointer ret_value, GType type, ....NULL */
-GtkWidget* create_generic_config_dlg( const char* title, GtkWidget* parent,
-                              GSourceFunc apply_func, Plugin * plugin,
-                      const char* name, ... );
 #endif

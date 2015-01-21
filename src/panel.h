@@ -43,7 +43,7 @@ G_BEGIN_DECLS
 #define PANEL_PROP_BACKGROUND_FILE   "background-file"
 #define PANEL_PROP_BACKGROUND_TYPE   "background-type"
 
-#define LX_TYPE_PANEL                  (lxpanel_get_type())
+#define LX_TYPE_PANEL                  (simple_panel_get_type())
 #define LXPANEL(obj)                   (G_TYPE_CHECK_INSTANCE_CAST((obj), \
                                         LX_TYPE_PANEL, SimplePanel))
 #define LXPANEL_CLASS(klass)           (G_TYPE_CHECK_CLASS_CAST((klass), \
@@ -51,7 +51,7 @@ G_BEGIN_DECLS
 #define LX_IS_PANEL(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
                                         LX_TYPE_PANEL))
 
-extern GType lxpanel_get_type          (void) G_GNUC_CONST;
+extern GType simple_panel_get_type          (void) G_GNUC_CONST;
 
 /* A little trick to be compatible with some themes which rely on the
    PanelToplevel class, so we use SimplePanel as alias for PanelToplevel */

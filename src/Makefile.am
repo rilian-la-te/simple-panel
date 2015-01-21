@@ -82,8 +82,7 @@ simple_panel_SOURCES = \
 	gtk-run.c \
 	main.c  \
 	app.c \
-	app-actions.c \
-	app-misc.c
+	app-actions.c
 
 simple_panel_includedir = $(includedir)/simple-panel
 simple_panel_include_HEADERS = $(SIMPLE_PANEL_HEADER_FILES)

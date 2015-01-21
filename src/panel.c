@@ -87,9 +87,9 @@ static void panel_add_actions( SimplePanel* p);
 PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel );
 static void panel_update_background(SimplePanel * panel);
 
-G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_APPLICATION_WINDOW)
+G_DEFINE_TYPE(PanelWindow, simple_panel, GTK_TYPE_APPLICATION_WINDOW)
 
-static inline char *_user_config_file_name(const char *name1, const char* cprofile, const char *name2)
+static inline gchar *_user_config_file_name(const char *name1, const char* cprofile, const char *name2)
 {
     return g_build_filename(g_get_user_config_dir(), "simple-panel", cprofile, name1,
                             name2, NULL);
@@ -124,7 +124,7 @@ static void lxpanel_finalize(GObject *object)
     g_free( p->name );
     g_free(p);
 
-    G_OBJECT_CLASS(lxpanel_parent_class)->finalize(object);
+    G_OBJECT_CLASS(simple_panel_parent_class)->finalize(object);
 }
 
 static void panel_stop_gui(SimplePanel *self)
@@ -167,7 +167,7 @@ static void simple_panel_destroy(GtkWidget* object)
 
     panel_stop_gui(self);
 
-	GTK_WIDGET_CLASS(lxpanel_parent_class)->destroy(object);
+    GTK_WIDGET_CLASS(simple_panel_parent_class)->destroy(object);
 }
 
 static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
@@ -175,7 +175,7 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     SimplePanel *panel = LXPANEL(widget);
     Panel *p = panel->priv;
     gint x, y, w;
-    GTK_WIDGET_CLASS(lxpanel_parent_class)->size_allocate(widget, a);
+    GTK_WIDGET_CLASS(simple_panel_parent_class)->size_allocate(widget, a);
     gtk_widget_set_allocation(widget,a);
     if (p->widthtype == PANEL_SIZE_DYNAMIC && p->box)
     {
@@ -209,7 +209,7 @@ lxpanel_get_preferred_width (GtkWidget *widget,
 							   gint      *minimal_width,
 							   gint      *natural_width)
 {
-  GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_width(widget, minimal_width,natural_width);
+  GTK_WIDGET_CLASS(simple_panel_parent_class)->get_preferred_width(widget, minimal_width,natural_width);
   GtkRequisition min;
   simple_panel_get_preferred_size(widget,&min,NULL);
   *minimal_width=*natural_width=min.width;
@@ -220,7 +220,7 @@ lxpanel_get_preferred_height (GtkWidget *widget,
 								gint      *minimal_height,
 								gint      *natural_height)
 {
-    GTK_WIDGET_CLASS(lxpanel_parent_class)->get_preferred_height(widget, minimal_height,natural_height);
+    GTK_WIDGET_CLASS(simple_panel_parent_class)->get_preferred_height(widget, minimal_height,natural_height);
     GtkRequisition min;
     simple_panel_get_preferred_size(widget,&min,NULL);
     *minimal_height=*natural_height=min.height;
@@ -257,7 +257,7 @@ static gboolean lxpanel_configure_event (GtkWidget *widget, GdkEventConfigure *e
     p->cy = e->y;
 
 ok:
-    return GTK_WIDGET_CLASS(lxpanel_parent_class)->configure_event(widget, e);
+    return GTK_WIDGET_CLASS(simple_panel_parent_class)->configure_event(widget, e);
 }
 
 static gboolean lxpanel_map_event(GtkWidget *widget, GdkEventAny *event)
@@ -266,7 +266,7 @@ static gboolean lxpanel_map_event(GtkWidget *widget, GdkEventAny *event)
 
     if (p->autohide)
         ah_start(LXPANEL(widget));
-    return GTK_WIDGET_CLASS(lxpanel_parent_class)->map_event(widget, event);
+    return GTK_WIDGET_CLASS(simple_panel_parent_class)->map_event(widget, event);
 }
 
 /* Handler for "button_press_event" signal with Panel as parameter. */
@@ -488,7 +488,7 @@ static void simple_panel_get_property(GObject      *object,
     }
 }
 
-static void lxpanel_class_init(PanelWindowClass *klass)
+static void simple_panel_class_init(PanelWindowClass *klass)
 {
     GObjectClass *gobject_class = (GObjectClass *)klass;
     GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
@@ -706,7 +706,7 @@ static void lxpanel_class_init(PanelWindowClass *klass)
 
 }
 
-static void lxpanel_init(PanelWindow *self)
+static void simple_panel_init(PanelWindow *self)
 {
     Panel *p = g_new0(Panel, 1);
     self->priv = p;

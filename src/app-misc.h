@@ -25,8 +25,16 @@
 #include "app.h"
 
 G_BEGIN_DECLS
-inline char* _system_config_file_name(PanelApp* app, const char *dir, const char *file_name);
-inline char* _user_config_file_name(PanelApp* app, const char *name1, const char *name2);
+static inline gchar *_system_config_file_name(PanelApp* app,const char *dir, const char *file_name)
+{
+    return g_build_filename(dir, "simple-panel", app->priv->profile, file_name, NULL);
+}
+
+static inline gchar *_user_config_file_name(PanelApp* app, const char *name1, const char *name2)
+{
+    return g_build_filename(g_get_user_config_dir(), "simple-panel", app->priv->profile, name1,
+                            name2, NULL);
+}
 
 G_END_DECLS
 
