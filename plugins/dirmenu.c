@@ -43,7 +43,6 @@ typedef struct {
     char * image;			/* Icon for top level widget */
     char * path;			/* Top level path for widget */
     char * name;			/* User's label for widget */
-    GdkPixbuf * folder_icon;		/* Icon for folders */
 } DirMenuPlugin;
 
 static GtkWidget * dirmenu_create_menu(DirMenuPlugin * dm, const char * path, gboolean open_at_top);
@@ -115,17 +114,6 @@ static GtkWidget * dirmenu_create_menu(DirMenuPlugin * dm, const char * path, gb
 {
     /* Create a menu. */
     GtkWidget * menu = gtk_menu_new();
-
-    if (dm->folder_icon == NULL)
-    {
-        int w;
-        int h;
-        gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &w, &h);
-        dm->folder_icon = gtk_icon_theme_load_icon(
-            panel_get_icon_theme(dm->panel),
-            "gnome-fs-directory", MAX(w, h), 0, NULL);
-    }
-
     g_object_set_data_full(G_OBJECT(menu), "path", g_strdup(path), g_free);
 
     /* Scan the specified directory to populate the menu with its subdirectories. */
@@ -258,7 +246,6 @@ static GtkWidget *dirmenu_constructor(SimplePanel *panel, GSettings *settings)
     /* Allocate and initialize plugin context and set into Plugin private data pointer. */
     DirMenuPlugin * dm = g_new0(DirMenuPlugin, 1);
     GtkWidget * p;
-    const char *str;
 
     /* Load parameters from the configuration file. */
     dm->image = g_settings_get_string(settings,DIRMENU_KEY_ICON);
@@ -271,6 +258,7 @@ static GtkWidget *dirmenu_constructor(SimplePanel *panel, GSettings *settings)
     /* Allocate top level widget and set into Plugin widget pointer.
      * It is not known why, but the button text will not draw if it is edited from empty to non-empty
      * unless this strategy of initializing it with a non-empty value first is followed. */
+
     p = simple_panel_button_new_for_icon(panel,
                             ((dm->image != NULL) ? dm->image : "file-manager"),
                             NULL, "Temp");
@@ -287,10 +275,6 @@ static GtkWidget *dirmenu_constructor(SimplePanel *panel, GSettings *settings)
 static void dirmenu_destructor(gpointer user_data)
 {
     DirMenuPlugin * dm = (DirMenuPlugin *)user_data;
-
-    /* Release a reference on the folder icon if held. */
-    if (dm->folder_icon)
-        g_object_unref(dm->folder_icon);
 
     /* Deallocate all memory. */
     g_free(dm->image);

@@ -705,12 +705,17 @@ static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
     /* Reference the window since it is never added to a container. */
     tr->invisible = g_object_ref_sink(G_OBJECT(invisible));
 	tr->invisible_window = GDK_WINDOW_XID(gtk_widget_get_window(invisible));
+    int height,icon_size;
+    g_object_get(panel,
+                 PANEL_PROP_ICON_SIZE,&icon_size,
+                 PANEL_PROP_HEIGHT,&height,
+                 NULL);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     tr->plugin = p = panel_icon_grid_new(panel_get_orientation(panel),
-                                         panel_get_icon_size(panel),
-                                         panel_get_icon_size(panel),
-                                         3, 0, panel_get_height(panel));
+                                         icon_size,
+                                         icon_size,
+                                         3, 0, height);
     g_signal_connect (tr->plugin, "draw",
                       G_CALLBACK (tray_draw_box), NULL);
     lxpanel_plugin_set_data(p, tr, tray_destructor);
@@ -752,11 +757,16 @@ static void tray_destructor(gpointer user_data)
 /* Callback when panel configuration changes. */
 static void tray_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
+    int height,icon_size;
+    g_object_get(panel,
+                 PANEL_PROP_ICON_SIZE,&icon_size,
+                 PANEL_PROP_HEIGHT,&height,
+                 NULL);
     /* Set orientation into the icon grid. */
     panel_icon_grid_set_geometry(PANEL_ICON_GRID(p), panel_get_orientation(panel),
-                                 panel_get_icon_size(panel),
-                                 panel_get_icon_size(panel),
-                                 3, 0, panel_get_height(panel));
+                                 icon_size,
+                                 icon_size,
+                                 3, 0, height);
 }
 
 FM_DEFINE_MODULE(lxpanel_gtk, tray)

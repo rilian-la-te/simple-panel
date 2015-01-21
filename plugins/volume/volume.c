@@ -62,44 +62,29 @@ volume_destructor(gpointer user_data)
 
 static void update_icon (GtkWidget *p, volume_t *vol)
 {
-	GdkPixbuf *icon;
+    GIcon* icon;
 	GtkWidget *image;
-	GtkIconTheme* theme;
-	GtkIconInfo* info;
-	int icon_size;
-
-	theme = panel_get_icon_theme(vol->panel);
-	icon_size = panel_get_icon_size(vol->panel);
 
 	if (curr_volume <= 0) {
-        info = gtk_icon_theme_lookup_icon( theme, "audio-volume-muted-panel", icon_size, 0 );
+        icon = g_themed_icon_new_with_default_fallbacks("audio-volume-muted-panel");
 	}
 	else if (curr_volume > 0 && curr_volume <= 50) {
-        info = gtk_icon_theme_lookup_icon( theme, "audio-volume-low-panel", icon_size, 0 );
+        icon = g_themed_icon_new_with_default_fallbacks("audio-volume-low-panel");
 	}
 	else if (curr_volume > 50 && curr_volume <= 75) {
-        info = gtk_icon_theme_lookup_icon( theme, "audio-volume-medium-panel", icon_size, 0 );
-	}
+        icon = g_themed_icon_new_with_default_fallbacks("audio-volume-medium-panel");
+    }
 	else /* curr_volume > 75 */ {
-        info = gtk_icon_theme_lookup_icon( theme, "audio-volume-high-panel", icon_size, 0 );
-	}
-
-	if (info ) {
-		icon = gdk_pixbuf_new_from_file_at_size(
-				gtk_icon_info_get_filename( info ),
-				icon_size, icon_size, NULL );
-		gtk_icon_info_free( info );
-	}
-	else {
-			icon = gdk_pixbuf_new_from_xpm_data((const char **) volume_xpm);
-	}
+        icon = g_themed_icon_new_with_default_fallbacks("audio-volume-high-panel");
+    }
 
 	if (icon) {
 		if (curr_image) {
 			gtk_widget_destroy(curr_image);
 			curr_image = NULL;
 		}
-		image = gtk_image_new_from_pixbuf(icon);
+        image = simple_panel_image_new_for_gicon(vol->panel,icon,-1);
+        g_object_unref(icon);
 		gtk_container_add(GTK_CONTAINER(p), image);
 
 		curr_image = image;

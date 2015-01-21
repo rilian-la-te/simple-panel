@@ -106,11 +106,8 @@ extern void simple_panel_draw_label_text(GtkWidget * label, const char * text,
 
 /* Accessors APIs for Panel* */
 extern GtkOrientation panel_get_orientation(SimplePanel *panel);
-extern gint panel_get_icon_size(SimplePanel *panel);
 extern gint panel_get_height(SimplePanel *panel);
 extern gint panel_get_monitor(SimplePanel *panel);
-extern GtkIconTheme *panel_get_icon_theme(SimplePanel *panel);
-extern gboolean panel_is_dynamic(SimplePanel *panel);
 extern GtkWidget *panel_box_new(SimplePanel *panel, gint spacing);
 extern GtkWidget *panel_separator_new(SimplePanel *panel);
 G_END_DECLS

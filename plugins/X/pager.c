@@ -44,15 +44,18 @@ static const char *configure_command = NULL;
 
 static void on_params_change_callback(SimplePanel* panel, GParamSpec* param, PagerData* d)
 {
-    int rows, r,h;
-    g_object_get(panel,PANEL_PROP_HEIGHT,&h,NULL);
+    int rows, r,h,icon_size;
+    g_object_get(panel,
+                 PANEL_PROP_HEIGHT,&h,
+                 PANEL_PROP_ICON_SIZE,&icon_size,
+                 NULL);
     h -= 2 * d->border;
     /* set geometry */
     wnck_pager_set_orientation(d->pager, panel_get_orientation(panel));
     if (panel_get_orientation(panel) == GTK_ORIENTATION_VERTICAL)
         h *= ((gfloat) gdk_screen_height() / (gfloat) gdk_screen_width());
-    rows = h / (panel_get_icon_size(panel) * 2) + 1; /* min */
-    r = (h - 2) / panel_get_icon_size(panel); /* max */
+    rows = h / (icon_size * 2) + 1; /* min */
+    r = (h - 2) / icon_size; /* max */
     rows = MAX(rows, r);
     wnck_pager_set_n_rows(d->pager, rows);
 }

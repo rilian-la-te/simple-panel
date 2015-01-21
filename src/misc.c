@@ -138,7 +138,6 @@ expand_tilda(const gchar *file)
     return ((file[0] == '~') ?
         g_strdup_printf("%s%s", getenv("HOME"), file+1)
         : g_strdup(file));
-
 }
 
 /*
@@ -178,17 +177,7 @@ static void on_theme_changed(GtkWidget * img, GObject *object)
 static void _simple_panel_button_set_icon(GtkWidget* btn, GIcon* icon, gint size)
 {
     /* Locate the image within the button. */
-    GtkWidget * child = gtk_bin_get_child(GTK_BIN(btn));
-    GtkWidget * img = NULL;
-    if (GTK_IS_IMAGE(child))
-        img = child;
-    else if (GTK_IS_BOX(child))
-    {
-        GList * children = gtk_container_get_children(GTK_CONTAINER(child));
-        img = GTK_WIDGET(GTK_IMAGE(children->data));
-        g_list_free(children);
-    }
-
+    GtkWidget * img = gtk_button_get_image(GTK_BUTTON(btn));
     if (img != NULL)
     {
         ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(img), img_data_id);
@@ -237,7 +226,7 @@ static void button_center(GtkWidget* b, GParamSpec* pspec, gpointer data)
     }
 }
 
-inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img, gchar* label)
+inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img,const gchar* label)
 {
     const gchar *css = ".-panel-button {\n"
             "margin: 0px 0px 0px 0px;\n"
@@ -348,30 +337,14 @@ static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *ic
                                                const gchar *label)
 {
     GtkWidget * event_box = gtk_button_new();
+    GtkWidget* image = NULL;
+    if (icon)
+        image = gtk_image_new_for_gicon(panel,icon, size);
+    simple_panel_setup_button(event_box,image,label);
     css_apply_with_class(event_box,NULL,GTK_STYLE_CLASS_BUTTON,TRUE);
     gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
     gtk_widget_set_can_focus(event_box, FALSE);
     gtk_widget_set_has_window(event_box,FALSE);
-    GtkWidget * image = gtk_image_new_for_gicon(panel,icon, size);
-    gtk_button_set_always_show_image(GTK_BUTTON(event_box),TRUE);
-//    gtk_button_set_label(GTK_BUTTON(event_box),label);
-//    gtk_button_set_image(GTK_BUTTON(event_box),image);
-//    gtk_button_set_image_position(GTK_BUTTON(event_box),GTK_POS_LEFT);
-    if (label == NULL)
-        gtk_container_add(GTK_CONTAINER(event_box), image);
-    else
-    {
-        GtkWidget * inner = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-        gtk_container_set_border_width(GTK_CONTAINER(inner), 0);
-        gtk_widget_set_can_focus(inner, FALSE);
-        gtk_container_add(GTK_CONTAINER(event_box), inner);
-
-        gtk_box_pack_start(GTK_BOX(inner), image, FALSE, FALSE, 0);
-
-        GtkWidget * lbl = gtk_label_new(label);
-        gtk_box_pack_end(GTK_BOX(inner), lbl, FALSE, FALSE, 0);
-    }
-    gtk_widget_show_all(event_box);
     gchar* css;
     ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(image), img_data_id);
     gchar* tmp = gdk_rgba_to_string(color);
@@ -388,50 +361,6 @@ GtkWidget *simple_panel_button_new_for_icon(SimplePanel *panel, const gchar *nam
     GdkRGBA fallback = {1,1,1,0.15};
     return _simple_panel_button_new_for_icon(panel,g_icon_new_for_string(name,NULL),
                                         -1, (color != NULL) ? color : &fallback, label);
-}
-
-void
-get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name)
-{
-    GtkWidget *b;
-    b = gtk_button_new();
-    gtk_widget_set_name(GTK_WIDGET(b), name);
-    gtk_widget_set_can_focus(b, FALSE);
-    gtk_widget_set_can_default(b, FALSE);
-    gtk_container_set_border_width (GTK_CONTAINER (b), 0);
-
-    if (parent)
-        gtk_container_add(parent, b);
-
-    gtk_widget_show(b);
-    gtk_widget_get_preferred_size(b, req, NULL);
-
-    gtk_widget_destroy(b);
-    return;
-}
-
-gboolean spawn_command_async(GtkWindow *parent_window, gchar const* workdir,
-        gchar const* cmd)
-{
-    GError* err = NULL;
-    gchar** argv = NULL;
-
-    g_info("lxpanel: spawning \"%s\"...", cmd);
-
-    g_shell_parse_argv(cmd, NULL, &argv, &err);
-    if (!err)
-        g_spawn_async(workdir, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &err);
-
-    if (err)
-    {
-        g_warning("%s\n", err->message);
-        fm_show_error(parent_window, NULL, err->message);
-        g_error_free(err);
-    }
-
-    g_strfreev(argv);
-
-    return !err;
 }
 
 void activate_menu_launch_id (GSimpleAction* action,GVariant* param, gpointer user_data)

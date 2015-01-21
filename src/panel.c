@@ -73,8 +73,6 @@ gboolean is_restarting = FALSE;
 
 gboolean is_in_lxde = FALSE;
 
-gchar* cprofile = NULL;
-
 static void simple_panel_get_preferred_size(GtkWidget* widget, GtkRequisition* min, GtkRequisition* nat);
 static void panel_start_gui(SimplePanel *p);
 static void ah_start(SimplePanel *p);
@@ -91,15 +89,18 @@ static void panel_update_background(SimplePanel * panel);
 
 G_DEFINE_TYPE(PanelWindow, lxpanel, GTK_TYPE_APPLICATION_WINDOW)
 
-static inline char *_system_config_file_name(const char *dir, const char *file_name)
-{
-    return g_build_filename(dir, "simple-panel", cprofile, file_name, NULL);
-}
-
-static inline char *_user_config_file_name(const char *name1, const char *name2)
+static inline char *_user_config_file_name(const char *name1, const char* cprofile, const char *name2)
 {
     return g_build_filename(g_get_user_config_dir(), "simple-panel", cprofile, name1,
                             name2, NULL);
+}
+
+static inline gchar* get_profile(SimplePanel* panel)
+{
+    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(panel));
+    gchar* profile;
+    g_object_get(app,"profile",&profile,NULL);
+    return profile;
 }
 
 static inline GList* get_all_panels(SimplePanel* panel)
@@ -1229,7 +1230,7 @@ static gboolean _panel_set_monitor(SimplePanel* panel, int monitor)
 }
 /* FIXME: Potentially we can support multiple panels at the same edge,
  * but currently this cannot be done due to some positioning problems. */
-static char* gen_panel_name( GtkPositionType edge, gint mon)
+static char* gen_panel_name(const gchar* profile, GtkPositionType edge, gint mon)
 {
     const gchar* edge_str;
     if (edge == GTK_POS_TOP)
@@ -1241,7 +1242,7 @@ static char* gen_panel_name( GtkPositionType edge, gint mon)
     if (edge == GTK_POS_RIGHT)
         edge_str="right";
     char* name = NULL;
-    char* dir = _user_config_file_name("panels", NULL);
+    char* dir = _user_config_file_name("panels",profile, NULL);
     int i;
     for( i = 0; i < G_MAXINT; ++i )
     {
@@ -1267,13 +1268,13 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
 {
     SimplePanel* panel = (SimplePanel*) data;
     gint m, monitors;
+    gchar* profile;
     GtkWidget* msg;
     gint e;
     GdkScreen *screen;
     GtkApplication* app = gtk_window_get_application(GTK_WINDOW(app));
     SimplePanel *new_panel = panel_allocate(app);
     Panel *p = new_panel->priv;
-    g_object_get(G_OBJECT(app),"profile",&cprofile,NULL);
 
     /* Allocate the edge. */
     screen = gdk_screen_get_default();
@@ -1327,7 +1328,8 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     return;
 
 found_edge:
-    p->name = gen_panel_name(p->edge,p->monitor);
+    p->name = gen_panel_name(profile,p->edge,p->monitor);
+    g_free(profile);
     p->settings = simple_panel_create_gsettings(new_panel);
     g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
     g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
@@ -1359,9 +1361,11 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
         gtk_widget_destroy(GTK_WIDGET(panel));
         gchar *fname;
         /* delete the config file of this panel */
-        fname = _user_config_file_name("panels", panel->priv->name);
+        gchar* profile = get_profile(panel);
+        fname = _user_config_file_name("panels",profile,panel->priv->name);
         g_unlink( fname );
         g_free(fname);
+        g_free(profile);
     }
 }
 
@@ -1382,6 +1386,7 @@ void panel_apply_icon( GtkWindow *w )
         window_icon = gdk_pixbuf_new_from_file(PACKAGE_DATA_DIR "/images/my-computer.png", NULL);
     }
     gtk_window_set_icon(w, window_icon);
+    g_object_unref(window_icon);
 }
 
 GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
@@ -1429,7 +1434,7 @@ GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
  *         panel creation                           *
  ****************************************************/
 static void
-make_round_corners(Panel *p)
+make_round_corners(SimplePanel *p)
 {
     /* FIXME: This should be re-written with shape extension of X11 */
     /* gdk_window_shape_combine_mask() can be used */
@@ -1443,11 +1448,6 @@ void panel_set_dock_type(SimplePanel *p)
     else {
         gtk_window_set_type_hint(GTK_WINDOW(p),GDK_WINDOW_TYPE_HINT_NORMAL);
     }
-}
-
-void panel_establish_autohide(Panel *p)
-{
-    _panel_establish_autohide(p->topgwin);
 }
 
 void _panel_establish_autohide(SimplePanel *p)
@@ -1487,7 +1487,7 @@ panel_start_gui(SimplePanel *panel)
     gtk_container_add(GTK_CONTAINER(panel), p->box);
     gtk_widget_show(p->box);
     if (p->round_corners)
-        make_round_corners(p);
+        make_round_corners(panel);
 
     panel_set_dock_type(panel);
 
@@ -1567,10 +1567,12 @@ PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
 {
     Panel* p = panel->priv;
     gchar *fname;
+    gchar* profile = get_profile(panel);
 
-    fname = _user_config_file_name("panels", p->name);
+    fname = _user_config_file_name("panels", profile, p->name);
     PanelGSettings* s =  panel_gsettings_create(fname);
     g_free(fname);
+    g_free(profile);
     return s;
 }
 
@@ -1639,11 +1641,6 @@ static int panel_start( SimplePanel *p )
     return 1;
 }
 
-void panel_destroy(Panel *p)
-{
-    gtk_widget_destroy(GTK_WIDGET(p->topgwin));
-}
-
 SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char* config_name)
 {
     SimplePanel* panel = NULL;
@@ -1654,7 +1651,6 @@ SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char*
         panel->priv->name = g_strdup(config_name);
         win_grp=app;
         all_panels = get_all_panels(panel);
-        g_object_get(G_OBJECT(app),"profile",&cprofile,NULL);
         g_debug("starting panel from file %s",config_file);
         panel->priv->settings = panel_gsettings_create(config_file);
         if (!panel_start(panel))
@@ -1671,11 +1667,6 @@ GtkOrientation panel_get_orientation(SimplePanel *panel)
     return panel->priv->orientation;
 }
 
-gint panel_get_icon_size(SimplePanel *panel)
-{
-    return panel->priv->icon_size;
-}
-
 gint panel_get_height(SimplePanel *panel)
 {
     return panel->priv->height;
@@ -1689,11 +1680,6 @@ gint panel_get_monitor(SimplePanel *panel)
 GtkIconTheme *panel_get_icon_theme(SimplePanel *panel)
 {
     return panel->priv->icon_theme;
-}
-
-gboolean panel_is_dynamic(SimplePanel *panel)
-{
-    return panel->priv->widthtype == PANEL_SIZE_DYNAMIC;
 }
 
 GtkWidget *panel_box_new(SimplePanel *panel, gint spacing)

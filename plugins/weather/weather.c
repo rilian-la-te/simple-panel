@@ -184,27 +184,6 @@ void weather_save_configuration(GtkWidget * pWeather, LocationInfo * pLocation)
 
 }
 
-/**
- * Weather Plugin configuration change callback.
- *
- * @param pPanel  Pointer to the panel instance.
- * @param pPlugin Pointer to the PluginClass wrapper instance.
- */
-static void
-weather_configuration_changed(SimplePanel *pPanel, GtkWidget *pWidget)
-{
-  LXW_LOG(LXW_DEBUG, "weather_configuration_changed()");
-
-  if (pPanel && pWidget)
-    {
-      LXW_LOG(LXW_DEBUG, 
-             "   orientation: %s, width: %d, height: %d, icon size: %d\n", 
-              (panel_get_orientation(pPanel) == GTK_ORIENTATION_HORIZONTAL)?"HORIZONTAL":
-              (panel_get_orientation(pPanel) == GTK_ORIENTATION_VERTICAL)?"VERTICAL":"NONE",
-              pPanel->width, panel_get_height(pPanel), 
-              panel_get_icon_size(pPanel));
-    }
-}
 
 /**
  * Weather Plugin configuration dialog callback.
@@ -240,6 +219,5 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk =
     // API functions
     .new_instance = weather_constructor,
     .config = weather_configure,
-    .reconfigure = weather_configuration_changed,
     .has_config = TRUE
   };

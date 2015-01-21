@@ -109,7 +109,8 @@ static const gchar    flag_filepath_generator[] = "%s/%s.png";
 
 static int xkb_get_flag_size(XkbPlugin *p_xkb)
 {
-    int  size = panel_get_icon_size(p_xkb->panel);
+    int size;
+    g_object_get(p_xkb->panel,PANEL_PROP_ICON_SIZE,&size,NULL);
     switch(p_xkb->flag_size)
     {
         case 1: return size*0.5;

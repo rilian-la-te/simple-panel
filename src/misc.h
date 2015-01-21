@@ -27,10 +27,9 @@ G_BEGIN_DECLS
 
 gchar *expand_tilda(const gchar *file);
 
-void get_button_spacing(GtkRequisition *req, GtkContainer *parent, gchar *name);
 GtkWidget *simple_panel_button_new_for_icon(SimplePanel *panel, const gchar *name, GdkRGBA *color, const gchar *label);
 void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, gint size);
-inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img, gchar* label);
+inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img,const gchar* label);
 GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gint height);
 GtkWidget* simple_panel_image_new_for_gicon(SimplePanel * p,GIcon *icon, gint height);
 gboolean simple_panel_image_change_icon(GtkWidget* img, const gchar* name);

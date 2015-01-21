@@ -760,7 +760,9 @@ static GtkWidget *_launchtaskbar_constructor(SimplePanel *panel, GSettings *sett
     ltbp->screen = gtk_widget_get_screen((GtkWidget*)panel);
 
     /* Initialize to defaults. */
-    ltbp->icon_size         = panel_get_icon_size(panel);
+    int icon_size;
+    g_object_get(panel,PANEL_PROP_ICON_SIZE,&icon_size,NULL);
+    ltbp->icon_size = icon_size;
     ltbp->fixed_mode        = (mode == LTB_LAUNCHBAR) || (mode == LTB_TASKBAR);
 
     /* Special cases key file */
@@ -1397,7 +1399,8 @@ static void launchtaskbar_panel_configuration_changed(SimplePanel *panel, GtkWid
 {
     /* Set orientation into the icon grid. */
     LaunchTaskBarPlugin *ltbp = lxpanel_plugin_get_data(p);
-    int new_icon_size = panel_get_icon_size(panel);
+    int new_icon_size;
+    g_object_get(panel,PANEL_PROP_ICON_SIZE,&new_icon_size,NULL);
 
     if (ltbp->lb_built)
         panel_icon_grid_set_geometry(PANEL_ICON_GRID(ltbp->lb_icon_grid),
