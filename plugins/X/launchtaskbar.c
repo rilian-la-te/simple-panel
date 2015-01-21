@@ -72,9 +72,7 @@
 # include "menu-policy.h"
 #endif
 
-#if GTK_CHECK_VERSION (3,0,0)
 #include <gdk/gdkx.h>
-#endif
 
 #define PANEL_ICON_SIZE 24 /* see the private.h */
 
