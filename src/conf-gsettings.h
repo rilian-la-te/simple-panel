@@ -36,8 +36,6 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <stdio.h>
-#include <glib-object.h>
 
 G_BEGIN_DECLS
 

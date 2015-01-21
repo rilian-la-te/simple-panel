@@ -32,10 +32,6 @@
 #include <glib/gi18n.h>
 #include <libfm/fm.h>
 
-//#define DEBUG
-
-//static void plugin_class_unref(PluginClass * pc);
-
 /* The same for new plugins type - they will be not unloaded by FmModule */
 #define REGISTER_STATIC_MODULE(pc) do { \
     extern SimplePanelPluginInit lxpanel_static_plugin_##pc; \
@@ -50,94 +46,6 @@ static GHashTable *_all_types = NULL;
 static inline const SimplePanelPluginInit *_find_plugin(const char *name)
 {
     return g_hash_table_lookup(_all_types, name);
-}
-
-static GtkWidget *_old_plugin_config(SimplePanel *panel, GtkWidget *instance)
-{
-    const SimplePanelPluginInit *init = PLUGIN_CLASS(instance);
-    Plugin * plugin;
-
-    g_return_val_if_fail(init != NULL && init->new_instance == NULL, NULL);
-    plugin = lxpanel_plugin_get_data(instance);
-    if (plugin->klass->config)
-        plugin->klass->config(plugin, GTK_WINDOW(panel));
-    return NULL;
-}
-
-static void _old_plugin_reconfigure(SimplePanel *panel, GtkWidget *instance)
-{
-    const SimplePanelPluginInit *init = PLUGIN_CLASS(instance);
-    Plugin * plugin;
-
-    g_return_if_fail(init != NULL && init->new_instance == NULL);
-    plugin = lxpanel_plugin_get_data(instance);
-    if (plugin->klass->panel_configuration_changed)
-        plugin->klass->panel_configuration_changed(plugin);
-}
-
-/* Register a PluginClass. */
-static void register_plugin_class(PluginClass * pc, gboolean dynamic)
-{
-    SimplePanelPluginInit *init = g_new0(SimplePanelPluginInit, 1);
-    init->_reserved1 = pc;
-    init->name = pc->name;
-    init->description = pc->description;
-    if (pc->config)
-        init->config = _old_plugin_config;
-    if (pc->panel_configuration_changed)
-        init->reconfigure = _old_plugin_reconfigure;
-    init->one_per_system = pc->one_per_system;
-    init->expand_available = pc->expand_available;
-    init->expand_default = pc->expand_default;
-    pc->dynamic = dynamic;
-    g_hash_table_insert(_all_types, g_strdup(pc->type), init);
-}
-
-/* Load a dynamic plugin. */
-static void plugin_load_dynamic(const char * type, const gchar * path)
-{
-    PluginClass * pc = NULL;
-
-    /* Load the external module. */
-    GModule * m = g_module_open(path, G_MODULE_BIND_LAZY);
-    if (m != NULL)
-    {
-        /* Formulate the name of the expected external variable of type PluginClass. */
-        char class_name[128];
-        g_snprintf(class_name, sizeof(class_name), "%s_plugin_class", type);
-
-        /* Validate that the external variable is of type PluginClass. */
-        gpointer tmpsym;
-        if (( ! g_module_symbol(m, class_name, &tmpsym))	/* Ensure symbol is present */
-        || ((pc = tmpsym) == NULL)
-        || (pc->structure_size != sizeof(PluginClass))		/* Then check versioning information */
-        || (pc->structure_version != PLUGINCLASS_VERSION)
-        || (strcmp(type, pc->type) != 0))			/* Then and only then access other fields; check name */
-        {
-            g_module_close(m);
-            g_warning("%s.so is not a lxpanel plugin", type);
-            return;
-        }
-
-        /* Register the newly loaded and valid plugin. */
-        pc->gmodule = m;
-        register_plugin_class(pc, TRUE);
-        pc->count = 1;
-    }
-}
-
-/* Unreference a dynamic plugin. */
-static void plugin_class_unref(PluginClass * pc)
-{
-    pc->count -= 1;
-
-    /* If the reference count drops to zero, unload the plugin if it is dynamic and has declared itself unloadable. */
-    if ((pc->count == 0)
-    && (pc->dynamic)
-    && ( ! pc->not_unloadable))
-    {
-        g_module_close(pc->gmodule);
-    }
 }
 
 /* Recursively set the background of all widgets on a panel background configuration change. */
@@ -311,11 +219,6 @@ void _unload_modules(void)
     while(g_hash_table_iter_next(&iter, &key, &val))
     {
         register const SimplePanelPluginInit *init = val;
-        if (init->new_instance == NULL) /* old type of plugin */
-        {
-            plugin_class_unref(init->_reserved1);
-            g_free(val);
-        }
     }
     g_hash_table_destroy(_all_types);
 #ifndef DISABLE_PLUGINS_LOADING
