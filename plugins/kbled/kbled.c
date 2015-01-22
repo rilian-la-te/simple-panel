@@ -54,6 +54,7 @@ static int xkb_error_base = 0;
 
 /* Private context for keyboard LED plugin. */
 typedef struct {
+    SimplePanel* panel;
     GSettings *settings;
     GtkWidget *indicator_image[3];		/* Image for each indicator */
     unsigned int current_state;			/* Current LED state, bit encoded */
@@ -67,7 +68,7 @@ static void kbled_destructor(gpointer user_data);
 /* Update image to correspond to current state. */
 static void kbled_update_image(KeyboardLEDPlugin * kl, int i, unsigned int state)
 {
-    simple_panel_image_change_icon(kl->indicator_image[i],(state ? on_icons_theme[i] : off_icons_theme[i]));
+    simple_panel_image_change_icon(kl->indicator_image[i],(state ? on_icons_theme[i] : off_icons_theme[i]),kl->panel);
 }
 
 /* Redraw after Xkb event or initialization. */
@@ -111,6 +112,7 @@ static GtkWidget *kbled_constructor(SimplePanel *panel, GSettings *settings)
     unsigned int current_state;
     Display *xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
 
+    kl->panel = panel;
     kl->settings = settings;
 
     /* Load parameters from the configuration file. */

@@ -310,7 +310,7 @@ static void volumealsa_update_current_icon(VolumeALSAPlugin * vol,int level)
     volumealsa_lookup_current_icon(vol,level);
 
     /* Change icon, fallback to default icon if theme doesn't exsit */
-    simple_panel_image_change_gicon(vol->tray_icon,vol->icon);
+    simple_panel_image_change_gicon(vol->tray_icon,vol->icon,vol->panel);
     /* Display current level in tooltip. */
     char * tooltip = g_strdup_printf("%s: %d", vol->channel, level);
     gtk_widget_set_tooltip_text(vol->plugin, tooltip);
@@ -520,7 +520,7 @@ static void alsa_deinit(VolumeALSAPlugin* vol)
         g_signal_handlers_disconnect_by_func(vol->plugin,volumealsa_popup_scale_scrolled,vol);
         asound_deinitialize(vol);
         vol->icon = g_icon_new_for_string(vol->symbolic ? "dialog-error-symbolic" : "dialog-error",NULL);
-        simple_panel_image_change_gicon(vol->tray_icon,vol->icon);
+        simple_panel_image_change_gicon(vol->tray_icon,vol->icon,vol->panel);
         gtk_widget_set_tooltip_text(vol->plugin, _("ALSA is not connected."));
         vol->alsa_is_init = FALSE;
     }

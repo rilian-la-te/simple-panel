@@ -99,22 +99,6 @@ gchar* css_apply_from_file_to_app (gchar* file)
     return NULL;
 }
 
-inline gchar* css_generate_panel_icon_button(GdkRGBA color){
-    gchar* returnie;
-    returnie = g_strdup_printf(".-panel-icon-button {\n"
-                               " padding: 1px;\n"
-                               " -GtkWidget-focus-line-width: 0px;\n"
-                               " -GtkWidget-focus-padding: 0px;\n"
-                               "}\n"
-                               ".-panel-icon-button:hover,"
-                               ".-panel-icon-button:prelight,"
-                               ".-panel-icon-button.highlight,"
-                               ".-panel-icon-button:active:hover {\n"
-                               " -gtk-image-effect: highlight;"
-                               "}\n");
-    return returnie;
-}
-
 
 inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboolean no_image)
 {

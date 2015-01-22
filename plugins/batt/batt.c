@@ -318,7 +318,7 @@ void update_display(lx_battery *lx_b) {
 
 update_done:
     gtk_button_set_label(GTK_BUTTON(lx_b->button),char_str);
-    simple_panel_image_change_gicon(lx_b->img,lx_b->icon);
+    simple_panel_image_change_gicon(lx_b->img,lx_b->icon,lx_b->panel);
     g_free(char_str);
 }
 

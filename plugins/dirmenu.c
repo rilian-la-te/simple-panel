@@ -314,7 +314,7 @@ static gboolean dirmenu_apply_configuration(gpointer user_data)
     g_settings_set_string(dm->settings,DIRMENU_KEY_PATH,dm->path);
     g_settings_set(dm->settings,DIRMENU_KEY_NAME,"ms",dm->name);
     g_settings_set_string(dm->settings,DIRMENU_KEY_ICON,dm->image);
-    simple_panel_button_set_icon(p,((dm->image != NULL) ? dm->image : "file-manager"),-1);
+    simple_panel_button_set_icon(p,((dm->image != NULL) ? dm->image : "file-manager"),dm->panel,-1);
     gtk_widget_set_tooltip_text(p, dm->path);
     gtk_container_foreach(GTK_CONTAINER(p), (GtkCallback) dirmenu_apply_configuration_to_children, (gpointer) dm);
     return FALSE;

@@ -31,21 +31,8 @@
 #include "private.h"
 #include "css.h"
 
-/* data used by themed images buttons */
-typedef struct {
-    GIcon *icon;
-    guint icon_changed_handler;
-    guint theme_changed_handler;
-    GdkRGBA hicolor;
-    gint size; /* desired size */
-    SimplePanel *panel;
-} ImgData;
-
-static GQuark img_data_id = 0;
-
 static void on_theme_changed(GtkWidget* img, GObject* object);
-static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data);
-static GtkWidget *gtk_image_new_for_gicon(SimplePanel* p, GIcon *icon, gint size);
+static void _gtk_image_set_panel(GtkWidget* img, GIcon *icon, SimplePanel* panel, gint size);
 
 static void
 calculate_width(int scrw, int wtype, int align, int margin,
@@ -140,71 +127,6 @@ expand_tilda(const gchar *file)
         : g_strdup(file));
 }
 
-/*
- * SuxPanel version 0.1
- * Copyright (c) 2003 Leandro Pereira <leandro@linuxmag.com.br>
- *
- * This program may be distributed under the terms of GNU General
- * Public License version 2. You should have received a copy of the
- * license with this program; if not, please consult http://www.fsf.org/.
- *
- * This program comes with no warranty. Use at your own risk.
- *
- */
-
-/* DestroyNotify handler for image data in _gtk_image_new_from_file_scaled. */
-static void img_data_free(ImgData * data)
-{
-    if (data->icon != NULL && G_IS_OBJECT(data->icon))
-        g_object_unref(data->icon);
-    g_signal_handler_disconnect(gtk_icon_theme_get_default(),data->theme_changed_handler);
-    if (data->panel != NULL)
-    {
-        g_object_remove_weak_pointer(G_OBJECT(data->panel), (gpointer *)&data->panel);
-        g_signal_handler_disconnect(data->panel, data->icon_changed_handler);
-    }
-    g_free(data);
-}
-
-/* Handler for "changed" signal in _gtk_image_new_from_file_scaled. */
-static void on_theme_changed(GtkWidget * img, GObject *object)
-{
-    ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(img), img_data_id);
-    _gtk_image_set_from_file_gicon(img, data);
-}
-
-/* consumes reference on icon */
-static void _simple_panel_button_set_icon(GtkWidget* btn, GIcon* icon, gint size)
-{
-    /* Locate the image within the button. */
-    GtkWidget * img = gtk_button_get_image(GTK_BUTTON(btn));
-    if (img != NULL)
-    {
-        ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(img), img_data_id);
-        if (size <= 0)
-            size = data->size;
-        if (icon != data->icon || size != data->size) /* something was changed */
-        {
-            if (data->icon != NULL)
-                g_object_unref(data->icon);
-            data->icon = icon;
-            data->size = size;
-            _gtk_image_set_from_file_gicon(img, data);
-        }
-        else
-            g_object_unref(icon);
-    }
-    else
-        g_object_unref(icon);
-}
-
-void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, gint size)
-{
-    GIcon* icon = g_icon_new_for_string(name,NULL);
-    _simple_panel_button_set_icon(btn, icon, size);
-    g_object_unref(icon);
-}
-
 static void widget_center(GtkWidget* w, gpointer data)
 {
     if (GTK_IS_WIDGET(w))
@@ -245,122 +167,106 @@ inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img,const gchar* 
     css_apply_with_class(b,css,"-panel-button",FALSE);
 }
 
-GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gint height)
+static void on_theme_changed(GtkWidget *img, GObject *object)
 {
-    GIcon* icon = g_icon_new_for_string(name,NULL);
-    GtkWidget* ret = gtk_image_new_for_gicon(p,icon,height);
-    g_object_unref(icon);
-    return ret;
+    int size = gtk_image_get_pixel_size(GTK_IMAGE(img));
+    GIcon* icon;
+    gtk_image_get_gicon(GTK_IMAGE(img),&icon,NULL);
+    _gtk_image_set_panel(img,icon,NULL,size);
 }
 
-GtkWidget* simple_panel_image_new_for_gicon(SimplePanel * p,GIcon *icon, gint height)
+static void _gtk_image_set_panel(GtkWidget* img, GIcon *icon, SimplePanel* panel, gint size)
 {
-    return gtk_image_new_for_gicon(p,icon,height);
+    if(icon)
+        gtk_image_set_from_gicon(GTK_IMAGE(img),icon,GTK_ICON_SIZE_INVALID);
+    else
+        return;
+    if(panel)
+        g_object_bind_property(panel,PANEL_PROP_ICON_SIZE,img,"pixel-size",G_BINDING_SYNC_CREATE | G_BINDING_DEFAULT);
+    else
+        gtk_image_set_pixel_size(GTK_IMAGE(img),size);
+    g_signal_connect_swapped(gtk_icon_theme_get_default(),"changed",G_CALLBACK(on_theme_changed),img);
 }
 
-static void _gtk_image_set_from_file_gicon(GtkWidget *img, ImgData *data)
+GtkWidget* simple_panel_image_new_for_gicon(SimplePanel *p, GIcon *icon, gint size)
 {
-    if (data->icon)
-    {
-        gtk_image_set_from_gicon(GTK_IMAGE(img),data->icon,GTK_ICON_SIZE_INVALID);
-        if (data->panel != NULL)
-            gtk_image_set_pixel_size(GTK_IMAGE(img),data->panel->priv->icon_size);
-        else
-            gtk_image_set_pixel_size(GTK_IMAGE(img),data->size);
-    }
-}
-
-gboolean simple_panel_image_change_icon(GtkWidget *img, const gchar *name)
-{
-    GIcon* icon = g_icon_new_for_string(name,NULL);
-    gboolean ret = simple_panel_image_change_gicon(img,icon);
-    g_object_unref(icon);
-    return ret;
-}
-
-gboolean simple_panel_image_change_gicon(GtkWidget *img, GIcon *icon)
-{
-    ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(img), img_data_id);
-
-    g_return_val_if_fail(data != NULL && icon != NULL, FALSE);
-    if(data == NULL || icon == NULL)
-        return FALSE;
-    if (data->icon != NULL)
-        g_object_unref(data->icon);
-    data->icon=icon;
-    if (!G_IS_THEMED_ICON(data->icon))
-    {
-        if (data->theme_changed_handler != 0)
-            g_signal_handler_disconnect(gtk_icon_theme_get_default(), data->theme_changed_handler);
-        data->theme_changed_handler = 0;
-    }
-    else if (data->theme_changed_handler == 0)
-    {
-        /* This image is loaded from icon theme.  Update the image if the icon theme is changed. */
-        data->theme_changed_handler = g_signal_connect_swapped(gtk_icon_theme_get_default(),
-                                                "changed", G_CALLBACK(on_theme_changed), img);
-    }
-    _gtk_image_set_from_file_gicon(img, data);
-    return TRUE;
-}
-
-static GtkWidget* gtk_image_new_for_gicon(SimplePanel* p,GIcon * icon, gint size)
-{
-    g_return_val_if_fail(icon != NULL, NULL);
-    GtkWidget * img = gtk_image_new();
-    ImgData * data = g_new0(ImgData, 1);
-    data->icon = icon;
-    data->size = size;
-    if (img_data_id == 0)
-        img_data_id = g_quark_from_static_string("ImgData");
-    g_object_set_qdata_full(G_OBJECT(img), img_data_id, data, (GDestroyNotify) img_data_free);
-    if (p && size < 0)
-    {
-        data->panel = p;
-        data->icon_changed_handler = g_signal_connect_swapped(p, "notify::"PANEL_PROP_ICON_SIZE,
-                                                G_CALLBACK(on_theme_changed), img);
-        /* it is in fact not required if image is panel child but let be safe */
-        g_object_add_weak_pointer(G_OBJECT(p), (gpointer *)&data->panel);
-    }
-    if (G_LIKELY(G_IS_THEMED_ICON(icon)))
-    {
-        data->theme_changed_handler = g_signal_connect_swapped(gtk_icon_theme_get_default(),
-                                                "changed", G_CALLBACK(on_theme_changed), img);
-    }
-    _gtk_image_set_from_file_gicon(img, data);
+    GtkWidget* img = gtk_image_new();
+    _gtk_image_set_panel(img,icon,p,size);
     return img;
 }
 
-/* consumes reference on icon */
+GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gint height)
+{
+    GIcon* icon = g_icon_new_for_string(name,NULL);
+    GtkWidget* ret = simple_panel_image_new_for_gicon(p,icon,height);
+    g_object_unref(icon);
+    return ret;
+}
+
+void simple_panel_image_change_gicon(GtkWidget *img, GIcon *icon, SimplePanel* p)
+{
+    _gtk_image_set_panel(img,icon,p,-1);
+}
+
+void simple_panel_image_change_icon(GtkWidget *img, const gchar *name,SimplePanel* p)
+{
+    GIcon* icon = g_icon_new_for_string(name,NULL);
+    simple_panel_image_change_gicon(img,icon,p);
+    g_object_unref(icon);
+    return;
+}
+
 static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *icon,
                                                gint size, const GdkRGBA* color,
                                                const gchar *label)
 {
+    const gchar* css = ".-panel-icon-button {\n"
+                       "  padding: 1px;\n"
+                       " -GtkWidget-focus-line-width: 0px;\n"
+                       " -GtkWidget-focus-padding: 0px;\n"
+                       "}\n"
+                       ".-panel-icon-button:hover,"
+                       ".-panel-icon-button:prelight,"
+                       ".-panel-icon-button.highlight,"
+                       ".-panel-icon-button:active:hover {\n"
+                       " -gtk-image-effect: highlight;"
+                       "}\n";
     GtkWidget * event_box = gtk_button_new();
     GtkWidget* image = NULL;
     if (icon)
-        image = gtk_image_new_for_gicon(panel,icon, size);
+        image = simple_panel_image_new_for_gicon(panel,icon, size);
     simple_panel_setup_button(event_box,image,label);
     css_apply_with_class(event_box,NULL,GTK_STYLE_CLASS_BUTTON,TRUE);
     gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
     gtk_widget_set_can_focus(event_box, FALSE);
     gtk_widget_set_has_window(event_box,FALSE);
-    gchar* css;
-    ImgData * data = (ImgData *) g_object_get_qdata(G_OBJECT(image), img_data_id);
-    gchar* tmp = gdk_rgba_to_string(color);
-    gdk_rgba_parse(&data->hicolor,tmp);
-    g_free(tmp);
-    css = css_generate_panel_icon_button(data->hicolor);
     css_apply_with_class(event_box,css,"-panel-icon-button",FALSE);
-    g_free(css);
     return event_box;
+}
+
+/* consumes reference on icon */
+static void _simple_panel_button_set_icon(GtkWidget* btn, GIcon* icon,SimplePanel* p, gint size)
+{
+    /* Locate the image within the button. */
+    GtkWidget * img = gtk_button_get_image(GTK_BUTTON(btn));
+    _gtk_image_set_panel(img,icon,p,size);
+}
+
+void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, SimplePanel* p, gint size)
+{
+    GIcon* icon = g_icon_new_for_string(name,NULL);
+    _simple_panel_button_set_icon(btn, icon, p, size);
+    g_object_unref(icon);
 }
 
 GtkWidget *simple_panel_button_new_for_icon(SimplePanel *panel, const gchar *name, GdkRGBA *color, const gchar *label)
 {
     GdkRGBA fallback = {1,1,1,0.15};
-    return _simple_panel_button_new_for_icon(panel,g_icon_new_for_string(name,NULL),
+    GIcon* icon = g_icon_new_for_string(name,NULL);
+    GtkWidget* ret = _simple_panel_button_new_for_icon(panel,icon,
                                         -1, (color != NULL) ? color : &fallback, label);
+    g_object_unref(icon);
+    return ret;
 }
 
 void activate_menu_launch_id (GSimpleAction* action,GVariant* param, gpointer user_data)
@@ -418,14 +324,6 @@ gint simple_panel_apply_properties_to_menu(GList* widgets, GMenuModel* menu)
         if (menuw && menu_link)
         {
             simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menuw)),menu_link);
-            g_menu_model_get_item_attribute(menu,i,"icon","s",&str);
-            if (str)
-            {
-                icon = g_icon_new_for_string(str,NULL);
-                g_object_set(G_OBJECT(l->data),"icon",icon,NULL);
-                g_free(str);
-                g_object_unref(icon);
-            }
             g_object_unref(menu_link);
         }
         str = NULL;
@@ -437,6 +335,15 @@ gint simple_panel_apply_properties_to_menu(GList* widgets, GMenuModel* menu)
                 l=l->next;
             g_object_unref(menu_link);
         }
+        g_menu_model_get_item_attribute(menu,i,"icon","s",&str);
+        if (str)
+        {
+            icon = g_icon_new_for_string(str,NULL);
+            g_object_set(G_OBJECT(l->data),"icon",icon,NULL);
+            g_free(str);
+            g_object_unref(icon);
+        }
+        str = NULL;
         g_menu_model_get_item_attribute(menu,i,"tooltip","s",&str);
         if (str)
         {

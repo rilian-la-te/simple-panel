@@ -37,6 +37,7 @@ struct statusicon *create_statusicon(SimplePanel* panel,GtkWidget *box,const cha
 
     /* icon */
     newicon->icon = simple_panel_image_new_for_icon(panel, icon_name, -1);
+    newicon->panel = panel;
     gtk_container_add(GTK_CONTAINER(newicon->main), newicon->icon);
     gtk_widget_show_all(newicon->main);
 
@@ -59,7 +60,7 @@ void statusicon_destroy(struct statusicon *icon)
 
 void update_statusicon(struct statusicon *widget, const char *icon_name)
 {
-    simple_panel_image_change_icon(widget->icon, icon_name);
+    simple_panel_image_change_icon(widget->icon, icon_name,widget->panel);
 }
 
 void set_statusicon_tooltips(struct statusicon *widget, const char *tooltips)

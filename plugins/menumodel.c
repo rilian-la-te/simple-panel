@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gtk/gtk.h>
 #include <glib.h>
 #include <glib/gi18n.h>
 
@@ -75,8 +76,20 @@ static void monitor_update(MenuModelPlugin* m);
 static GtkWidget* menumodel_widget_create(MenuModelPlugin* m);
 static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, MenuModelPlugin* menu);
 
+static void on_theme_changed(MenuModelPlugin* m, GObject* object)
+{
+    if (GTK_IS_MENU_SHELL(m->button))
+        simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(m->button)),m->menu);
+    else
+    {
+        GtkWidget* menu = GTK_WIDGET(gtk_menu_button_get_popup(GTK_MENU_BUTTON(m->button)));
+        simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menu)),m->menu);
+    }
+}
+
 static void menumodel_widget_destroy(MenuModelPlugin* m)
 {
+    g_signal_handlers_disconnect_by_func(gtk_icon_theme_get_default(),on_theme_changed,m);
     if (m->show_system_menu_idle)
         g_source_remove(m->show_system_menu_idle);
     if (m->monitor_update_idle)
@@ -282,6 +295,7 @@ static GtkWidget* create_menubutton(MenuModelPlugin* m)
     simple_panel_setup_button(m->button,img,m->caption ? m->caption : NULL);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
     gtk_widget_show(m->button);
+    g_signal_connect_swapped(gtk_icon_theme_get_default(),"changed",G_CALLBACK(on_theme_changed),m);
     return m->button;
 }
 
@@ -293,6 +307,7 @@ static GtkWidget* create_menubar(MenuModelPlugin* m)
     plugin_widget_set_background(m->button,m->panel);
     gtk_widget_show(m->button);
     g_signal_connect(m->panel,"notify::edge",G_CALLBACK(panel_edge_changed),m);
+    g_signal_connect_swapped(gtk_icon_theme_get_default(),"changed",G_CALLBACK(on_theme_changed),m);
     return m->button;
 }
 

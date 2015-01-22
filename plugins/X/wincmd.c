@@ -37,6 +37,7 @@ typedef enum {
 
 /* Private context for window command plugin. */
 typedef struct {
+    SimplePanel* panel;
     GSettings* settings;
     char * image;				/* Main icon */
     WcCommand button_1_command;		/* Command for mouse button 1 */
@@ -154,6 +155,7 @@ static GtkWidget *wincmd_constructor(SimplePanel *panel, GSettings *settings)
     wc->image = g_settings_get_string(settings, WINCMD_KEY_IMAGE);
 
     /* Save construction pointers */
+    wc->panel = panel;
     wc->settings = settings;
 
     /* Allocate top level widget and set into Plugin widget pointer. */
@@ -186,7 +188,7 @@ static gboolean wincmd_apply_configuration(gpointer user_data)
     g_settings_set_enum(wc->settings,WINCMD_KEY_MIDDLE,wc->button_2_command);
     g_settings_set_string(wc->settings,WINCMD_KEY_IMAGE,wc->image);
     g_settings_set_boolean(wc->settings,WINCMD_KEY_TOGGLE,wc->toggle_preference);
-    simple_panel_image_change_icon(p,wc->image);
+    simple_panel_image_change_icon(p,wc->image, wc->panel);
     return FALSE;
 }
 

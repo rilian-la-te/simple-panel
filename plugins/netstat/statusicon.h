@@ -7,6 +7,7 @@
 struct statusicon {
         GtkWidget *main;
         GtkWidget *icon;
+        SimplePanel* panel;
 };
 
 struct statusicon *create_statusicon(SimplePanel *panel, GtkWidget *box,
