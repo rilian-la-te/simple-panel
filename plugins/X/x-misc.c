@@ -86,8 +86,6 @@ Atom a_NET_SYSTEM_TRAY_MESSAGE_DATA;
 Atom a_NET_SYSTEM_TRAY_ORIENTATION;
 Atom a_MANAGER;
 
-Atom a_LXPANEL_CMD; /* for private client message */
-
 /* if current window manager is EWMH conforming. */
 gboolean is_ewmh_supported;
 
@@ -139,8 +137,6 @@ enum{
     I_NET_SYSTEM_TRAY_MESSAGE_DATA,
     I_NET_SYSTEM_TRAY_ORIENTATION,
     I_MANAGER,
-
-    I_LXPANEL_CMD,
     N_ATOMS
 };
 
@@ -195,11 +191,9 @@ void resolve_atoms()
     atom_names[ I_NET_SYSTEM_TRAY_ORIENTATION ] = "_NET_SYSTEM_TRAY_ORIENTATION";
     atom_names[ I_MANAGER ] = "MANAGER";
 
-    atom_names[ I_LXPANEL_CMD ] = "_LXPANEL_CMD";
-
     Atom atoms[ N_ATOMS ];
 
-    ENTER;
+
 
     if( !  XInternAtoms( GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), (char**)atom_names,
             N_ATOMS, False, atoms ) )
@@ -255,9 +249,7 @@ void resolve_atoms()
     a_NET_SYSTEM_TRAY_ORIENTATION = atoms[ I_NET_SYSTEM_TRAY_ORIENTATION ];
     a_MANAGER = atoms[ I_MANAGER ];
 
-    a_LXPANEL_CMD = atoms[ I_LXPANEL_CMD ];
-
-    RET();
+    return;
 }
 
 
@@ -376,7 +368,7 @@ get_xaproperty (Window win, Atom prop, Atom type, int *nitems)
     unsigned long after_ret;
     unsigned char *prop_data;
 
-    ENTER;
+
     prop_data = NULL;
     if (XGetWindowProperty (GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), win, prop, 0, G_MAXLONG, False,
               type, &type_ret, &format_ret, &items_ret,
@@ -386,7 +378,7 @@ get_xaproperty (Window win, Atom prop, Atom type, int *nitems)
             XFree( prop_data );
         if( nitems )
             *nitems = 0;
-        RET(NULL);
+        return NULL;
     }
     if (nitems)
         *nitems = items_ret;
@@ -400,7 +392,7 @@ text_property_to_utf8 (const XTextProperty *prop)
   int count;
   char *retval;
 
-  ENTER;
+
   list = NULL;
   count = gdk_text_property_to_utf8_list_for_display (gdk_display_get_default(),
                                           gdk_x11_xatom_to_atom (prop->encoding),
@@ -418,7 +410,7 @@ text_property_to_utf8 (const XTextProperty *prop)
 
   g_strfreev (list);
 
-  RET(retval);
+  return retval;
 }
 
 char *
@@ -427,7 +419,7 @@ get_textproperty(Window win, Atom atom)
     XTextProperty text_prop;
     char *retval;
 
-    ENTER;
+
     if (XGetTextProperty(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), win, &text_prop, atom)) {
         DBG("format=%d enc=%d nitems=%d value=%s   \n",
               text_prop.format,
@@ -437,45 +429,10 @@ get_textproperty(Window win, Atom atom)
         retval = text_property_to_utf8 (&text_prop);
         if (text_prop.nitems > 0)
             XFree (text_prop.value);
-        RET(retval);
+        return retval;
 
     }
-    RET(NULL);
-}
-
-
-int
-get_net_number_of_desktops()
-{
-    int desknum;
-    gulong *data;
-
-    ENTER;
-    data = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_NUMBER_OF_DESKTOPS,
-          XA_CARDINAL, 0);
-    if (!data)
-        RET(0);
-
-    desknum = *data;
-    XFree (data);
-    RET(desknum);
-}
-
-
-int
-get_net_current_desktop ()
-{
-    int desk;
-    gulong *data;
-
-    ENTER;
-    data = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_CURRENT_DESKTOP, XA_CARDINAL, 0);
-    if (!data)
-        RET(0);
-
-    desk = *data;
-    XFree (data);
-    RET(desk);
+    return NULL;
 }
 
 int
@@ -484,7 +441,7 @@ get_net_wm_desktop(Window win)
     int desk = 0;
     gulong *data;
 
-    ENTER;
+
     data = get_xaproperty (win, a_NET_WM_DESKTOP, XA_CARDINAL, 0);
     if (data) {
         desk = *data;
@@ -499,7 +456,7 @@ get_net_wm_pid(Window win)
     GPid pid = 0;
     gulong *data;
 
-    ENTER;
+
     data = get_xaproperty (win, a_NET_WM_PID, XA_CARDINAL, 0);
     if (data) {
         pid = *data;
@@ -515,10 +472,10 @@ get_net_wm_state(Window win, NetWMState *nws)
     int num3;
 
 
-    ENTER;
+
     memset(nws, 0, sizeof(*nws));
     if (!(state = get_xaproperty(win, a_NET_WM_STATE, XA_ATOM, &num3)))
-        RET();
+        return;
 
     DBG( "%x: netwm state = { ", (unsigned int)win);
     while (--num3 >= 0) {
@@ -543,7 +500,7 @@ get_net_wm_state(Window win, NetWMState *nws)
     }
     XFree(state);
     DBG( "}\n");
-    RET();
+    return;
 }
 
 void
@@ -553,10 +510,10 @@ get_net_wm_window_type(Window win, NetWMWindowType *nwwt)
     int num3;
 
 
-    ENTER;
+
     memset(nwwt, 0, sizeof(*nwwt));
     if (!(state = get_xaproperty(win, a_NET_WM_WINDOW_TYPE, XA_ATOM, &num3)))
-        RET();
+        return;
 
     DBG( "%x: netwm state = { ", (unsigned int)win);
     while (--num3 >= 0) {
@@ -590,7 +547,7 @@ get_net_wm_window_type(Window win, NetWMWindowType *nwwt)
     }
     XFree(state);
     DBG( "}\n");
-    RET();
+    return;
 }
 
 int
@@ -599,7 +556,7 @@ get_wm_state (Window win)
     unsigned long *data;
     int ret = 0;
 
-    ENTER;
+
     data = get_xaproperty (win, a_WM_STATE, a_WM_STATE, 0);
     if (data) {
         ret = data[0];

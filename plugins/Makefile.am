@@ -52,6 +52,7 @@ EXTRA_LTLIBRARIES = \
 	cpufreq.la \
 	deskno.la \
 	indicator.la \
+	icontasklist.la \
 	kbled.la \
 	monitors.la \
 	netstat.la \
@@ -178,6 +179,18 @@ launchtaskbar_la_CFLAGS = \
 	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
 	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\"
 launchtaskbar_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
+
+# icontasklist
+icontasklist_la_SOURCES = \
+	icontasklist/icontasklist.c \
+	X/x-misc.c
+icontasklist_la_CFLAGS = \
+	$(WNCK_CFLAGS) \
+	-I$(srcdir)/X \
+	-I$(srcdir)/icontasklist \
+	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
+	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\"
+icontasklist_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
 # pager
 pager_la_SOURCES = X/pager.c
