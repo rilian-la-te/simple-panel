@@ -17,7 +17,7 @@
  */
 
 #include <stdlib.h>
-
+#include <gtk/gtk.h>
 #include <glib/gi18n.h>
 
 #ifndef WNCK_I_KNOW_THIS_IS_UNSTABLE
@@ -71,7 +71,6 @@ static void wincmd_execute(WinCmdPlugin * wc, WcCommand command)
     {
         WnckWorkspace* desk = wnck_screen_get_active_workspace(scr);
         GList* l;
-        int len = g_list_length(windows);
         for (l = windows; l!= NULL; l=l->next)
         {
             if (wnck_window_is_visible_on_workspace(WNCK_WINDOW(l->data),desk))
@@ -86,12 +85,13 @@ static void wincmd_execute(WinCmdPlugin * wc, WcCommand command)
                             wnck_window_minimize(WNCK_WINDOW(l->data));
                         else
                             wnck_window_unminimize(WNCK_WINDOW(l->data),0);
+                        break;
                     case WC_SHADE:
                         if ((( ! wc->toggle_preference) || ( ! wc->toggle_state)))
                             wnck_window_shade(WNCK_WINDOW(l->data));
                         else
                             wnck_window_unshade(WNCK_WINDOW(l->data));
-
+                        break;
                 }
             }
         }
@@ -136,7 +136,6 @@ static gboolean wincmd_button_clicked(GtkWidget * widget, GdkEventButton * event
 static GtkWidget *wincmd_constructor(SimplePanel *panel, GSettings *settings)
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
-    resolve_atoms();
     WinCmdPlugin * wc = g_new0(WinCmdPlugin, 1);
     GtkWidget * p;
 
