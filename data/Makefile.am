@@ -56,10 +56,6 @@ CLEANFILES = \
 	$(gsettings_SCHEMAS)
 
 simple_panel_images_DATA = \
-	images/gnome-netstatus-0-24.png \
-	images/gnome-netstatus-25-49.png \
-	images/gnome-netstatus-50-74.png \
-	images/gnome-netstatus-75-100.png \
 	images/background.png \
 	images/capslock-on.png \
 	images/capslock-off.png \
