@@ -2,8 +2,9 @@
 
 <gresources>
   <gresource prefix="/org/simple/panel/lib">
-    <file alias="pref.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/panel-pref.ui</file>
-    <file alias="menus.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/panel-menus.ui</file>
-    <file alias="system-menus.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/system-menus.ui</file>
+    <file compressed="true" alias="pref.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/panel-pref.ui</file>
+    <file compressed="true" alias="menus.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/panel-menus.ui</file>
+    <file compressed="true" alias="system-menus.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/system-menus.ui</file>
+    <file compressed="true" alias="panel.png">@top_srcdir@/data/images/panel.png</file>
   </gresource>
 </gresources>

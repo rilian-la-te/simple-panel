@@ -56,20 +56,10 @@ static void get_about_dialog()
     about = gtk_about_dialog_new();
     gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(about), VERSION);
     gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about), _("SimplePanel"));
-    if (gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), "start-here"))
-    {
-         gtk_about_dialog_set_logo( GTK_ABOUT_DIALOG(about),
-                                    gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), "start-here", 48, 0, NULL));
-         gtk_window_set_icon(GTK_WINDOW(about),
-                             gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), "start-here", 48, 0, NULL));
-    }
-    else
-    {
-        gtk_about_dialog_set_logo(  GTK_ABOUT_DIALOG(about),
-                                    gdk_pixbuf_new_from_file(PACKAGE_DATA_DIR "/images/my-computer.png", NULL));
-        gtk_window_set_icon(GTK_WINDOW(about),
-                            gdk_pixbuf_new_from_file(PACKAGE_DATA_DIR "/images/my-computer.png", NULL));
-    }
+    GdkPixbuf* window_icon = gdk_pixbuf_new_from_resource("/org/simple/panel/app/panel.png",NULL);
+    gtk_window_set_icon(GTK_WINDOW(about), window_icon);
+    gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(about),window_icon);
+    g_object_unref(window_icon);
     gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about), _("Copyright (C) 2008-2015"));
     gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about), _( " Simple desktop panel."));
     gtk_about_dialog_set_license(GTK_ABOUT_DIALOG(about), "This program is free software; you can redistribute it and/or\nmodify it under the terms of the GNU General Public License\nas published by the Free Software Foundation; either version 2\nof the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program; if not, write to the Free Software\nFoundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.");

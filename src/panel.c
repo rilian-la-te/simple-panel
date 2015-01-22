@@ -20,6 +20,7 @@
 #include <config.h>
 #endif
 
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <glib/gi18n.h>
 #include <stdlib.h>
 #include <glib/gstdio.h>
@@ -1371,20 +1372,7 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
 
 void panel_apply_icon( GtkWindow *w )
 {
-    GdkPixbuf* window_icon;
-
-    if(gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), "video-display"))
-    {
-        window_icon = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), "video-display", 24, 0, NULL);
-    }
-    else if(gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), "start-here"))
-    {
-        window_icon = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), "start-here", 24, 0, NULL);
-    }
-    else
-    {
-        window_icon = gdk_pixbuf_new_from_file(PACKAGE_DATA_DIR "/images/my-computer.png", NULL);
-    }
+    GdkPixbuf* window_icon = gdk_pixbuf_new_from_resource("/org/simple/panel/lib/panel.png",NULL);
     gtk_window_set_icon(w, window_icon);
     g_object_unref(window_icon);
 }

@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <gtk/gtk.h>
 #include <glib/gi18n.h>
 
 #include <string.h>
@@ -351,8 +352,15 @@ static GtkWidget *cpufreq_constructor(SimplePanel *panel, GSettings *settings)
     cf->main = gtk_event_box_new();
     lxpanel_plugin_set_data(cf->main, cf, cpufreq_destructor);
     gtk_widget_set_has_window(cf->main, FALSE);
-
-    cf->namew = simple_panel_image_new_for_icon(panel,PROC_ICON,-1);
+    GIcon* icon = g_themed_icon_new_with_default_fallbacks("cpu-frequency-indicator");
+    g_themed_icon_append_name(G_THEMED_ICON(icon),"cpufreq-100");
+    g_themed_icon_append_name(G_THEMED_ICON(icon),"indicator-cpufreq");
+    g_themed_icon_append_name(G_THEMED_ICON(icon),"gnome-cpu-frequency-applet");
+    g_themed_icon_append_name(G_THEMED_ICON(icon),"mate-cpu-frequency-applet");
+    g_themed_icon_append_name(G_THEMED_ICON(icon),"xfce4-cpugraph-plugin");
+    g_themed_icon_append_name(G_THEMED_ICON(icon),PROC_ICON);
+    cf->namew = simple_panel_image_new_for_gicon(panel,icon,-1);
+    g_object_unref(icon);
     gtk_container_add(GTK_CONTAINER(cf->main), cf->namew);
 
     cf->has_cpufreq = 0;

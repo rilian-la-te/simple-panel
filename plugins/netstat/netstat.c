@@ -170,7 +170,7 @@ wireless_menu(netdev_info *ni)
 
             /* Encryption */
             if (aps->apinfo->haskey) {
-                lockicon = simple_panel_image_new_for_icon(NULL,ICONS_WL_LOCK,18);
+                lockicon = simple_panel_image_new_for_icon(NULL,ICONS_WL_LOCK_THEME,18);
                 gtk_box_pack_start(GTK_BOX(item_box), lockicon, FALSE, FALSE, 0);
             }
 
@@ -258,35 +258,6 @@ static gint menupopup(GtkWidget *widget, GdkEvent *event, netdev_info *ni)
     }
 
     return FALSE;
-}
-
-static char *select_icon(gboolean plug, gboolean connected, int stat)
-{
-    if (!plug)
-        return ICONS_DISCONNECT;
-
-    switch(stat) {
-        case NETDEV_STAT_NORMAL:
-            return ICONS_CONNECTED;
-            break;
-        case NETDEV_STAT_PROBLEM:
-            return ICONS_PROBLEM;
-            break;
-        case NETDEV_STAT_RENEW:
-            return ICONS_RENEW;
-            break;
-        case NETDEV_STAT_BOTHRS:
-            return ICONS_BOTHRS;
-            break;
-        case NETDEV_STAT_SENDDATA:
-            return ICONS_SENDDATA;
-            break;
-        case NETDEV_STAT_RECVDATA:
-            return ICONS_RECVDATA;
-            break;
-        default:
-            return NULL;
-    }
 }
 
 static char *select_icon_theme(gboolean plug, gboolean connected, int stat)
