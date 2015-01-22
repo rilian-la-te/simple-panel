@@ -207,8 +207,7 @@ xkb_la_CFLAGS = \
 	-DXKBCONFDIR=\"$(datadir)/simple-panel/xkeyboardconfig\"
 xkb_la_SOURCES = \
 	xkb/xkb-plugin.c \
-	xkb/xkb.c \
-	X/x-misc.c
+	xkb/xkb.c
 xkb_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
 xkeyboardconfigdir=$(datadir)/simple-panel/xkeyboardconfig

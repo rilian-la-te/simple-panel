@@ -286,7 +286,7 @@ if test x"$wnck_support" = "xyes"; then
 fi
 if test x"$wnck_support" = "xno"; then
 	if test x"$X_plugins_support" = "xyes"; then
-            X_PLUGINS_LIST="wincmd.la tray.la"
+            X_PLUGINS_LIST="tray.la"
     	AC_SUBST(X_PLUGINS_LIST)
 	fi
     AC_WARN([No libwnck-3.0 found.  All wnck-related plugins are not built.])
@@ -419,10 +419,10 @@ echo
 if test x$plugins_loading = xyes; then
 echo Building dynamic plugins:
     if test x"$wnck_support" == "xyes"; then
-        AC_MSG_RESULT([    libwnck plugins support (pager, taskbar)])
+        AC_MSG_RESULT([    libwnck plugins support (pager, taskbar, wincmd)])
 	fi
     if test x"$X_plugins_support" == "xyes"; then
-        AC_MSG_RESULT([    X - Xorg plugins support (tray, wincmd)])
+        AC_MSG_RESULT([    X - Xorg plugins support (tray)])
     fi
     if test x"$plugin_netstatus" != x; then
         AC_MSG_RESULT([    netstatus - Monitor networking status])
