@@ -782,7 +782,7 @@ static GtkWidget *indicator_constructor(SimplePanel *panel, GSettings *settings)
     gtk_widget_set_can_focus(indicator->menubar, TRUE);
 
     /* Init some theme/icon stuff */
-    gtk_icon_theme_append_search_path(panel_get_icon_theme(panel),
+    gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(),
                                     INDICATOR_ICONS_DIR);
     g_debug("Icons directory: %s", INDICATOR_ICONS_DIR);
 

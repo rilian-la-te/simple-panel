@@ -125,13 +125,13 @@ static void alignment_changed(SimplePanel* panel, GParamSpec* spec, GtkWidget* w
     g_object_get(panel,PANEL_PROP_ALIGNMENT,&alignment,NULL);
     switch (alignment)
     {
-    case PANEL_ALIGN_LEFT:
+    case ALIGN_LEFT:
         str = g_strdup_printf(print_format,_("Start"));
         break;
-    case PANEL_ALIGN_CENTER:
+    case ALIGN_CENTER:
         str = g_strdup_printf(print_format,_("Center"));
         break;
-    case PANEL_ALIGN_RIGHT:
+    case ALIGN_RIGHT:
         str = g_strdup_printf(print_format,_("End"));
         break;
     };
@@ -151,17 +151,17 @@ static void simple_panel_notify_scale_cb(SimplePanel* panel, GParamSpec* param, 
 
 static void simple_panel_notify_color_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
 {
-    gtk_widget_set_sensitive(w,panel->priv->background==PANEL_BACKGROUND_CUSTOM_COLOR);
+    gtk_widget_set_sensitive(w,panel->priv->background==BACKGROUND_COLOR);
 }
 
 static void simple_panel_notify_image_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
 {
-    gtk_widget_set_sensitive(w,panel->priv->background==PANEL_BACKGROUND_CUSTOM_IMAGE);
+    gtk_widget_set_sensitive(w,panel->priv->background==BACKGROUND_IMAGE);
 }
 
 static void simple_panel_notify_align_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
 {
-    gtk_widget_set_sensitive(w,panel->priv->align!=PANEL_ALIGN_CENTER);
+    gtk_widget_set_sensitive(w,panel->priv->align!=ALIGN_CENTER);
 }
 
 static void
@@ -202,16 +202,16 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
     p->widthtype = widthtype;
 
     spin = (GtkWidget*)g_object_get_data(G_OBJECT(item), "scale-width" );
-    t = (widthtype != PANEL_SIZE_DYNAMIC);
+    t = (widthtype != SIZE_DYNAMIC);
     gtk_widget_set_sensitive( spin, t );
     g_settings_set_enum(panel->priv->settings->toplevel_settings,PANEL_PROP_SIZE_TYPE,widthtype);
     switch (widthtype)
     {
-    case PANEL_SIZE_PERCENT:
+    case SIZE_PERCENT:
         simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,100);
         g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,100);
         break;
-    case PANEL_SIZE_PIXEL:
+    case SIZE_PIXEL:
         if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
         {
             simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_width());
@@ -223,7 +223,7 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
             g_settings_set_int(panel->priv->settings->toplevel_settings,PANEL_PROP_WIDTH,gdk_screen_height());
         }
         break;
-    case PANEL_SIZE_DYNAMIC:
+    case SIZE_DYNAMIC:
         break;
     default: ;
     }
@@ -774,21 +774,21 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     /* margin */
     p->margin_control = w = (GtkWidget*)gtk_builder_get_object( builder, "margin" );
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_MARGIN,w,"value",G_SETTINGS_BIND_DEFAULT);
-    gtk_widget_set_sensitive(w,p->align != PANEL_ALIGN_CENTER);
+    gtk_widget_set_sensitive(w,p->align != ALIGN_CENTER);
     g_signal_connect(panel, "notify::"PANEL_PROP_ALIGNMENT,G_CALLBACK(simple_panel_notify_align_cb),w);
 
     /* size */
     p->width_control = w = (GtkWidget*)gtk_builder_get_object( builder, "scale-width" );
     gint upper = 0;
-    if( p->widthtype == PANEL_SIZE_PERCENT)
+    if( p->widthtype == SIZE_PERCENT)
         upper = 100;
-    else if( p->widthtype == PANEL_SIZE_PIXEL)
+    else if( p->widthtype == SIZE_PIXEL)
         upper = (((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
     simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),0,upper);
     simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->width );
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_WIDTH,w,"value",G_SETTINGS_BIND_DEFAULT);
     g_signal_connect(panel, "notify::"PANEL_PROP_WIDTH, G_CALLBACK(simple_panel_notify_scale_cb), w );
-    gtk_widget_set_sensitive( w, p->widthtype != PANEL_SIZE_DYNAMIC );
+    gtk_widget_set_sensitive( w, p->widthtype != SIZE_DYNAMIC );
 
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "width_unit" );
@@ -821,18 +821,18 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
         tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
         gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
         g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
-        gtk_widget_set_sensitive(tint_clr,p->background == PANEL_BACKGROUND_CUSTOM_COLOR);
+        gtk_widget_set_sensitive(tint_clr,p->background == BACKGROUND_COLOR);
         g_signal_connect(panel, "notify::"PANEL_PROP_BACKGROUND_TYPE,G_CALLBACK(simple_panel_notify_color_cb),w);
 
         w = (GtkWidget*)gtk_builder_get_object( builder, "img_file" );
         if (p->background_file != NULL)
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), p->background_file);
-        else if ((info = gtk_icon_theme_lookup_icon(p->icon_theme, "lxpanel-background", 0, 0)))
+        else if ((info = gtk_icon_theme_lookup_icon(gtk_icon_theme_get_default(), "lxpanel-background", 0, 0)))
         {
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(w), gtk_icon_info_get_filename(info));
             g_object_unref(info);
         }
-        gtk_widget_set_sensitive(w,p->background == PANEL_BACKGROUND_CUSTOM_IMAGE);
+        gtk_widget_set_sensitive(w,p->background == BACKGROUND_IMAGE);
         g_signal_connect(panel, "notify::"PANEL_PROP_BACKGROUND_TYPE,G_CALLBACK(simple_panel_notify_image_cb),w);
         g_signal_connect( w, "file-set", G_CALLBACK (background_changed), p);
     }

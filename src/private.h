@@ -34,22 +34,44 @@
 
 /* Extracted from panel.h */
 typedef enum {
-    PANEL_ALIGN_LEFT,
-    PANEL_ALIGN_CENTER,
-    PANEL_ALIGN_RIGHT
-} PanelAlignType;
+    ALIGN_LEFT,
+    ALIGN_CENTER,
+    ALIGN_RIGHT
+} AlignType;
+
 typedef enum {
-    PANEL_SIZE_FILL=0,
-    PANEL_SIZE_DYNAMIC,
-    PANEL_SIZE_PIXEL,
-    PANEL_SIZE_PERCENT
-} PanelSizeType;
+    SIZE_DYNAMIC,
+    SIZE_PIXEL,
+    SIZE_PERCENT
+} SizeType;
+
 typedef enum {
-    PANEL_BACKGROUND_GTK=0,
-    PANEL_BACKGROUND_GNOME,
-    PANEL_BACKGROUND_CUSTOM_COLOR,
-    PANEL_BACKGROUND_CUSTOM_IMAGE
-} PanelBackgroundType;
+    BACKGROUND_GTK=0,
+    BACKGROUND_GNOME,
+    BACKGROUND_COLOR,
+    BACKGROUND_IMAGE
+} BackgroundType;
+
+typedef enum {
+    APPEARANCE_CSS_THEME = 1,
+    APPEARANCE_BACKGROUND_COLOR = 1 << 1,
+    APPEARANCE_BACKGROUND_IMAGE = 1 << 2,
+    APPEARANCE_REPEAT_BACKGROUND_IMAGE = 1 << 3,
+    APPEARANCE_FONT_FAMILY = 1 << 4,
+    APPEARANCE_FONT_STYLE = 1 << 5,
+    APPEARANCE_FONT_SIZE = 1 << 6,
+    APPEARANCE_FONT_COLOR = 1 << 7,
+    APPEARANCE_SHADOW = 1 << 8,
+    APPEARANCE_ROUND_CORNERS = 1 << 9,
+} AppearanceFlags;
+
+typedef enum {
+    GEOMETRY_AUTOHIDE = 1,
+    GEOMETRY_SHOW_HIDDEN = 1 << 1,
+    GEOMETRY_ABOVE = 1 << 2,
+    GEOMETRY_STRUT = 1 << 3,
+    GEOMETRY_DOCK = 1 << 4,
+} GeometryFlags;
 
 #define PANEL_ICON_SIZE               24	/* Default size of panel icons */
 #define PANEL_HEIGHT_DEFAULT          26	/* Default height of horizontal panel */
@@ -67,7 +89,6 @@ struct _Panel {
     char* name;
     SimplePanel * topgwin;			/* Main panel window */
     GdkDisplay * display;		/* Main panel's GdkDisplay */
-    GtkIconTheme* icon_theme; /*Default icon theme*/
 
     GtkWidget * box;			/* Top level widget */
 
@@ -79,7 +100,9 @@ struct _Panel {
     int align, margin;
     GtkPositionType edge;
     GtkOrientation orientation;
-    PanelBackgroundType background;
+    BackgroundType background;
+    AppearanceFlags appearance;
+    GeometryFlags geometry;
     int widthtype, width;
     int heighttype, height;
     gint monitor;

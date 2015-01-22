@@ -178,13 +178,13 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     gint x, y, w;
     GTK_WIDGET_CLASS(simple_panel_parent_class)->size_allocate(widget, a);
     gtk_widget_set_allocation(widget,a);
-    if (p->widthtype == PANEL_SIZE_DYNAMIC && p->box)
+    if (p->widthtype == SIZE_DYNAMIC && p->box)
     {
         (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? gtk_widget_get_preferred_width (p->box,NULL, &w) : gtk_widget_get_preferred_height (p->box,NULL, &w);
         if (w!=p->width)
             g_settings_set_int(p->settings->toplevel_settings, PANEL_PROP_WIDTH,w);
     }
-    if (p->heighttype == PANEL_SIZE_DYNAMIC)
+    if (p->heighttype == SIZE_DYNAMIC)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->height : a->width;
 
     if (!gtk_widget_get_realized(widget))
@@ -554,8 +554,8 @@ static void simple_panel_class_init(PanelWindowClass *klass)
                     PANEL_PROP_SIZE_TYPE,
                     "Size Type",
                     "Type of panel size counting",
-                    PANEL_SIZE_TYPE,
-                    PANEL_SIZE_PERCENT,
+                    SIZE_TYPE,
+                    SIZE_PERCENT,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
@@ -564,8 +564,8 @@ static void simple_panel_class_init(PanelWindowClass *klass)
                     PANEL_PROP_ALIGNMENT,
                     "Alignment",
                     "Panel alignment side",
-                    PANEL_ALIGN_TYPE,
-                    PANEL_ALIGN_CENTER,
+                    ALIGN_TYPE,
+                    ALIGN_CENTER,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
@@ -616,8 +616,8 @@ static void simple_panel_class_init(PanelWindowClass *klass)
                     PANEL_PROP_BACKGROUND_TYPE,
                     "Background Type",
                     "Type of panel background",
-                    PANEL_BACKGROUND_TYPE,
-                    PANEL_BACKGROUND_GTK,
+                    BACKGROUND_TYPE,
+                    BACKGROUND_GTK,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
@@ -712,7 +712,6 @@ static void simple_panel_init(PanelWindow *self)
     Panel *p = g_new0(Panel, 1);
     self->priv = p;
     p->topgwin = self;
-    p->icon_theme = gtk_icon_theme_get_default();
 	GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(self));
 	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
 	gtk_widget_set_visual(GTK_WIDGET(self), visual);
@@ -748,7 +747,7 @@ static SimplePanel* panel_allocate(GtkApplication* app)
 static void panel_normalize_configuration(Panel* p)
 {
     _panel_set_panel_configuration_changed( p->topgwin );
-    if (p->widthtype == PANEL_SIZE_PERCENT && p->width > 100)
+    if (p->widthtype == SIZE_PERCENT && p->width > 100)
         p->width = 100;
     if (p->monitor < 0)
         p->monitor = -1;
@@ -944,7 +943,7 @@ static void panel_update_background(SimplePanel * panel)
     GdkRGBA color;
     gboolean system = TRUE;
     gdk_rgba_parse(&color,"transparent");
-    if (p->background == PANEL_BACKGROUND_CUSTOM_IMAGE)
+    if (p->background == BACKGROUND_IMAGE)
 	{
 		/* User specified background pixmap. */
         if (p->background_file != NULL)
@@ -953,13 +952,13 @@ static void panel_update_background(SimplePanel * panel)
             css = css_generate_background(p->background_file,color,FALSE);
         }
 	}
-    else if (p->background == PANEL_BACKGROUND_CUSTOM_COLOR)
+    else if (p->background == BACKGROUND_COLOR)
 	{
 		/* User specified background color. */
         system = FALSE;
         css = css_generate_background("none",p->gtintcolor,TRUE);
     }
-    else if (p->background == PANEL_BACKGROUND_GNOME)
+    else if (p->background == BACKGROUND_GNOME)
         gtk_style_context_add_class(gtk_widget_get_style_context(GTK_WIDGET(panel)),"gnome-panel-menu-bar");
     else
         gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(panel)),"gnome-panel-menu-bar");
@@ -1521,7 +1520,7 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
                                 : PANEL_WIDTH_DEFAULT));
         if (p->height_control != NULL)
             simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->height_control), p->height);
-        if ((p->widthtype == PANEL_SIZE_PIXEL) && (p->width_control != NULL))
+        if ((p->widthtype == SIZE_PIXEL) && (p->width_control != NULL))
         {
             int value = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? gdk_screen_width() : gdk_screen_height());
             simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(p->width_control), 0, value);
@@ -1663,11 +1662,6 @@ gint panel_get_height(SimplePanel *panel)
 gint panel_get_monitor(SimplePanel *panel)
 {
     return panel->priv->monitor;
-}
-
-GtkIconTheme *panel_get_icon_theme(SimplePanel *panel)
-{
-    return panel->priv->icon_theme;
 }
 
 GtkWidget *panel_box_new(SimplePanel *panel, gint spacing)

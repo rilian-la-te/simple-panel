@@ -621,7 +621,7 @@
                                         <property name="can_focus">T</property>
                                         <property name="active">False</property>
                                         <property name="action-name">win.background-type</property>
-                                        <property name="action-target">'custom-color'</property>
+                                        <property name="action-target">'color'</property>
                                         <property name="group">background-normal</property>
                                       </object>
                                       <packing>
@@ -661,7 +661,7 @@
                                         <property name="can_focus">True</property>
                                         <property name="active">False</property>
                                         <property name="action-name">win.background-type</property>
-                                        <property name="action-target">'custom-image'</property>
+                                        <property name="action-target">'image'</property>
                                         <property name="group">background-normal</property>
                                       </object>
                                       <packing>

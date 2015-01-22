@@ -38,7 +38,7 @@ static void
 calculate_width(int scrw, int wtype, int align, int margin,
       int *panw, int *x)
 {
-    if (wtype == PANEL_SIZE_PERCENT) {
+    if (wtype == SIZE_PERCENT) {
         /* sanity check */
         if (*panw > 100)
             *panw = 100;
@@ -46,7 +46,7 @@ calculate_width(int scrw, int wtype, int align, int margin,
             *panw = 1;
         *panw = ((gfloat) scrw * (gfloat) *panw) / 100.0;
     }
-    if (align != PANEL_ALIGN_CENTER) {
+    if (align != ALIGN_CENTER) {
         if (margin > scrw) {
             g_warning( "margin is bigger then edge size %d > %d. Ignoring margin",
                   margin, scrw);
@@ -54,13 +54,13 @@ calculate_width(int scrw, int wtype, int align, int margin,
         }
 	*panw = MIN(scrw - margin, *panw);
     }
-    if (align == PANEL_ALIGN_LEFT)
+    if (align == ALIGN_LEFT)
         *x += margin;
-    else if (align == PANEL_ALIGN_RIGHT) {
+    else if (align == ALIGN_RIGHT) {
         *x += scrw - *panw - margin;
         if (*x < 0)
             *x = 0;
-    } else if (align == PANEL_ALIGN_CENTER)
+    } else if (align == ALIGN_CENTER)
         *x += (scrw - *panw) / 2;
 }
 

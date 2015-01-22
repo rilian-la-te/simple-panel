@@ -32,12 +32,12 @@
       <_summary>Panel width</_summary>
       <_description>The width (height for a vertical panel) of the panel. Minimum size is 16 px (or 1 percent, if size-type is percent), maximum is screen edge size (or 100 percent).</_description>
     </key>
-    <key name="size-type" enum="org.simple.panel.PanelSizeType">
+    <key name="size-type" enum="org.simple.panel.SizeType">
       <default>'percent'</default>
       <_summary>Panel height type</_summary>
       <_description>This key determines as width for panel counts. If dynamic, it taken from size request, if pixel, it exactly as in width key, is percent it will be a value from 1 to 100.</_description>
     </key>
-    <key name="alignment" enum="org.simple.panel.PanelAlignType">
+    <key name="alignment" enum="org.simple.panel.AlignType">
       <default>'center'</default>
       <_summary>Panel alignment type</_summary>
       <_description>This key determines from which point width for panel counts.</_description>
@@ -74,7 +74,7 @@
       <_summary>Visible pixels when hidden</_summary>
       <_description>Specifies the number of pixels visible when the panel is automatically hidden into a corner. This key is only relevant if the autohide key is true.</_description>
     </key>
-    <key name="background-type" enum="org.simple.panel.PanelBackgroundType">
+    <key name="background-type" enum="org.simple.panel.BackgroundType">
       <default>'gtk'</default>
       <_summary>Background type</_summary>
       <_description>Which type of background should be used for this panel. Possible values are "gtk" - the default GTK+ widget background will be used, "gnome" - the default Gnome Panel background will be used, "color" - the color key will be used as background color or "image" - the image specified by the image key will be used as background.</_description>
@@ -88,6 +88,11 @@
       <default>''</default>
       <_summary>Background image</_summary>
       <_description>Specifies the file to be used for the background image. If the image contains an alpha channel it will be composited onto the desktop background image.</_description>
+    </key>
+	<key name="appearance-features" flags="org.simple.panel.AppearanceFlags">
+      <default>[]</default>
+      <_summary>Selected apperance features.</_summary>
+      <_description>Listed appearance features will be used from GSettings, not from GTK theme.</_description>
     </key>
     <key name="enable-font-size" type="b">
       <default>false</default>
