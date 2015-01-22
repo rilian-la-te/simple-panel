@@ -172,7 +172,7 @@ netstatus_icon_lookup_icon_theme (NetstatusIcon *icon,
   char         *filename = NULL;
 
   icon_theme = netstatus_icon_get_icon_theme (icon);
-  if ((icon_info = gtk_icon_theme_lookup_icon (icon_theme, icon_name, 1000, 0)))
+  if ((icon_info = gtk_icon_theme_lookup_icon (icon_theme, icon_name, 1000, GTK_ICON_LOOKUP_GENERIC_FALLBACK)))
     {
       filename = g_strdup (gtk_icon_info_get_filename (icon_info));
 
@@ -286,55 +286,55 @@ netstatus_icon_init_pixbufs (NetstatusIcon *icon)
 {
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->icons [NETSTATUS_STATE_DISCONNECTED],
-                  "network-offline");
+                  "network-offline-symbolic");
   icon->priv->scaled_icons [NETSTATUS_STATE_DISCONNECTED] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->icons [NETSTATUS_STATE_IDLE],
-                  "network-idle");
+                  "network-idle-symbolic");
   icon->priv->scaled_icons [NETSTATUS_STATE_IDLE] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->icons [NETSTATUS_STATE_TX],
-                  "network-transmit");
+                  "network-transmit-symbolic");
   icon->priv->scaled_icons [NETSTATUS_STATE_TX] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->icons [NETSTATUS_STATE_RX],
-                  "network-receive");
+                  "network-receive-symbolic");
   icon->priv->scaled_icons [NETSTATUS_STATE_RX] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->icons [NETSTATUS_STATE_TX_RX],
-                  "network-transmit-receive");
+                  "network-transmit-receive-symbolic");
   icon->priv->scaled_icons [NETSTATUS_STATE_TX_RX] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->icons [NETSTATUS_STATE_ERROR],
-                  "network-error");
+                  "network-error-symbolic");
   icon->priv->scaled_icons [NETSTATUS_STATE_ERROR] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->signal_icons [NETSTATUS_SIGNAL_0_24],
-                  "network-wireless-signal-weak.png");
+                  "network-wireless-signal-weak-symbolic");
   icon->priv->rotated_signal_icons [NETSTATUS_SIGNAL_0_24] = NULL;
   icon->priv->scaled_signal_icons  [NETSTATUS_SIGNAL_0_24] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->signal_icons [NETSTATUS_SIGNAL_25_49],
-                  "network-wireless-signal-ok.png");
+                  "network-wireless-signal-ok-symbolic");
   icon->priv->rotated_signal_icons [NETSTATUS_SIGNAL_25_49] = NULL;
   icon->priv->scaled_signal_icons  [NETSTATUS_SIGNAL_25_49] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->signal_icons [NETSTATUS_SIGNAL_50_74],
-                  "network-wireless-signal-good.png");
+                  "network-wireless-signal-good-symbolic");
   icon->priv->rotated_signal_icons [NETSTATUS_SIGNAL_50_74] = NULL;
   icon->priv->scaled_signal_icons  [NETSTATUS_SIGNAL_50_74] = NULL;
 
   netstatus_icon_init_pixbuf (icon,
 			      &icon->priv->signal_icons [NETSTATUS_SIGNAL_75_100],
-                  "network-wireless-signal-excellent");
+                  "network-wireless-signal-excellen-symbolic");
   icon->priv->rotated_signal_icons [NETSTATUS_SIGNAL_75_100] = NULL;
   icon->priv->scaled_signal_icons  [NETSTATUS_SIGNAL_75_100] = NULL;
 
