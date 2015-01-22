@@ -194,13 +194,9 @@ tray_la_CFLAGS = \
 tray_la_LIBADD = $(X11_LIBS)
 
 # wincmd
-wincmd_la_SOURCES = X/wincmd.c \
-	X/x-misc.c
-wincmd_la_CFLAGS = \
-	-I$(srcdir)/X \
-	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
-	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\"
-wincmd_la_LIBADD = $(X11_LIBS)
+wincmd_la_SOURCES = X/wincmd.c
+wincmd_la_CFLAGS = $(WNCK_CFLAGS)
+wincmd_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
 # xkb
 xkb_la_CFLAGS = \

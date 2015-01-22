@@ -20,7 +20,11 @@
 
 #include <glib/gi18n.h>
 
-#include "x-misc.h"
+#ifndef WNCK_I_KNOW_THIS_IS_UNSTABLE
+#define WNCK_I_KNOW_THIS_IS_UNSTABLE
+#endif
+#include <libwnck/libwnck.h>
+
 #include "plugin.h"
 
 #define WINCMD_KEY_LEFT "left-button-command"
@@ -61,25 +65,16 @@ static void wincmd_adjust_toggle_state(WinCmdPlugin * wc)
 static void wincmd_execute(WinCmdPlugin * wc, WcCommand command)
 {
     /* Get the list of all windows. */
-    int client_count;
-    Window * client_list = get_xaproperty (GDK_ROOT_WINDOW(), a_NET_CLIENT_LIST, XA_WINDOW, &client_count);
-    Display *xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
-    if (client_list != NULL)
+    WnckScreen* scr = wnck_screen_get_default();
+    GList* windows = wnck_screen_get_windows(scr);
+    if (windows)
     {
-        /* Loop over all windows. */
-        int current_desktop = get_net_current_desktop();
-        int i;
-        for (i = 0; i < client_count; i++)
+        WnckWorkspace* desk = wnck_screen_get_active_workspace(scr);
+        GList* l;
+        int len = g_list_length(windows);
+        for (l = windows; l!= NULL; l=l->next)
         {
-            /* Get the desktop and window type properties. */
-            NetWMWindowType nwwt;
-            int task_desktop = get_net_wm_desktop(client_list[i]);
-            get_net_wm_window_type(client_list[i], &nwwt);
-
-            /* If the task is visible on the current desktop and it is an ordinary window,
-             * execute the requested Iconify or Shade change. */
-            if (((task_desktop == -1) || (task_desktop == current_desktop))
-                && (( ! nwwt.dock) && ( ! nwwt.desktop) && ( ! nwwt.splash)))
+            if (wnck_window_is_visible_on_workspace(WNCK_WINDOW(l->data),desk))
             {
                 switch (command)
                 {
@@ -87,23 +82,19 @@ static void wincmd_execute(WinCmdPlugin * wc, WcCommand command)
                         break;
 
                     case WC_ICONIFY:
-                        if (( ! wc->toggle_preference) || ( ! wc->toggle_state))
-                            XIconifyWindow(xdisplay, client_list[i], DefaultScreen(xdisplay));
+                        if ((( ! wc->toggle_preference) || ( ! wc->toggle_state)))
+                            wnck_window_minimize(WNCK_WINDOW(l->data));
                         else
-                            XMapWindow (xdisplay, client_list[i]);
-                        break;
-
+                            wnck_window_unminimize(WNCK_WINDOW(l->data),0);
                     case WC_SHADE:
-                        Xclimsg(client_list[i], a_NET_WM_STATE,
-                            ((( ! wc->toggle_preference) || ( ! wc->toggle_state)) ? a_NET_WM_STATE_ADD : a_NET_WM_STATE_REMOVE),
-                            a_NET_WM_STATE_SHADED, 0, 0, 0);
-                        break;
+                        if ((( ! wc->toggle_preference) || ( ! wc->toggle_state)))
+                            wnck_window_shade(WNCK_WINDOW(l->data));
+                        else
+                            wnck_window_unshade(WNCK_WINDOW(l->data));
+
                 }
             }
         }
-        XFree(client_list);
-
-	/* Adjust toggle state. */
         wincmd_adjust_toggle_state(wc);
     }
 }
@@ -112,6 +103,7 @@ static void wincmd_execute(WinCmdPlugin * wc, WcCommand command)
 static gboolean wincmd_button_clicked(GtkWidget * widget, GdkEventButton * event, SimplePanel * panel)
 {
     WinCmdPlugin * wc = lxpanel_plugin_get_data(widget);
+    WnckScreen* scr = wnck_screen_get_default();
 
     /* Left-click to iconify. */
     if (event->button == 1)
@@ -125,9 +117,8 @@ static gboolean wincmd_button_clicked(GtkWidget * widget, GdkEventButton * event
          * Otherwise, fall back to iconifying windows individually. */
         if (gdk_x11_screen_supports_net_wm_hint(screen, atom))
         {
-            int showing_desktop = ((( ! wc->toggle_preference) || ( ! wc->toggle_state)) ? 1 : 0);
-            Xclimsg(DefaultRootWindow(GDK_DISPLAY_XDISPLAY(gdk_display_get_default())),
-                    a_NET_SHOWING_DESKTOP, showing_desktop, 0, 0, 0, 0);
+            int showing_desktop = ((( ! wc->toggle_preference) || ( ! wc->toggle_state)) ? TRUE :FALSE);
+            wnck_screen_toggle_showing_desktop(scr,showing_desktop);
             wincmd_adjust_toggle_state(wc);
         }
         else
