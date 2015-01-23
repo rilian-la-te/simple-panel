@@ -526,6 +526,12 @@ static void alsa_deinit(VolumeALSAPlugin* vol)
     }
 }
 
+static GtkWidget* get_background_widget(GtkWidget* plugin)
+{
+    VolumeALSAPlugin *b = lxpanel_plugin_get_data(plugin);
+    return gtk_bin_get_child(GTK_BIN(b->plugin));
+}
+
 /* Plugin constructor. */
 static GtkWidget *volumealsa_constructor(SimplePanel *panel, GSettings *settings)
 {

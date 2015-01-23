@@ -311,6 +311,12 @@ static GtkWidget* create_menubar(MenuModelPlugin* m)
     return m->button;
 }
 
+static GtkWidget* get_background_widget(GtkWidget* plugin)
+{
+    MenuModelPlugin *b = lxpanel_plugin_get_data(plugin);
+    return b->button;
+}
+
 static GtkWidget* menumodel_constructor(SimplePanel *panel, GSettings *settings)
 {
     MenuModelPlugin* plugin;
@@ -369,6 +375,7 @@ SimplePanelPluginInit lxpanel_static_plugin_menumodel = {
     .new_instance = menumodel_constructor,
     .config = menumodel_config,
     .show_system_menu = menumodel_show_system_menu,
+    .background_widget = get_background_widget,
     .has_config = TRUE
 };
 

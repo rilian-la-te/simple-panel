@@ -409,7 +409,7 @@ static void simple_panel_set_property(GObject      *object,
         if (fonts)
         {
             panel_widget_update_fonts(toplevel,GTK_WIDGET(toplevel));
-            gtk_container_foreach(GTK_CONTAINER(toplevel),plugins_update_appearance,toplevel);
+            gtk_container_foreach(GTK_CONTAINER(toplevel->priv->box),plugins_update_appearance,toplevel);
         }
         if (updatestrut)
             _panel_set_wm_strut(toplevel);

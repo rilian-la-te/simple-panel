@@ -302,6 +302,12 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
     return p;
 }
 
+static GtkWidget* get_background_widget(GtkWidget* plugin)
+{
+    DClockPlugin *b = lxpanel_plugin_get_data(plugin);
+    return b->btn;
+}
+
 /* Plugin destructor. */
 static void dclock_destructor(gpointer user_data)
 {
@@ -381,5 +387,6 @@ SimplePanelPluginInit lxpanel_static_plugin_dclock = {
 
     .new_instance = dclock_constructor,
     .config = dclock_configure,
+    .background_widget = get_background_widget,
     .has_config = TRUE,
 };
