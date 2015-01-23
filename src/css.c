@@ -32,7 +32,7 @@
 
 #include "css.h"
 
-void css_apply_with_class (GtkWidget* widget,const gchar* css, gchar* klass ,gboolean remove)
+void css_apply_with_class (GtkWidget* widget,const char* css, const char* klass, const gboolean remove)
 {
     GtkStyleContext* context;
     GtkCssProvider  *provider;

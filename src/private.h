@@ -58,9 +58,10 @@ typedef enum {
     APPEARANCE_BACKGROUND_IMAGE = 1 << 2,
     APPEARANCE_REPEAT_BACKGROUND_IMAGE = 1 << 3,
     APPEARANCE_FONT = 1 << 4,
-    APPEARANCE_FONT_COLOR = 1 << 5,
-    APPEARANCE_SHADOW = 1 << 6,
-    APPEARANCE_ROUND_CORNERS = 1 << 7,
+    APPEARANCE_FONT_SIZE = 1 << 5,
+    APPEARANCE_FOREGROUND_COLOR = 1 << 6,
+    APPEARANCE_SHADOW = 1 << 7,
+    APPEARANCE_ROUND_CORNERS = 1 << 8,
 } AppearanceFlags;
 
 typedef enum {
@@ -101,6 +102,7 @@ struct _Panel {
     BackgroundType background;
     AppearanceFlags appearance;
     GeometryFlags geometry;
+    gchar* font;
     int widthtype, width;
     int heighttype, height;
     gint monitor;
@@ -112,7 +114,7 @@ struct _Panel {
     guint self_destroy : 1;
     guint setdocktype : 1;
     guint setstrut : 1;
-    guint round_corners : 1;
+    guint round_corners;
     guint usefontcolor : 1;
     guint usefontsize : 1;
     guint fontsize;

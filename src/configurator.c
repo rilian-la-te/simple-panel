@@ -149,14 +149,76 @@ static void simple_panel_notify_scale_cb(SimplePanel* panel, GParamSpec* param, 
     g_free(str);
 }
 
-static void simple_panel_notify_color_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
+static void configure_background_color(GSimpleAction* action, GVariant* param, gpointer d)
 {
-    gtk_widget_set_sensitive(w,panel->priv->background==BACKGROUND_COLOR);
+    SimplePanel* data = (SimplePanel*)d;
+    gint flags;
+    g_object_get(data,PANEL_PROP_APPEARANCE,&flags,NULL);
+    flags = (flags & APPEARANCE_BACKGROUND_COLOR) ? flags &= ~APPEARANCE_BACKGROUND_COLOR :
+            flags | APPEARANCE_BACKGROUND_COLOR;
+    g_settings_set_flags(data->priv->settings->toplevel_settings,PANEL_PROP_APPEARANCE,flags);
+    GVariant* var = g_variant_new_boolean((flags & APPEARANCE_BACKGROUND_COLOR));
+    g_simple_action_set_state(action,var);
 }
 
-static void simple_panel_notify_image_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
+static void configure_background_image(GSimpleAction* action, GVariant* param, gpointer d)
 {
-    gtk_widget_set_sensitive(w,panel->priv->background==BACKGROUND_IMAGE);
+    SimplePanel* data = (SimplePanel*)d;
+    gint flags;
+    g_object_get(data,PANEL_PROP_APPEARANCE,&flags,NULL);
+    flags = (flags & APPEARANCE_BACKGROUND_IMAGE) ? flags &= ~APPEARANCE_BACKGROUND_IMAGE :
+            flags | APPEARANCE_BACKGROUND_IMAGE;
+    g_settings_set_flags(data->priv->settings->toplevel_settings,PANEL_PROP_APPEARANCE,flags);
+    GVariant* var = g_variant_new_boolean((flags & APPEARANCE_BACKGROUND_IMAGE));
+    g_simple_action_set_state(action,var);
+}
+
+static void configure_foreground_color(GSimpleAction* action, GVariant* param, gpointer d)
+{
+    SimplePanel* data = (SimplePanel*)d;
+    gint flags;
+    g_object_get(data,PANEL_PROP_APPEARANCE,&flags,NULL);
+    flags = (flags & APPEARANCE_FOREGROUND_COLOR) ? flags &= ~APPEARANCE_FOREGROUND_COLOR :
+            flags | APPEARANCE_FOREGROUND_COLOR;
+    g_settings_set_flags(data->priv->settings->toplevel_settings,PANEL_PROP_APPEARANCE,flags);
+    GVariant* var = g_variant_new_boolean((flags & APPEARANCE_FOREGROUND_COLOR));
+    g_simple_action_set_state(action,var);
+}
+
+static void configure_font(GSimpleAction* action, GVariant* param, gpointer d)
+{
+    SimplePanel* data = (SimplePanel*)d;
+    gint flags;
+    g_object_get(data,PANEL_PROP_APPEARANCE,&flags,NULL);
+    flags = (flags & APPEARANCE_FONT) ? flags &= ~APPEARANCE_FONT :
+            flags | APPEARANCE_FONT;
+    g_settings_set_flags(data->priv->settings->toplevel_settings,PANEL_PROP_APPEARANCE,flags);
+    GVariant* var = g_variant_new_boolean((flags & APPEARANCE_FONT));
+    g_simple_action_set_state(action,var);
+}
+
+static void configure_round_corners(GSimpleAction* action, GVariant* param, gpointer d)
+{
+    SimplePanel* data = (SimplePanel*)d;
+    gint flags;
+    g_object_get(data,PANEL_PROP_APPEARANCE,&flags,NULL);
+    flags = (flags & APPEARANCE_ROUND_CORNERS) ? flags &= ~APPEARANCE_ROUND_CORNERS :
+            flags | APPEARANCE_ROUND_CORNERS;
+    g_settings_set_flags(data->priv->settings->toplevel_settings,PANEL_PROP_APPEARANCE,flags);
+    GVariant* var = g_variant_new_boolean((flags & APPEARANCE_ROUND_CORNERS));
+    g_simple_action_set_state(action,var);
+}
+
+static void configure_font_size(GSimpleAction* action, GVariant* param, gpointer d)
+{
+    SimplePanel* data = (SimplePanel*)d;
+    gint flags;
+    g_object_get(data,PANEL_PROP_APPEARANCE,&flags,NULL);
+    flags = (flags & APPEARANCE_FONT_SIZE) ? flags &= ~APPEARANCE_FONT_SIZE :
+            flags | APPEARANCE_FONT_SIZE;
+    g_settings_set_flags(data->priv->settings->toplevel_settings,PANEL_PROP_APPEARANCE,flags);
+    GVariant* var = g_variant_new_boolean((flags & APPEARANCE_FONT_SIZE));
+    g_simple_action_set_state(action,var);
 }
 
 static void simple_panel_notify_align_cb(SimplePanel* panel, GParamSpec* param, GtkWidget* w)
@@ -177,8 +239,6 @@ response_event(GtkDialog *widget, gint arg1, SimplePanel* panel )
         /* NOTE: NO BREAK HERE*/
         panel_signal_handlers_disconnect_by_func_only(panel,simple_panel_notify_scale_cb);
         panel_signal_handlers_disconnect_by_func_only(panel,simple_panel_notify_align_cb);
-        panel_signal_handlers_disconnect_by_func_only(panel,simple_panel_notify_color_cb);
-        panel_signal_handlers_disconnect_by_func_only(panel,simple_panel_notify_image_cb);
         panel_signal_handlers_disconnect_by_func_only(panel,edge_changed);
         panel_signal_handlers_disconnect_by_func_only(panel,alignment_changed);
         gtk_widget_destroy(GTK_WIDGET(widget));
@@ -817,12 +877,20 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_AUTOHIDE,w,"sensitive",G_SETTINGS_BIND_GET);
     /* background */
     {
+        const GActionEntry entries_appearance [] =
+        {
+            {"use-background-color", configure_background_color,NULL,"false" ,NULL},
+            {"use-foreground-color", configure_foreground_color,NULL,"false" ,NULL},
+            {"use-background-image", configure_background_image,NULL,"false" ,NULL},
+            {"use-font", configure_font,NULL,"false" ,NULL},
+            {"use-round-corners", configure_round_corners,NULL,"false" ,NULL},
+            {"use-font-size", configure_font_size,NULL,"false" ,NULL}
+        };
+        g_action_map_add_action_entries(G_ACTION_MAP(configurator),entries_appearance,G_N_ELEMENTS(entries_appearance),panel);
         GtkIconInfo* info;
         tint_clr = w = (GtkWidget*)gtk_builder_get_object( builder, "tint_clr" );
         gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(w), &p->gtintcolor);
         g_signal_connect( w, "color-set", G_CALLBACK( on_tint_color_set ), p );
-        gtk_widget_set_sensitive(tint_clr,p->background == BACKGROUND_COLOR);
-        g_signal_connect(panel, "notify::"PANEL_PROP_BACKGROUND_TYPE,G_CALLBACK(simple_panel_notify_color_cb),w);
 
         w = (GtkWidget*)gtk_builder_get_object( builder, "img_file" );
         if (p->background_file != NULL)
@@ -833,19 +901,11 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
             g_object_unref(info);
         }
         gtk_widget_set_sensitive(w,p->background == BACKGROUND_IMAGE);
-        g_signal_connect(panel, "notify::"PANEL_PROP_BACKGROUND_TYPE,G_CALLBACK(simple_panel_notify_image_cb),w);
-        g_signal_connect( w, "file-set", G_CALLBACK (background_changed), p);
     }
     /* font color */
     w = (GtkWidget*)gtk_builder_get_object( builder, "font_clr" );
     gtk_color_chooser_set_rgba( GTK_COLOR_CHOOSER(w), &p->gfontcolor );
     g_signal_connect( w, "color-set", G_CALLBACK( on_font_color_set ), p );
-    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_COLOR,w,"sensitive",G_SETTINGS_BIND_GET);
-
-    /* font size */
-    w = (GtkWidget*)gtk_builder_get_object( builder, "font_size" );
-    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_FONT_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
-    g_settings_bind(p->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_SIZE,w,"sensitive",G_SETTINGS_BIND_GET);
 
     /* plugin list */
     {
@@ -876,7 +936,6 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"win",G_ACTION_GROUP(panel));
     gtk_widget_insert_action_group(GTK_WIDGET(p->pref_dialog),"app",G_ACTION_GROUP(app));
     gtk_widget_show(GTK_WIDGET(p->pref_dialog));
-    g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE,back_type);
 }
 
 static void notify_apply_config( GtkWidget* widget )

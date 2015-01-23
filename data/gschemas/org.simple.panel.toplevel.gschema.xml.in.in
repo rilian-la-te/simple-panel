@@ -48,6 +48,11 @@
       <_summary>Panel icon size</_summary>
       <_description>Size of icons on the panel in pixels. Minimum is 16px, maximum is 200px.</_description>
     </key>
+    <key name="advanced-geometry-features" flags="org.simple.panel.GeometryFlags">
+      <default>['dock','strut']</default>
+      <_summary>Selected apperance features.</_summary>
+      <_description>Listed appearance features will be used from GSettings, not from GTK theme.</_description>
+    </key>
     <key name="dock" type="b">
       <default>true</default>
       <_summary>As dock</_summary>
@@ -74,11 +79,6 @@
       <_summary>Visible pixels when hidden</_summary>
       <_description>Specifies the number of pixels visible when the panel is automatically hidden into a corner. This key is only relevant if the autohide key is true.</_description>
     </key>
-    <key name="background-type" enum="org.simple.panel.BackgroundType">
-      <default>'gtk'</default>
-      <_summary>Background type</_summary>
-      <_description>Which type of background should be used for this panel. Possible values are "gtk" - the default GTK+ widget background will be used, "gnome" - the default Gnome Panel background will be used, "color" - the color key will be used as background color or "image" - the image specified by the image key will be used as background.</_description>
-    </key>
     <key name="background-color" type="s">
       <default>'rgb(255,255,255)'</default>
       <_summary>Background color</_summary>
@@ -89,31 +89,32 @@
       <_summary>Background image</_summary>
       <_description>Specifies the file to be used for the background image. If the image contains an alpha channel it will be composited onto the desktop background image.</_description>
     </key>
-	<key name="appearance-features" flags="org.simple.panel.AppearanceFlags">
+    <key name="appearance-features" flags="org.simple.panel.AppearanceFlags">
       <default>[]</default>
       <_summary>Selected apperance features.</_summary>
       <_description>Listed appearance features will be used from GSettings, not from GTK theme.</_description>
     </key>
-    <key name="enable-font-size" type="b">
-      <default>false</default>
-      <_summary>Use custom font size</_summary>
-      <_description>If true, the panel use custom font size for all items.</_description>
+    <key name="font" type="s">
+      <default>'Arial 10'</default>
+      <_summary>Selected font.</_summary>
+      <_description>This font will be used for appearance, if selected in features.</_description>
     </key>
-    <key name="enable-font-color" type="b">
-      <default>false</default>
-      <_summary>Use custom font color</_summary>
-      <_description>If true, the panel use custom font color for all items.</_description>
-    </key>
-    <key name="font-color" type="s">
+    <key name="foreground-color" type="s">
       <default>'rgb(255,255,255)'</default>
-      <_summary>Background color</_summary>
-      <_description>Specifies the background color for the panel in rgba(red,green,blue,alpha) format.</_description>
+      <_summary>Foreground color</_summary>
+      <_description>Specifies the foreground color for the panel in rgba(red,green,blue,alpha) format.</_description>
     </key>
     <key name="font-size" type="i">
 	  <range min="2" max="96"/>
       <default>10</default>
       <_summary>Font size</_summary>
       <_description>Custom font size of the panel.</_description>
+    </key>
+    <key name="round-corners-size" type="i">
+    <range min="0" max="200"/>
+      <default>0</default>
+      <_summary>Round corners size</_summary>
+      <_description>Radius of panel's rounded corners.</_description>
     </key>
   </schema>
 </schemalist>

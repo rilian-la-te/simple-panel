@@ -50,13 +50,14 @@ enum
     PROP_ALIGNMENT,
     PROP_MARGIN,
     PROP_MONITOR,
+    PROP_GEOMETRY,
     PROP_AUTOHIDE,
     PROP_AUTOHIDE_SIZE,
-    PROP_ENABLEFONTCOLOR,
-    PROP_ENABLEFONTSIZE,
+    PROP_APPEARANCE,
+    PROP_ROUND_CORNERS,
     PROP_BACKGROUNDFILE,
-    PROP_BACKGROUNDTYPE,
     PROP_TINTCOLOR,
+    PROP_FONT,
     PROP_FONTCOLOR,
     PROP_FONTSIZE,
     PROP_ICON_SIZE,
@@ -121,6 +122,8 @@ static void lxpanel_finalize(GObject *object)
     if (p->settings)
         panel_gsettings_free(p->settings,FALSE);
 
+    if (p->font)
+        g_free(p->font);
     g_free( p->background_file );
 
     g_free( p->name );
@@ -333,11 +336,6 @@ static void simple_panel_set_property(GObject      *object,
         geometry = TRUE;
         updatestrut = TRUE;
         break;
-    case PROP_BACKGROUNDTYPE:
-        toplevel->priv->background = g_value_get_enum(value);
-        background = TRUE;
-        configuration = TRUE;
-        break;
     case PROP_AUTOHIDE:
         toplevel->priv->autohide = g_value_get_boolean(value);
         toplevel->priv->visible = toplevel->priv->autohide ? FALSE : TRUE;
@@ -349,14 +347,9 @@ static void simple_panel_set_property(GObject      *object,
         geometry=TRUE;
         updatestrut = TRUE;
         break;
-    case PROP_ENABLEFONTCOLOR:
-        toplevel->priv->usefontcolor = g_value_get_boolean (value);
-        fonts = TRUE;
-        configuration = TRUE;
-        break;
-    case PROP_ENABLEFONTSIZE:
-        toplevel->priv->usefontsize = g_value_get_boolean (value);
-        fonts = TRUE;
+    case PROP_APPEARANCE:
+        toplevel->priv->appearance = g_value_get_flags(value);
+        background = TRUE;
         configuration = TRUE;
         break;
     case PROP_BACKGROUNDFILE:
@@ -372,11 +365,18 @@ static void simple_panel_set_property(GObject      *object,
     case PROP_FONTCOLOR:
         gdk_rgba_parse(&toplevel->priv->gfontcolor,g_value_get_string(value));
         fonts = TRUE;
+        background = TRUE;
         configuration = TRUE;
         break;
-    case PROP_FONTSIZE:
-        toplevel->priv->fontsize = g_value_get_int(value);
-        fonts = TRUE;
+    case PROP_FONT:
+        toplevel->priv->font = g_value_dup_string(value);
+        g_print("%s\n",g_value_get_string(value));
+        background = TRUE;
+        configuration = TRUE;
+        break;
+    case PROP_ROUND_CORNERS:
+        toplevel->priv->round_corners = g_value_get_int(value);
+        background = TRUE;
         configuration = TRUE;
         break;
     case PROP_ICON_SIZE:
@@ -405,11 +405,13 @@ static void simple_panel_set_property(GObject      *object,
         if (geometry)
             gtk_widget_queue_resize(GTK_WIDGET(toplevel));
         if (background)
+        {
             panel_widget_update_background(toplevel);
+            gtk_container_foreach(GTK_CONTAINER(toplevel->priv->box),plugins_update_appearance,toplevel);
+        }
         if (fonts)
         {
             panel_widget_update_fonts(toplevel,GTK_WIDGET(toplevel));
-            gtk_container_foreach(GTK_CONTAINER(toplevel->priv->box),plugins_update_appearance,toplevel);
         }
         if (updatestrut)
             _panel_set_wm_strut(toplevel);
@@ -451,20 +453,17 @@ static void simple_panel_get_property(GObject      *object,
     case PROP_MARGIN:
         g_value_set_int(value,toplevel->priv->margin);
         break;
-    case PROP_BACKGROUNDTYPE:
-        g_value_set_enum(value,toplevel->priv->background);
-        break;
     case PROP_AUTOHIDE:
         g_value_set_boolean(value, toplevel->priv->autohide);
         break;
     case PROP_AUTOHIDE_SIZE:
         g_value_set_int(value,toplevel->priv->height_when_hidden);
         break;
-    case PROP_ENABLEFONTCOLOR:
-        g_value_set_boolean (value,toplevel->priv->usefontcolor);
+    case PROP_APPEARANCE:
+        g_value_set_flags(value,toplevel->priv->background);
         break;
-    case PROP_ENABLEFONTSIZE:
-        g_value_set_boolean (value,toplevel->priv->usefontsize);
+    case PROP_ROUND_CORNERS:
+        g_value_set_int(value,toplevel->priv->background);
         break;
     case PROP_BACKGROUNDFILE:
         g_value_set_string(value,toplevel->priv->background_file);
@@ -475,8 +474,8 @@ static void simple_panel_get_property(GObject      *object,
     case PROP_FONTCOLOR:
         g_value_set_string(value,gdk_rgba_to_string(&toplevel->priv->gfontcolor));
         break;
-    case PROP_FONTSIZE:
-        g_value_set_int(value,toplevel->priv->fontsize);
+    case PROP_FONT:
+        g_value_set_string(value,toplevel->priv->font);
         break;
     case PROP_ICON_SIZE:
         g_value_set_int(value,toplevel->priv->icon_size);
@@ -615,31 +614,24 @@ static void simple_panel_class_init(PanelWindowClass *klass)
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
-                PROP_BACKGROUNDTYPE,
-                g_param_spec_enum(
-                    PANEL_PROP_BACKGROUND_TYPE,
-                    "Background Type",
+                PROP_APPEARANCE,
+                g_param_spec_flags(
+                    PANEL_PROP_APPEARANCE,
+                    "Appearance features",
                     "Type of panel background",
-                    BACKGROUND_TYPE,
-                    BACKGROUND_GTK,
+                    APPEARANCE_FLAGS,
+                    0,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
-    g_object_class_install_property (
+    g_object_class_install_property(
                 gobject_class,
-                PROP_ENABLEFONTCOLOR,
-                g_param_spec_boolean(
-                    PANEL_PROP_ENABLE_FONT_COLOR,
-                    "Enable font color",
-                    "Enable custom font color",
-                    FALSE,
-                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
-    g_object_class_install_property (
-                gobject_class,
-                PROP_ENABLEFONTSIZE,
-                g_param_spec_boolean(
-                    PANEL_PROP_ENABLE_FONT_SIZE,
-                    "Enable font size",
-                    "Enable custom font size",
-                    FALSE,
+                PROP_ROUND_CORNERS,
+                g_param_spec_int(
+                    PANEL_PROP_ROUND_CORNERS,
+                    "Round corners radius",
+                    "Radius of round corners of this panel",
+                    0,
+                    PANEL_HEIGHT_MAX,
+                    0,
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property(
                 gobject_class,
@@ -679,16 +671,14 @@ static void simple_panel_class_init(PanelWindowClass *klass)
                     "Font color color of this panel",
                     "black",
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
-    g_object_class_install_property(
+    g_object_class_install_property (
                 gobject_class,
-                PROP_FONTSIZE,
-                g_param_spec_int(
-                    PANEL_PROP_FONT_SIZE,
-                    "Font size",
-                    "Size of panel fonts",
-                    PANEL_FONT_MIN,
-                    PANEL_FONT_MAX,
-                    PANEL_FONT_DEFAULT,
+                PROP_FONT,
+                g_param_spec_string (
+                    PANEL_PROP_FONT,
+                    "Font",
+                    "Font of this panel",
+                    "Cousine 10",
                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME));
     g_object_class_install_property (
                 gobject_class,
@@ -940,40 +930,94 @@ void _panel_set_wm_strut(SimplePanel *panel)
 /****************************************************
  *         panel's handlers for GTK events          *
  ****************************************************/
-static void panel_widget_update_background(SimplePanel * panel)
+static void panel_update_background (SimplePanel* p, GtkWidget* w, gboolean only_fonts)
 {
-	Panel * p = panel->priv;
-    gchar* css = NULL;
-    GdkRGBA color;
-    gboolean system = TRUE;
-    gdk_rgba_parse(&color,"transparent");
-    if (p->background == BACKGROUND_IMAGE)
-	{
-		/* User specified background pixmap. */
-        if (p->background_file != NULL)
-        {
-            system = FALSE;
-            css = css_generate_background(p->background_file,color,FALSE);
-        }
-	}
-    else if (p->background == BACKGROUND_COLOR)
-	{
-		/* User specified background color. */
-        system = FALSE;
-        css = css_generate_background("none",p->gtintcolor,TRUE);
-    }
-    else if (p->background == BACKGROUND_GNOME)
-        gtk_style_context_add_class(gtk_widget_get_style_context(GTK_WIDGET(panel)),"gnome-panel-menu-bar");
-    else
-        gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(panel)),"gnome-panel-menu-bar");
-
-    if (css)
+    GString* str;
+    char* css;
+    const AppearanceFlags check = p->priv->appearance;
+    char* background, *foreground;
+    background = gdk_rgba_to_string(&p->priv->gtintcolor);
+    foreground = gdk_rgba_to_string(&p->priv->gfontcolor);
+    str = g_string_new(NULL);
+    gboolean class_background, class_shadow, class_corners, class_fontsize, class_font, class_foreground;
+    class_background = ((check & APPEARANCE_BACKGROUND_COLOR) || (check & APPEARANCE_BACKGROUND_IMAGE));
+    class_shadow = (check & APPEARANCE_SHADOW );
+    class_corners = (check & APPEARANCE_ROUND_CORNERS );
+    class_fontsize = (check & APPEARANCE_FONT_SIZE );
+    class_font = (check & APPEARANCE_FONT);
+    class_foreground = (check & APPEARANCE_FOREGROUND_COLOR);
+    if (class_background)
     {
-        css_apply_with_class(GTK_WIDGET(panel),css,"-simple-panel-background",system);
-        g_free(css);
+        g_string_append_printf(str,".-simple-panel-background {\n");
+        {
+            if (check & APPEARANCE_BACKGROUND_COLOR)
+                g_string_append_printf(str," background-color: %s;\n",background);
+            else
+                g_string_append_printf(str," background-color: transparent;\n");
+            if (check & APPEARANCE_BACKGROUND_IMAGE)
+            {
+                g_string_append_printf(str," background-image: url('%s');\n",p->priv->background_file);
+                if (!(check & APPEARANCE_REPEAT_BACKGROUND_IMAGE))
+                    g_string_append_printf(str," background-repeat: no-repeat;\n");
+            }
+            else
+                g_string_append_printf(str," background-image: none;\n");
+        }
+        g_string_append_printf(str,"}\n");
     }
-    else if (system)
-        css_apply_with_class(GTK_WIDGET(panel),"","-simple-panel-background",system);
+//    {
+//        g_string_append_printf(str,".-simple-panel-shadow {\n");
+//        g_string_append_printf(str," box-shadow: 0 0 0 3px alpha(0.3, %s);\n",foreground);
+//        g_string_append_printf(str," border-style: none;\n margin: 3px;\n");
+//        g_string_append_printf(str,"}\n");
+//    }
+    {
+        g_string_append_printf(str,".-simple-panel-round-corners {\n");
+        g_string_append_printf(str," border-radius: %dpx;\n",p->priv->round_corners);
+        g_string_append_printf(str,"}\n");
+    }
+    PangoFontDescription* font = pango_font_description_from_string(p->priv->font);
+    {
+        g_string_append_printf(str,".-simple-panel-font-size {\n");
+        g_string_append_printf(str," font-size: %dpx;\n",pango_font_description_get_size(font)/PANGO_SCALE);
+        g_string_append_printf(str,"}\n");
+    }
+    {
+        g_string_append_printf(str,".-simple-panel-fonts {\n");
+        const char* family = pango_font_description_get_family(font);
+        int size = pango_font_description_get_size(font)/PANGO_SCALE;
+        int weight = pango_font_description_get_weight(font);
+        int style = pango_font_description_get_style(font);
+        int variant = pango_font_description_get_variant(font);
+        const gchar* wc;
+        const gchar* sc;
+        const gchar* vc;
+        sc = (style == PANGO_STYLE_ITALIC) ? "italic" : ((style == PANGO_STYLE_OBLIQUE) ? "oblique" : "normal");
+        vc = (variant == PANGO_VARIANT_SMALL_CAPS) ? "small-caps" : "normal";
+        wc = (weight <= PANGO_WEIGHT_SEMILIGHT) ? "light" : (weight >= PANGO_WEIGHT_SEMIBOLD ? "bold" : "normal");
+        g_string_append_printf(str," font: %s %s %s %dpx %s;\n",sc,vc,wc,size,family);
+        g_string_append_printf(str,"}\n");
+    }
+    {
+        g_string_append_printf(str,".-simple-panel-foreground-color {\n");
+        g_string_append_printf(str," color: %s;\n",foreground);
+        g_string_append_printf(str,"}\n");
+    }
+    g_string_append_printf(str,"\0");
+    css = g_string_free(str,FALSE);
+    if (!only_fonts)
+    {
+        css_apply_with_class(GTK_WIDGET(w),css,"-simple-panel-background",!class_background);
+        css_apply_with_class(GTK_WIDGET(w),css,"-simple-panel-shadow",!class_shadow);
+        css_apply_with_class(GTK_WIDGET(w),css,"-simple-panel-round-corners",!class_corners);
+    }
+    gboolean apply_size = (!class_font || class_fontsize);
+    css_apply_with_class(GTK_WIDGET(w),css,"-simple-panel-font-size",!class_fontsize);
+    css_apply_with_class(GTK_WIDGET(w),css,"-simple-panel-font", apply_size);
+    css_apply_with_class(GTK_WIDGET(w),css,"-simple-panel-foreground-color",!class_foreground);
+    pango_font_description_free(font);
+    g_free(background);
+    g_free(foreground);
 }
 
 static void plugins_update_appearance(GtkWidget* plugin, gpointer data)
@@ -993,23 +1037,14 @@ static void plugins_update_appearance(GtkWidget* plugin, gpointer data)
 
 }
 
-void panel_widget_update_fonts(SimplePanel * p, GtkWidget* w)
+static void panel_widget_update_background(SimplePanel * p)
 {
-    gchar* css;
-    if (p->priv->usefontcolor){
-        css = css_generate_font_color(p->priv->gfontcolor);
-        css_apply_with_class(w,css,"-simple-panel-font-color",FALSE);
-        g_free(css);
-    } else {
-        css_apply_with_class(w,css,"-simple-panel-font-color",TRUE);
-    }
-    if (p->priv->usefontsize){
-        css = css_generate_font_size(p->priv->fontsize);
-        css_apply_with_class(w,css,"-simple-panel-font-size",FALSE);
-        g_free(css);
-    } else {
-        css_apply_with_class(w,css,"-simple-panel-font-size",TRUE);
-    }
+   panel_update_background(p,GTK_WIDGET(p),FALSE);
+}
+
+static void panel_widget_update_fonts(SimplePanel * p, GtkWidget* w)
+{
+    panel_update_background(p,w,TRUE);
 }
 
 /****************************************************
@@ -1605,13 +1640,12 @@ static void panel_add_actions( SimplePanel* p)
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ICON_SIZE);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_MARGIN);
     simple_panel_bind_gsettings(G_OBJECT(p),p->priv->settings->toplevel_settings,PANEL_PROP_MONITOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_FONT_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_COLOR);
+    simple_panel_bind_gsettings(G_OBJECT(p),p->priv->settings->toplevel_settings,PANEL_PROP_APPEARANCE);
+    simple_panel_bind_gsettings(G_OBJECT(p),p->priv->settings->toplevel_settings,PANEL_PROP_ROUND_CORNERS);
+    simple_panel_bind_gsettings(G_OBJECT(p),p->priv->settings->toplevel_settings,PANEL_PROP_FONT);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_FONT_COLOR);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_COLOR);
     simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_FILE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE);
 }
 
 static void on_monitors_changed(GdkScreen* screen, gpointer unused)

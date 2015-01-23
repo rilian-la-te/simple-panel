@@ -32,7 +32,7 @@
 #include <gtk/gtk.h>
 #include "panel.h"
 
-inline void css_apply_with_class (GtkWidget* widget,const gchar* css, gchar* klass ,gboolean remove);
+inline void css_apply_with_class (GtkWidget* widget, const char *css, const char *klass , const gboolean remove);
 inline gchar* css_generate_background(const char *filename, GdkRGBA color,gboolean no_image);
 inline gchar* css_generate_font_color(GdkRGBA color);
 inline gchar* css_generate_font_size(gint size);
