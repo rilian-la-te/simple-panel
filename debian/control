@@ -1,33 +1,31 @@
-Source: lxpanel
+Source: simple-panel
 Section: x11
 Priority: optional
 Maintainer: Debian LXDE Maintainers <lxde-debian@lists.lxde.org>
 Uploaders:
- Andrew Lee (李健秋) <ajqlee@debian.org>,
- Andriy Grytsenko <andrej@rep.kiev.ua>
+ Athor <ria.freelander@gmail.com>
 Build-Depends:
  debhelper (>= 8.9.0~), dh-autoreconf, gtk-doc-tools,
  intltool, libasound2-dev,
- libgtk2.0-dev (>= 2.18), libiw-dev [linux-any],
+ libgtk3.0-dev (>= 3.12), libiw-dev [linux-any],
  libmenu-cache-dev | libmenu-cache1-dev,
- libwnck-dev, libfm-gtk-dev (>= 1.2.0) | libfm-dev (>= 1.2.0),
+ libwnck3-dev, libfm-gtk-dev (>= 1.2.0) | libfm-dev (>= 1.2.0),
  libxml2-dev
 Standards-Version: 3.9.5
 Homepage: http://www.lxde.org/
 Vcs-Browser: http://git.lxde.org/gitweb/?p=debian/lxpanel.git
 Vcs-Git: git://git.lxde.org/git/debian/lxpanel.git
 
-Package: lxpanel
+Package: simple-panel
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, lxmenu-data, libfm-modules,
- lxpanel-data (= ${source:Version})
+ simple-panel-data (= ${source:Version})
 Recommends: xkb-data
 Suggests: lxsession | menu, iceweasel | www-browser
-Description: LXDE panel
- LXPanel is a GUI application for the Lightweight X11 Desktop Environment
- (LXDE).
+Description: SimplePanel
+ SimplePanel is a GUI application for the X11.
  .
- It is derived from fbpanel and includes the following features:
+ It is derived from lxpanel and includes the following features:
  .
   * User-friendly application menu automatically generated from .desktop
     files on the system
@@ -40,40 +38,35 @@ Description: LXDE panel
   * Notification area (system tray).
   * Digital clock.
   * Keyboard LEDs plug-in (display caps/num locks).
-  * lxpanelctl: control lxpanel from other programs.
-    For example, "lxpanelctl run" will show the Run dialog in lxpanel,
-    and "lxpanelctl menu" will show the application menu. This is
+  * simple-panel can be controlled from other programs.
+    For example, "lxpanel --command run" will show the Run dialog in lxpanel,
+    and "lxpanel --command menu" will show the application menu. This is
     useful in combination with window manager key bindings.
 
-Package: lxpanel-dev
+Package: simple-panel-dev
 Architecture: any
-Depends: ${misc:Depends}, lxpanel (= ${binary:Version}), libglib2.0-dev,
+Depends: ${misc:Depends}, simple-panel (= ${binary:Version}), libglib2.0-dev,
  libmenu-cache1-dev, pkg-config
 Recommends: manpages-dev
-Description: LXDE panel (development)
- LXPanel is a GUI application for the Lightweight X11 Desktop Environment
- (LXDE).
+Description: SimplePanel (development)
+ SimplePanel is a GUI application for the X11.
  .
  This package contains the development files.
 
-Package: lxpanel-dbg
+Package: simple-panel-dbg
 Section: debug
 Priority: extra
 Architecture: any
-Depends: ${misc:Depends}, lxpanel (= ${binary:Version})
-Description: LXDE panel (debug)
- LXPanel is a GUI application for the Lightweight X11 Desktop Environment
- (LXDE).
+Depends: ${misc:Depends}, simple-panel (= ${binary:Version})
+Description: SimplePanel (debug)
+ SimplePanel is a GUI application for the X11.
  .
  This package contains the debugging symbols.
 
-Package: lxpanel-data
+Package: simple-panel-data
 Architecture: all
 Depends: ${misc:Depends}
-Breaks: lxpanel (<< 0.7.0)
-Replaces: lxpanel (<< 0.7.0)
 Description: LXDE panel (data files)
- LXPanel is a GUI application for the Lightweight X11 Desktop Environment
- (LXDE).
+ SimplePanel is a GUI application for the X11.
  .
  This package contains the data required for panel.

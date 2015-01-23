@@ -19,7 +19,7 @@ else
 endif
 
 override_dh_strip:
-	dh_strip --dbg-package=lxpanel-dbg
+	dh_strip --dbg-package=simple-panel-dbg
 
 override_dh_makeshlibs:
 	# plugins are not shared libs so disable processing for them
