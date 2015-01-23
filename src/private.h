@@ -40,6 +40,7 @@ typedef enum {
 } AlignType;
 
 typedef enum {
+    SIZE_FILL = 0,
     SIZE_DYNAMIC,
     SIZE_PIXEL,
     SIZE_PERCENT
