@@ -91,11 +91,15 @@ static void panel_widget_update_background(SimplePanel * panel);
 
 G_DEFINE_TYPE(PanelWindow, simple_panel, GTK_TYPE_APPLICATION_WINDOW)
 
-static inline gchar *_user_config_file_name(const char *name1, const char* cprofile, const char *name2)
-{
-    return g_build_filename(g_get_user_config_dir(), "simple-panel", cprofile, name1,
-                            name2, NULL);
-}
+#define _user_config_file_name(name1, cprofile, name2)\
+    g_build_filename(g_get_user_config_dir(), "simple-panel", cprofile, name1,\
+                            name2, NULL)
+
+#define get_all_panels(panel)\
+    gtk_application_get_windows(\
+                gtk_window_get_application(\
+                    GTK_WINDOW(panel)\
+                    ))
 
 static inline gchar* get_profile(SimplePanel* panel)
 {
@@ -103,14 +107,6 @@ static inline gchar* get_profile(SimplePanel* panel)
     gchar* profile;
     g_object_get(app,"profile",&profile,NULL);
     return profile;
-}
-
-static inline GList* get_all_panels(SimplePanel* panel)
-{
-    return gtk_application_get_windows(
-                gtk_window_get_application(
-                    GTK_WINDOW(panel)
-                    ));
 }
 
 static void lxpanel_finalize(GObject *object)
@@ -1377,8 +1373,8 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
     gtk_widget_destroy( dlg );
     if( ok )
     {
-        panel_stop_gui(panel);
         gchar* profile = get_profile(panel);
+        panel_stop_gui(panel);
         gtk_widget_destroy(GTK_WIDGET(panel));
         gchar *fname;
         /* delete the config file of this panel */
