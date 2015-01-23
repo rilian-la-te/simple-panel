@@ -20,7 +20,6 @@
 #include "menu-maker.h"
 #include <glib.h>
 #include <gio/gdesktopappinfo.h>
-#include <glib.h>
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 #include <string.h>

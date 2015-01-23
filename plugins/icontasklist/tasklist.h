@@ -19,8 +19,8 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WNCK_TASKLIST_H
-#define WNCK_TASKLIST_H
+#ifndef ICON_TASKLIST_H
+#define ICON_TASKLIST_H
 
 #define WNCK_I_KNOW_THIS_IS_UNSTABLE
 #include <gtk/gtk.h>
@@ -28,31 +28,31 @@
 
 G_BEGIN_DECLS
 
-#define WNCK_TYPE_TASKLIST              (wnck_tasklist_get_type ())
-#define WNCK_TASKLIST(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), WNCK_TYPE_TASKLIST, WnckTasklist))
-#define WNCK_TASKLIST_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), WNCK_TYPE_TASKLIST, WnckTasklistClass))
-#define WNCK_IS_TASKLIST(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), WNCK_TYPE_TASKLIST))
-#define WNCK_IS_TASKLIST_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), WNCK_TYPE_TASKLIST))
-#define WNCK_TASKLIST_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), WNCK_TYPE_TASKLIST, WnckTasklistClass))
+#define ICON_TYPE_TASKLIST              (icon_tasklist_get_type ())
+#define ICON_TASKLIST(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), ICON_TYPE_TASKLIST, IconTasklist))
+#define ICON_TASKLIST_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), ICON_TYPE_TASKLIST, IconTasklistClass))
+#define ICON_IS_TASKLIST(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), ICON_TYPE_TASKLIST))
+#define ICON_IS_TASKLIST_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), ICON_TYPE_TASKLIST))
+#define ICON_TASKLIST_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), ICON_TYPE_TASKLIST, IconTasklistClass))
 
-typedef struct _WnckTasklist        WnckTasklist;
-typedef struct _WnckTasklistClass   WnckTasklistClass;
-typedef struct _WnckTasklistPrivate WnckTasklistPrivate;
+typedef struct _IconTasklist        IconTasklist;
+typedef struct _IconTasklistClass   IconTasklistClass;
+typedef struct _IconTasklistPrivate IconTasklistPrivate;
 
 /**
- * WnckTasklist:
+ * IconTasklist:
  *
- * The #WnckTasklist struct contains only private fields and should not be
+ * The #IconTasklist struct contains only private fields and should not be
  * directly accessed.
  */
-struct _WnckTasklist
+struct _IconTasklist
 {
   GtkContainer parent_instance;
 
-  WnckTasklistPrivate *priv;
+  IconTasklistPrivate *priv;
 };
 
-struct _WnckTasklistClass
+struct _IconTasklistClass
 {
   GtkContainerClass parent_class;
   
@@ -64,72 +64,51 @@ struct _WnckTasklistClass
 };
 
 /**
- * WnckTasklistGroupingType:
- * @WNCK_TASKLIST_NEVER_GROUP: never group multiple #WnckWindow of the same
+ * IconTasklistGroupingType:
+ * @ICON_TASKLIST_NEVER_GROUP: never group multiple #WnckWindow of the same
  * #WnckApplication.
- * @WNCK_TASKLIST_AUTO_GROUP: group multiple #WnckWindow of the same
+ * @ICON_TASKLIST_AUTO_GROUP: group multiple #WnckWindow of the same
  * #WnckApplication for some #WnckApplication, when there is not enough place
  * to have a good-looking list of all #WnckWindow.
- * @WNCK_TASKLIST_ALWAYS_GROUP: always group multiple #WnckWindow of the same
+ * @ICON_TASKLIST_ALWAYS_GROUP: always group multiple #WnckWindow of the same
  * #WnckApplication, for all #WnckApplication.
  *
- * Type defining the policy of the #WnckTasklist for grouping multiple
+ * Type defining the policy of the #IconTasklist for grouping multiple
  * #WnckWindow of the same #WnckApplication.
  */
 typedef enum {
-  WNCK_TASKLIST_NEVER_GROUP,
-  WNCK_TASKLIST_AUTO_GROUP,
-  WNCK_TASKLIST_ALWAYS_GROUP
-} WnckTasklistGroupingType;
+  ICON_TASKLIST_NEVER_GROUP,
+  ICON_TASKLIST_AUTO_GROUP,
+  ICON_TASKLIST_ALWAYS_GROUP
+} IconTasklistGroupingType;
 
-GType wnck_tasklist_get_type (void) G_GNUC_CONST;
+GType icon_tasklist_get_type (void) G_GNUC_CONST;
 
-GtkWidget *wnck_tasklist_new (void);
-const int *wnck_tasklist_get_size_hint_list (WnckTasklist  *tasklist,
+GtkWidget *icon_tasklist_new (void);
+const int *icon_tasklist_get_size_hint_list (IconTasklist  *tasklist,
 					      int           *n_elements);
 
-void wnck_tasklist_set_grouping (WnckTasklist             *tasklist,
-				 WnckTasklistGroupingType  grouping);
-void wnck_tasklist_set_switch_workspace_on_unminimize (WnckTasklist  *tasklist,
+void icon_tasklist_set_grouping (IconTasklist             *tasklist,
+                 IconTasklistGroupingType  grouping);
+void icon_tasklist_set_switch_workspace_on_unminimize (IconTasklist  *tasklist,
 						       gboolean       switch_workspace_on_unminimize);
-void wnck_tasklist_set_middle_click_close (WnckTasklist  *tasklist,
+void icon_tasklist_set_middle_click_close (IconTasklist  *tasklist,
 					   gboolean       middle_click_close);
-void wnck_tasklist_set_grouping_limit (WnckTasklist *tasklist,
+void icon_tasklist_set_grouping_limit (IconTasklist *tasklist,
 				       gint          limit);
-void wnck_tasklist_set_include_all_workspaces (WnckTasklist *tasklist,
+void icon_tasklist_set_include_all_workspaces (IconTasklist *tasklist,
 					       gboolean      include_all_workspaces);
-void wnck_tasklist_set_button_relief (WnckTasklist *tasklist,
+void icon_tasklist_set_button_relief (IconTasklist *tasklist,
                                       GtkReliefStyle relief);
-void wnck_tasklist_set_orientation (WnckTasklist *tasklist,
+void icon_tasklist_set_orientation (IconTasklist *tasklist,
                                     GtkOrientation orient);
 
-/**
- * WnckLoadIconFunction:
- * @icon_name: an icon name as in the Icon field in a .desktop file for the
- * icon to load.
- * @size: the desired icon size.
- * @flags: not defined to do anything yet.
- * @data: data passed to the function, set when the #WnckLoadIconFunction has
- * been set for the #WnckTasklist.
- *
- * Specifies the type of function passed to wnck_tasklist_set_icon_loader().
- *
- * Returns: it should return a <classname>GdkPixbuf</classname> of @icon_name
- * at size @size, or %NULL if no icon for @icon_name at size @size could be
- * loaded.
- *
- * Since: 2.2
- */
-typedef GdkPixbuf* (*WnckLoadIconFunction) (const char   *icon_name,
-                                            int           size,
-                                            unsigned int  flags,
-                                            void         *data);
 
-void wnck_tasklist_set_icon_loader (WnckTasklist         *tasklist,
+void icon_tasklist_set_icon_loader (IconTasklist         *tasklist,
                                     WnckLoadIconFunction  load_icon_func,
                                     void                 *data,
                                     GDestroyNotify        free_data_func);
 
 G_END_DECLS
 
-#endif /* WNCK_TASKLIST_H */
+#endif /* ICON_TASKLIST_H */

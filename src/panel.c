@@ -986,7 +986,6 @@ static void plugins_update_appearance(GtkWidget* plugin, gpointer data)
         back = init->background_widget(plugin);
         if (back)
         {
-            plugin_widget_set_background(back,p);
             panel_widget_update_fonts(p,back);
         }
     }
@@ -1293,7 +1292,7 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
     GtkWidget* msg;
     gint e;
     GdkScreen *screen;
-    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(app));
+    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(panel));
     SimplePanel *new_panel = panel_allocate(app);
     Panel *p = new_panel->priv;
 
@@ -1379,10 +1378,10 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
     if( ok )
     {
         panel_stop_gui(panel);
+        gchar* profile = get_profile(panel);
         gtk_widget_destroy(GTK_WIDGET(panel));
         gchar *fname;
         /* delete the config file of this panel */
-        gchar* profile = get_profile(panel);
         fname = _user_config_file_name("panels",profile,panel->priv->name);
         g_unlink( fname );
         g_free(fname);
