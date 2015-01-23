@@ -42,6 +42,7 @@ gsettings_SCHEMAS = $(panel_gschemas_in:.xml.in=.xml)
 uidir=$(datadir)/simple-panel/ui
 ui_in_files= \
 	ui/launchtaskbar.glade \
+	ui/icontasklist.glade \
 	ui/netstatus.glade
 
 ui_DATA = $(ui_in_files:.glade=.ui)
