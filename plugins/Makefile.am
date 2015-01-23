@@ -183,6 +183,7 @@ launchtaskbar_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 # icontasklist
 icontasklist_la_SOURCES = \
 	icontasklist/icontasklist.c \
+	icontasklist/tasklist.c \
 	X/x-misc.c
 icontasklist_la_CFLAGS = \
 	$(WNCK_CFLAGS) \
