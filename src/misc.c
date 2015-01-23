@@ -222,7 +222,8 @@ static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *ic
                                                const gchar *label)
 {
     const gchar* css = ".-panel-icon-button {\n"
-                       "  padding: 1px;\n"
+                       "  padding: 0px;\n"
+                       "  margin: 0px;\n"
                        " -GtkWidget-focus-line-width: 0px;\n"
                        " -GtkWidget-focus-padding: 0px;\n"
                        "}\n"
