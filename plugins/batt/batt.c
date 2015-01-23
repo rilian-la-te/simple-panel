@@ -409,6 +409,12 @@ static GtkWidget * constructor(SimplePanel *panel, GSettings *settings)
     return p;
 }
 
+static GtkWidget* get_background_widget(GtkWidget* plugin)
+{
+    lx_battery *b = lxpanel_plugin_get_data(plugin);
+    return b->button;
+}
+
 static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, lx_battery* b)
 {
     int edge;
@@ -505,6 +511,7 @@ SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .description = N_("Display battery status using ACPI"),
     .new_instance = constructor,
     .config      = config,
+    .background_widget = get_background_widget,
     .has_config  = TRUE,
 };
 

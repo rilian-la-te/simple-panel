@@ -151,6 +151,7 @@ static void button_center(GtkWidget* b, GParamSpec* pspec, gpointer data)
 inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img,const gchar* label)
 {
     const gchar *css = ".-panel-button {\n"
+            "font: inherit;"
             "margin: 0px 0px 0px 0px;\n"
             "padding: 0px 0px 0px 0px;\n"
             "}\n";

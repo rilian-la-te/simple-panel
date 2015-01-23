@@ -120,7 +120,7 @@ inline gchar* css_generate_font_color(GdkRGBA color){
     gchar* color_str = gdk_rgba_to_string(&color);
     gchar* ret;
     ret = g_strdup_printf(".-simple-panel-font-color{\n"
-                    " color: %s;\n"
+                    "color: %s;\n"
                     "}",color_str);
     g_free(color_str);
     return ret;

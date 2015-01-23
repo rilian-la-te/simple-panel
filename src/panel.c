@@ -78,7 +78,8 @@ static void simple_panel_get_preferred_size(GtkWidget* widget, GtkRequisition* m
 static void panel_start_gui(SimplePanel *p);
 static void ah_start(SimplePanel *p);
 static void ah_stop(SimplePanel *p);
-static void panel_update_fonts(SimplePanel * p);
+static void panel_widget_update_fonts(SimplePanel * p, GtkWidget *w);
+static void plugins_update_appearance(GtkWidget* plugin, gpointer data);
 static void activate_remove_plugin(GSimpleAction* action, GVariant* param, gpointer pl);
 static void activate_new_panel(GSimpleAction* action, GVariant* param, gpointer data);
 static void activate_remove_panel(GSimpleAction* action, GVariant* param, gpointer data);
@@ -86,7 +87,7 @@ static void activate_panel_settings(GSimpleAction* action, GVariant* param, gpoi
 static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
 PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel );
-static void panel_update_background(SimplePanel * panel);
+static void panel_widget_update_background(SimplePanel * panel);
 
 G_DEFINE_TYPE(PanelWindow, simple_panel, GTK_TYPE_APPLICATION_WINDOW)
 
@@ -404,9 +405,12 @@ static void simple_panel_set_property(GObject      *object,
         if (geometry)
             gtk_widget_queue_resize(GTK_WIDGET(toplevel));
         if (background)
-            panel_update_background(toplevel);
+            panel_widget_update_background(toplevel);
         if (fonts)
-            panel_update_fonts(toplevel);
+        {
+            panel_widget_update_fonts(toplevel,GTK_WIDGET(toplevel));
+            gtk_container_foreach(GTK_CONTAINER(toplevel),plugins_update_appearance,toplevel);
+        }
         if (updatestrut)
             _panel_set_wm_strut(toplevel);
     }
@@ -936,7 +940,7 @@ void _panel_set_wm_strut(SimplePanel *panel)
 /****************************************************
  *         panel's handlers for GTK events          *
  ****************************************************/
-static void panel_update_background(SimplePanel * panel)
+static void panel_widget_update_background(SimplePanel * panel)
 {
 	Panel * p = panel->priv;
     gchar* css = NULL;
@@ -972,22 +976,39 @@ static void panel_update_background(SimplePanel * panel)
         css_apply_with_class(GTK_WIDGET(panel),"","-simple-panel-background",system);
 }
 
-void panel_update_fonts(SimplePanel * p)
+static void plugins_update_appearance(GtkWidget* plugin, gpointer data)
+{
+    SimplePanel* p = (SimplePanel*)data;
+    GtkWidget* back;
+    const SimplePanelPluginInit *init = PLUGIN_CLASS(plugin);
+    if (init && init->background_widget)
+    {
+        back = init->background_widget(plugin);
+        if (back)
+        {
+            plugin_widget_set_background(back,p);
+            panel_widget_update_fonts(p,back);
+        }
+    }
+
+}
+
+void panel_widget_update_fonts(SimplePanel * p, GtkWidget* w)
 {
     gchar* css;
     if (p->priv->usefontcolor){
         css = css_generate_font_color(p->priv->gfontcolor);
-        css_apply_with_class(GTK_WIDGET(p),css,"-simple-panel-font-color",FALSE);
+        css_apply_with_class(w,css,"-simple-panel-font-color",FALSE);
         g_free(css);
     } else {
-        css_apply_with_class(GTK_WIDGET(p),css,"-simple-panel-font-color",TRUE);
+        css_apply_with_class(w,css,"-simple-panel-font-color",TRUE);
     }
     if (p->priv->usefontsize){
         css = css_generate_font_size(p->priv->fontsize);
-        css_apply_with_class(GTK_WIDGET(p),css,"-simple-panel-font-size",FALSE);
+        css_apply_with_class(w,css,"-simple-panel-font-size",FALSE);
         g_free(css);
     } else {
-        css_apply_with_class(GTK_WIDGET(p),css,"-simple-panel-font-size",TRUE);
+        css_apply_with_class(w,css,"-simple-panel-font-size",TRUE);
     }
 }
 

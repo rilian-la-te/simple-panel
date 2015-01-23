@@ -98,6 +98,7 @@ typedef struct {
     char *description;          /* tooltip text */
     GtkWidget *(*new_instance)(SimplePanel *panel, GSettings* settings);
     GtkWidget *(*config)(SimplePanel *panel, GtkWidget *instance);
+    GtkWidget *(*background_widget)(GtkWidget* instance);
     void (*reconfigure)(SimplePanel *panel, GtkWidget *instance);
     gboolean (*button_press_event)(GtkWidget *widget, GdkEventButton *event, SimplePanel *panel);
     void (*show_system_menu)(GtkWidget *widget);
