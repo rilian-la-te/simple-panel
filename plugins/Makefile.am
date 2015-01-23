@@ -9,8 +9,8 @@ AM_CPPFLAGS = \
 
 AM_LDFLAGS = \
 	-module -avoid-version -shared -export-dynamic \
-	-no-undefined -rpath $(pkglibdir)/plugins \
-	$(pkglibdir)/../libsimplepanel.la \
+        -no-undefined -rpath $(pkglibdir)/plugins \
+        $(pkglibdir)/../libsimplepanel.la \
 	$(PACKAGE_LIBS)
 
 #$(top_builddir)/src/libsimplepanel.la:
@@ -183,6 +183,7 @@ launchtaskbar_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 # icontasklist
 icontasklist_la_SOURCES = \
 	icontasklist/icontasklist-plugin.c \
+	icontasklist/tasklist-dnd.c \
 	icontasklist/tasklist.c
 icontasklist_la_CFLAGS = \
 	$(WNCK_CFLAGS) \

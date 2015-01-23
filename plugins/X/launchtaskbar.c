@@ -3495,11 +3495,11 @@ static SimplePanelPluginInit _taskbar_init = {
 
 static void launchtaskbar_init(void)
 {
-    lxpanel_register_plugin_type("launchbar", &_launchbar_init);
-    lxpanel_register_plugin_type("taskbar", &_taskbar_init);
+//    lxpanel_register_plugin_type("launchbar", &_launchbar_init);
+//    lxpanel_register_plugin_type("taskbar", &_taskbar_init);
 }
 
-FM_DEFINE_MODULE(lxpanel_gtk, launchtaskbar);
+FM_DEFINE_MODULE(lxpanel_gtk, launchtaskbar)
 
 /* Plugin descriptor. */
 SimplePanelPluginInit fm_module_init_lxpanel_gtk = {

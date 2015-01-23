@@ -26,38 +26,9 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <glib.h>
 #include <glib/gi18n-lib.h>
-#include <X11/Xlib.h>
 #include "tasklist.h"
-
-/**
- * SECTION:tasklist
- * @short_description: a tasklist widget, showing the list of windows as a list
- * of buttons.
- * @see_also: #WnckScreen, #WnckSelector
- * @stability: Unstable
- *
- * The #IconTasklist represents client windows on a screen as a list of buttons
- * labelled with the window titles and icons. Pressing a button can activate or
- * minimize the represented window, and other typical actions are available
- * through a popup menu. Windows needing attention can also be distinguished
- * by a fade effect on the buttons representing them, to help attract the
- * user's attention.
- *
- * The behavior of the #IconTasklist can be customized in various ways, like
- * grouping multiple windows of the same application in one button (see
- * icon_tasklist_set_grouping() and icon_tasklist_set_grouping_limit()), or
- * showing windows from all workspaces (see
- * icon_tasklist_set_include_all_workspaces()). The fade effect for windows
- * needing attention can be controlled by various style properties like
- * #IconTasklist:fade-max-loops and #IconTasklist:fade-opacity.
- *
- * The tasklist also acts as iconification destination. If there are multiple
- * #IconTasklist or other applications setting the iconification destination
- * for windows, the iconification destinations might not be consistent among
- * windows and it is not possible to determine which #IconTasklist (or which
- * other application) owns this propriety.
- */
 
 /* TODO:
  *
@@ -222,8 +193,8 @@ struct _IconTasklistPrivate
 
 static GType icon_task_get_type (void);
 
-G_DEFINE_TYPE (IconTask, icon_task, G_TYPE_OBJECT);
-G_DEFINE_TYPE (IconTasklist, icon_tasklist, GTK_TYPE_CONTAINER);
+G_DEFINE_TYPE (IconTask, icon_task, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (IconTasklist, icon_tasklist, GTK_TYPE_CONTAINER)
 #define ICON_TASKLIST_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), ICON_TYPE_TASKLIST, IconTasklistPrivate))
 
 static void icon_task_init        (IconTask      *task);
@@ -236,10 +207,7 @@ static IconTask *icon_task_new_from_window      (IconTasklist    *tasklist,
 						 WnckWindow      *window);
 static IconTask *icon_task_new_from_class_group (IconTasklist    *tasklist,
 						 WnckClassGroup  *class_group);
-#ifdef HAVE_STARTUP_NOTIFICATION
-static IconTask *icon_task_new_from_startup_sequence (IconTasklist      *tasklist,
-                                                      SnStartupSequence *sequence);
-#endif
+
 static gboolean icon_task_get_needs_attention (IconTask *task);
 
 
@@ -336,7 +304,7 @@ static void     icon_tasklist_disconnect_screen        (IconTasklist *tasklist);
 #define _wnck_screen_get_gdk_screen(screen)\
     gdk_display_get_screen(gdk_display_get_default(),wnck_screen_get_number(screen))
 
-inline gchar *
+static inline gchar *
 _wnck_window_get_name_for_display (WnckWindow *window,
                                    gboolean    use_icon_name,
                                    gboolean    use_state_decorations)
@@ -1812,14 +1780,6 @@ icon_tasklist_disconnect_screen (IconTasklist *tasklist)
     }
 
   g_assert (i == N_SCREEN_CONNECTIONS);
-
-#ifdef HAVE_STARTUP_NOTIFICATION
-  if (tasklist->priv->startup_sequence_timeout != 0)
-    {
-      g_source_remove (tasklist->priv->startup_sequence_timeout);
-      tasklist->priv->startup_sequence_timeout = 0;
-    }
-#endif
 }
 
 static gboolean
@@ -2986,17 +2946,6 @@ icon_task_get_text (IconTask *task,
       break;
 
     case ICON_TASK_STARTUP_SEQUENCE:
-#ifdef HAVE_STARTUP_NOTIFICATION
-      name = sn_startup_sequence_get_description (task->startup_sequence);
-      if (name == NULL)
-        name = sn_startup_sequence_get_name (task->startup_sequence);
-      if (name == NULL)
-        name = sn_startup_sequence_get_binary_name (task->startup_sequence);
-
-      return g_strdup (name);
-#else
-      return NULL;
-#endif
       break;
     }
 
@@ -3111,35 +3060,6 @@ icon_task_get_icon (IconTask *task)
 				      state & WNCK_WINDOW_STATE_MINIMIZED);
       break;
     case ICON_TASK_STARTUP_SEQUENCE:
-#ifdef HAVE_STARTUP_NOTIFICATION
-      if (task->tasklist->priv->icon_loader != NULL)
-        {
-          const char *icon;
-
-          icon = sn_startup_sequence_get_icon_name (task->startup_sequence);
-          if (icon != NULL)
-            {
-              GdkPixbuf *loaded;
-
-              loaded =  (* task->tasklist->priv->icon_loader) (icon,
-                                                               MINI_ICON_SIZE,
-                                                               0,
-                                                               task->tasklist->priv->icon_loader_data);
-
-              if (loaded != NULL)
-                {
-                  pixbuf = icon_task_scale_icon (loaded, FALSE);
-                  g_object_unref (G_OBJECT (loaded));
-                }
-            }
-        }
-
-      if (pixbuf == NULL)
-        {
-          _wnck_get_fallback_icons (NULL, 0, 0,
-                                    &pixbuf, MINI_ICON_SIZE, MINI_ICON_SIZE);
-        }
-#endif
       break;
     }
 
@@ -3167,7 +3087,7 @@ icon_task_get_needs_attention (IconTask *task)
 	  if (wnck_window_or_transient_needs_attention (win_task->window))
 	    {
 	      needs_attention = TRUE;
-              task->start_needs_attention = MAX (task->start_needs_attention, _wnck_window_or_transient_get_needs_attention_time (win_task->window));
+              task->start_needs_attention = MAX (task->start_needs_attention, time(0));
 	      break;
 	    }
 
@@ -3178,7 +3098,7 @@ icon_task_get_needs_attention (IconTask *task)
     case ICON_TASK_WINDOW:
       needs_attention =
 	wnck_window_or_transient_needs_attention (task->window);
-      task->start_needs_attention = _wnck_window_or_transient_get_needs_attention_time (task->window);
+      task->start_needs_attention = time(0); //_wnck_window_or_transient_get_needs_attention_time (task->window);
       break;
 
     case ICON_TASK_STARTUP_SEQUENCE:
@@ -3988,39 +3908,6 @@ icon_task_compare (gconstpointer  a,
                * started, and then who cares about sort order... */
 }
 
-static void
-remove_startup_sequences_for_window (IconTasklist *tasklist,
-                                     WnckWindow   *window)
-{
-#ifdef HAVE_STARTUP_NOTIFICATION
-  const char *win_id;
-  GList *tmp;
-
-  win_id = _wnck_window_get_startup_id (window);
-  if (win_id == NULL)
-    return;
-
-  tmp = tasklist->priv->startup_sequences;
-  while (tmp != NULL)
-    {
-      IconTask *task = tmp->data;
-      GList *next = tmp->next;
-      const char *task_id;
-
-      g_assert (task->type == ICON_TASK_STARTUP_SEQUENCE);
-
-      task_id = sn_startup_sequence_get_id (task->startup_sequence);
-
-      if (task_id && strcmp (task_id, win_id) == 0)
-        gtk_widget_destroy (task->button);
-
-      tmp = next;
-    }
-#else
-  ; /* nothing */
-#endif
-}
-
 static IconTask *
 icon_task_new_from_window (IconTasklist *tasklist,
 			   WnckWindow   *window)
@@ -4057,195 +3944,3 @@ icon_task_new_from_class_group (IconTasklist   *tasklist,
 
   return task;
 }
-
-#ifdef HAVE_STARTUP_NOTIFICATION
-static IconTask*
-icon_task_new_from_startup_sequence (IconTasklist      *tasklist,
-                                     SnStartupSequence *sequence)
-{
-  IconTask *task;
-
-  task = g_object_new (WNCK_TYPE_TASK, NULL);
-
-  task->type = ICON_TASK_STARTUP_SEQUENCE;
-  task->window = NULL;
-  task->class_group = NULL;
-  task->startup_sequence = sequence;
-  sn_startup_sequence_ref (task->startup_sequence);
-  task->tasklist = tasklist;
-
-  icon_task_create_widgets (task, tasklist->priv->relief);
-
-  return task;
-}
-
-/* This should be fairly long, as it should never be required unless
- * apps or .desktop files are buggy, and it's confusing if
- * OpenOffice or whatever seems to stop launching - people
- * might decide they need to launch it again.
- */
-#define STARTUP_TIMEOUT 15000
-
-static gboolean
-sequence_timeout_callback (void *user_data)
-{
-  IconTasklist *tasklist = user_data;
-  GList *tmp;
-  GTimeVal now;
-  long tv_sec, tv_usec;
-  double elapsed;
-
-  g_get_current_time (&now);
-
- restart:
-  tmp = tasklist->priv->startup_sequences;
-  while (tmp != NULL)
-    {
-      IconTask *task = ICON_TASK (tmp->data);
-
-      sn_startup_sequence_get_last_active_time (task->startup_sequence,
-                                                &tv_sec, &tv_usec);
-
-      elapsed =
-        ((((double)now.tv_sec - tv_sec) * G_USEC_PER_SEC +
-          (now.tv_usec - tv_usec))) / 1000.0;
-
-      if (elapsed > STARTUP_TIMEOUT)
-        {
-          g_assert (task->button != NULL);
-          /* removes task from list as a side effect */
-          gtk_widget_destroy (task->button);
-
-          goto restart; /* don't iterate over changed list, just restart;
-                         * not efficient but who cares here.
-                         */
-        }
-
-      tmp = tmp->next;
-    }
-
-  if (tasklist->priv->startup_sequences == NULL)
-    {
-      tasklist->priv->startup_sequence_timeout = 0;
-      return FALSE;
-    }
-  else
-    return TRUE;
-}
-
-static void
-icon_tasklist_sn_event (SnMonitorEvent *event,
-                        void           *user_data)
-{
-  IconTasklist *tasklist;
-
-  tasklist = ICON_TASKLIST (user_data);
-
-  switch (sn_monitor_event_get_type (event))
-    {
-    case SN_MONITOR_EVENT_INITIATED:
-      {
-        IconTask *task;
-
-        task = icon_task_new_from_startup_sequence (tasklist,
-                                                    sn_monitor_event_get_startup_sequence (event));
-
-        gtk_widget_set_parent (task->button, GTK_WIDGET (tasklist));
-        gtk_widget_show (task->button);
-
-        tasklist->priv->startup_sequences =
-          g_list_prepend (tasklist->priv->startup_sequences,
-                          task);
-
-        if (tasklist->priv->startup_sequence_timeout == 0)
-          {
-            tasklist->priv->startup_sequence_timeout =
-              g_timeout_add_seconds (1, sequence_timeout_callback,
-                                     tasklist);
-          }
-
-        gtk_widget_queue_resize (GTK_WIDGET (tasklist));
-      }
-      break;
-
-    case SN_MONITOR_EVENT_COMPLETED:
-      {
-        GList *tmp;
-        tmp = tasklist->priv->startup_sequences;
-        while (tmp != NULL)
-          {
-            IconTask *task = ICON_TASK (tmp->data);
-
-            if (task->startup_sequence ==
-                sn_monitor_event_get_startup_sequence (event))
-              {
-                g_assert (task->button != NULL);
-                /* removes task from list as a side effect */
-                gtk_widget_destroy (task->button);
-                break;
-              }
-
-            tmp = tmp->next;
-          }
-      }
-      break;
-
-    case SN_MONITOR_EVENT_CHANGED:
-      break;
-
-    case SN_MONITOR_EVENT_CANCELED:
-      break;
-    }
-
-  if (tasklist->priv->startup_sequences == NULL &&
-      tasklist->priv->startup_sequence_timeout != 0)
-    {
-      g_source_remove (tasklist->priv->startup_sequence_timeout);
-      tasklist->priv->startup_sequence_timeout = 0;
-    }
-}
-
-static void
-icon_tasklist_check_end_sequence (IconTasklist   *tasklist,
-                                  WnckWindow     *window)
-{
-  const char *res_class;
-  const char *res_name;
-  GList *tmp;
-
-  if (tasklist->priv->startup_sequences == NULL)
-    return;
-
-  res_class = wnck_window_get_class_group_name (window);
-  res_name = wnck_window_get_class_instance_name (window);
-
-  if (res_class == NULL && res_name == NULL)
-    return;
-
-  tmp = tasklist->priv->startup_sequences;
-  while (tmp != NULL)
-    {
-      IconTask *task = ICON_TASK (tmp->data);
-      const char *wmclass;
-
-      wmclass = sn_startup_sequence_get_wmclass (task->startup_sequence);
-
-      if (wmclass != NULL &&
-          ((res_class && strcmp (res_class, wmclass) == 0) ||
-           (res_name && strcmp (res_name, wmclass) == 0)))
-        {
-          sn_startup_sequence_complete (task->startup_sequence);
-
-          g_assert (task->button != NULL);
-          /* removes task from list as a side effect */
-          gtk_widget_destroy (task->button);
-
-          /* only match one */
-          return;
-        }
-
-      tmp = tmp->next;
-    }
-}
-
-#endif /* HAVE_STARTUP_NOTIFICATION */

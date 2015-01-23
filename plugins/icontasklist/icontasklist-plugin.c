@@ -3,7 +3,7 @@
 #endif
 
 #include <glib/gi18n.h>
-
+#include <libfm/fm.h>
 
 #include "tasklist.h"
 #include "plugin.h"
@@ -19,23 +19,29 @@ static GtkWidget *icontasklist_constructor(SimplePanel *panel, GSettings *settin
 {
     /* Allocate plugin context and set into Plugin private data pointer. */
     IconTasklistPlugin * sp = g_new0(IconTasklistPlugin, 1);
-    GtkWidget * p;
+    GtkWidget * p, *w;
 
+    w = icon_tasklist_new();
+
+    g_return_val_if_fail(w != NULL, NULL);
     /* Save construction pointers */
     sp->panel = panel;
     sp->settings = settings;
+
+    gtk_widget_show(w);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     p = gtk_event_box_new();
     lxpanel_plugin_set_data(p, sp, g_free);
     gtk_widget_set_has_window(p,FALSE);
-    sp->tasklist = icon_tasklist_new();
-    gtk_container_add(GTK_CONTAINER(p),sp->tasklist);
+    sp->tasklist = w;
+    gtk_container_add(GTK_CONTAINER(p),w);
 
     /* Apply the configuration and show the widget. */
-    gtk_widget_show_all(p);
     return p;
 }
+
+FM_DEFINE_MODULE(lxpanel_gtk, icontasklist)
 
 SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Application Task Bar with Pinned Tasks"),
