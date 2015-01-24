@@ -182,11 +182,12 @@ launchtaskbar_la_LIBADD = $(WNCK_LIBS) $(X11_LIBS)
 
 # icontasklist
 icontasklist_la_SOURCES = \
-	icontasklist/icontasklist-plugin.c \
-	icontasklist/tasklist-dnd.c \
-	icontasklist/tasklist.c
+	icontasklist/icontasklist.c
+#	icontasklist/tasklist-dnd.c \
+#	icontasklist/tasklist.c
 icontasklist_la_CFLAGS = \
 	$(WNCK_CFLAGS) \
+	-I$(srcdir)/X \
 	-I$(srcdir)/icontasklist \
 	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
 	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\"

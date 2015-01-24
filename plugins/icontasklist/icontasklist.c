@@ -50,11 +50,13 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk-pixbuf-xlib/gdk-pixbuf-xlib.h>
 #include <gdk/gdk.h>
+#include <gtk/gtk.h>
+#include <glib.h>
 #include <glib/gi18n.h>
 #include <glib-object.h>
 #include <cairo-xlib.h>
 
-#include <libfm/fm-gtk.h>
+#include <libfm/fm.h>
 
 #ifndef WNCK_I_KNOW_THIS_IS_UNSTABLE
 #define WNCK_I_KNOW_THIS_IS_UNSTABLE
@@ -67,6 +69,7 @@
 #include "css.h"
 #include "icon.xpm"
 #include "icon-grid.h"
+#include "misc.h"
 #define DISABLE_MENU
 #ifndef DISABLE_MENU
 # include "menu-policy.h"
@@ -152,7 +155,7 @@ typedef struct {
     GtkWidget * image_widget;   /* Pointer to image */
     FmFileInfo * fi;                    /* Launcher application descriptor */
     gchar* id;        /* Pointer to settings */
-    FmDndDest * dd;                     /* Drag and drop support */
+//    FmDndDest * dd;                     /* Drag and drop support */
     gint number;
 } LaunchButton;
 
@@ -162,7 +165,7 @@ struct LaunchTaskBarPlugin {
     GtkWidget *lb_icon_grid;         /* Icon grid managing the container */
     GSList        *buttons;          /* Launchbar buttons */
     LaunchButton  *bootstrap_button; /* Bootstrapping button for empty launchtaskbar */
-    FmIcon * add_icon;                  /* Icon for bootstrap_button */
+    GIcon * add_icon;                  /* Icon for bootstrap_button */
     GtkWidget     *p_button_add, *p_button_remove, *p_label_menu_app_exec, *p_label_def_app_exec;
     /* TASKBAR */
     Task * p_task_list;            /* List of tasks to be displayed in taskbar */
@@ -373,8 +376,8 @@ static void launchbutton_free(LaunchButton * btn)
 {
     if (btn->fi)
         fm_file_info_unref(btn->fi);
-    if (btn->dd)
-        g_object_unref(btn->dd);
+//    if (btn->dd)
+//        g_object_unref(btn->dd);
     if (btn->id)
         g_free(btn->id);
     g_free(btn);
@@ -394,33 +397,32 @@ static gboolean launchbutton_press_event(GtkWidget * widget, GdkEventButton * ev
     return FALSE;
 }
 
-/* Handler for "drag-motion" event from launchtaskbar button. */
-static gboolean launchbutton_drag_motion_event(
-    GtkWidget * widget,
-    GdkDragContext * context,
-    gint x,
-    gint y,
-    guint time,
-    LaunchButton * b)
-{
-    GdkAtom target;
-    GdkDragAction action = 0;
+///* Handler for "drag-motion" event from launchtaskbar button. */
+//static gboolean launchbutton_drag_motion_event(
+//    GtkWidget * widget,
+//    GdkDragContext * context,
+//    gint x,
+//    gint y,
+//    guint time,
+//    LaunchButton * b)
+//{
+//    GdkAtom target;
+//    GdkDragAction action = 0;
 
-    fm_dnd_dest_set_dest_file(b->dd, b->fi);
-    target = fm_dnd_dest_find_target(b->dd, context);
-    if (target != GDK_NONE && fm_dnd_dest_is_target_supported(b->dd, target))
-        action = fm_dnd_dest_get_default_action(b->dd, context, target);
-    gdk_drag_status(context, action, time);
-    /* g_debug("launchbutton_drag_motion_event: act=%u",action); */
-    return (action != 0);
-}
+////    fm_dnd_dest_set_dest_file(b->dd, b->fi);
+////    target = fm_dnd_dest_find_target(b->dd, context);
+//    if (target != GDK_NONE && fm_dnd_dest_is_target_supported(b->dd, target))
+//        action = fm_dnd_dest_get_default_action(b->dd, context, target);
+//    gdk_drag_status(context, action, time);
+//    /* g_debug("launchbutton_drag_motion_event: act=%u",action); */
+//    return (action != 0);
+//}
 
 /* Build the graphic elements for the bootstrap launchtaskbar button. */
 static void launchbutton_build_bootstrap(LaunchTaskBarPlugin *lb)
 {
     if(lb->bootstrap_button == NULL)
     {
-        GdkPixbuf * icon;
         /* Build a button that has the stock "Add" icon.
          * The "desktop-id" being NULL is the marker that this is the bootstrap button. */
         lb->bootstrap_button = g_new0(LaunchButton, 1);
@@ -435,10 +437,8 @@ static void launchbutton_build_bootstrap(LaunchTaskBarPlugin *lb)
         g_signal_connect(event_box, "button-press-event", G_CALLBACK(launchbutton_press_event), lb->bootstrap_button);
 
         /* Create an image containing the stock "Add" icon as a child of the event box. */
-        lb->add_icon = fm_icon_from_name("gtk-add");
-        icon = fm_pixbuf_from_icon(lb->add_icon, lb->icon_size);
-        lb->bootstrap_button->image_widget = gtk_image_new_from_pixbuf(icon);
-        g_object_unref(icon);
+        lb->add_icon = g_icon_new_for_string("list-add",GTK_ICON_SIZE_INVALID);
+        lb->bootstrap_button->image_widget = simple_panel_image_new_for_gicon(lb->panel,lb->add_icon,-1);
         gtk_container_add(GTK_CONTAINER(event_box), lb->bootstrap_button->image_widget);
 
         /* Add the bootstrap button to the icon grid.  By policy it is empty at this point. */
@@ -555,11 +555,11 @@ static LaunchButton *launchbutton_for_file_info(LaunchTaskBarPlugin * lb, FmFile
     gtk_container_add(GTK_CONTAINER(lb->lb_icon_grid), button);
 
     /* Drag and drop support. */
-    btn->dd = fm_dnd_dest_new_with_handlers(button);
+//    btn->dd = fm_dnd_dest_new_with_handlers(button);
 
     /* Connect signals. */
     g_signal_connect(button, "button-press-event", G_CALLBACK(launchbutton_press_event), (gpointer) btn);
-    g_signal_connect(button, "drag-motion", G_CALLBACK(launchbutton_drag_motion_event), btn);
+//    g_signal_connect(button, "drag-motion", G_CALLBACK(launchbutton_drag_motion_event), btn);
 
     /* If the list goes from null to non-null, remove the bootstrap button. */
     if ((lb->buttons == NULL) && (lb->bootstrap_button != NULL))
@@ -1044,7 +1044,7 @@ static void launchbar_configure_initialize_list(LaunchTaskBarPlugin *ltbp, GtkWi
         GdkPixbuf * pix;
         GtkTreeIter it;
         gtk_list_store_append(list, &it);
-        pix = fm_pixbuf_from_icon(fm_file_info_get_icon(btn->fi), PANEL_ICON_SIZE);
+        pix = fm_icon_get_gicon(fm_file_info_get_icon(btn->fi));
         gtk_list_store_set(list, &it,
                            COL_ICON, pix,
                            COL_TITLE, fm_file_info_get_disp_name(btn->fi),
@@ -1293,7 +1293,7 @@ static GtkWidget *launchtaskbar_configure(SimplePanel *panel, GtkWidget *p)
         GtkBuilder *builder = gtk_builder_new();
         GObject *object;
 
-        gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/launchtaskbar.ui", NULL);
+        gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/icontasklist.ui", NULL);
         dlg = (GtkWidget *)gtk_builder_get_object(builder, "dlg");
         panel_apply_icon(GTK_WINDOW(dlg));
 
@@ -1334,10 +1334,10 @@ static GtkWidget *launchtaskbar_configure(SimplePanel *panel, GtkWidget *p)
         ltbp->p_notebook_page_launch = gtk_notebook_get_nth_page(ltbp->p_notebook, 0);
         ltbp->p_notebook_page_task = gtk_notebook_get_nth_page(ltbp->p_notebook, 1);
         set_config_visibility(ltbp);
-	object = gtk_builder_get_object(builder, "combobox_mode");
+    object = gtk_builder_get_object(builder, "combobox_mode");
         gtk_combo_box_set_active(GTK_COMBO_BOX(object), ltbp->mode);
-	g_signal_connect(object, "changed",
-			G_CALLBACK(on_combobox_mode_changed), ltbp);
+    g_signal_connect(object, "changed",
+            G_CALLBACK(on_combobox_mode_changed), ltbp);
 
 #define SETUP_TOGGLE_BUTTON(button,member) \
         object = gtk_builder_get_object(builder, #button); \
@@ -1405,14 +1405,6 @@ static void launchtaskbar_panel_configuration_changed(SimplePanel *panel, GtkWid
                                      panel_get_orientation(panel),
                                      new_icon_size, new_icon_size, 3, 0,
                                      panel_get_height(panel));
-
-    /* Reset the bootstrap button. */
-    if (ltbp->bootstrap_button != NULL)
-    {
-        GdkPixbuf * icon = fm_pixbuf_from_icon(ltbp->add_icon, new_icon_size);
-        gtk_image_set_from_pixbuf(GTK_IMAGE(ltbp->bootstrap_button->image_widget), icon);
-        g_object_unref(icon);
-    }
 
     if (ltbp->tb_built)
     {
@@ -1878,7 +1870,7 @@ static void task_delete(LaunchTaskBarPlugin * tb, Task * tk, gboolean unlink, gb
 
 static cairo_surface_t *
 _wnck_cairo_surface_get_from_pixmap (Screen *screen,
-									 Pixmap  xpixmap)
+                                     Pixmap  xpixmap)
 {
   cairo_surface_t *surface;
   Display *display;
@@ -1893,27 +1885,27 @@ _wnck_cairo_surface_get_from_pixmap (Screen *screen,
  // _wnck_error_trap_push (display);
 
   if (!XGetGeometry (display, xpixmap, &root_return,
-					 &x_ret, &y_ret, &w_ret, &h_ret, &bw_ret, &depth_ret))
-	goto TRAP_POP;
+                     &x_ret, &y_ret, &w_ret, &h_ret, &bw_ret, &depth_ret))
+    goto TRAP_POP;
 
   if (depth_ret == 1)
-	{
+    {
       surface = cairo_xlib_surface_create_for_bitmap (display,
-													  xpixmap,
+                                                      xpixmap,
                                                       screen,
-													  w_ret,
-													  h_ret);
-	}
+                                                      w_ret,
+                                                      h_ret);
+    }
   else
-	{
-	  if (!XGetWindowAttributes (display, root_return, &attrs))
-		goto TRAP_POP;
+    {
+      if (!XGetWindowAttributes (display, root_return, &attrs))
+        goto TRAP_POP;
 
       surface = cairo_xlib_surface_create (display,
-										   xpixmap,
-										   attrs.visual,
-										   w_ret, h_ret);
-	}
+                                           xpixmap,
+                                           attrs.visual,
+                                           w_ret, h_ret);
+    }
 
 TRAP_POP:
 //  _wnck_error_trap_pop (display);
@@ -1924,7 +1916,7 @@ TRAP_POP:
 
 GdkPixbuf*
 _wnck_gdk_pixbuf_get_from_pixmap (Screen *screen,
-								  Pixmap  xpixmap)
+                                  Pixmap  xpixmap)
 {
   cairo_surface_t *surface;
   GdkPixbuf *retval;
@@ -1932,13 +1924,13 @@ _wnck_gdk_pixbuf_get_from_pixmap (Screen *screen,
   surface = _wnck_cairo_surface_get_from_pixmap (screen, xpixmap);
 
   if (surface == NULL)
-	return NULL;
+    return NULL;
 
   retval = gdk_pixbuf_get_from_surface (surface,
-										0,
-										0,
-										cairo_xlib_surface_get_width (surface),
-										cairo_xlib_surface_get_height (surface));
+                                        0,
+                                        0,
+                                        cairo_xlib_surface_get_width (surface),
+                                        cairo_xlib_surface_get_height (surface));
   cairo_surface_destroy (surface);
 
   return retval;
@@ -2183,7 +2175,7 @@ static GdkPixbuf * get_wm_icon(Window task_win, guint required_width, guint requ
         if (result == Success)
         {
 #if GTK_CHECK_VERSION (3, 0, 0)
-			pixmap = _wnck_gdk_pixbuf_get_from_pixmap(gdk_x11_screen_get_xscreen(gdk_screen_get_default()),xpixmap);
+            pixmap = _wnck_gdk_pixbuf_get_from_pixmap(gdk_x11_screen_get_xscreen(gdk_screen_get_default()),xpixmap);
 #else
             pixmap = _wnck_gdk_pixbuf_get_from_pixmap(xpixmap, w, h);
 #endif
@@ -2203,7 +2195,7 @@ static GdkPixbuf * get_wm_icon(Window task_win, guint required_width, guint requ
             {
                 /* Convert the X mask to a GDK pixmap. */
 #if GTK_CHECK_VERSION (3, 0, 0)
-				GdkPixbuf * mask = _wnck_gdk_pixbuf_get_from_pixmap(gdk_x11_screen_get_xscreen(gdk_screen_get_default()),xmask);
+                GdkPixbuf * mask = _wnck_gdk_pixbuf_get_from_pixmap(gdk_x11_screen_get_xscreen(gdk_screen_get_default()),xmask);
 #else
                 GdkPixbuf * mask = _wnck_gdk_pixbuf_get_from_pixmap(xmask, w, h);
 #endif
@@ -3495,11 +3487,11 @@ static SimplePanelPluginInit _taskbar_init = {
 
 static void launchtaskbar_init(void)
 {
-    lxpanel_register_plugin_type("launchbar", &_launchbar_init);
-    lxpanel_register_plugin_type("taskbar", &_taskbar_init);
+//    lxpanel_register_plugin_type("launchbar", &_launchbar_init);
+//    lxpanel_register_plugin_type("taskbar", &_taskbar_init);
 }
 
-FM_DEFINE_MODULE(lxpanel_gtk, launchtaskbar);
+FM_DEFINE_MODULE(lxpanel_gtk, icontasklist)
 
 /* Plugin descriptor. */
 SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
