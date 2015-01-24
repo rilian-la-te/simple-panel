@@ -532,7 +532,7 @@ static void panel_icon_grid_set_property(GObject *object, guint prop_id,
         panel_icon_grid_set_constrain_width(ig, g_value_get_boolean(value));
         break;
     case PROP_ASPECT_WIDTH:
-        panel_icon_grid_set_constrain_width(ig, g_value_get_boolean(value));
+        panel_icon_grid_set_aspect_width(ig, g_value_get_boolean(value));
         break;
     /* case PROP_FILL_WIDTH:
         panel_icon_grid_set_fill_width(ig, g_value_get_boolean(value));
