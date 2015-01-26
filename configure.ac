@@ -1,7 +1,7 @@
 AC_PREREQ(2.53)
 AC_INIT(simple-panel, 0.1.99, http://lxde.org/)
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects no-dist-gzip dist-xz])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Support silent build rules. Disable by either passing --disable-silent-rules
@@ -26,9 +26,9 @@ LT_INIT
 # Checks for libraries.
 AC_SEARCH_LIBS([log], [m])
 CFLAGS="$CFLAGS -DENABLE_GTK3"
-pkg_modules="$pkg_modules gtk+-3.0 libfm-gtk3 >= 1.2.0"
+pkg_modules="$pkg_modules gtk+-3.0 >= 3.12.0 libfm-gtk3 >= 1.2.0"
 pkg_modules="$pkg_modules \
-             gio-unix-2.0 \
+             gio-unix-2.0 >= 2.40.0 \
              gthread-2.0 \
              gmodule-2.0"
 PKG_CHECK_MODULES(PACKAGE, [$pkg_modules])
@@ -38,6 +38,26 @@ AC_PATH_PROG(GLIB_MKENUMS, glib-mkenums)
 AC_PATH_PROG(GLIB_COMPILE_RESOURCES, glib-compile-resources)
 
 GLIB_GSETTINGS
+
+# For various Vala things.
+GOBJECT_INTROSPECTION_CHECK([1.40.0])
+
+# Need Vala.
+AM_PROG_VALAC([0.24], [], [AC_MSG_ERROR([valac is required to build Simple Panel (vala parts)])])
+
+# Determine if upower is newer than we're supporting right now
+PKG_CHECK_MODULES(UPOWER99, [upower-glib >= 0.9.99], [have_upower0999=yes], [have_upower0999=no])
+if test "x$have_upower0999" = "xyes" ; then
+    VALAFLAGS="$VALAFLAGS --define HAVE_UPOWER0999"
+fi
+
+# Check for GTK3.13+ (Le World Blow Up)
+PKG_CHECK_MODULES(GTK313, [gtk+-3.0  >= 3.13], [have_gtk313=yes], [have_gtk313=no])
+if test "x$have_gtk313" = "xyes" ; then
+    VALAFLAGS="$VALAFLAGS --define HAVE_GTK313"
+fi
+
+AC_SUBST(VALAFLAGS)
 
 ###########################
 # Indicator Info
