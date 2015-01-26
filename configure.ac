@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT(simple-panel, 0.1.0, http://lxde.org/)
+AC_INIT(simple-panel, 0.1.99, http://lxde.org/)
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects no-dist-gzip dist-xz])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -396,9 +396,10 @@ fi
 AC_CONFIG_FILES([
     simple-panel.pc
     Makefile
-    src/Makefile
-    src/libsimplepanel.gresource.xml
-    src/simple-panel.gresource.xml
+    lib/Makefile
+    app/Makefile
+    lib/libsimplepanel.gresource.xml
+    app/simple-panel.gresource.xml
     plugins/Makefile
     po/Makefile.in
     data/Makefile

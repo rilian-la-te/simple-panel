@@ -3,7 +3,7 @@
 ## common flags for all plugins
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/lib \
 	$(PACKAGE_CFLAGS) \
 	$(G_CAST_CHECKS)
 

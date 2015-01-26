@@ -33,7 +33,6 @@
 
 #define __LXPANEL_INTERNALS__
 
-#include "app.h"
 #include "private.h"
 #include "misc.h"
 #include "css.h"

@@ -17,7 +17,7 @@ two_panels_config_paneldir = $(sysconfdir)/xdg/simple-panel/two_panels/panels
 
 gsettings_ENUM_NAMESPACE = org.simple.panel
 gsettings_ENUM_FILES = \
-        $(top_srcdir)/src/*.h \
+        $(top_srcdir)/lib/*.h \
         $(top_srcdir)/plugins/*.c \
         $(top_srcdir)/plugins/X/*.c \
         $(top_srcdir)/plugins/xkb/xkb.h

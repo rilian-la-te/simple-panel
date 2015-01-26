@@ -35,7 +35,6 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 
-#include "app.h"
 #include "panel.h"
 
 enum{

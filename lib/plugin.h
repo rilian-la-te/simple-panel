@@ -96,6 +96,7 @@ typedef struct {
     void (*finalize)(void);     /* optional finalize */
     char *name;                 /* name to represent in lists */
     char *description;          /* tooltip text */
+
     GtkWidget *(*new_instance)(SimplePanel *panel, GSettings* settings);
     GtkWidget *(*config)(SimplePanel *panel, GtkWidget *instance);
     GtkWidget *(*background_widget)(GtkWidget* instance);
