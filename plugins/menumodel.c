@@ -368,7 +368,9 @@ static GtkWidget *menumodel_config(SimplePanel *panel, GtkWidget *p)
                                       NULL);
 }
 
-SimplePanelPluginInit lxpanel_static_plugin_menumodel = {
+FM_DEFINE_MODULE(lxpanel_gtk,menumodel);
+
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Custom Menu"),
     .description = N_("Any custom menu in GMenuModel XML format. Also supports setting it as application menu."),
     .new_instance = menumodel_constructor,

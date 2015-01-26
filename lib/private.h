@@ -145,7 +145,6 @@ struct _Panel {
 #define STATIC_LAUNCHBAR
 #define STATIC_DCLOCK
 #define STATIC_DIRMENU
-#define STATIC_MENUMODEL
 #define STATIC_SPACE
 
 /* Plugins management - new style */

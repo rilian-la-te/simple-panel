@@ -8,11 +8,10 @@ namespace MenuMaker
 		if (info.should_show())
 		{
 			var found = false;
-			var action = "app.launch_id('%s')".printf(info.get_id());
+			var action = "app.launch-id('%s')".printf(info.get_id());
 			var item = new GLib.MenuItem(info.get_name(),action);
-			var missing = "application-x-executable";
-			item.set_attribute("icon","s", info.get_icon() != null ?
-			                   info.get_icon().serialize() : missing);
+			var icon = (info.get_icon() != null) ? info.get_icon().to_string() : "application-x-executable";
+			item.set_attribute("icon","s",icon);
 			if(info.get_description() != null)
 				item.set_attribute("tooltip","s",info.get_description());
 			var cats = info.get_categories().split_set(";");

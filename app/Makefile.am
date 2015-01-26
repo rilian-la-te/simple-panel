@@ -46,7 +46,8 @@ simple_panel_LDFLAGS = $(DYNAMIC_FLAGS) -rpath $(pkglibdir)
 simple_panel_DEPENDENCIES_EXTRA = $(BUILTIN_PLUGINS)
 
 simple_panel_LDADD = \
-		$(pkglibdir)/libsimplepanel.la \
+		$(top_builddir)/lib/libsimplepanel.la \
+		$(top_builddir)/libvalapanel/libvalapanel.la \
 		$(BUILTIN_PLUGINS) \
 		$(PACKAGE_LIBS) \
 		$(INTLLIBS)
@@ -57,7 +58,5 @@ EXTRA_DIST = $(SIMPLE_PANEL_NOINST_HEADER_FILES)
 CLEANFILES = \
 	simple-panel-resources.c \
 	simple-panel.gresource.xml
-$(builddir)/libvalapanel/libvalapanel.a: $(simple_panel_include_HEADERS)
-	cd $(builddir)/libvalapanel && $(MAKE) libvalapanel.a
 $(top_builddir)/plugins/libbuiltin_plugins.a: $(simple_panel_include_HEADERS)
 	cd $(top_builddir)/plugins && $(MAKE) libbuiltin_plugins.a

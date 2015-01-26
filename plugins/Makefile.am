@@ -9,9 +9,9 @@ AM_CPPFLAGS = \
 
 AM_LDFLAGS = \
 	-module -avoid-version -shared -export-dynamic \
-        -no-undefined -rpath $(pkglibdir)/plugins \
-        $(pkglibdir)/../libsimplepanel.la \
-        $(pkglibdir)/../libvalapanel.la \
+        -no-undefined -rpath $(pkglibdir) \
+        $(top_builddir)/lib/libsimplepanel.la \
+        $(top_builddir)/libvalapanel/libvalapanel.la \
 	$(PACKAGE_LIBS)
 
 #$(top_builddir)/src/libsimplepanel.la:
@@ -29,14 +29,13 @@ PLUGINS_SOURCES = \
 	dclock.c \
 	dirmenu.c \
 	separator.c \
-        space.c \
-	menumodel.c
+        space.c
 
 
 libbuiltin_plugins_a_SOURCES = \
 	$(PLUGINS_SOURCES)
 
-libbuiltin_plugins_a_LIBADD = 
+libbuiltin_plugins_a_LIBADD = $(top_builddir)/libvalapanel/libvalapanel.la
 
 ## loadable plugins
 if BUILD_PLUGIN_LOADER
@@ -55,6 +54,7 @@ EXTRA_LTLIBRARIES = \
 	indicator.la \
 	icontasklist.la \
 	kbled.la \
+	menumodel.la \
 	monitors.la \
 	netstat.la \
 	netstatus.la \
@@ -112,6 +112,9 @@ indicator_la_LIBADD = $(APPLET_LIBS)
 kbled_la_SOURCES = kbled/kbled.c
 kbled_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
 kbled_la_LIBADD = $(X11_LIBS)
+
+# menumodel
+menumodel_la_SOURCES = menumodel.c
 
 # monitors
 monitors_la_SOURCES = monitors/monitors.c
