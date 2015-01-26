@@ -30,6 +30,7 @@
 #include "misc.h"
 #include "private.h"
 #include "css.h"
+#include "vala.h"
 
 static void on_theme_changed(GtkWidget* img, GObject* object);
 static void _gtk_image_set_panel(GtkWidget* img, GIcon *icon, SimplePanel* panel, gint size);

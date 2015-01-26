@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS= -I m4
 
-SUBDIRS = data lib app plugins po man
+SUBDIRS = data libvalapanel lib app plugins po man
 
 EXTRA_DIST = \
         autogen.sh \

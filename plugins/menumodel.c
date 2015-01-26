@@ -36,7 +36,6 @@
 
 #include "misc.h"
 #include "plugin.h"
-#include "menu-maker.h"
 
 #define MENUMODEL_KEY_ICON "icon-name"
 #define MENUMODEL_KEY_CAPTION "menu-caption"
@@ -205,13 +204,13 @@ static void load_internal_menus(GMenu* menu, gint enum_id)
 
     if (enum_id == MENU_INTERNAL_APPLICATIONS)
     {
-        section = do_applications_menumodel(FALSE);
+        section = menu_maker_create_applications_menu(FALSE);
         g_menu_append_section(menu,NULL,section);
         g_object_unref(section);
     }
     if (enum_id == MENU_INTERNAL_SETTINGS)
     {
-        section = do_applications_menumodel(TRUE);
+        section = menu_maker_create_applications_menu(TRUE);
         g_menu_append_section(menu,NULL,section);
         g_object_unref(section);
     }
@@ -247,7 +246,7 @@ static GMenuModel* return_menumodel(MenuModelPlugin* m)
     GMenuModel* ret;
     if (m->internal)
     {
-        ret = create_default_menumodel(m->bar,m->icon_str);
+        ret = menu_maker_create_main_menu(m->bar,m->icon_str);
         m->app_monitor = g_app_info_monitor_get();
         g_signal_connect_swapped(m->app_monitor,"changed",G_CALLBACK(monitor_update),m);
         m->file_monitor = NULL;

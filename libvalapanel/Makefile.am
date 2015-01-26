@@ -14,17 +14,17 @@ libvalapanel-resources.c: $(top_srcdir)/data/libvalapanel.gresource.xml $(panel_
 	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target=$@ --sourcedir=$(top_srcdir)/data --generate-source $(top_srcdir)/data/libvalapanel.gresource.xml
 
 
-noinst_LIBRARIES = libvalapanel.a
+pkglib_LTLIBRARIES = libvalapanel.la
 
-libvalapanel_a_CPPFLAGS = $(simple_panel_CPPFLAGS)
-nodist_libvalapanel_a_SOURCES = libvalapanel-resources.c
-libvalapanel_a_SOURCES = \
+libvalapanel_la_CPPFLAGS = $(simple_panel_CPPFLAGS)
+nodist_libvalapanel_la_SOURCES = libvalapanel-resources.c
+libvalapanel_la_SOURCES = \
 	menu-maker.vala \
 	plugin-settings.vala \
 	icon-grid.vala \
 	css.vala
 
-libvalapanel_a_VALAFLAGS = \
+libvalapanel_la_VALAFLAGS = \
 	--library=libvalapanel \
 	-H $(top_srcdir)/lib/vala.h \
 	--vapi=$(top_srcdir)/vapi/vala-panel.vapi \
@@ -36,7 +36,7 @@ libvalapanel_a_VALAFLAGS = \
 	--pkg gio-settingsbackend-2.0 \
 	$(VALAFLAGS)
 
-libvalapanel_a_CFLAGS = \
+libvalapanel_la_CFLAGS = \
 	$(PACKAGE_CFLAGS) \
 	-DG_SETTINGS_ENABLE_BACKEND \
 	-DGETTEXT_PACKAGE=\""simple-panel"\" \
@@ -46,13 +46,17 @@ libvalapanel_a_CFLAGS = \
 	-DPACKAGE_BIN_DIR=\""$(bindir)"\" \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
 
-libvalapanel_a_LIBADD = \
-	$(GOBJECT_LIBS) \
-	$(GTK3_LIBS) 
+libvalapanel_la_LIBADD = \
+	$(PACKAGE_LIBS)
+	
+libvalapanel_la_LDFLAGS = \
+       -no-undefined \
+       -rpath $(pkglibdir)
+
 CLEANFILES = \
 	$(BUILT_SOURCES) \
-	$(libvalapanel_a_SOURCES:.vala=.c)
+	$(libvalapanel_la_SOURCES:.vala=.c)
 
 dist-hook:
 	cd $(distdir) && \
-	rm $(libvalapanel_a_SOURCES:.vala=.c) libvalapanel_a_vala.stamp
+	rm $(libvalapanel_la_SOURCES:.vala=.c) libvalapanel_la_vala.stamp

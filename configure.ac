@@ -417,7 +417,7 @@ AC_CONFIG_FILES([
     simple-panel.pc
     Makefile
     lib/Makefile
-    lib/libvalapanel/Makefile
+    libvalapanel/Makefile
     app/Makefile
     lib/libsimplepanel.gresource.xml
     data/libvalapanel.gresource.xml

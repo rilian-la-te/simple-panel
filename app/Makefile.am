@@ -15,7 +15,6 @@ simple_panel_CPPFLAGS = \
 
 BUILTIN_PLUGINS = $(top_builddir)/plugins/libbuiltin_plugins.a
 
-
 SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	private.h \
 	app.h \
@@ -58,6 +57,7 @@ EXTRA_DIST = $(SIMPLE_PANEL_NOINST_HEADER_FILES)
 CLEANFILES = \
 	simple-panel-resources.c \
 	simple-panel.gresource.xml
-
+$(builddir)/libvalapanel/libvalapanel.a: $(simple_panel_include_HEADERS)
+	cd $(builddir)/libvalapanel && $(MAKE) libvalapanel.a
 $(top_builddir)/plugins/libbuiltin_plugins.a: $(simple_panel_include_HEADERS)
 	cd $(top_builddir)/plugins && $(MAKE) libbuiltin_plugins.a

@@ -11,6 +11,7 @@ AM_LDFLAGS = \
 	-module -avoid-version -shared -export-dynamic \
         -no-undefined -rpath $(pkglibdir)/plugins \
         $(pkglibdir)/../libsimplepanel.la \
+        $(pkglibdir)/../libvalapanel.la \
 	$(PACKAGE_LIBS)
 
 #$(top_builddir)/src/libsimplepanel.la:
@@ -31,11 +32,11 @@ PLUGINS_SOURCES = \
         space.c \
 	menumodel.c
 
+
 libbuiltin_plugins_a_SOURCES = \
 	$(PLUGINS_SOURCES)
 
-libbuiltin_plugins_a_LIBADD =
-
+libbuiltin_plugins_a_LIBADD = 
 
 ## loadable plugins
 if BUILD_PLUGIN_LOADER
