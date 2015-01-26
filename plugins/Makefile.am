@@ -4,6 +4,7 @@
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
+	-I$(top_srcdir)/libvalapanel \
 	$(PACKAGE_CFLAGS) \
 	$(G_CAST_CHECKS)
 
@@ -115,6 +116,7 @@ kbled_la_LIBADD = $(X11_LIBS)
 
 # menumodel
 menumodel_la_SOURCES = menumodel.c
+menumodel_la_LIBADD = $(top_builddir)/libvalapanel/libvalapanel.la
 
 # monitors
 monitors_la_SOURCES = monitors/monitors.c

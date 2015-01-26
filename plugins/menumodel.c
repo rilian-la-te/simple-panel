@@ -35,6 +35,7 @@
 #include <fcntl.h>
 
 #include "misc.h"
+#include "vala.h"
 #include "plugin.h"
 
 #define MENUMODEL_KEY_ICON "icon-name"

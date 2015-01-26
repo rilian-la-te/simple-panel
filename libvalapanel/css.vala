@@ -36,7 +36,7 @@ namespace PanelCSS
 		} catch (GLib.Error e) {}
 		return null;
 	}
-	internal string generate_background(string? name, Gdk.RGBA color)
+	public string generate_background(string? name, Gdk.RGBA color)
 	{
 		if (name != null)
 			return ".-vala-panel-background{\n
@@ -48,19 +48,19 @@ namespace PanelCSS
 			 background-image: none;\n
 			}".printf(color.to_string());
 	}
-	internal string generate_font_size(int size)
+	public string generate_font_size(int size)
 	{
 		return ".-vala-panel-font-size{\n
 				font-size: %dpx;\n
 				}".printf(size);
 	}
-	internal string generate_font_color(Gdk.RGBA color)
+	public string generate_font_color(Gdk.RGBA color)
 	{
 		return ".-vala-panel-font-size{\n
 				color: %s;\n
 				}".printf(color.to_string());
 	}
-	internal string generate_font_label(double size ,bool bold)
+	public string generate_font_label(double size ,bool bold)
 	{
 		int size_factor = (int)size * 100;
 		return ".-vala-panel-font-label{\n

@@ -2,6 +2,7 @@
 
 simple_panel_CPPFLAGS = \
 	-I$(top_srcdir) \
+	-I$(top_srcdir)/libvalapanel \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
 	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
@@ -42,8 +43,7 @@ panel-enum-types.c: panel-enum-types.c.template $(SIMPLE_PANEL_ENUM_FILES) $(GLI
 BUILT_SOURCES = \
 	panel-enum-types.c \
 	panel-enum-types.h \
-	libsimplepanel-resources.c \
-	vala.h
+	libsimplepanel-resources.c
 
 libsimplepanel_la_CPPFLAGS = $(simple_panel_CPPFLAGS)
 nodist_libsimplepanel_la_SOURCES = libsimplepanel-resources.c

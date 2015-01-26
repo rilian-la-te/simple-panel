@@ -4,17 +4,20 @@ namespace MenuMaker
 {
 	private static void parse_app_info(GLib.DesktopAppInfo info, Gtk.Builder builder)
 	{
-		GLib.Menu menu_link;
 		if (info.should_show())
 		{
+			GLib.Menu menu_link;
 			var found = false;
 			var action = "app.launch-id('%s')".printf(info.get_id());
 			var item = new GLib.MenuItem(info.get_name(),action);
-			var icon = (info.get_icon() != null) ? info.get_icon().to_string() : "application-x-executable";
+			var icon = (info.get_icon() != null) 
+						? info.get_icon().to_string() 
+						: "application-x-executable";
 			item.set_attribute("icon","s",icon);
 			if(info.get_description() != null)
 				item.set_attribute("tooltip","s",info.get_description());
-			var cats = info.get_categories().split_set(";");
+			var cats_str = info.get_categories() ?? " ";
+			var cats = cats_str.split_set(";");
 			foreach (var cat in cats)
 			{
 				menu_link = (GLib.Menu)builder.get_object(cat.down());
@@ -49,18 +52,20 @@ namespace MenuMaker
 				i--;
 			}
 			var j = (i < 0) ? 0 : i;
+			j = (j >= menu.get_n_items()) ? menu.get_n_items() -1 : j;
     		if ((string)menu.get_item_attribute_value(j,"x-cat",GLib.VariantType.STRING) in cats) 
 			{
         		menu.remove(j);
         		i--;
     		}
 		}
+		menu = (GLib.Menu) builder.get_object("applications-menu");
 		return (GLib.MenuModel) menu;
 	}
 
 	public static static GLib.MenuModel create_applications_menu(bool do_settings)
 	{
-		string[] apps_cats = {"audiovideo","education","game","graphics",
+		string[] apps_cats = {"audiovideo","education","game","graphics","system",
 							"network","office","utility","development","other"};
 		string[] settings_cats = {"settings"};
 		if (do_settings)
@@ -139,7 +144,7 @@ namespace MenuMaker
 		for (int i = 0; i< menu2.get_n_items(); i++)
 		{
 			var link = menu2.get_item_link(i,GLib.Menu.LINK_SECTION);
-			string label = (string)menu2.get_item_attribute_value(i,"label",
+			string? label = (string?)menu2.get_item_attribute_value(i,"label",
 			                                                      GLib.VariantType.STRING);
 			if (link != null)
 				menu1.append_section(label,link);
@@ -160,7 +165,7 @@ namespace MenuMaker
 		}
 		else
 		{
-			menu.append(_("Vala ValaPanel"),null);
+			menu.append(_("Vala Panel"),null);
 			menu.append_section(null,MenuMaker.create_applications_menu (false));
 			var section = new GLib.Menu();
 			section.append_submenu(_("Places"),MenuMaker.create_places_menu());

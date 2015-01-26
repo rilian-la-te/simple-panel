@@ -26,7 +26,7 @@ libvalapanel_la_SOURCES = \
 
 libvalapanel_la_VALAFLAGS = \
 	--library=libvalapanel \
-	-H $(top_srcdir)/lib/vala.h \
+	-H vala.h \
 	--vapi=$(top_srcdir)/vapi/vala-panel.vapi \
 	--vapidir=$(top_srcdir)/vapi \
 	--vapidir=. \
@@ -55,7 +55,8 @@ libvalapanel_la_LDFLAGS = \
 
 CLEANFILES = \
 	$(BUILT_SOURCES) \
-	$(libvalapanel_la_SOURCES:.vala=.c)
+	$(libvalapanel_la_SOURCES:.vala=.c) \
+	vala.h
 
 dist-hook:
 	cd $(distdir) && \
