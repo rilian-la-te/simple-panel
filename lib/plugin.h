@@ -23,9 +23,7 @@
 
 #include "panel.h"
 #include "conf-gsettings.h"
-#include "css.h"
 #include "misc.h"
-#include "menu-maker.h"
 
 G_BEGIN_DECLS
 

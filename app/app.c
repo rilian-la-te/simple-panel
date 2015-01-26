@@ -39,8 +39,6 @@
 #include "app-misc.h"
 #include "panel-enum-types.h"
 #include "misc.h"
-#include "menu-maker.h"
-
 enum
 {
     PROP_NONE,

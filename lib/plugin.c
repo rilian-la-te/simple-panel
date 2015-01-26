@@ -20,6 +20,7 @@
 #include "config.h"
 #endif
 
+#include "vala.h"
 #include "private.h"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -54,8 +55,8 @@ void plugin_widget_set_background(GtkWidget * w, SimplePanel * panel)
     GdkRGBA transparent = {1,1,1,0};
     if (w != NULL)
     {
-        gchar* css = css_generate_background("",transparent,TRUE);
-        css_apply_with_class(w,css,"-simple-panel-background",FALSE);
+        gchar* css = panel_css_generate_background(NULL,&transparent);
+        panel_css_apply_with_class(w,css,"-simple-panel-background",TRUE);
         g_free(css);
     }
 }

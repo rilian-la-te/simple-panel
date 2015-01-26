@@ -72,10 +72,10 @@ namespace PanelCSS
 	{
 		var flags = w.get_state_flags();
 		var pass = w.get_style_context().get_color(flags);
-		var act = pass.copy();
-		pass.alpha = 0.5;
-		act.alpha = 0.8;
-		string edge = "0px 0px 0px 0px";
+		var act = w.get_style_context().get_color(flags);
+		pass.alpha = 0.7;
+		act.alpha = 0.9;
+		string? edge = null;
 		switch (e)
 		{
 			case Gtk.PositionType.TOP:
@@ -91,6 +91,11 @@ namespace PanelCSS
 				edge = "0px 2px 0px 0px";
 				break;
 		}
+#if HAVE_GTK313
+		var checked = ".-panel-flat-button:checked,";
+#else
+		var checked = "";
+#endif
 		return ".-panel-flat-button {\n
                padding: 0px;\n
                 -GtkWidget-focus-line-width: 0px;\n
@@ -99,9 +104,8 @@ namespace PanelCSS
                border-color: transparent;
                border-width: %s;
                }\n
-#if HAVE_GTK313
-               .-panel-flat-button:checked,
-#endif
+
+               %s
                .-panel-flat-button:active {\n
                border-style: solid;
                border-width: %s;
@@ -113,6 +117,6 @@ namespace PanelCSS
                border-style: solid;
                border-width: %s;
                border-color: %s;
-               }\n".printf(edge,edge,act.to_string(),edge,pass.to_string());
+               }\n".printf(edge,checked,edge,pass.to_string(),edge,act.to_string());
 	}
 }

@@ -29,7 +29,6 @@
 
 #include "misc.h"
 #include "private.h"
-#include "css.h"
 #include "vala.h"
 
 static void on_theme_changed(GtkWidget* img, GObject* object);
@@ -166,7 +165,7 @@ inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img,const gchar* 
     if (label)
         gtk_button_set_label(GTK_BUTTON(b),label);
     gtk_button_set_relief(GTK_BUTTON(b),GTK_RELIEF_NONE);
-    css_apply_with_class(b,css,"-panel-button",FALSE);
+    panel_css_apply_with_class(b,css,"-panel-button",TRUE);
 }
 
 static void on_theme_changed(GtkWidget *img, GObject *object)
@@ -239,11 +238,11 @@ static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *ic
     if (icon)
         image = simple_panel_image_new_for_gicon(panel,icon, size);
     simple_panel_setup_button(event_box,image,label);
-    css_apply_with_class(event_box,NULL,GTK_STYLE_CLASS_BUTTON,TRUE);
+    panel_css_apply_with_class(event_box,NULL,GTK_STYLE_CLASS_BUTTON,FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
     gtk_widget_set_can_focus(event_box, FALSE);
     gtk_widget_set_has_window(event_box,FALSE);
-    css_apply_with_class(event_box,css,"-panel-icon-button",FALSE);
+    panel_css_apply_with_class(event_box,css,"-panel-icon-button",TRUE);
     return event_box;
 }
 

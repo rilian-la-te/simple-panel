@@ -435,7 +435,7 @@ static void volumealsa_toggle_muted(VolumeALSAPlugin * vol)
 static void volumealsa_set_menu_command(GtkWidget* p, GMenu* menu)
 {
     VolumeALSAPlugin * vol = lxpanel_plugin_get_data(p);
-    gchar* action = g_strdup_printf(LAUNCH_COMMAND_ACTION,vol->mixer_command);
+    gchar* action = g_strdup_printf("app.launch-command('%s')",vol->mixer_command);
     g_menu_prepend(menu,_("Sound settings..."),action);
     g_free(action);
 }

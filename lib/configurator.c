@@ -25,7 +25,6 @@
 
 #include "private.h"
 #include "misc.h"
-#include "css.h"
 #include "panel-enum-types.h"
 #include <stdlib.h>
 #include <sys/types.h>

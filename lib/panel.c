@@ -964,11 +964,11 @@ static void panel_widget_update_background(SimplePanel * panel)
 
     if (css)
     {
-        css_apply_with_class(GTK_WIDGET(panel),css,"-simple-panel-background",system);
+        panel_css_apply_with_class(GTK_WIDGET(panel),css,"-simple-panel-background",!system);
         g_free(css);
     }
     else if (system)
-        css_apply_with_class(GTK_WIDGET(panel),"","-simple-panel-background",system);
+        panel_css_apply_with_class(GTK_WIDGET(panel),"","-simple-panel-background",!system);
 }
 
 static void plugins_update_appearance(GtkWidget* plugin, gpointer data)
@@ -992,17 +992,17 @@ void panel_widget_update_fonts(SimplePanel * p, GtkWidget* w)
     gchar* css;
     if (p->priv->usefontcolor){
         css = css_generate_font_color(p->priv->gfontcolor);
-        css_apply_with_class(w,css,"-simple-panel-font-color",FALSE);
+        panel_css_apply_with_class(w,css,"-simple-panel-font-color",TRUE);
         g_free(css);
     } else {
-        css_apply_with_class(w,css,"-simple-panel-font-color",TRUE);
+        panel_css_apply_with_class(w,css,"-simple-panel-font-color",FALSE);
     }
     if (p->priv->usefontsize){
         css = css_generate_font_size(p->priv->fontsize);
-        css_apply_with_class(w,css,"-simple-panel-font-size",FALSE);
+        panel_css_apply_with_class(w,css,"-simple-panel-font-size",TRUE);
         g_free(css);
     } else {
-        css_apply_with_class(w,css,"-simple-panel-font-size",TRUE);
+        panel_css_apply_with_class(w,css,"-simple-panel-font-size",FALSE);
     }
 }
 
@@ -1512,7 +1512,7 @@ void simple_panel_draw_label_text(GtkWidget * label, const char * text,
 {
     gtk_label_set_text(GTK_LABEL(label),text);
     gchar* css = css_generate_font_label(custom_size_factor,bold);
-    css_apply_with_class(label,css,"-simple-panel-font-label",FALSE);
+    panel_css_apply_with_class(label,css,"-simple-panel-font-label",TRUE);
     g_free(css);
 }
 

@@ -64,7 +64,7 @@
 #include "x-misc.h"
 #include "plugin.h"
 #include "panel.h"
-#include "css.h"
+#include "vala.h"
 #include "icon.xpm"
 #include "icon-grid.h"
 #define DISABLE_MENU
@@ -2746,17 +2746,19 @@ static void task_update_style(Task * tk, LaunchTaskBarPlugin * tb)
 
     if( tb->flat_button )
     {
-        gchar* launchtaskbar_css_flat = css_generate_flat_button(tb->tb_icon_grid,tb->panel);
-        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-normal",TRUE);
-        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_flat,"-panel-flat-button",FALSE);
+        int edge;
+        g_object_get(tb->panel,PANEL_PROP_EDGE,&edge,NULL);
+        gchar* launchtaskbar_css_flat = panel_css_generate_flat_button(tb->tb_icon_grid,edge);
+        panel_css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-normal",FALSE);
+        panel_css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_flat,"-panel-flat-button",TRUE);
         g_free(launchtaskbar_css_flat);
-        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,TRUE);
+        panel_css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,FALSE);
     }
     else
     {
-        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-normal",FALSE);
-        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-flat-button",TRUE);
-        css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,FALSE);
+        panel_css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-task-normal",TRUE);
+        panel_css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,"-panel-flat-button",FALSE);
+        panel_css_apply_with_class(GTK_WIDGET(tk->button),launchtaskbar_css_normal,GTK_STYLE_CLASS_BUTTON,TRUE);
     }
 
     task_draw_label(tk);
