@@ -23,8 +23,7 @@ SIMPLE_PANEL_HEADER_FILES = \
 
 SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	dbg.h \
-	private.h \
-	menu-maker.h
+	private.h
 
 SIMPLE_PANEL_ENUM_FILES = $(SIMPLE_PANEL_HEADER_FILES)
 SIMPLE_PANEL_ENUM_FILES += $(SIMPLE_PANEL_NOINST_HEADER_FILES)
@@ -50,7 +49,6 @@ nodist_libsimplepanel_la_SOURCES = libsimplepanel-resources.c
 libsimplepanel_la_SOURCES = \
 	misc.c \
 	css.c \
-	menu-maker.c \
 	configurator.c \
 	dbg.c \
 	icon-grid.c \
