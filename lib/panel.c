@@ -35,7 +35,7 @@
 
 #include "private.h"
 #include "misc.h"
-#include "css.h"
+#include "vala.h"
 #include "panel-enum-types.h"
 
 enum
@@ -404,7 +404,6 @@ static void simple_panel_set_property(GObject      *object,
         if (fonts)
         {
             panel_widget_update_fonts(toplevel,GTK_WIDGET(toplevel));
-            gtk_container_foreach(GTK_CONTAINER(toplevel->priv->box),plugins_update_appearance,toplevel);
         }
         if (updatestrut)
             _panel_set_wm_strut(toplevel);
@@ -948,14 +947,14 @@ static void panel_widget_update_background(SimplePanel * panel)
         if (p->background_file != NULL)
         {
             system = FALSE;
-            css = css_generate_background(p->background_file,color,FALSE);
+            css = panel_css_generate_background((const char*)p->background_file,&color);
         }
 	}
     else if (p->background == BACKGROUND_COLOR)
 	{
 		/* User specified background color. */
         system = FALSE;
-        css = css_generate_background("none",p->gtintcolor,TRUE);
+        css = panel_css_generate_background(NULL,&p->gtintcolor);
     }
     else if (p->background == BACKGROUND_GNOME)
         gtk_style_context_add_class(gtk_widget_get_style_context(GTK_WIDGET(panel)),"gnome-panel-menu-bar");
@@ -964,11 +963,11 @@ static void panel_widget_update_background(SimplePanel * panel)
 
     if (css)
     {
-        panel_css_apply_with_class(GTK_WIDGET(panel),css,"-simple-panel-background",!system);
+        panel_css_apply_with_class(GTK_WIDGET(panel),css,"-vala-panel-background",!system);
         g_free(css);
     }
     else if (system)
-        panel_css_apply_with_class(GTK_WIDGET(panel),"","-simple-panel-background",!system);
+        panel_css_apply_with_class(GTK_WIDGET(panel),"","-vala-panel-background",!system);
 }
 
 static void plugins_update_appearance(GtkWidget* plugin, gpointer data)
@@ -991,18 +990,18 @@ void panel_widget_update_fonts(SimplePanel * p, GtkWidget* w)
 {
     gchar* css;
     if (p->priv->usefontcolor){
-        css = css_generate_font_color(p->priv->gfontcolor);
-        panel_css_apply_with_class(w,css,"-simple-panel-font-color",TRUE);
+        css = panel_css_generate_font_color(&p->priv->gfontcolor);
+        panel_css_apply_with_class(w,css,"-vala-panel-font-color",TRUE);
         g_free(css);
     } else {
-        panel_css_apply_with_class(w,css,"-simple-panel-font-color",FALSE);
+        panel_css_apply_with_class(w,css,"-vala-panel-font-color",FALSE);
     }
     if (p->priv->usefontsize){
-        css = css_generate_font_size(p->priv->fontsize);
-        panel_css_apply_with_class(w,css,"-simple-panel-font-size",TRUE);
+        css = panel_css_generate_font_size(p->priv->fontsize);
+        panel_css_apply_with_class(w,css,"-vala-panel-font-size",TRUE);
         g_free(css);
     } else {
-        panel_css_apply_with_class(w,css,"-simple-panel-font-size",FALSE);
+        panel_css_apply_with_class(w,css,"-vala-panel-font-size",FALSE);
     }
 }
 
@@ -1511,8 +1510,8 @@ void simple_panel_draw_label_text(GtkWidget * label, const char * text,
                            gboolean bold, float custom_size_factor)
 {
     gtk_label_set_text(GTK_LABEL(label),text);
-    gchar* css = css_generate_font_label(custom_size_factor,bold);
-    panel_css_apply_with_class(label,css,"-simple-panel-font-label",TRUE);
+    gchar* css = panel_css_generate_font_label(custom_size_factor,bold);
+    panel_css_apply_with_class(label,css,"-vala-panel-font-label",TRUE);
     g_free(css);
 }
 

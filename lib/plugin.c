@@ -56,7 +56,7 @@ void plugin_widget_set_background(GtkWidget * w, SimplePanel * panel)
     if (w != NULL)
     {
         gchar* css = panel_css_generate_background(NULL,&transparent);
-        panel_css_apply_with_class(w,css,"-simple-panel-background",TRUE);
+        panel_css_apply_with_class(w,css,"-vala-panel-background",TRUE);
         g_free(css);
     }
 }

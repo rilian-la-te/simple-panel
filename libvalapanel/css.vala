@@ -56,7 +56,7 @@ namespace PanelCSS
 	}
 	public string generate_font_color(Gdk.RGBA color)
 	{
-		return ".-vala-panel-font-size{\n
+		return ".-vala-panel-font-color{\n
 				color: %s;\n
 				}".printf(color.to_string());
 	}
