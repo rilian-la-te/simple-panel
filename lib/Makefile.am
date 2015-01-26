@@ -10,6 +10,8 @@ simple_panel_CPPFLAGS = \
 	$(PACKAGE_CFLAGS) \
 	$(G_CAST_CHECKS)
 
+VALA_LIB = $(builddir)/libvalapanel/libvalapanel.a
+
 pkglib_LTLIBRARIES = libsimplepanel.la
 
 SIMPLE_PANEL_HEADER_FILES = \
@@ -62,7 +64,9 @@ libsimplepanel_la_LDFLAGS = \
        -no-undefined \
        -rpath $(pkglibdir)
        
-libsimplepanel_la_LIBADD = $(PACKAGE_LIBS)
+libsimplepanel_la_LIBADD = \
+	$(PACKAGE_LIBS) \
+	$(VALA_LIB)
 
 EXTRA_DIST = $(SIMPLE_PANEL_NOINST_HEADER_FILES) \
 	panel-enum-types.h
@@ -71,3 +75,6 @@ CLEANFILES = panel-enum-types.c \
 	panel-enum-types.h \
 	libsimplepanel-resources.c \
 	libsimplepanel.gresource.xml 
+	
+$(builddir)/libvalapanel/libvalapanel.a: $(simple_panel_include_HEADERS)
+	cd $(builddir)/libvalapanel && $(MAKE) libvalapanel.a
