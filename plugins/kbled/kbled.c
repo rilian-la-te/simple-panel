@@ -31,7 +31,7 @@
 
 #include <X11/XKBlib.h>
 
-#include "icon-grid.h"
+#include "vala.h"
 
 #define KBLED_KEY_NUM "numlock-on"
 #define KBLED_KEY_CAPS "capslock-on"
@@ -121,7 +121,7 @@ static GtkWidget *kbled_constructor(SimplePanel *panel, GSettings *settings)
     kl->visible[2] = g_settings_get_boolean(settings,KBLED_KEY_SCROLL);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
-    p = panel_icon_grid_new(panel_get_orientation(panel),
+    p = (GtkWidget*)vala_panel_icon_grid_new(panel_get_orientation(panel),
                             panel_get_icon_size(panel),
                             panel_get_icon_size(panel),
                             0, 0, panel_get_height(panel));
@@ -206,7 +206,7 @@ static void kbled_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
     /* Set orientation into the icon grid. */
     KeyboardLEDPlugin * kl = lxpanel_plugin_get_data(p);
 
-    panel_icon_grid_set_geometry(PANEL_ICON_GRID(p), panel_get_orientation(panel),
+    vala_panel_icon_grid_set_geometry(VALA_PANEL_ICON_GRID(p), panel_get_orientation(panel),
                                  panel_get_icon_size(panel),
                                  panel_get_icon_size(panel),
                                  0, 0, panel_get_height(panel));

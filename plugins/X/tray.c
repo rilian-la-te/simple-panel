@@ -32,7 +32,7 @@
 
 #include "plugin.h"
 #include "x-misc.h"
-#include "icon-grid.h"
+#include "vala.h"
 
 #include <gtk/gtkx.h>
 
@@ -712,7 +712,7 @@ static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
                  NULL);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
-    tr->plugin = p = panel_icon_grid_new(panel_get_orientation(panel),
+    tr->plugin = p = (GtkWidget*)vala_panel_icon_grid_new(panel_get_orientation(panel),
                                          icon_size,
                                          icon_size,
                                          3, 0, height);
@@ -763,7 +763,7 @@ static void tray_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
                  PANEL_PROP_HEIGHT,&height,
                  NULL);
     /* Set orientation into the icon grid. */
-    panel_icon_grid_set_geometry(PANEL_ICON_GRID(p), panel_get_orientation(panel),
+    vala_panel_icon_grid_set_geometry(VALA_PANEL_ICON_GRID(p), panel_get_orientation(panel),
                                  icon_size,
                                  icon_size,
                                  3, 0, height);

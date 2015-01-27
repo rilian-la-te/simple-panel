@@ -66,7 +66,6 @@
 #include "panel.h"
 #include "vala.h"
 #include "icon.xpm"
-#include "icon-grid.h"
 #define DISABLE_MENU
 #ifndef DISABLE_MENU
 # include "menu-policy.h"
@@ -705,11 +704,11 @@ static void launchtaskbar_constructor_task(LaunchTaskBarPlugin *ltbp)
             ltbp->grouped_tasks = g_settings_get_boolean(s,LTB_KEY_GROUPING);
 
         /* Make container for task buttons as a child of top level widget. */
-        ltbp->tb_icon_grid = panel_icon_grid_new(panel_get_orientation(ltbp->panel),
+        ltbp->tb_icon_grid = (GtkWidget*)vala_panel_icon_grid_new(panel_get_orientation(ltbp->panel),
                                                  ltbp->task_width_max,
                                                  ltbp->icon_size, ltbp->spacing, 0,
                                                  panel_get_height(ltbp->panel));
-        panel_icon_grid_set_constrain_width(PANEL_ICON_GRID(ltbp->tb_icon_grid), TRUE);
+        vala_panel_icon_grid_set_constrain(VALA_PANEL_ICON_GRID(ltbp->tb_icon_grid), TRUE);
         gtk_box_pack_start(GTK_BOX(ltbp->plugin), ltbp->tb_icon_grid, TRUE, TRUE, 0);
         taskbar_update_style(ltbp);
 
@@ -784,7 +783,7 @@ static GtkWidget *_launchtaskbar_constructor(SimplePanel *panel, GSettings *sett
     ltbp->plugin = p = panel_box_new(panel, 5);
     lxpanel_plugin_set_data(p, ltbp, launchtaskbar_destructor);
     /* Allocate an icon grid manager to manage the container. */
-    ltbp->lb_icon_grid = panel_icon_grid_new(panel_get_orientation(panel),
+    ltbp->lb_icon_grid = (GtkWidget*)vala_panel_icon_grid_new(panel_get_orientation(panel),
                                              ltbp->icon_size, ltbp->icon_size,
                                              3, 0, panel_get_height(panel));
     gtk_box_pack_start(GTK_BOX(p), ltbp->lb_icon_grid, FALSE, TRUE, 0);
@@ -973,7 +972,7 @@ static void launchbar_configure_move_up_button(GtkButton * widget, LaunchTaskBar
                 ltbp->buttons = g_slist_insert(ltbp->buttons, btn, i);
                 gtk_list_store_move_before(GTK_LIST_STORE(list), &it, &it2);
                 launchbar_update_button_settings(ltbp);
-                panel_icon_grid_reorder_child(PANEL_ICON_GRID(ltbp->lb_icon_grid),
+                vala_panel_icon_grid_reorder_child(VALA_PANEL_ICON_GRID(ltbp->lb_icon_grid),
                                               btn->widget, i);
             }
         }
@@ -1005,7 +1004,7 @@ static void launchbar_configure_move_down_button(GtkButton * widget, LaunchTaskB
                 ltbp->buttons = g_slist_remove(ltbp->buttons, btn);
                 ltbp->buttons = g_slist_insert(ltbp->buttons, btn, i + 1);
                 gtk_list_store_move_after(GTK_LIST_STORE(list), &it, &it2);
-                panel_icon_grid_reorder_child(PANEL_ICON_GRID(ltbp->lb_icon_grid),
+                vala_panel_icon_grid_reorder_child(VALA_PANEL_ICON_GRID(ltbp->lb_icon_grid),
                                               btn->widget, i);
                 launchbar_update_button_settings(ltbp);
             }
@@ -1401,7 +1400,7 @@ static void launchtaskbar_panel_configuration_changed(SimplePanel *panel, GtkWid
     g_object_get(panel,PANEL_PROP_ICON_SIZE,&new_icon_size,NULL);
 
     if (ltbp->lb_built)
-        panel_icon_grid_set_geometry(PANEL_ICON_GRID(ltbp->lb_icon_grid),
+        vala_panel_icon_grid_set_geometry(VALA_PANEL_ICON_GRID(ltbp->lb_icon_grid),
                                      panel_get_orientation(panel),
                                      new_icon_size, new_icon_size, 3, 0,
                                      panel_get_height(panel));
@@ -2625,9 +2624,9 @@ static gboolean taskbar_button_drag_drop(GtkWidget * widget, GdkDragContext * dr
     {
         if (drag_source != tk->button)
         {
-            PanelIconGrid *ig = PANEL_ICON_GRID(tk->tb->tb_icon_grid);
-            gint i = panel_icon_grid_get_child_position(ig, tk->button);
-            panel_icon_grid_reorder_child(ig, drag_source, i);
+            ValaPanelIconGrid *ig = VALA_PANEL_ICON_GRID(tk->tb->tb_icon_grid);
+            gint i = vala_panel_icon_grid_get_child_position(ig, tk->button);
+            vala_panel_icon_grid_reorder_child(ig, drag_source, i);
         }
         gtk_drag_finish(drag_context, TRUE, TRUE, time);
         return TRUE;
@@ -2715,7 +2714,7 @@ static void taskbar_button_size_allocate(GtkWidget * btn, GtkAllocation * alloc,
 /* Update style on the taskbar when created or after a configuration change. */
 static void taskbar_update_style(LaunchTaskBarPlugin * tb)
 {
-    panel_icon_grid_set_geometry(PANEL_ICON_GRID(tb->tb_icon_grid),
+    vala_panel_icon_grid_set_geometry(VALA_PANEL_ICON_GRID(tb->tb_icon_grid),
         panel_get_orientation(tb->panel),
         ((tb->icons_only) ? tb->icon_size + ICON_ONLY_EXTRA : tb->task_width_max),
         tb->icon_size, tb->spacing, 0, panel_get_height(tb->panel));
