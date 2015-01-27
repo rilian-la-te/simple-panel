@@ -715,7 +715,7 @@ static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
     tr->plugin = p = (GtkWidget*)vala_panel_icon_grid_new(panel_get_orientation(panel),
                                          icon_size,
                                          icon_size,
-                                         3, 0, height);
+										 3, 1, height);
     vala_panel_icon_grid_set_aspect(VALA_PANEL_ICON_GRID(p),TRUE);
     vala_panel_icon_grid_set_fill_width(VALA_PANEL_ICON_GRID(p),TRUE);
     g_signal_connect (tr->plugin, "draw",
@@ -760,16 +760,15 @@ static void tray_destructor(gpointer user_data)
 /* Callback when panel configuration changes. */
 static void tray_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
-    int height,icon_size;
+	int height;
     g_object_get(panel,
-                 PANEL_PROP_ICON_SIZE,&icon_size,
                  PANEL_PROP_HEIGHT,&height,
                  NULL);
     /* Set orientation into the icon grid. */
     vala_panel_icon_grid_set_geometry(VALA_PANEL_ICON_GRID(p), panel_get_orientation(panel),
-                                 icon_size,
-                                 icon_size,
-                                 3, 0, height);
+								 22,
+								 22,
+								 3, 1, height);
 }
 
 FM_DEFINE_MODULE(lxpanel_gtk, tray)

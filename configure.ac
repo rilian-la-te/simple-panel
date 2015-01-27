@@ -423,6 +423,7 @@ AC_CONFIG_FILES([
     lib/libsimplepanel.gresource.xml
     data/libvalapanel.gresource.xml
     app/simple-panel.gresource.xml
+    app/vala-panel.gresource.xml
     plugins/Makefile
     po/Makefile.in
     data/Makefile

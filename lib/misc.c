@@ -356,6 +356,46 @@ gint simple_panel_apply_properties_to_menu(GList* widgets, GMenuModel* menu)
     return i-1;
 }
 
+void activate_panel_preferences(GSimpleAction* simple, GVariant* param, gpointer data)
+{
+	GtkApplication* app = (GtkApplication*)data;
+	const gchar* par = g_variant_get_string(param, NULL);
+	GList* all_panels = gtk_application_get_windows(app);
+	GList* l;
+	for( l = all_panels; l; l = l->next )
+	{
+		gchar* name;
+		SimplePanel* p = (SimplePanel*)l->data;
+		g_object_get(p,"name",&name,NULL);
+		if (!g_strcmp0(par,name))
+			panel_configure(p, "geometry");
+		else
+			g_warning("No panel with this name found.\n");
+		g_free(name);
+	}
+}
+
+void activate_menu(GSimpleAction* simple, GVariant* param, gpointer data)
+{
+	GtkApplication* app = GTK_APPLICATION(data);
+	GList* l;
+	GList* all_panels = gtk_application_get_windows(app);
+	for( l = all_panels; l; l = l->next )
+	{
+		SimplePanel* p = (SimplePanel*)l->data;
+		GList *plugins, *pl;
+
+		plugins = gtk_container_get_children(GTK_CONTAINER(p->priv->box));
+		for (pl = plugins; pl; pl = pl->next)
+		{
+			const SimplePanelPluginInit *init = PLUGIN_CLASS(pl->data);
+			if (init->show_system_menu)
+			/* queue to show system menu */
+				init->show_system_menu(pl->data);
+		}
+		g_list_free(plugins);
+	}
+}
 
 void start_panels_from_dir(GtkApplication* app,const char *panel_dir)
 {

@@ -8,8 +8,10 @@
     <property name="title" translatable="yes">Application preferences</property>
     <property name="resizable">False</property>
     <property name="default_width">450</property>
+    <property name="icon">/org/vala-panel/app/panel.png</property>
     <property name="type_hint">dialog</property>
     <property name="gravity">center</property>
+    <property name="window-position">center</property>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox1">
         <property name="visible">True</property>

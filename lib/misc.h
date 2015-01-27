@@ -44,6 +44,8 @@ gint simple_panel_apply_properties_to_menu(GList* widgets, GMenuModel* menu);
 void activate_menu_launch_id (GSimpleAction* action,GVariant* param, gpointer user_data);
 void activate_menu_launch_uri (GSimpleAction* action,GVariant* param, gpointer user_data);
 void activate_menu_launch_command (GSimpleAction* action,GVariant* param, gpointer user_data);
+void activate_menu(GSimpleAction* simple, GVariant* param, gpointer data);
+void activate_panel_preferences(GSimpleAction* simple, GVariant* param, gpointer data);
 G_END_DECLS
 
 #endif

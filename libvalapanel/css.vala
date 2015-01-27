@@ -36,6 +36,22 @@ namespace PanelCSS
 		} catch (GLib.Error e) {}
 		return null;
 	}
+	
+	public Gtk.CssProvider? apply_from_file_to_app_with_provider(string file)
+	{
+		var provider = new Gtk.CssProvider();
+		try 
+		{
+			provider.load_from_path(file);
+			Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(),provider,500);
+			return provider;
+		} catch (GLib.Error e)
+		{
+			warning("Cannot apply custom style: %s\n",e.message);
+		}
+		return null;
+	}
+	
 	public string generate_background(string? name, Gdk.RGBA color)
 	{
 		if (name != null)
