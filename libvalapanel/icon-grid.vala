@@ -2,7 +2,6 @@ using GLib;
 using Gtk;
 using Gdk;
 
-
 namespace ValaPanel
 {
 	[Flags]

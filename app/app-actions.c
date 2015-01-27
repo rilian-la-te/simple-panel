@@ -173,10 +173,10 @@ GSettings* load_global_config_gsettings(PanelApp* app, GSettingsBackend** config
     }
     /* now try to load user config file */
     user_file = _user_config_file_name(app,"config", NULL);
-    if (!g_file_test(file, G_FILE_TEST_EXISTS) && loaded)
+    if (!g_file_test(user_file, G_FILE_TEST_EXISTS) && loaded)
     {
         GFile* src = g_file_new_for_path(file);
-        GFile* dest = g_file_new_for_path(file);
+        GFile* dest = g_file_new_for_path(user_file);
         g_file_copy(src,dest,G_FILE_COPY_BACKUP,NULL,NULL,NULL,NULL);
         g_object_unref(src);
         g_object_unref(dest);
