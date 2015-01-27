@@ -115,8 +115,6 @@ namespace ValaPanel
 				target_dimension = a.width;
 			int chw = this.child_width;
 			int chh = this.child_height;
-			colnum = colnum == 0 ? 1 : colnum;
-			rownum = rownum == 0 ? 1 : rownum;
 			int x_delta = 0;
 			if (rownum !=0 && colnum != 0 && cha.width > 0)
 			{
