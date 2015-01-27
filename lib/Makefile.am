@@ -18,7 +18,6 @@ SIMPLE_PANEL_HEADER_FILES = \
 	panel.h \
 	misc.h \
 	icon-grid.h \
-	conf-gsettings.h \
 	css.h
 
 SIMPLE_PANEL_NOINST_HEADER_FILES = \
@@ -54,7 +53,6 @@ libsimplepanel_la_SOURCES = \
 	icon-grid.c \
 	panel.c \
 	plugin.c \
-	conf-gsettings.c \
 	panel-enum-types.c
 	
 libsimplepanel_la_LDFLAGS = \

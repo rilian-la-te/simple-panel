@@ -259,7 +259,7 @@ static void on_size_allocate(GtkWidget *widget, GdkRectangle *allocation, Simple
          /* g_debug("size-allocate on %s, params: %d,%d\n", PLUGIN_CLASS(widget)->name,allocation->width,allocation->height); */
 }
 
-GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, guint pack_pos)
+GtkWidget* simple_panel_add_plugin(SimplePanel *p, ValaPanelPluginSettings *settings, guint pack_pos)
 {
     const SimplePanelPluginInit *init;
     GtkWidget *widget;
@@ -267,20 +267,20 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
     gboolean has_config = FALSE;
 
     CHECK_MODULES();
-    init = _find_plugin(settings->config_path_appender);
+    init = _find_plugin(settings->path_append);
     if (init == NULL)
         return NULL;
     /* prepare widget settings */
-    g_settings_set_string(settings->default_settings,DEFAULT_PLUGIN_NAME_KEY,settings->config_path_appender);
+    g_settings_set_string(settings->default_settings,VALA_PANEL_KEY_NAME,settings->path_append);
     if (init->has_config)
         has_config = init->has_config;
-    plugin_gsettings_config_init(p->priv->settings,settings,has_config);
+    vala_panel_plugin_settings_init_configuration(settings,p->priv->settings,has_config);
     if(init->expand_available)
-        g_settings_set_boolean(settings->default_settings,DEFAULT_PLUGIN_KEY_CAN_EXPAND,TRUE);
+        g_settings_set_boolean(settings->default_settings,VALA_PANEL_KEY_CAN_EXPAND,TRUE);
     else
-        g_settings_set_boolean(settings->default_settings,DEFAULT_PLUGIN_KEY_EXPAND, FALSE);
-    expand = g_settings_get_boolean(settings->default_settings,DEFAULT_PLUGIN_KEY_EXPAND);
-    padding = g_settings_get_int(settings->default_settings,DEFAULT_PLUGIN_KEY_PADDING);
+        g_settings_set_boolean(settings->default_settings,VALA_PANEL_KEY_EXPAND, FALSE);
+    expand = g_settings_get_boolean(settings->default_settings,VALA_PANEL_KEY_EXPAND);
+    padding = g_settings_get_int(settings->default_settings,VALA_PANEL_KEY_PADDING);
     /* If this plugin can only be instantiated once, count the instantiation.
      * This causes the configuration system to avoid displaying the plugin as one that can be added. */
     if (init->new_instance) /* new style of plugin */
@@ -299,9 +299,9 @@ GtkWidget* simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, gu
     {
         g_error("simple-panel: Plugin \"%s\" is invalid",init->name);
     }
-    gtk_widget_set_name(widget, settings->config_path_appender);
+    gtk_widget_set_name(widget, settings->path_append);
     gtk_box_pack_start(GTK_BOX(p->priv->box), widget, expand, TRUE, 0);
-    g_settings_set_uint(settings->default_settings,DEFAULT_PLUGIN_KEY_POSITION,pack_pos);
+    g_settings_set_uint(settings->default_settings,VALA_PANEL_KEY_POSITION,pack_pos);
     gtk_box_reorder_child(GTK_BOX(p->priv->box),widget,pack_pos);
     g_signal_connect(widget, "size-allocate", G_CALLBACK(on_size_allocate), p);
     gtk_widget_show(widget);

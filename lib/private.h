@@ -20,7 +20,6 @@
 #define PRIVATE_H
 
 #include "plugin.h"
-#include "conf-gsettings.h"
 
 #include <gmodule.h>
 
@@ -28,6 +27,7 @@
 #include <gdk/gdk.h>
 #include <stdio.h>
 #include "panel.h"
+#include "vala.h"
 
 /* -----------------------------------------------------------------------------
  *   Definitions used by lxpanel main code internally */
@@ -126,7 +126,7 @@ struct _Panel {
 
     char* background_file;
 
-    PanelGSettings* settings; /* Panel configuration data */
+    ValaPanelToplevelSettings* settings; /* Panel configuration data */
 
     GtkWidget* plugin_pref_dialog;	/* Plugin preference dialog */
     GtkWidget* pref_dialog;		/* preference dialog */
@@ -153,7 +153,7 @@ void _unload_modules(void);
 void init_plugin_class_list(void);
 
 
-GtkWidget *simple_panel_add_plugin(SimplePanel *p, PluginGSettings* settings, guint pack_pos);
+GtkWidget *simple_panel_add_plugin(SimplePanel *p, ValaPanelPluginSettings* settings, guint pack_pos);
 GHashTable *lxpanel_get_all_types(void); /* transfer none */
 void set_widget_positions(SimplePanel* p);
 void update_positions_on_panel(SimplePanel* p);

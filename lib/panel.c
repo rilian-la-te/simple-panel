@@ -85,7 +85,7 @@ static void activate_remove_panel(GSimpleAction* action, GVariant* param, gpoint
 static void activate_panel_settings(GSimpleAction* action, GVariant* param, gpointer data);
 static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
-PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel );
+ValaPanelToplevelSettings* simple_panel_create_gsettings( SimplePanel* panel );
 static void panel_widget_update_background(SimplePanel * panel);
 
 G_DEFINE_TYPE(PanelWindow, simple_panel, GTK_TYPE_APPLICATION_WINDOW)
@@ -114,7 +114,9 @@ static void lxpanel_finalize(GObject *object)
     Panel *p = self->priv;
 
     if (p->settings)
-        panel_gsettings_free(p->settings,FALSE);
+    {
+        g_object_unref(p->settings);
+    }
 
     g_free( p->background_file );
 
@@ -141,7 +143,7 @@ static void panel_stop_gui(SimplePanel *self)
         gtk_dialog_response(GTK_DIALOG(p->plugin_pref_dialog), GTK_RESPONSE_CLOSE);
     if (p->settings != NULL)
     {
-        panel_gsettings_free(p->settings,FALSE);
+        g_object_unref(p->settings);
         p->settings = NULL;
     }
     if (p->initialized)
@@ -178,7 +180,8 @@ static void lxpanel_size_allocate(GtkWidget *widget, GtkAllocation *a)
     {
         (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? gtk_widget_get_preferred_width (p->box,NULL, &w) : gtk_widget_get_preferred_height (p->box,NULL, &w);
         if (w!=p->width)
-            g_settings_set_int(p->settings->toplevel_settings, PANEL_PROP_WIDTH,w);
+            g_settings_set_int(vala_panel_toplevel_settings_get_settings(panel->priv->settings),
+                               PANEL_PROP_WIDTH,w);
     }
     if (p->heighttype == SIZE_DYNAMIC)
         p->height = (p->orientation == GTK_ORIENTATION_HORIZONTAL) ? a->height : a->width;
@@ -1224,8 +1227,8 @@ static void activate_remove_plugin(GSimpleAction *action, GVariant *param, gpoin
         gtk_widget_destroy(panel->pref_dialog);
         panel->pref_dialog = NULL;
     }
-    PluginGSettings* settings = g_object_get_qdata(G_OBJECT(plugin), lxpanel_plugin_qconf);
-    panel_gsettings_remove_plugin_settings(panel->settings,settings->plugin_number);
+    ValaPanelPluginSettings* settings = g_object_get_qdata(G_OBJECT(plugin), lxpanel_plugin_qconf);
+    vala_panel_toplevel_settings_remove_plugin_settings(panel->settings,settings->number);
     /* reset conf pointer because the widget still may be referenced by configurator */
     g_object_set_qdata(G_OBJECT(plugin), lxpanel_plugin_qconf, NULL);
     gtk_widget_destroy(plugin);
@@ -1345,8 +1348,8 @@ found_edge:
     p->name = gen_panel_name(profile,p->edge,p->monitor);
     g_free(profile);
     p->settings = simple_panel_create_gsettings(new_panel);
-    g_settings_set_enum(p->settings->toplevel_settings,PANEL_PROP_EDGE,p->edge);
-    g_settings_set_int(p->settings->toplevel_settings,PANEL_PROP_MONITOR,p->monitor);
+    g_settings_set_enum(vala_panel_toplevel_settings_get_settings(p->settings),PANEL_PROP_EDGE,p->edge);
+    g_settings_set_int(vala_panel_toplevel_settings_get_settings(p->settings),PANEL_PROP_MONITOR,p->monitor);
     panel_add_actions(new_panel);
     panel_normalize_configuration(p);
     panel_start_gui(new_panel);
@@ -1492,10 +1495,11 @@ panel_start_gui(SimplePanel *panel)
 
     panel_set_dock_type(panel);
 
-    panel_gsettings_init_plugin_list(p->settings);
-    for (l = p->settings->all_settings; l != NULL; l = l->next)
+    vala_panel_toplevel_settings_init_plugin_list(p->settings);
+    for (l = vala_panel_toplevel_settings_get_plugins(p->settings); l != NULL; l = l->next)
     {
-        position = g_settings_get_uint(((PluginGSettings*)l->data)->default_settings,DEFAULT_PLUGIN_KEY_POSITION);
+        position = g_settings_get_uint(((ValaPanelPluginSettings*)l->data)->default_settings,
+                                       VALA_PANEL_KEY_POSITION);
         simple_panel_add_plugin(panel,l->data,position);
     }
     update_positions_on_panel(panel);
@@ -1527,7 +1531,7 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     /* either first run or orientation was changed */
     if (previous_orientation != p->orientation)
     {
-        g_settings_set_int(p->settings->toplevel_settings,
+        g_settings_set_int(vala_panel_toplevel_settings_get_settings(p->settings),
                                PANEL_PROP_HEIGHT,
                                ((p->orientation == GTK_ORIENTATION_HORIZONTAL)
                                 ? PANEL_HEIGHT_DEFAULT
@@ -1564,14 +1568,14 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
     /* panel geometry changed? update panel background then */
 }
 
-PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
+ValaPanelToplevelSettings *simple_panel_create_gsettings( SimplePanel* panel )
 {
     Panel* p = panel->priv;
     gchar *fname;
     gchar* profile = get_profile(panel);
 
     fname = _user_config_file_name("panels", profile, p->name);
-    PanelGSettings* s =  panel_gsettings_create(fname);
+    ValaPanelToplevelSettings* s =  vala_panel_toplevel_settings_new(fname);
     g_free(fname);
     g_free(profile);
     return s;
@@ -1579,6 +1583,7 @@ PanelGSettings* simple_panel_create_gsettings( SimplePanel* panel )
 
 static void panel_add_actions( SimplePanel* p)
 {
+    GSettings* settings = vala_panel_toplevel_settings_get_settings(p->priv->settings);
     const GActionEntry win_action_entries[] =
     {
         {"new-panel", activate_new_panel, NULL, NULL, NULL},
@@ -1586,25 +1591,25 @@ static void panel_add_actions( SimplePanel* p)
         {"panel-settings", activate_panel_settings, "s", NULL, NULL},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(p),win_action_entries,G_N_ELEMENTS(win_action_entries),p);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_EDGE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ALIGNMENT);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_HEIGHT);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_WIDTH);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_SIZE_TYPE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_AUTOHIDE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_AUTOHIDE_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_STRUT);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_DOCK);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ICON_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_MARGIN);
-    simple_panel_bind_gsettings(G_OBJECT(p),p->priv->settings->toplevel_settings,PANEL_PROP_MONITOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_FONT_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_ENABLE_FONT_COLOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_FONT_COLOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_COLOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_FILE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),p->priv->settings->toplevel_settings,PANEL_PROP_BACKGROUND_TYPE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_EDGE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ALIGNMENT);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_HEIGHT);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_WIDTH);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_SIZE_TYPE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE_SIZE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_STRUT);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_DOCK);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ICON_SIZE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_MARGIN);
+    simple_panel_bind_gsettings(G_OBJECT(p),settings,PANEL_PROP_MONITOR);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_SIZE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_SIZE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_COLOR);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_COLOR);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_COLOR);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_FILE);
+    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_TYPE);
 }
 
 static void on_monitors_changed(GdkScreen* screen, gpointer unused)
@@ -1653,7 +1658,7 @@ SimplePanel* panel_load(GtkApplication* app,const char* config_file, const char*
         win_grp=app;
         all_panels = get_all_panels(panel);
         g_debug("starting panel from file %s",config_file);
-        panel->priv->settings = panel_gsettings_create(config_file);
+        panel->priv->settings = vala_panel_toplevel_settings_new(config_file);
         if (!panel_start(panel))
         {
             g_warning( "lxpanel: can't start panel");

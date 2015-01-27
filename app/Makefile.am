@@ -5,6 +5,7 @@ bin_PROGRAMS = simple-panel
 simple_panel_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
+	-I$(top_srcdir)/libvalapanel \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
 	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
