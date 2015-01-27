@@ -119,12 +119,14 @@ static GtkWidget *kbled_constructor(SimplePanel *panel, GSettings *settings)
     kl->visible[0] = g_settings_get_boolean(settings,KBLED_KEY_CAPS);
     kl->visible[1] = g_settings_get_boolean(settings,KBLED_KEY_NUM);
     kl->visible[2] = g_settings_get_boolean(settings,KBLED_KEY_SCROLL);
+    int h,icon_size;
+    g_object_get(kl->panel, PANEL_PROP_ICON_SIZE, &icon_size,PANEL_PROP_HEIGHT,&h,NULL);
 
     /* Allocate top level widget and set into Plugin widget pointer. */
     p = (GtkWidget*)vala_panel_icon_grid_new(panel_get_orientation(panel),
-                            panel_get_icon_size(panel),
-                            panel_get_icon_size(panel),
-                            0, 0, panel_get_height(panel));
+                            icon_size,
+                            icon_size,
+                            0, 0, h);
     lxpanel_plugin_set_data(p, kl, kbled_destructor);
 
     /* Then allocate three images for the three indications, but make them visible only when the configuration requests. */
@@ -205,11 +207,13 @@ static void kbled_panel_configuration_changed(SimplePanel *panel, GtkWidget *p)
 {
     /* Set orientation into the icon grid. */
     KeyboardLEDPlugin * kl = lxpanel_plugin_get_data(p);
+    int h,icon_size;
+    g_object_get(kl->panel, PANEL_PROP_ICON_SIZE, &icon_size,PANEL_PROP_HEIGHT,&h,NULL);
 
     vala_panel_icon_grid_set_geometry(VALA_PANEL_ICON_GRID(p), panel_get_orientation(panel),
-                                 panel_get_icon_size(panel),
-                                 panel_get_icon_size(panel),
-                                 0, 0, panel_get_height(panel));
+                                 icon_size,
+                                 icon_size,
+                                 0, 0, h);
 
     /* Do a full redraw. */
     int current_state = kl->current_state;

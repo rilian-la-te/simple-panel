@@ -101,10 +101,7 @@ namespace ValaPanel
 			}
 			for (var i = 0; i < len; i++)
 				if (!numtable.contains(i))
-				{
-			        stdout.printf("%u\n",i);
 					return i;
-				}
 			return len+1;
 		}
 		

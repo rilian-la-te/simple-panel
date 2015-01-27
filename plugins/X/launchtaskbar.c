@@ -785,7 +785,7 @@ static GtkWidget *_launchtaskbar_constructor(SimplePanel *panel, GSettings *sett
     /* Allocate an icon grid manager to manage the container. */
     ltbp->lb_icon_grid = (GtkWidget*)vala_panel_icon_grid_new(panel_get_orientation(panel),
                                              ltbp->icon_size, ltbp->icon_size,
-                                             3, 0, panel_get_height(panel));
+                                             3, 1, panel_get_height(panel));
     gtk_box_pack_start(GTK_BOX(p), ltbp->lb_icon_grid, FALSE, TRUE, 0);
 
     /* Read parameters from the configuration file. */
@@ -1402,7 +1402,7 @@ static void launchtaskbar_panel_configuration_changed(SimplePanel *panel, GtkWid
     if (ltbp->lb_built)
         vala_panel_icon_grid_set_geometry(VALA_PANEL_ICON_GRID(ltbp->lb_icon_grid),
                                      panel_get_orientation(panel),
-                                     new_icon_size, new_icon_size, 3, 0,
+                                     new_icon_size, new_icon_size, 3, 1,
                                      panel_get_height(panel));
 
     /* Reset the bootstrap button. */
@@ -2717,7 +2717,7 @@ static void taskbar_update_style(LaunchTaskBarPlugin * tb)
     vala_panel_icon_grid_set_geometry(VALA_PANEL_ICON_GRID(tb->tb_icon_grid),
         panel_get_orientation(tb->panel),
         ((tb->icons_only) ? tb->icon_size + ICON_ONLY_EXTRA : tb->task_width_max),
-        tb->icon_size, tb->spacing, 0, panel_get_height(tb->panel));
+        tb->icon_size, tb->spacing, 1, panel_get_height(tb->panel));
 }
 
 static void taskbar_style_updated(GtkWidget* btn,gpointer* data)

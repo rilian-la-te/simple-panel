@@ -429,7 +429,6 @@ static void trayclient_request_dock(TrayPlugin * tr, XClientMessageEvent * xeven
     tc->socket = gtk_socket_new();
 
     /* Add the socket to the icon grid. */
-    gtk_widget_set_size_request(tc->socket,22,22);
     gtk_container_add(GTK_CONTAINER(tr->plugin), tc->socket);
     gtk_widget_show(tc->socket);
     gdk_window_set_composited (gtk_widget_get_window(tc->socket),TRUE);
@@ -608,12 +607,13 @@ tray_draw_icon (GtkWidget *widget, gpointer   data)
 
       gtk_widget_get_allocation (widget, &allocation);
       gtk_widget_get_allocation (gtk_widget_get_parent(widget), &parent_alloc);
+      /* use has_window workaround*/
       cairo_save (cr);
       gdk_cairo_set_source_window (cr,
                                    gtk_widget_get_window (widget),
-                                   allocation.x-parent_alloc.x,
-                                   allocation.y-parent_alloc.y);
-      cairo_rectangle (cr, allocation.x-parent_alloc.x, allocation.y-parent_alloc.y, allocation.width, allocation.height);
+                                   allocation.x,
+                                   allocation.y);
+      cairo_rectangle (cr, allocation.x, allocation.y, allocation.width, allocation.height);
       cairo_clip (cr);
       cairo_paint (cr);
       cairo_restore (cr);
@@ -716,8 +716,11 @@ static GtkWidget *tray_constructor(SimplePanel *panel, GSettings *settings)
                                          icon_size,
                                          icon_size,
                                          3, 0, height);
+    vala_panel_icon_grid_set_aspect(VALA_PANEL_ICON_GRID(p),TRUE);
+    vala_panel_icon_grid_set_fill_width(VALA_PANEL_ICON_GRID(p),TRUE);
     g_signal_connect (tr->plugin, "draw",
                       G_CALLBACK (tray_draw_box), NULL);
+    gtk_widget_set_has_window(p,TRUE);
     lxpanel_plugin_set_data(p, tr, tray_destructor);
     gtk_widget_set_name(p, "tray");
 

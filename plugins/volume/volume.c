@@ -250,9 +250,11 @@ _error:
     p = gtk_event_box_new();
     lxpanel_plugin_set_data(p, vol, volume_destructor);
     vol->panel = panel;
+    int icon_size;
+    g_object_get(panel,PANEL_PROP_ICON_SIZE, &icon_size,NULL);
 
     g_signal_connect(p, "scroll-event", G_CALLBACK(on_mouse_scroll), vol);
-    gtk_widget_set_size_request(p, panel_get_icon_size(panel), panel_get_icon_size(panel));
+    gtk_widget_set_size_request(p, icon_size, icon_size);
 
     update_icon(p, vol);
     gtk_widget_destroy( vol->dlg );
