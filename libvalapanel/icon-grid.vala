@@ -199,16 +199,18 @@ namespace ValaPanel
 			Gtk.Requisition req = Gtk.Requisition();
 			int pw = this.get_allocated_width();
 			this.get_size(ref req);
+			pw = (pw > 1) ? pw : int.MAX;
 			min = int.min(req.width,pw);
-			nat = req.width;
+			nat = int.min(req.width,pw);
 		}
 		public override void get_preferred_height(out int min, out int nat)
 		{
 			Gtk.Requisition req = Gtk.Requisition();
 			int pw = this.get_allocated_height();
 			this.get_size(ref req);
+			pw = (pw > 1) ? pw : int.MAX;
 			min = int.min(req.height,pw);
-			nat = req.height;
+			nat = int.min(req.height,pw);
 		}
 		private void get_size(ref Gtk.Requisition req)
 		{
