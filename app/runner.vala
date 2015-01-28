@@ -7,7 +7,7 @@ namespace ValaPanel
 	{
 		public bool running;
 		private unowned Gtk.Entry entry;
-		private unowned SList<string>? filenames;
+		private SList<string>? filenames;
 		public CompletionThread (Gtk.Entry entry) {
 			this.entry = entry;
 			running = true;
@@ -32,8 +32,8 @@ namespace ValaPanel
 						{
 							if (!running)
 								break;
-							if (list.find_custom(name,(GLib.CompareFunc)Posix.strcmp) != null)
-								list.prepend(name);
+							if (list.find_custom(name,(GLib.CompareFunc)Posix.strcmp) == null)
+								list.append(name);
 						}
 					}
 					
@@ -44,7 +44,7 @@ namespace ValaPanel
 					continue;
 				}
 			}
-			filenames = list;
+			filenames = (owned)list;
 			Idle.add(() => 
 			{
 				if(running)
