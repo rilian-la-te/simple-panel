@@ -13,8 +13,8 @@ namespace Compat
 	public static void unload_modules();
 	[CCode (cname = "init_pugin_class_list", cheader_filename = "private.h")]
 	public static void init_plugin_class_list();
-	[CCode (cname = "fm_gtk_init", cheader_filename = "libfm/fm.h")]
-	public static void fm_gtk_init();
-	[CCode (cname = "fm_gtk_finalize", cheader_filename = "libfm/fm.h")]
+	[CCode (cname = "fm_gtk_init", cheader_filename = "libfm/fm-gtk.h")]
+	public static void fm_gtk_init(GLib.Object? o);
+	[CCode (cname = "fm_gtk_finalize", cheader_filename = "libfm/fm-gtk.h")]
 	public static void fm_gtk_finalize();
 }

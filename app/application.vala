@@ -28,7 +28,7 @@ namespace ValaPanel
 	public static int main(string[] args)
 	{
 		var app = new App();
-		return app.run();
+		return app.run(args);
 	}
 	
 	public class App: Gtk.Application
@@ -45,22 +45,22 @@ namespace ValaPanel
 		private string _css;
 		private CssProvider provider;
 		public string profile
-		{get; private set;}
+                {get; internal set construct; default = "default";}
 		public string terminal_command
-		{get; private set;}
+                {get; internal set;}
 		public string logout_command
-		{get; private set;}
+                {get; internal set;}
 		public string shutdown_command
-		{get; private set;}
+                {get; internal set;}
 		public bool is_dark
 		{get {return _dark;}
-		private set {_dark = value; apply_styling();}}
+                internal set {_dark = value; apply_styling();}}
 		public bool is_custom
 		{get {return _custom;}
-		private set {_custom = value; apply_styling();}}
+                internal set {_custom = value; apply_styling();}}
 		public string css
 		{get {return _css;}
-		private set {_css = value; apply_styling();}}
+                internal set {_css = value; apply_styling();}}
 				
 		private static const OptionEntry options[] =
 		{
@@ -79,7 +79,6 @@ namespace ValaPanel
 			{"logout", activate_logout, null, null, null},
 			{"shutdown", activate_shutdown, null, null, null},
 			{"quit", activate_exit, null, null, null},
-			{ null }
 		};
 		private static const GLib.ActionEntry[] menu_entries =
 		{
@@ -135,8 +134,9 @@ namespace ValaPanel
 			GLib.Intl.bindtextdomain(Config.GETTEXT_PACKAGE,Config.PACKAGE_LOCALE_DIR);
 			GLib.Intl.bind_textdomain_codeset(Config.GETTEXT_PACKAGE,"UTF-8");
 			GLib.Intl.textdomain(Config.GETTEXT_PACKAGE);
-			Gtk.IconTheme.get_default().append_search_path(Config.PACKAGE_DATA_DIR+"/images");
-			Compat.fm_gtk_init();
+			var datadir = Config.PACKAGE_DATA_DIR;
+			Gtk.IconTheme.get_default().append_search_path(datadir+"/images");
+			Compat.fm_gtk_init(null);
 			Compat.prepare_modules();
 			add_action_entries(app_entries,this);
 			add_action_entries(menu_entries,this);
@@ -185,9 +185,9 @@ namespace ValaPanel
 			string? profile_name;
 			string? command;
 			var options = cmdl.get_options_dict();
-			if (options.lookup("profile","s",out profile_name))
+			if (options.lookup("profile","&s",out profile_name))
 				profile = profile_name;
-			if (options.lookup("command","s",out command))
+			if (options.lookup("command","&s",out command))
 			{
 				string name;
 				Variant param;
@@ -295,7 +295,9 @@ namespace ValaPanel
 		}
 		internal void activate_run(SimpleAction action, Variant? param)
 		{
-			
+			var runner = new Runner(this);
+			runner.run();
+			runner.destroy();
 		}
 		internal void activate_logout(SimpleAction action, Variant? param)
 		{

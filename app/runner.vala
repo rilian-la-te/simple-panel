@@ -99,6 +99,12 @@ namespace ValaPanel
 				apps_list = AppInfo.get_all();
 			});
 		}
+		
+		public Runner(App app)
+		{
+			Object(application: app);
+		}
+		
 		construct
 		{
 			PanelCSS.apply_from_resource(this,"/org/vala-panel/app/style.css","-panel-run-dialog");
