@@ -14,17 +14,6 @@ namespace ValaPanel
 		public static const string CUSTOM = "is-custom";
 		public static const string CSS = "css";
 	}
-	internal static string system_config_file_name(string name1, string profile,
-											string? name2)
-	{
-		return GLib.Path.build_filename(name1,GETTEXT_PACKAGE,profile,name2);
-	}
-	internal static string user_config_file_name(string name1, string profile,
-											string? name2)
-	{
-		return GLib.Path.build_filename(GLib.Environment.get_user_config_dir(),
-								GETTEXT_PACKAGE,profile,name1,name2);
-	}
 	public static int main(string[] args)
 	{
 		var app = new App();
@@ -43,9 +32,13 @@ namespace ValaPanel
 		private bool _dark;
 		private bool _custom;
 		private string _css;
+		private string _profile;
 		private CssProvider provider;
+		[CCode (notify = false)]
 		public string profile
-                {get; internal set construct; default = "default";}
+                {get {return _profile;}
+                 internal set construct {_profile=value;}
+                }
 		public string terminal_command
                 {get; internal set;}
 		public string logout_command
@@ -89,13 +82,24 @@ namespace ValaPanel
 		public App()
 		{
 			Object(application_id: "org.valapanel.application",
-					flags: GLib.ApplicationFlags.HANDLES_COMMAND_LINE);
+					flags: GLib.ApplicationFlags.HANDLES_COMMAND_LINE,
+					profile: "default");
 		}
 		
 		construct
 		{
 			started = false;
 			add_main_option_entries(options);
+		}
+		
+		private static string system_config_file_name(string name1, string? name2)
+		{
+			return GLib.Path.build_filename(name1,GETTEXT_PACKAGE,_profile,name2);
+		}
+		private static string user_config_file_name(string name1, string? name2)
+		{
+			return GLib.Path.build_filename(GLib.Environment.get_user_config_dir(),
+								GETTEXT_PACKAGE,_profile,name1,name2);
 		}
 		
 		private void activate_preferences (SimpleAction act, Variant? param)
@@ -152,6 +156,7 @@ namespace ValaPanel
 		{
 			if (!started)
 			{
+				print("%s\n",profile);
 				ensure_user_config();
 				load_settings();
 				Gdk.get_default_root_window().set_events(Gdk.EventMask.STRUCTURE_MASK
@@ -186,7 +191,7 @@ namespace ValaPanel
 			string? command;
 			var options = cmdl.get_options_dict();
 			if (options.lookup("profile","&s",out profile_name))
-				profile = profile_name;
+				_profile = profile_name;
 			if (options.lookup("command","&s",out command))
 			{
 				string name;
@@ -215,14 +220,17 @@ namespace ValaPanel
 		
 		private bool start_all_panels()
 		{
-			var panel_dir = user_config_file_name("panels",profile,null);
+			var panel_dir = user_config_file_name("panels",null);
 			Compat.start_panels_from_dir((Gtk.Application)this,panel_dir);
 			if (this.get_windows() != null)
 				return true;
 			var dirs = GLib.Environment.get_system_config_dirs();
+			if (dirs == null)
+				return false;
 			foreach(var dir in dirs)
 			{
-				panel_dir = system_config_file_name(dir,profile,"panels");
+				panel_dir = system_config_file_name(dir,"panels");
+				Compat.start_panels_from_dir((Gtk.Application)this,panel_dir);
 				if (this.get_windows() != null)
 					return true;
 			}
@@ -231,7 +239,7 @@ namespace ValaPanel
 		
 		private void ensure_user_config()
 		{
-			var dir = user_config_file_name("panels",profile,null);
+			var dir = user_config_file_name("panels",null);
 			GLib.FileUtils.mkdir_with_parents(dir,0700);
 		}
 		
@@ -254,14 +262,14 @@ namespace ValaPanel
 			string? user_file = null;
 			foreach (var dir in dirs)
 			{
-				file = system_config_file_name(dir,profile,"config");
+				file = system_config_file_name(dir,"config");
 				if (GLib.FileUtils.test(file,FileTest.EXISTS))
 				{
 					loaded = true;
 					break;
 				}
 			}
-			user_file = user_config_file_name("config",profile,null);
+			user_file = user_config_file_name("config",null);
 			if (!GLib.FileUtils.test(user_file,FileTest.EXISTS) && loaded)
 			{
 				var src = File.new_for_path(file);
