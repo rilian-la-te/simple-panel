@@ -16,8 +16,7 @@ pkglib_LTLIBRARIES = libsimplepanel.la
 SIMPLE_PANEL_HEADER_FILES = \
 	plugin.h \
 	panel.h \
-	misc.h \
-	css.h
+	misc.h
 
 SIMPLE_PANEL_NOINST_HEADER_FILES = \
 	dbg.h \
@@ -46,7 +45,6 @@ libsimplepanel_la_CPPFLAGS = $(simple_panel_CPPFLAGS)
 nodist_libsimplepanel_la_SOURCES = libsimplepanel-resources.c
 libsimplepanel_la_SOURCES = \
 	misc.c \
-	css.c \
 	configurator.c \
 	dbg.c \
 	panel.c \

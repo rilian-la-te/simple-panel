@@ -29,7 +29,7 @@
 #include <glib/gi18n.h>
 
 #include "misc.h"
-#include "css.h"
+#include "vala.h"
 
 #define DEFAULT_TIP_FORMAT    "%A %x"
 #define DEFAULT_CLOCK_FORMAT  "%R"
@@ -357,7 +357,7 @@ static gboolean dclock_apply_configuration(gpointer user_data)
     }
 
     gchar* css = dclock_gen_css(dc->bold);
-    css_apply_with_class(dc->btn,css,"-simple-panel-font-weight",FALSE);
+	panel_css_apply_with_class(dc->btn,css,"-simple-panel-font-weight",TRUE);
     g_free(css);
 
     /* Save configuration */
