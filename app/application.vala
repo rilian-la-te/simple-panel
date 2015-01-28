@@ -271,7 +271,11 @@ namespace ValaPanel
 			}
 			config_backend = GLib.keyfile_settings_backend_new(user_file,PATH,NAME);
 			config = new GLib.Settings.with_backend_and_path(SCHEMA,config_backend,PATH);
-			
+			gsettings_as_action(this,config,Key.LOGOUT);
+			gsettings_as_action(this,config,Key.SHUTDOWN);
+			gsettings_as_action(this,config,Key.DARK);
+			gsettings_as_action(this,config,Key.CUSTOM);
+			gsettings_as_action(this,config,Key.CSS);
 		}
 		private void activate_menu_callback(SimpleAction action, Variant? param)
 		{
@@ -281,34 +285,13 @@ namespace ValaPanel
 		{
 			Compat.activate_panel_preferences(action,param,this);
 		}
-		internal void activate_menu_launch_id(SimpleAction action, Variant? param)
-		{
-			var id = param.get_string();
-			var info = new DesktopAppInfo(id);
-			try{
-			info.launch(null,Gdk.Display.get_default().get_app_launch_context());
-			} catch (GLib.Error e){warning("%s\n",e.message);}
-		}
-		internal void activate_menu_launch_command(SimpleAction action, Variant? param)
-		{
-			var command = param.get_string();
-			GLib.AppInfo info = AppInfo.create_from_commandline(command,null,
-						AppInfoCreateFlags.SUPPORTS_STARTUP_NOTIFICATION);
-			try{
-			info.launch(null,Gdk.Display.get_default().get_app_launch_context());
-			} catch (GLib.Error e){warning("%s\n",e.message);}
-		}
-		internal void activate_menu_launch_uri(SimpleAction action, Variant? param)
-		{
-			var uri = param.get_string();
-			try{
-			GLib.AppInfo.launch_default_for_uri(uri,
-						Gdk.Display.get_default().get_app_launch_context());
-			} catch (GLib.Error e){warning("%s\n",e.message);}
-		}
 		internal void activate_about(SimpleAction action, Variant? param)
 		{
-			
+			var builder = new Builder.from_resource("/org/vala-panel/app/about.ui");
+			var d = builder.get_object("valapanel-about") as AboutDialog;
+			d.set_version(Config.VERSION);
+			d.run();
+			d.destroy();
 		}
 		internal void activate_run(SimpleAction action, Variant? param)
 		{
@@ -316,11 +299,13 @@ namespace ValaPanel
 		}
 		internal void activate_logout(SimpleAction action, Variant? param)
 		{
-			
+			Variant variant = new Variant.string(logout_command);
+			activate_menu_launch_command(null,variant);
 		}
 		internal void activate_shutdown(SimpleAction action, Variant? param)
 		{
-			
+			Variant variant = new Variant.string(shutdown_command);
+			activate_menu_launch_command(null,variant);
 		}
 		internal void activate_exit(SimpleAction action, Variant? param)
 		{

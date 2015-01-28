@@ -22,7 +22,8 @@ libvalapanel_la_SOURCES = \
 	menu-maker.vala \
 	plugin-settings.vala \
 	icon-grid.vala \
-	css.vala
+	css.vala \
+	misc.vala
 
 libvalapanel_la_VALAFLAGS = \
 	--library=libvalapanel \

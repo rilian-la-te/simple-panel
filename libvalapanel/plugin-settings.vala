@@ -157,7 +157,7 @@ namespace ValaPanel
 				try 
 				{
 					var name = f.get_string(group,Key.NAME);
-					name = name.delimit("'",' ').strip();
+					name._delimit("'",' ')._strip();
 					var config = f.get_boolean(group,Key.SCHEMA);
 					var s = add_plugin_settings_full(name,int.parse(group));
 					s.init_configuration(this,config);

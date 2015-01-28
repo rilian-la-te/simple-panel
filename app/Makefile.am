@@ -33,7 +33,7 @@ simple-panel-resources.c: simple-panel.gresource.xml $(simple_panel_resdeps)
 	
 vala_panel_resdeps = $(shell $(GLIB_COMPILE_RESOURCES) --generate-dependencies vala-panel.gresource.xml)
 
-vala-panel-resources.c: simple-panel.gresource.xml $(simple_panel_resdeps)
+vala-panel-resources.c: vala-panel.gresource.xml $(simple_panel_resdeps)
 	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target=$@ --sourcedir=$(srcdir) --generate-source vala-panel.gresource.xml
 
 BUILT_SOURCES = \
@@ -48,11 +48,13 @@ simple_panel_SOURCES = \
 	app-actions.c
 
 nodist_vala_panel_SOURCES = vala-panel-resources.c
-vala_panel_SOURCES = application.vala
+vala_panel_SOURCES = application.vala runner.vala
 
 vala_panel_VALAFLAGS = \
 	--vapidir=$(top_srcdir)/vapi \
 	--vapidir=. \
+	--target-glib=2.40 \
+	--gresources=$(srcdir)/vala-panel.gresource.xml \
 	--pkg gtk+-3.0 \
 	--pkg gio-2.0 \
 	--pkg gio-unix-2.0 \
@@ -60,6 +62,7 @@ vala_panel_VALAFLAGS = \
 	--pkg temp \
 	--pkg vala-panel \
 	--pkg gio-settingsbackend-2.0 \
+	--pkg posix \
 	$(VALAFLAGS)
 
 simple_panel_includedir = $(includedir)/simple-panel
