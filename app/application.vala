@@ -25,7 +25,7 @@ namespace ValaPanel
 		private static const string SCHEMA = "org.simple.panel";
 		private static const string NAME = "global";
 		private static const string PATH = "/org/simple/panel/";
-		private bool started;
+		private bool started = false;
 		private SettingsBackend config_backend;
 		private Dialog? pref_dialog;
 		private GLib.Settings config;
@@ -34,10 +34,10 @@ namespace ValaPanel
 		private string _css;
 		private string _profile;
 		private CssProvider provider;
-		[CCode (notify = false)]
 		public string profile
                 {get {return _profile;}
-                 internal set construct {_profile=value;}
+                 internal set construct {_profile = value;}
+                 default = "default";
                 }
 		public string terminal_command
                 {get; internal set;}
@@ -55,7 +55,7 @@ namespace ValaPanel
 		{get {return _css;}
                 internal set {_css = value; apply_styling();}}
 				
-		private static const OptionEntry options[] =
+		private static const OptionEntry[] options =
 		{
 			{ "version", 'v', 0, OptionArg.NONE, null, N_("Print version and exit"), null },
 			{ "profile", 'p', 0, OptionArg.STRING, null, N_("Use specified profile"), N_("profile") },
@@ -88,15 +88,15 @@ namespace ValaPanel
 		
 		construct
 		{
-			started = false;
 			add_main_option_entries(options);
+			started = false;
 		}
 		
-		private static string system_config_file_name(string name1, string? name2)
+		private string system_config_file_name(string name1, string? name2)
 		{
 			return GLib.Path.build_filename(name1,GETTEXT_PACKAGE,_profile,name2);
 		}
-		private static string user_config_file_name(string name1, string? name2)
+		private string user_config_file_name(string name1, string? name2)
 		{
 			return GLib.Path.build_filename(GLib.Environment.get_user_config_dir(),
 								GETTEXT_PACKAGE,_profile,name1,name2);
@@ -156,7 +156,6 @@ namespace ValaPanel
 		{
 			if (!started)
 			{
-				print("%s\n",profile);
 				ensure_user_config();
 				load_settings();
 				Gdk.get_default_root_window().set_events(Gdk.EventMask.STRUCTURE_MASK
@@ -190,9 +189,9 @@ namespace ValaPanel
 			string? profile_name;
 			string? command;
 			var options = cmdl.get_options_dict();
-			if (options.lookup("profile","&s",out profile_name))
+			if (options.lookup("profile","s",out profile_name))
 				_profile = profile_name;
-			if (options.lookup("command","&s",out command))
+			if (options.lookup("command","s",out command))
 			{
 				string name;
 				Variant param;
@@ -303,9 +302,8 @@ namespace ValaPanel
 		}
 		internal void activate_run(SimpleAction action, Variant? param)
 		{
-			var runner = new Runner(this);
-			runner.run();
-			runner.destroy();
+			Runner runner = new Runner(this);
+			runner.gtk_run();
 		}
 		internal void activate_logout(SimpleAction action, Variant? param)
 		{

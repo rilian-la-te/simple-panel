@@ -48,7 +48,7 @@ simple_panel_SOURCES = \
 	app-actions.c
 
 nodist_vala_panel_SOURCES = vala-panel-resources.c
-vala_panel_SOURCES = application.vala runner.vala
+vala_panel_SOURCES = runner.vala application.vala
 
 vala_panel_VALAFLAGS = \
 	--vapidir=$(top_srcdir)/vapi \

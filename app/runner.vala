@@ -5,10 +5,9 @@ namespace ValaPanel
 {
 	internal class CompletionThread
 	{
-		internal bool running
-		{get; set;}
-		private Gtk.Entry entry;
-		private SList<string> filenames;
+		public bool running;
+		private unowned Gtk.Entry entry;
+		private unowned SList<string>? filenames;
 		public CompletionThread (Gtk.Entry entry) {
 			this.entry = entry;
 			running = true;
@@ -45,7 +44,7 @@ namespace ValaPanel
 					continue;
 				}
 			}
-			filenames = (owned)list;
+			filenames = list;
 			Idle.add(() => 
 			{
 				if(running)
@@ -68,36 +67,32 @@ namespace ValaPanel
 				store.append(out it);
 				store.set(it,0,filename,-1);
 			}
-			
+			comp.set_model(store);
+			comp.set_text_column(0);
+			entry.set_completion(comp);
+			comp.complete();
 		}
 	}
 	[GtkTemplate (ui = "/org/vala-panel/app/app-runner.ui")]
+	[CCode (cname="Runner")]
 	internal class Runner : Gtk.Dialog
 	{
 		[GtkChild (name="main-entry")]
 		private Entry main_entry;
 		[GtkChild (name="terminal-button")]
 		private ToggleButton terminal_button;
-		[GtkChild (name="main-box")]
+		[GtkChild (name="main-box", internal=true)]
 		private Box main_box;
 		
-		private CompletionThread thread;
+		private CompletionThread? thread;
 		
-		private static GLib.List<GLib.AppInfo> apps_list;
-		private static AppInfoMonitor monitor;
+		private GLib.List<GLib.AppInfo> apps_list;
+		private AppInfoMonitor monitor;
 		private bool cached;
 		private App app 
 		{
 			get{return this.get_application() as App;}
 			set{set_application(value as Gtk.Application);}
-		}
-		static construct
-		{
-			monitor = AppInfoMonitor.get();
-			monitor.changed.connect(()=>
-			{
-				apps_list = AppInfo.get_all();
-			});
 		}
 		
 		public Runner(App app)
@@ -115,9 +110,16 @@ namespace ValaPanel
 			this.set_visual(this.get_screen().get_rgba_visual());
 			this.set_default_response(Gtk.ResponseType.OK);
 			this.set_keep_above(true);
+			thread = null;
+			monitor = AppInfoMonitor.get();
+			apps_list = AppInfo.get_all();
+			monitor.changed.connect(()=>
+			{
+				apps_list = AppInfo.get_all();
+			});
 		}
 		
-		static DesktopAppInfo? match_app_by_exec(string exec)
+		private DesktopAppInfo? match_app_by_exec(string exec)
 		{
 			DesktopAppInfo? ret = null;
 			string exec_path = GLib.Environment.find_program_in_path(exec);
@@ -205,10 +207,15 @@ namespace ValaPanel
 			this.destroy();
 		}
 		
-		public override void show()
+		public void gtk_run()
 		{
+			this.show_all();
 			this.setup_entry_completion();
-			base.show();
+			this.show_all();
+			this.show();
+			main_entry.grab_focus();
+			main_box.set_orientation(Gtk.Orientation.HORIZONTAL);
+			this.present();
 		}
 		
 		[GtkCallback]
@@ -220,7 +227,9 @@ namespace ValaPanel
 				app = match_app_by_exec(main_entry.get_text());
 			}
 			if (app != null)
+			{
 				main_entry.set_icon_from_gicon(Gtk.EntryIconPosition.PRIMARY,app.get_icon());
+			}
 			else
 				main_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,"system-run-symbolic");
 		}
