@@ -1,6 +1,6 @@
 .-panel-run-dialog
 {
-	border-radius: 6px;
+	border-radius: 15px;
 	border: none;
 }
 .-panel-run-header
@@ -20,7 +20,7 @@
 .-panel-icon-button.highlight,
 .-panel-icon-button:active:hover
 {
-	-gtk-image-effect: highlight;"
+	-gtk-image-effect: highlight;
 }
 .-panel-button
 {

@@ -29,6 +29,7 @@ namespace ValaPanel
 		private SettingsBackend config_backend;
 		private Dialog? pref_dialog;
 		private GLib.Settings config;
+		private Runner? runner;
 		private bool _dark;
 		private bool _custom;
 		private string _css;
@@ -83,7 +84,8 @@ namespace ValaPanel
 		{
 			Object(application_id: "org.valapanel.application",
 					flags: GLib.ApplicationFlags.HANDLES_COMMAND_LINE,
-					profile: "default");
+					profile: "default",
+					resource_base_path: "/org/vala-panel/app");
 		}
 		
 		construct
@@ -302,8 +304,13 @@ namespace ValaPanel
 		}
 		internal void activate_run(SimpleAction action, Variant? param)
 		{
-			Runner runner = new Runner(this);
-			runner.gtk_run();
+			if (runner == null || !runner.get_mapped())
+			{
+				runner = new Runner(this);
+				runner.gtk_run();
+			}
+			else
+				runner.present();
 		}
 		internal void activate_logout(SimpleAction action, Variant? param)
 		{

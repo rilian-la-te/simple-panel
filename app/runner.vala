@@ -103,8 +103,7 @@ namespace ValaPanel
 		construct
 		{
 			PanelCSS.apply_from_resource(this,"/org/vala-panel/app/style.css","-panel-run-dialog");
-			PanelCSS.apply_from_resource(this,"/org/vala-panel/app/style.css","-panel-run-header");
-			PanelCSS.apply_from_resource(main_box,"/org/vala-panel/app/style.css","-panel-run-header");
+			main_box.get_style_context().add_class("-panel-run-header");
 			//FIXME: Implement cache
 			cached = false;
 			this.set_visual(this.get_screen().get_rgba_visual());
