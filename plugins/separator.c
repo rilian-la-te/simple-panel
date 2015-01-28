@@ -46,8 +46,9 @@ static void separator_reconfigure(SimplePanel *panel, GtkWidget *instance)
     gtk_orientable_set_orientation(GTK_ORIENTABLE(sep),panel_get_orientation(panel));
 }
 
+FM_DEFINE_MODULE(lxpanel_gtk, separator)
 /* Plugin descriptor. */
-SimplePanelPluginInit lxpanel_static_plugin_separator = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Separator"),
     .description = N_("Add a separator to the panel"),
 

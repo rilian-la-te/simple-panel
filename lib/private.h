@@ -140,13 +140,6 @@ struct _Panel {
     guint mouse_timeout;
 };
 
-/* FIXME: optional definitions */
-#define STATIC_SEPARATOR
-#define STATIC_LAUNCHBAR
-#define STATIC_DCLOCK
-#define STATIC_DIRMENU
-#define STATIC_SPACE
-
 /* Plugins management - new style */
 void _prepare_modules(void);
 void _unload_modules(void);

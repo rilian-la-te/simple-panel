@@ -206,6 +206,10 @@ plugin_cpufreq=
 plugin_monitors=
 plugin_indicator=
 plugin_menumodel=
+plugin_dirmenu=
+plugin_separator=
+plugin_space=
+plugin_dclock=
 
 AC_MSG_CHECKING([which plugins should be built dynamically])
 AC_ARG_WITH(plugins,
@@ -225,7 +229,7 @@ if test x"$plugins" != xall -a x"$plugins" != xnone; then
     fi
 fi
 
-ALL_PLUGINS_LIST="netstatus netstat volume volumealsa cpu deskno batt kbled xkb thermal cpufreq monitors indicator weather menumodel"
+ALL_PLUGINS_LIST="netstatus netstat volume volumealsa cpu deskno batt kbled xkb thermal cpufreq monitors indicator weather menumodel dirmenu separator space dclock"
 AC_SUBST(ALL_PLUGINS_LIST)
 
 AC_DEFUN([check_plugin_name],[
@@ -332,6 +336,10 @@ PLUGINS_LIST="\
     $plugin_monitors \
     $plugin_indicator \
     $plugin_weather \
+    $plugin_dclock \
+    $plugin_separator \
+    $plugin_space \
+    $plugin_dirmenu \
     $plugin_menumodel"
 
 AC_SUBST(PLUGINS_LIST)

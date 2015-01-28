@@ -88,8 +88,9 @@ static GtkWidget *space_configure(SimplePanel *panel, GtkWidget *instance)
     return dlg;
 }
 
+FM_DEFINE_MODULE(lxpanel_gtk, space)
 /* Plugin descriptor. */
-SimplePanelPluginInit lxpanel_static_plugin_space = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Spacer"),
     .description = N_("Allocate space"),
 

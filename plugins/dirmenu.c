@@ -338,8 +338,9 @@ static void dirmenu_panel_configuration_changed(SimplePanel *panel, GtkWidget *p
     dirmenu_apply_configuration(p);
 }
 
+FM_DEFINE_MODULE(lxpanel_gtk, dirmenu)
 /* Plugin descriptor. */
-SimplePanelPluginInit lxpanel_static_plugin_dirmenu = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Directory Menu"),
     .description = N_("Browse directory tree via menu (Author = PCMan)"),
 

@@ -380,8 +380,9 @@ static GtkWidget *dclock_configure(SimplePanel *panel, GtkWidget *p)
         NULL);
 }
 
+FM_DEFINE_MODULE(lxpanel_gtk, dclock)
 /* Plugin descriptor. */
-SimplePanelPluginInit lxpanel_static_plugin_dclock = {
+SimplePanelPluginInit fm_module_init_lxpanel_gtk = {
     .name = N_("Digital Clock"),
     .description = N_("Display digital clock and tooltip"),
 

@@ -15,29 +15,6 @@ AM_LDFLAGS = \
         $(top_builddir)/libvalapanel/libvalapanel.la \
 	$(PACKAGE_LIBS)
 
-#$(top_builddir)/src/libsimplepanel.la:
-#	cd $(top_builddir)/src && $(MAKE) libsimplepanel.la
-
-## built-in plugins
-noinst_LIBRARIES = libbuiltin_plugins.a
-
-libbuiltin_plugins_a_CFLAGS = \
-	-DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\" \
-	-DPACKAGE_UI_DIR=\""$(datadir)/simple-panel/ui"\" \
-	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
-
-PLUGINS_SOURCES = \
-	dclock.c \
-	dirmenu.c \
-	separator.c \
-        space.c
-
-
-libbuiltin_plugins_a_SOURCES = \
-	$(PLUGINS_SOURCES)
-
-libbuiltin_plugins_a_LIBADD = $(top_builddir)/libvalapanel/libvalapanel.la
-
 ## loadable plugins
 if BUILD_PLUGIN_LOADER
 DYNAMIC_PLUGINS = \
@@ -56,6 +33,10 @@ EXTRA_LTLIBRARIES = \
 	icontasklist.la \
 	kbled.la \
 	menumodel.la \
+	space.la\
+	separator.la\
+	dclock.la\
+	dirmenu.la\
 	monitors.la \
 	netstat.la \
 	netstatus.la \
@@ -70,6 +51,14 @@ EXTRA_LTLIBRARIES = \
 	xkb.la
 
 pkglibdir = $(libdir)/simple-panel/plugins
+
+
+# core plugins
+menumodel_la_SOURCES = menumodel.c
+dclock_la_SOURCES = dclock.c
+dirmenu_la_SOURCES = dirmenu.c
+separator_la_SOURCES = separator.c
+space_la_SOURCES = space.c
 
 # batt
 batt_la_SOURCES = \
@@ -113,10 +102,6 @@ indicator_la_LIBADD = $(APPLET_LIBS)
 kbled_la_SOURCES = kbled/kbled.c
 kbled_la_CFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/simple-panel"\"
 kbled_la_LIBADD = $(X11_LIBS)
-
-# menumodel
-menumodel_la_SOURCES = menumodel.c
-menumodel_la_LIBADD = $(top_builddir)/libvalapanel/libvalapanel.la
 
 # monitors
 monitors_la_SOURCES = monitors/monitors.c
