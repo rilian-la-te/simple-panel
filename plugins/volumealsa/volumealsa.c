@@ -555,7 +555,7 @@ static GtkWidget *volumealsa_constructor(SimplePanel *panel, GSettings *settings
     g_signal_connect(b,"toggled",G_CALLBACK(on_button_toggled),vol);
     vol->icon = g_themed_icon_new_with_default_fallbacks(vol->symbolic ? "dialog-error-symbolic" : "dialog-error");
     vol->tray_icon = simple_panel_image_new_for_gicon(panel,vol->icon,-1);
-    simple_panel_setup_button(b,vol->tray_icon,NULL);
+    vala_panel_setup_button(b,vol->tray_icon,NULL);
     /* Initialize ALSA.  If that fails, present missing icon. */
     alsa_init(vol);
 

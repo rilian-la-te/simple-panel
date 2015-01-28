@@ -151,7 +151,7 @@ static GtkWidget *wincmd_constructor(SimplePanel *panel, GSettings *settings)
     /* Allocate top level widget and set into Plugin widget pointer. */
     p = gtk_button_new();
     GtkWidget* img = simple_panel_image_new_for_icon(panel,wc->image,-1);
-    simple_panel_setup_button(p,img,NULL);
+    vala_panel_setup_button(p,img,NULL);
     lxpanel_plugin_set_data(p, wc, wincmd_destructor);
     gtk_widget_set_tooltip_text(p, _("Left click to iconify all windows.  Middle click to shade them."));
 

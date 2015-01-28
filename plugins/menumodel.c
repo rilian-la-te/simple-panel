@@ -79,11 +79,11 @@ static void panel_edge_changed(SimplePanel* panel, GParamSpec* param, MenuModelP
 static void on_theme_changed(MenuModelPlugin* m, GObject* object)
 {
     if (GTK_IS_MENU_SHELL(m->button))
-        simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(m->button)),m->menu);
+		vala_panel_apply_menu_properties(gtk_container_get_children(GTK_CONTAINER(m->button)),m->menu);
     else
     {
         GtkWidget* menu = GTK_WIDGET(gtk_menu_button_get_popup(GTK_MENU_BUTTON(m->button)));
-        simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menu)),m->menu);
+		vala_panel_apply_menu_properties(gtk_container_get_children(GTK_CONTAINER(menu)),m->menu);
     }
 }
 
@@ -283,7 +283,7 @@ static GtkWidget* create_menubutton(MenuModelPlugin* m)
     GtkWidget* img, *menu;
     m->button = gtk_menu_button_new();
     menu = gtk_menu_new_from_model(m->menu);
-    simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menu)),m->menu);
+	vala_panel_apply_menu_properties(gtk_container_get_children(GTK_CONTAINER(menu)),m->menu);
     gtk_widget_show_all(menu);
     gtk_menu_button_set_popup(GTK_MENU_BUTTON(m->button),menu);
     gtk_menu_button_set_use_popover(GTK_MENU_BUTTON(m->button),FALSE);
@@ -292,7 +292,7 @@ static GtkWidget* create_menubutton(MenuModelPlugin* m)
         img = simple_panel_image_new_for_icon(m->panel,m->icon_str,-1);
         gtk_widget_show(img);
     }
-    simple_panel_setup_button(m->button,img,m->caption ? m->caption : NULL);
+    vala_panel_setup_button(m->button,img,m->caption ? m->caption : NULL);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
     gtk_widget_show(m->button);
     g_signal_connect_swapped(gtk_icon_theme_get_default(),"changed",G_CALLBACK(on_theme_changed),m);
@@ -302,7 +302,7 @@ static GtkWidget* create_menubutton(MenuModelPlugin* m)
 static GtkWidget* create_menubar(MenuModelPlugin* m)
 {
     m->button = gtk_menu_bar_new_from_model(G_MENU_MODEL(m->menu));
-    simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(m->button)),m->menu);
+	vala_panel_apply_menu_properties(gtk_container_get_children(GTK_CONTAINER(m->button)),m->menu);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
     plugin_widget_set_background(m->button,m->panel);
     gtk_widget_show(m->button);

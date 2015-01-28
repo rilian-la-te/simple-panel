@@ -38,7 +38,7 @@ namespace MenuMaker
 
 	public static GLib.MenuModel applications_model(string[] cats)
 	{
-		var builder = new Gtk.Builder.from_resource("/org/vala-panel/panel/lib/system-menus.ui");
+		var builder = new Gtk.Builder.from_resource("/org/vala-panel/lib/system-menus.ui");
 		var menu = (GLib.Menu) builder.get_object("categories");
 		foreach (var info in GLib.AppInfo.get_all ())
 			parse_app_info((GLib.DesktopAppInfo)info,builder);
@@ -76,7 +76,7 @@ namespace MenuMaker
 
 	public static GLib.MenuModel create_places_menu()
 	{
-		var builder = new Gtk.Builder.from_resource ("/org/vala-panel/panel/lib/system-menus.ui");
+		var builder = new Gtk.Builder.from_resource ("/org/vala-panel/lib/system-menus.ui");
 		var menu = (GLib.Menu) builder.get_object("places-menu");
 		var section = (GLib.Menu) builder.get_object("folders-section");
 		var item = new GLib.MenuItem(_("Home"),null);
@@ -116,7 +116,7 @@ namespace MenuMaker
 
 	public static GLib.MenuModel create_system_menu()
 	{
-		var builder = new Gtk.Builder.from_resource ("/org/vala-panel/panel/lib/system-menus.ui");
+		var builder = new Gtk.Builder.from_resource ("/org/vala-panel/lib/system-menus.ui");
 		var menu = (GLib.Menu) builder.get_object("settings-section");
 		menu.append_section(null,MenuMaker.create_applications_menu (true));
 		var info = new GLib.DesktopAppInfo("gnome-control-center.desktop");

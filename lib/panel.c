@@ -1591,25 +1591,25 @@ static void panel_add_actions( SimplePanel* p)
         {"panel-settings", activate_panel_settings, "s", NULL, NULL},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(p),win_action_entries,G_N_ELEMENTS(win_action_entries),p);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_EDGE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ALIGNMENT);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_HEIGHT);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_WIDTH);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_SIZE_TYPE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_STRUT);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_DOCK);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ICON_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_MARGIN);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_EDGE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ALIGNMENT);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_HEIGHT);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_WIDTH);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_SIZE_TYPE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE_SIZE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_STRUT);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_DOCK);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ICON_SIZE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_MARGIN);
     simple_panel_bind_gsettings(G_OBJECT(p),settings,PANEL_PROP_MONITOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_SIZE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_COLOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_COLOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_COLOR);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_FILE);
-    simple_panel_add_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_TYPE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_SIZE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_SIZE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_COLOR);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_COLOR);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_COLOR);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_FILE);
+	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_TYPE);
 }
 
 static void on_monitors_changed(GdkScreen* screen, gpointer unused)

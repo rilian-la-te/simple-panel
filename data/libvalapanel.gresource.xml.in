@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <gresources>
-  <gresource prefix="/org/vala-panel/panel/lib">
+  <gresource prefix="/org/vala-panel/lib">
     <file compressed="true" alias="pref.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/panel-pref.ui</file>
     <file compressed="true" alias="menus.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/panel-menus.ui</file>
     <file compressed="true" alias="system-menus.ui" preprocess="xml-stripblanks">@top_srcdir@/data/ui/system-menus.ui</file>

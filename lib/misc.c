@@ -127,47 +127,6 @@ expand_tilda(const gchar *file)
         : g_strdup(file));
 }
 
-static void widget_center(GtkWidget* w, gpointer data)
-{
-    if (GTK_IS_WIDGET(w))
-    {
-        gtk_widget_set_halign(w, GTK_ALIGN_FILL);
-        gtk_widget_set_valign(w, GTK_ALIGN_FILL);
-    }
-}
-
-static void button_center(GtkWidget* b, GParamSpec* pspec, gpointer data)
-{
-    GtkWidget* w = gtk_bin_get_child(GTK_BIN(b));
-    if (GTK_IS_CONTAINER(w))
-    {
-        GtkWidget* ch = (GTK_IS_BIN(w)) ? gtk_bin_get_child(GTK_BIN(w)) : w;
-        if (GTK_IS_CONTAINER(ch))
-            gtk_container_foreach(GTK_CONTAINER(ch),widget_center, data);
-        widget_center(ch,b);
-    }
-}
-
-inline void simple_panel_setup_button(GtkWidget* b, GtkWidget* img,const gchar* label)
-{
-    const gchar *css = ".-panel-button {\n"
-            "color: inherit;"
-            "margin: 0px 0px 0px 0px;\n"
-            "padding: 0px 0px 0px 0px;\n"
-            "}\n";
-    g_signal_connect(b,"notify::image",G_CALLBACK(button_center),NULL);
-    g_signal_connect(b,"notify::label",G_CALLBACK(button_center),NULL);
-    if (img)
-    {
-        gtk_button_set_image(GTK_BUTTON(b),img);
-        gtk_button_set_always_show_image(GTK_BUTTON(b),TRUE);
-    }
-    if (label)
-        gtk_button_set_label(GTK_BUTTON(b),label);
-    gtk_button_set_relief(GTK_BUTTON(b),GTK_RELIEF_NONE);
-    panel_css_apply_with_class(b,css,"-panel-button",TRUE);
-}
-
 static void on_theme_changed(GtkWidget *img, GObject *object)
 {
     int size = gtk_image_get_pixel_size(GTK_IMAGE(img));
@@ -237,7 +196,7 @@ static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *ic
     GtkWidget* image = NULL;
     if (icon)
         image = simple_panel_image_new_for_gicon(panel,icon, size);
-    simple_panel_setup_button(event_box,image,label);
+	vala_panel_setup_button(event_box,image,label);
     panel_css_apply_with_class(event_box,NULL,GTK_STYLE_CLASS_BUTTON,FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
     gtk_widget_set_can_focus(event_box, FALSE);
@@ -269,91 +228,6 @@ GtkWidget *simple_panel_button_new_for_icon(SimplePanel *panel, const gchar *nam
                                         -1, (color != NULL) ? color : &fallback, label);
     g_object_unref(icon);
     return ret;
-}
-
-void activate_menu_launch_id (GSimpleAction* action,GVariant* param, gpointer user_data)
-{
-    GError* err = NULL;
-    const gchar* id = g_variant_get_string(param,NULL);
-    GDesktopAppInfo *info = g_desktop_app_info_new(id);
-    g_app_info_launch (G_APP_INFO (info), NULL, G_APP_LAUNCH_CONTEXT(gdk_display_get_app_launch_context(gdk_display_get_default())), &err);
-    g_object_unref(info);
-    if (err)
-        g_warning("%s\n",err->message);
-    g_clear_error(&err);
-}
-
-void activate_menu_launch_uri (GSimpleAction* action,GVariant* param, gpointer user_data)
-{
-    GError* err = NULL;
-    const char* uri = g_variant_get_string(param,NULL);
-    g_app_info_launch_default_for_uri(uri,
-                                      G_APP_LAUNCH_CONTEXT(gdk_display_get_app_launch_context(gdk_display_get_default())),&err);
-    if (err)
-        g_warning("%s\n",err->message);
-    g_clear_error(&err);
-}
-
-void activate_menu_launch_command (GSimpleAction* action,GVariant* param, gpointer user_data)
-{
-    GError* err = NULL;
-    const char* commandline = g_variant_get_string(param,NULL);
-    GAppInfo*  info = g_app_info_create_from_commandline(commandline, NULL,G_APP_INFO_CREATE_SUPPORTS_STARTUP_NOTIFICATION,&err);
-    if (err)
-        g_warning("%s\n",err->message);
-    g_clear_error(&err);
-    g_app_info_launch(info,NULL,G_APP_LAUNCH_CONTEXT(gdk_display_get_app_launch_context(gdk_display_get_default())),&err);
-    if (err)
-        g_warning("%s\n",err->message);
-    g_clear_error(&err);
-}
-
-gint simple_panel_apply_properties_to_menu(GList* widgets, GMenuModel* menu)
-{
-    GList* l;
-    GMenuModel* menu_link;
-    GtkWidget* menuw;
-    gchar* str = NULL;
-    GIcon* icon;
-    int len = g_menu_model_get_n_items(menu);
-    int i, j ,ret;
-    for (i=0, l=widgets; (i<len) && (l!= NULL); i++,l = l->next)
-    {
-        while (GTK_IS_SEPARATOR_MENU_ITEM(l->data))
-            l = l->next;
-        menuw = gtk_menu_item_get_submenu(GTK_MENU_ITEM(l->data));
-        menu_link = g_menu_model_get_item_link(menu,i,"submenu");
-        if (menuw && menu_link)
-        {
-            simple_panel_apply_properties_to_menu(gtk_container_get_children(GTK_CONTAINER(menuw)),menu_link);
-            g_object_unref(menu_link);
-        }
-        str = NULL;
-        menu_link = g_menu_model_get_item_link(menu,i,"section");
-        if (menu_link)
-        {
-            ret = simple_panel_apply_properties_to_menu(l,menu_link);
-            for (j = 0; j < ret; j++)
-                l=l->next;
-            g_object_unref(menu_link);
-        }
-        g_menu_model_get_item_attribute(menu,i,"icon","s",&str);
-        if (str)
-        {
-            icon = g_icon_new_for_string(str,NULL);
-            g_object_set(G_OBJECT(l->data),"icon",icon,NULL);
-            g_free(str);
-            g_object_unref(icon);
-        }
-        str = NULL;
-        g_menu_model_get_item_attribute(menu,i,"tooltip","s",&str);
-        if (str)
-        {
-            gtk_widget_set_tooltip_text(GTK_WIDGET(l->data),str);
-            g_free(str);
-        }
-    }
-    return i-1;
 }
 
 void activate_panel_preferences(GSimpleAction* simple, GVariant* param, gpointer data)
@@ -435,23 +309,6 @@ void simple_panel_scale_button_set_value_labeled (GtkScaleButton* b, gint value)
     gchar* str = g_strdup_printf("%d",value);
     gtk_button_set_label(GTK_BUTTON(b),str);
     g_free(str);
-}
-
-void simple_panel_add_prop_as_action(GActionMap* map,const char* prop)
-{
-    GAction* action;
-    action = G_ACTION(g_property_action_new(prop,map,prop));
-    g_action_map_add_action(map,action);
-    g_object_unref(action);
-}
-
-void simple_panel_add_gsettings_as_action(GActionMap* map, GSettings* settings,const char* prop)
-{
-    GAction* action;
-    g_settings_bind(settings,prop,G_OBJECT(map),prop,G_SETTINGS_BIND_GET | G_SETTINGS_BIND_SET |G_SETTINGS_BIND_DEFAULT);
-    action = G_ACTION(g_settings_create_action(settings,prop));
-    g_action_map_add_action(map,action);
-    g_object_unref(action);
 }
 
 void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop)

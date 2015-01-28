@@ -9,7 +9,7 @@ namespace ValaPanel
 		var info = new DesktopAppInfo(id);
 		try{
 		info.launch(null,Gdk.Display.get_default().get_app_launch_context());
-		} catch (GLib.Error e){warning("%s\n",e.message);}
+		} catch (GLib.Error e){stderr.printf("%s\n",e.message);}
 	}
 	public static void activate_menu_launch_command(SimpleAction? action, Variant? param)
 	{
@@ -18,7 +18,7 @@ namespace ValaPanel
 		GLib.AppInfo info = AppInfo.create_from_commandline(command,null,
 					AppInfoCreateFlags.SUPPORTS_STARTUP_NOTIFICATION);
 		info.launch(null,Gdk.Display.get_default().get_app_launch_context());
-		} catch (GLib.Error e){warning("%s\n",e.message);}
+		} catch (GLib.Error e){stderr.printf("%s\n",e.message);}
 	}
 	public static void activate_menu_launch_uri(SimpleAction action, Variant? param)
 	{
@@ -26,7 +26,7 @@ namespace ValaPanel
 		try{
 		GLib.AppInfo.launch_default_for_uri(uri,
 					Gdk.Display.get_default().get_app_launch_context());
-		} catch (GLib.Error e){warning("%s\n",e.message);}
+		} catch (GLib.Error e){stderr.printf("%s\n",e.message);}
 	}
 	public static void gsettings_as_action(ActionMap map, GLib.Settings settings, string prop)
 	{
@@ -41,8 +41,8 @@ namespace ValaPanel
 		var i = 0;
 		for(i = 0, l = widgets;(i<len)&&(l!=null);i++,l=l.next)
 		{
+			while (l.data is SeparatorMenuItem) l = l.next;
 			var shell = l.data as Gtk.MenuItem;
-			while (shell is SeparatorMenuItem) l = l.next;
 			var menuw = shell.get_submenu() as Gtk.Menu;
 			var menu_link = menu.get_item_link(i,"submenu");
 			if (menuw !=null && menu_link !=null)
@@ -53,7 +53,7 @@ namespace ValaPanel
 				var ret = apply_menu_properties(l,menu_link);
 				for (int j=0;j<ret;j++) l = l.next;
 			}
-			string? str;
+			string? str = null;
 			menu.get_item_attribute(i,"icon","s",out str);
 			if(str != null)
 			{
@@ -66,10 +66,57 @@ namespace ValaPanel
 					stderr.printf("Incorrect menu icon:%s\n", e.message);
 				}
 			}
+			str=null;
 			menu.get_item_attribute(i,"tooltip","s",out str);
 			if (str != null)
 				shell.set_tooltip_text(str);
 		}
 		return i-1;
+	}
+	
+	public static void setup_button(Widget button, Widget? image, string? label)
+	{
+		Button b = button as Button;
+		Image img = image as Image;
+		PanelCSS.apply_from_resource(b,"/org/vala-panel/lib/style.css","-panel-button");
+//Children hierarhy: button => alignment => box => (label,image)
+		b.notify.connect((a,b)=>{
+			if (b.name == "label" || b.name == "image")
+			{
+				var B = a as Bin;
+				var w = B.get_child();
+				if (w is Container)
+				{
+					Bin? bin;
+					Widget ch;
+					if (w is Bin)
+					{
+						bin = w as Bin;
+						ch = bin.get_child();
+					}
+					else
+						ch = w;
+					if (ch is Container)
+					{
+						var cont = ch as Container;
+						cont.forall((c)=>{
+							if (c is Widget){
+							c.set_halign(Gtk.Align.FILL);
+							c.set_valign(Gtk.Align.FILL);
+							}});
+					}
+					ch.set_halign(Gtk.Align.FILL);
+					ch.set_valign(Gtk.Align.FILL);
+				}
+			}
+		});
+		if (img != null)
+		{
+			b.set_image(img);
+			b.set_always_show_image(true);
+		}
+		if (label != null)
+			b.set_label(label);
+		b.set_relief(Gtk.ReliefStyle.NONE);
 	}
 }
