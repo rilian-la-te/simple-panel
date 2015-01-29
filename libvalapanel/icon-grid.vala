@@ -200,7 +200,7 @@ namespace ValaPanel
 			this.get_size(ref req);
 			pw = (pw > 1) ? pw : int.MAX;
 			min = int.min(req.width,pw);
-			nat = int.min(req.width,pw);
+			nat = req.width;
 		}
 		public override void get_preferred_height(out int min, out int nat)
 		{
@@ -209,7 +209,7 @@ namespace ValaPanel
 			this.get_size(ref req);
 			pw = (pw > 1) ? pw : int.MAX;
 			min = int.min(req.height,pw);
-			nat = int.min(req.height,pw);
+			nat = req.height;
 		}
 		private void get_size(ref Gtk.Requisition req)
 		{
