@@ -30,8 +30,6 @@
 
 #include "plugin.h"
 
-#include "dbg.h"
-
 #define PROC_ICON            "cpufreq-icon"
 #define SYSFS_CPU_DIRECTORY "/sys/devices/system/cpu"
 #define SCALING_GOV         "scaling_governor"
@@ -299,8 +297,6 @@ cpufreq_menu(cpufreq *cf){
 static  gboolean
 clicked(GtkWidget *widget, GdkEventButton *evt, SimplePanel *panel)
 {
-    ENTER;
-
     /* Standard right-click handling. */
     if( evt->button == 1 )
     {
@@ -310,7 +306,7 @@ clicked(GtkWidget *widget, GdkEventButton *evt, SimplePanel *panel)
       return TRUE;
     }
 
-    RET(FALSE);
+	return FALSE;
 }
 
 static gboolean
@@ -321,13 +317,11 @@ _update_tooltip(cpufreq *cf)
     get_cur_freq(cf);
     get_cur_governor(cf);
 
-    ENTER;
-
     tooltip = g_strdup_printf(_("Frequency: %d MHz\nGovernor: %s"),
                               cf->cur_freq / 1000, cf->cur_governor);
     gtk_widget_set_tooltip_text(cf->main, tooltip);
     g_free(tooltip);
-    RET(TRUE);
+	return TRUE;
 }
 
 static gboolean update_tooltip(gpointer user_data)
@@ -342,7 +336,6 @@ static GtkWidget *cpufreq_constructor(SimplePanel *panel, GSettings *settings)
     cpufreq *cf;
     //GtkWidget *button;
 
-    ENTER;
     cf = g_new0(cpufreq, 1);
     g_return_val_if_fail(cf != NULL, NULL);
     cf->governors = NULL;
@@ -376,7 +369,7 @@ static GtkWidget *cpufreq_constructor(SimplePanel *panel, GSettings *settings)
 
     gtk_widget_show(cf->namew);
 
-    RET(cf->main);
+	return cf->main;
 }
 
 /*

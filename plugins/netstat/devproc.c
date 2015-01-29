@@ -33,7 +33,6 @@
 #include "netstat.h"
 #include "statusicon.h"
 #include "devproc.h"
-#include "dbg.h"
 
 /* network device list */
 static void netproc_netdevlist_add(NETDEVLIST_PTR *netdev_list,

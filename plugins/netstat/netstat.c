@@ -35,7 +35,6 @@
 #include "devproc.h"
 #include "wireless.h"
 #include "plugin.h"
-#include "dbg.h"
 #define NETSTAT_KEY_FIX "config-cmd"
 
 /* 1 second */
@@ -43,8 +42,7 @@
 
 static void* actionProcess(void *arg)
 {
-    ENTER;
-    RET(GINT_TO_POINTER(system((char *)arg)));
+	return GINT_TO_POINTER(system((char *)arg));
 }
 
 /* menu handlers */
@@ -385,7 +383,6 @@ static void netstat_destructor(gpointer user_data)
 {
     netstat *ns = (netstat *) user_data;
 
-    ENTER;
     g_source_remove(ns->ttag);
     netproc_netdevlist_clear(&ns->fnetd->netdevlist);
     /* The widget is destroyed in plugin_stop().
@@ -397,7 +394,7 @@ static void netstat_destructor(gpointer user_data)
     g_free(ns->fnetd);
     g_free(ns->fixcmd);
     g_free(ns);
-    RET();
+	return;
 }
 
 static GtkWidget *netstat_constructor(SimplePanel *panel, GSettings *settings)
@@ -437,7 +434,7 @@ static GtkWidget *netstat_constructor(SimplePanel *panel, GSettings *settings)
     gtk_widget_set_has_window(p, FALSE);
     gtk_container_add((GtkContainer*)p, ns->mainw);
 
-    RET(p);
+	return p;
 }
 
 static void orientation_changed(SimplePanel *panel, GtkWidget *p)

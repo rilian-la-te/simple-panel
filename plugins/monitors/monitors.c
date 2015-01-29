@@ -71,9 +71,6 @@
 
 #include "plugin.h"
 
-#include "dbg.h"
-
-
 #define PLUGIN_NAME      "MonitorsPlugin"
 #define BORDER_SIZE      2                  /* Pixels               */
 #define DEFAULT_WIDTH    40                 /* Pixels               */
@@ -84,10 +81,6 @@
 #define MONITORS_KEY_ACTION "click-action"
 #define MONITORS_KEY_CPU_CL "cpu-color"
 #define MONITORS_KEY_RAM_CL "ram-color"
-
-#ifndef ENTER
-#define ENTER fprintf(stderr, "Entering %s\n", __func__);
-#endif
 
 /*
  * Stats are stored in a circular buffer.
@@ -162,8 +155,6 @@ static gboolean monitors_apply_config(gpointer);
 static Monitor*
 monitor_init(MonitorsPlugin *mp, Monitor *m, gchar *color)
 {
-    ENTER;
-
     m->da = gtk_drawing_area_new();
     gtk_widget_set_size_request(m->da, DEFAULT_WIDTH, panel_get_height(mp->panel));
     gtk_widget_add_events(m->da, GDK_BUTTON_PRESS_MASK);
@@ -287,8 +278,6 @@ cpu_tooltip_update (Monitor *m)
 static gboolean
 mem_update(Monitor * m)
 {
-    ENTER;
-
     FILE *meminfo;
     char buf[80];
     long int mem_total = 0;
@@ -298,13 +287,13 @@ mem_update(Monitor * m)
     unsigned int readmask = 0x8 | 0x4 | 0x2 | 0x1;
 
     if (!m->stats || !m->pixmap)
-        RET(TRUE);
+		return TRUE;
 
     meminfo = fopen("/proc/meminfo", "r");
     if (!meminfo) {
         g_warning("monitors: Could not open /proc/meminfo: %d, %s",
                   errno, strerror(errno));
-        RET(FALSE);
+		return FALSE;
     }
 
     while (readmask && fgets(buf, sizeof(buf), meminfo)) {
@@ -331,7 +320,7 @@ mem_update(Monitor * m)
     if (readmask) {
         g_warning("monitors: Couldn't read all values from /proc/meminfo: "
                   "readmask %x", readmask);
-        RET(FALSE);
+		return FALSE;
     }
 
     m->total = mem_total;
@@ -356,7 +345,7 @@ mem_update(Monitor * m)
     /* Redraw the pixmap, with the new sample */
     redraw_pixmap (m);
 
-    RET(TRUE);
+	return TRUE;
 }
 
 static void
@@ -569,7 +558,7 @@ monitors_update(gpointer data)
         return FALSE;
     mp = (MonitorsPlugin *) data;
     if (!mp)
-        RET(FALSE);
+		return FALSE;
 
     for (i = 0; i < N_MONITORS; i++)
     {
@@ -588,7 +577,7 @@ static Monitor*
 monitors_add_monitor (GtkWidget *p, MonitorsPlugin *mp, update_func update,
              tooltip_update_func update_tooltip, gchar *color)
 {
-    ENTER;
+
 
     Monitor *m;
 
@@ -599,13 +588,13 @@ monitors_add_monitor (GtkWidget *p, MonitorsPlugin *mp, update_func update,
     gtk_box_pack_start(GTK_BOX(p), m->da, FALSE, FALSE, 0);
     gtk_widget_show(m->da);
 
-    RET(m);
+	return m;
 }
 
 static GtkWidget *
 monitors_constructor(SimplePanel *panel, GSettings *settings)
 {
-    ENTER;
+
     int i;
     MonitorsPlugin *mp;
     GtkWidget *p;
@@ -648,13 +637,13 @@ monitors_constructor(SimplePanel *panel, GSettings *settings)
      * seconds */
     mp->timer = g_timeout_add_seconds(UPDATE_PERIOD, (GSourceFunc) monitors_update,
                               (gpointer) mp);
-    RET(p);
+	return p;
 }
 
 static void
 monitors_destructor(gpointer user_data)
 {
-    ENTER;
+
     int            i;
     MonitorsPlugin *mp;
 
@@ -673,14 +662,14 @@ monitors_destructor(gpointer user_data)
     g_free(mp->action);
     g_free(mp);
 
-    RET();
+	return;
 }
 
 
 static GtkWidget *
 monitors_config (SimplePanel *panel, GtkWidget *p)
 {
-    ENTER;
+
 
     GtkWidget *dialog;
     MonitorsPlugin *mp;
@@ -696,13 +685,13 @@ monitors_config (SimplePanel *panel, GtkWidget *p)
         _("Action when clicked (default: lxtask)"), &mp->action, CONF_TYPE_STR,
         NULL);
 
-    RET(dialog);
+	return dialog;
 }
 
 static gboolean
 monitors_apply_config (gpointer user_data)
 {
-    ENTER;
+
     GtkWidget *p = user_data;
     MonitorsPlugin *mp;
     mp = lxpanel_plugin_get_data(p);
@@ -765,7 +754,7 @@ start:
     g_settings_set_string(mp->settings, MONITORS_KEY_RAM_CL,
                             mp->monitors[MEM_POSITION] ? colors[MEM_POSITION] : NULL);
 
-    RET(FALSE);
+	return FALSE;
 }
 
 

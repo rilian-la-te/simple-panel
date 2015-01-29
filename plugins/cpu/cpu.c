@@ -34,8 +34,6 @@
 #define BORDER_SIZE 2
 #define PANEL_HEIGHT_DEFAULT 26 /* from panel defaults */
 
-/* #include "../../dbg.h" */
-
 typedef unsigned long long CPUTick;		/* Value from /proc/stat */
 typedef float CPUSample;			/* Saved CPU utilization value as 0.0..1.0 */
 

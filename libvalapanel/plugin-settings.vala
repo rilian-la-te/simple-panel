@@ -115,7 +115,6 @@ namespace ValaPanel
 		public PluginSettings add_plugin_settings(string name)
 		{
 			var num = find_free_num ();
-			stdout.printf("%u\n",num);
 			var settings = new PluginSettings(this,name,num);
 			plugins.append(settings);
 			return settings;
@@ -150,7 +149,11 @@ namespace ValaPanel
 			try {
 				f.load_from_file(this.filename,GLib.KeyFileFlags.KEEP_COMMENTS);
 			}
-			catch (GLib.KeyFileError e) {} catch (GLib.FileError e) {}
+			catch (Error e)
+			{
+				stderr.printf("Cannot load config file: %s\n",e.message);
+				return false;
+			}
 			var groups = f.get_groups();
 			foreach (var group in groups)
 			{

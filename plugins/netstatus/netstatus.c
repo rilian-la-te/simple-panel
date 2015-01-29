@@ -24,8 +24,6 @@
 
 #include "plugin.h"
 
-#include "dbg.h"
-
 #include "netstatus-icon.h"
 #include "netstatus-dialog.h"
 
@@ -47,7 +45,6 @@ netstatus_destructor(gpointer user_data)
 {
     netstatus *ns = (netstatus *)user_data;
 
-    ENTER;
     /* The widget is destroyed in plugin_stop().
     gtk_widget_destroy(ns->mainw);
     */
@@ -59,7 +56,7 @@ netstatus_destructor(gpointer user_data)
         gtk_widget_destroy(ns->dlg);
     }
     g_free(ns);
-    RET();
+	return;
 }
 
 static void on_response( GtkDialog* dlg, gint response, netstatus *ns )
@@ -111,7 +108,6 @@ netstatus_constructor(SimplePanel *panel, GSettings *settings)
     NetstatusIface* iface;
     GtkWidget *p;
 
-    ENTER;
     ns = g_new0(netstatus, 1);
     ns->settings = settings;
     g_return_val_if_fail(ns != NULL, NULL);
@@ -126,7 +122,7 @@ netstatus_constructor(SimplePanel *panel, GSettings *settings)
     gtk_widget_add_events( p, GDK_BUTTON_PRESS_MASK );
     g_object_unref( iface );
 
-    RET(p);
+	return p;
 }
 
 static gboolean apply_config(gpointer user_data)

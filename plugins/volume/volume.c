@@ -27,8 +27,6 @@
 
 #include "plugin.h"
 
-#include "dbg.h"
-
 #include "volume-impl.h"
 
 #include "volume_xpm.h"
@@ -51,13 +49,12 @@ volume_destructor(gpointer user_data)
 {
     volume_t *vol = (volume_t *) user_data;
 
-    ENTER;
     if (vol->dlg)
         gtk_widget_destroy(vol->dlg);
     if (mixer_fd)
         close(mixer_fd);
     g_free(vol);
-    RET();
+	return;
 }
 
 static void update_icon (GtkWidget *p, volume_t *vol)
@@ -225,11 +222,10 @@ static GtkWidget *volume_constructor(SimplePanel *panel, GSettings *settings)
     curr_image = NULL;
     skip_botton1_event = FALSE;
 
-    ENTER;
     /* check if OSS mixer device could be open */
     mixer_fd = open ("/dev/mixer", O_RDWR, 0);
     if (mixer_fd < 0) {
-        RET(NULL);
+		return NULL;
     }
     /* try to obtain current volume */
     p = create_volume_window(); /* use pointer */
@@ -240,7 +236,7 @@ static GtkWidget *volume_constructor(SimplePanel *panel, GSettings *settings)
     {
 _error:
         gtk_widget_destroy(p);
-        RET(NULL);
+		return NULL;
     }
     curr_volume = gtk_adjustment_get_value (vol_adjustment);
 
@@ -263,7 +259,7 @@ _error:
     /* FIXME: display current level in tooltip. ex: "Volume Control: 80%"  */
     gtk_widget_set_tooltip_text(p, _("Volume control"));
 
-    RET(p);
+	return p;
 }
 
 FM_DEFINE_MODULE(lxpanel_gtk, volume)

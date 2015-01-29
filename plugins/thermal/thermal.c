@@ -31,8 +31,6 @@
 #include "plugin.h"
 #include "misc.h"
 
-#include "dbg.h"
-
 #define PROC_THERMAL_DIRECTORY "/proc/acpi/thermal_zone/" /* must be slash-terminated */
 #define PROC_THERMAL_TEMPF  "temperature"
 #define PROC_THERMAL_TRIP  "trip_points"
@@ -484,7 +482,6 @@ thermal_destructor(gpointer user_data)
 {
   thermal *th = (thermal *)user_data;
 
-  ENTER;
   remove_all_sensors(th);
   g_string_free(th->tip, TRUE);
   g_free(th->sensor);
@@ -493,7 +490,7 @@ thermal_destructor(gpointer user_data)
   g_free(th->str_cl_warning2);
   g_source_remove(th->timer);
   g_free(th);
-  RET();
+  return;
 }
 
 static GtkWidget *
@@ -502,7 +499,6 @@ thermal_constructor(SimplePanel *panel, GSettings *settings)
     thermal *th;
     GtkWidget *p;
 
-    ENTER;
     th = g_new0(thermal, 1);
     th->panel = panel;
     th->settings = settings;
@@ -534,13 +530,11 @@ thermal_constructor(SimplePanel *panel, GSettings *settings)
     update_display(th);
     th->timer = g_timeout_add_seconds(3, (GSourceFunc) update_display_timeout, (gpointer)th);
 
-    RET(p);
+	return p;
 }
 
 static GtkWidget *config(SimplePanel *panel, GtkWidget *p)
 {
-    ENTER;
-
     GtkWidget *dialog;
     thermal *th = lxpanel_plugin_get_data(p);
     dialog = lxpanel_generic_config_dlg(_("Temperature Monitor"),
@@ -555,7 +549,7 @@ static GtkWidget *config(SimplePanel *panel, GtkWidget *p)
             _("Warning2 temperature"), &th->warning2, CONF_TYPE_INT,
             NULL);
 
-    RET(dialog);
+	return dialog;
 }
 
 FM_DEFINE_MODULE(lxpanel_gtk, thermal)
