@@ -69,7 +69,7 @@ static gboolean deskno_name_update(WnckScreen* screen, WnckWorkspace* space,gpoi
         name = g_strdup_printf("%d",wnck_workspace_get_number(workspace)+1);
         const_name = FALSE;
     }
-    simple_panel_draw_label_text(dc->label, name, dc->bold, 1);
+    vala_panel_setup_label(dc->label, name, dc->bold, 1);
     if (!const_name)
         g_free(name);
     return FALSE;

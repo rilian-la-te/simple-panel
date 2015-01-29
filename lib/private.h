@@ -164,11 +164,9 @@ void _panel_show_config_dialog(SimplePanel *panel, GtkWidget *p, GtkWidget *dlg)
 
 void _calculate_position(SimplePanel *panel, GdkRectangle *rect);
 
-void _panel_determine_background_pixmap(SimplePanel * p, GtkWidget * widget);
 void _panel_establish_autohide(SimplePanel *p);
 void _panel_set_wm_strut(SimplePanel *p);
 void _panel_set_panel_configuration_changed(SimplePanel *p);
-void _panel_queue_update_background(SimplePanel *p);
 
 void panel_configure(SimplePanel* p, const gchar *sel_page);
 gboolean panel_edge_available(Panel* p, int edge, gint monitor);
@@ -179,15 +177,8 @@ gboolean _panel_edge_can_strut(SimplePanel *panel, int edge, gint monitor, gulon
  *   Should be removed and appropriate code cleaned on some of next releases. */
 
 /* Extracted from panel.h */
-extern void panel_set_dock_type(SimplePanel *p);
-extern void panel_set_panel_configuration_changed(Panel *p);
 extern SimplePanel* panel_load(GtkApplication *app, const char* config_file, const char* config_name);
 
 /* Extracted from misc.h */
 void calculate_position(SimplePanel *np);
-
-char* translate_exec_to_cmd( const char* exec, const char* icon,
-                             const char* title, const char* fpath );
-
-void show_error( GtkWindow* parent_win, const char* msg );
 #endif

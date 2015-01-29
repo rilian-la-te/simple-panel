@@ -23,22 +23,33 @@
 
 #include "panel.h"
 
+#define simple_panel_image_change_gicon(img, icon, p) \
+	gtk_image_set_from_gicon ( GTK_IMAGE(img) , (icon), GTK_ICON_SIZE_INVALID)
+
+#define simple_panel_image_change_icon(img, name, p) {\
+	GIcon* __icon__ = g_icon_new_for_string(name,NULL); 	\
+	gtk_image_set_from_gicon ( GTK_IMAGE(img) , __icon__, GTK_ICON_SIZE_INVALID); \
+	g_object_unref(__icon__);}
+
+#define simple_panel_button_set_icon(btn,name,p,size) {\
+	GIcon* __icon__ = g_icon_new_for_string(name,NULL); 	\
+	GtkImage* __img__ = GTK_IMAGE(gtk_button_get_image(GTK_BUTTON(btn))); \
+	gtk_image_set_from_gicon ( GTK_IMAGE(__img__) , (__icon__), GTK_ICON_SIZE_INVALID); \
+	g_object_unref(__icon__);}
+
+#define expand_tilda(file)\
+	( (file) [0] == '~') ? \
+			g_strdup_printf("%s%s", getenv("HOME"), (file)+1) \
+			: g_strdup(file)
+
 G_BEGIN_DECLS
 
-gchar *expand_tilda(const gchar *file);
-
 GtkWidget *simple_panel_button_new_for_icon(SimplePanel *panel, const gchar *name, GdkRGBA *color, const gchar *label);
-void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, SimplePanel* p, gint size);
 GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gint height);
 GtkWidget* simple_panel_image_new_for_gicon(SimplePanel * p,GIcon *icon, gint height);
-void simple_panel_image_change_icon(GtkWidget* img, const gchar* name, SimplePanel* p);
-void simple_panel_image_change_gicon(GtkWidget* img, GIcon* icon, SimplePanel* p);
-void simple_panel_scale_button_set_range (GtkScaleButton* b, gint lower, gint upper);
-void simple_panel_scale_button_set_value_labeled (GtkScaleButton* b, gint value);
-void start_panels_from_dir(GtkApplication* app,const char *panel_dir);
-void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop);
 void activate_menu(GSimpleAction* simple, GVariant* param, gpointer data);
 void activate_panel_preferences(GSimpleAction* simple, GVariant* param, gpointer data);
+
 G_END_DECLS
 
 #endif

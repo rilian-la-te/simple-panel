@@ -222,7 +222,7 @@ namespace ValaPanel
 		private bool start_all_panels()
 		{
 			var panel_dir = user_config_file_name("panels",null);
-			Compat.start_panels_from_dir((Gtk.Application)this,panel_dir);
+			start_panels_from_dir((Gtk.Application)this,panel_dir);
 			if (this.get_windows() != null)
 				return true;
 			var dirs = GLib.Environment.get_system_config_dirs();
@@ -231,7 +231,7 @@ namespace ValaPanel
 			foreach(var dir in dirs)
 			{
 				panel_dir = system_config_file_name(dir,"panels");
-				Compat.start_panels_from_dir((Gtk.Application)this,panel_dir);
+				start_panels_from_dir((Gtk.Application)this,panel_dir);
 				if (this.get_windows() != null)
 					return true;
 			}
@@ -280,11 +280,11 @@ namespace ValaPanel
 			}
 			config_backend = GLib.keyfile_settings_backend_new(user_file,PATH,NAME);
 			config = new GLib.Settings.with_backend_and_path(SCHEMA,config_backend,PATH);
-			gsettings_as_action(this,config,Key.LOGOUT);
-			gsettings_as_action(this,config,Key.SHUTDOWN);
-			gsettings_as_action(this,config,Key.DARK);
-			gsettings_as_action(this,config,Key.CUSTOM);
-			gsettings_as_action(this,config,Key.CSS);
+			settings_as_action(this,config,Key.LOGOUT);
+			settings_as_action(this,config,Key.SHUTDOWN);
+			settings_as_action(this,config,Key.DARK);
+			settings_as_action(this,config,Key.CUSTOM);
+			settings_as_action(this,config,Key.CSS);
 		}
 		private void activate_menu_callback(SimpleAction action, Variant? param)
 		{

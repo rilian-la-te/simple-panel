@@ -87,6 +87,7 @@ static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
 ValaPanelToplevelSettings* simple_panel_create_gsettings( SimplePanel* panel );
 static void panel_widget_update_background(SimplePanel * panel);
+extern void panel_set_dock_type(SimplePanel *p);
 
 G_DEFINE_TYPE(PanelWindow, simple_panel, GTK_TYPE_APPLICATION_WINDOW)
 
@@ -1338,7 +1339,7 @@ static void activate_new_panel(GSimpleAction *action, GVariant *param, gpointer 
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,GTK_BUTTONS_CLOSE,
              "There is no room for another panel. All the edges are taken.");
-    panel_apply_icon(GTK_WINDOW(msg));
+	vala_panel_apply_window_icon(GTK_WINDOW(msg));
     gtk_window_set_title( (GtkWindow*)msg, _("Error") );
     gtk_dialog_run(GTK_DIALOG(msg));
     gtk_widget_destroy(msg);
@@ -1368,7 +1369,7 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
                                                     GTK_MESSAGE_QUESTION,
                                                     GTK_BUTTONS_OK_CANCEL,
                                                     _("Really delete this panel?\n<b>Warning: This can not be recovered.</b>") );
-    panel_apply_icon(GTK_WINDOW(dlg));
+	vala_panel_apply_window_icon(GTK_WINDOW(dlg));
     gtk_window_set_title( (GtkWindow*)dlg, _("Confirm") );
     ok = ( gtk_dialog_run( (GtkDialog*)dlg ) == GTK_RESPONSE_OK );
     gtk_widget_destroy( dlg );
@@ -1384,13 +1385,6 @@ static void activate_remove_panel(GSimpleAction *action, GVariant *param, gpoint
         g_free(fname);
         g_free(profile);
     }
-}
-
-void panel_apply_icon( GtkWindow *w )
-{
-    GdkPixbuf* window_icon = gdk_pixbuf_new_from_resource("/org/simple/panel/lib/panel.png",NULL);
-    gtk_window_set_icon(w, window_icon);
-    g_object_unref(window_icon);
 }
 
 GtkMenu* lxpanel_get_plugin_menu(SimplePanel* panel, GtkWidget* plugin)
@@ -1509,17 +1503,6 @@ panel_start_gui(SimplePanel *panel)
     p->initialized = TRUE;
 }
 
-/* Draw text into a label, with the user preference color and optionally bold. */
-void simple_panel_draw_label_text(GtkWidget * label, const char * text,
-                           gboolean bold, float custom_size_factor)
-{
-    gtk_label_set_text(GTK_LABEL(label),text);
-    gchar* css = panel_css_generate_font_label(custom_size_factor,bold);
-    panel_css_apply_with_class(label,css,"-vala-panel-font-label",TRUE);
-    g_free(css);
-}
-
-
 void _panel_set_panel_configuration_changed(SimplePanel *panel)
 {
     Panel *p = panel->priv;
@@ -1537,12 +1520,12 @@ void _panel_set_panel_configuration_changed(SimplePanel *panel)
                                 ? PANEL_HEIGHT_DEFAULT
                                 : PANEL_WIDTH_DEFAULT));
         if (p->height_control != NULL)
-            simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->height_control), p->height);
+            vala_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->height_control), p->height);
         if ((p->widthtype == SIZE_PIXEL) && (p->width_control != NULL))
         {
             int value = ((p->orientation == GTK_ORIENTATION_HORIZONTAL) ? gdk_screen_width() : gdk_screen_height());
-            simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(p->width_control), 0, value);
-            simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->width_control), value);
+            vala_panel_scale_button_set_range(GTK_SCALE_BUTTON(p->width_control), 0, value);
+            vala_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(p->width_control), value);
         }
     }
 
@@ -1591,25 +1574,25 @@ static void panel_add_actions( SimplePanel* p)
         {"panel-settings", activate_panel_settings, "s", NULL, NULL},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(p),win_action_entries,G_N_ELEMENTS(win_action_entries),p);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_EDGE);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ALIGNMENT);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_HEIGHT);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_WIDTH);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_SIZE_TYPE);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE_SIZE);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_STRUT);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_DOCK);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ICON_SIZE);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_MARGIN);
-    simple_panel_bind_gsettings(G_OBJECT(p),settings,PANEL_PROP_MONITOR);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_SIZE);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_SIZE);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_COLOR);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_COLOR);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_COLOR);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_FILE);
-	vala_panel_gsettings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_TYPE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_EDGE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ALIGNMENT);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_HEIGHT);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_WIDTH);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_SIZE_TYPE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_AUTOHIDE_SIZE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_STRUT);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_DOCK);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ICON_SIZE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_MARGIN);
+	vala_panel_settings_bind(G_OBJECT(p),settings,PANEL_PROP_MONITOR);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_SIZE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_SIZE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_ENABLE_FONT_COLOR);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_FONT_COLOR);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_COLOR);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_FILE);
+	vala_panel_settings_as_action(G_ACTION_MAP(p),settings,PANEL_PROP_BACKGROUND_TYPE);
 }
 
 static void on_monitors_changed(GdkScreen* screen, gpointer unused)
@@ -1681,16 +1664,6 @@ gint panel_get_height(SimplePanel *panel)
 gint panel_get_monitor(SimplePanel *panel)
 {
     return panel->priv->monitor;
-}
-
-GtkWidget *panel_box_new(SimplePanel *panel, gint spacing)
-{
-    return gtk_box_new(panel->priv->orientation, spacing);
-}
-
-GtkWidget *panel_separator_new(SimplePanel *panel)
-{
-    return gtk_separator_new(panel->priv->orientation);
 }
 
 gboolean _class_is_present(const SimplePanelPluginInit *init)

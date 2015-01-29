@@ -208,18 +208,18 @@ static void set_strut_type( GtkWidget *item, SimplePanel* panel )
     switch (widthtype)
     {
     case SIZE_PERCENT:
-        simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,100);
+        vala_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,100);
         g_settings_set_int(settings,PANEL_PROP_WIDTH,100);
         break;
     case SIZE_PIXEL:
         if ((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM))
         {
-            simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_width());
+            vala_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_width());
             g_settings_set_int(settings,PANEL_PROP_WIDTH,gdk_screen_width());
         }
         else
         {
-            simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_height());
+            vala_panel_scale_button_set_range(GTK_SCALE_BUTTON(spin),0,gdk_screen_height());
             g_settings_set_int(settings,PANEL_PROP_WIDTH,gdk_screen_height());
         }
         break;
@@ -731,7 +731,7 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
     g_signal_connect(p->pref_dialog, "response", G_CALLBACK(response_event), panel);
     g_object_add_weak_pointer( G_OBJECT(p->pref_dialog), (gpointer) &p->pref_dialog );
     gtk_window_set_position( GTK_WINDOW(p->pref_dialog), GTK_WIN_POS_CENTER );
-    panel_apply_icon(GTK_WINDOW(p->pref_dialog));
+    vala_panel_apply_window_icon(GTK_WINDOW(p->pref_dialog));
 
     /* position */
     w3 = w = (GtkWidget*)gtk_builder_get_object( builder, "edge-button");
@@ -787,8 +787,8 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
         upper = 100;
     else if( p->widthtype == SIZE_PIXEL)
         upper = (((p->edge == GTK_POS_TOP) || (p->edge == GTK_POS_BOTTOM)) ? gdk_screen_width() : gdk_screen_height());
-    simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),0,upper);
-    simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->width );
+    vala_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),0,upper);
+    vala_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->width );
     g_settings_bind(settings,PANEL_PROP_WIDTH,w,"value",G_SETTINGS_BIND_DEFAULT);
     g_signal_connect(panel, "notify::"PANEL_PROP_WIDTH, G_CALLBACK(simple_panel_notify_scale_cb), w );
     gtk_widget_set_sensitive( w, p->widthtype != SIZE_DYNAMIC );
@@ -801,20 +801,20 @@ void panel_configure( SimplePanel* panel, const gchar* sel_page )
                      G_CALLBACK(set_strut_type), panel);
 
     p->height_control = w = (GtkWidget*)gtk_builder_get_object( builder, "scale-height" );
-    simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),PANEL_HEIGHT_MIN,PANEL_HEIGHT_MAX);
-    simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->height);
+    vala_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),PANEL_HEIGHT_MIN,PANEL_HEIGHT_MAX);
+    vala_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->height);
     g_settings_bind(settings,PANEL_PROP_HEIGHT,w,"value",G_SETTINGS_BIND_DEFAULT);
     g_signal_connect(panel, "notify::"PANEL_PROP_HEIGHT, G_CALLBACK(simple_panel_notify_scale_cb), w );
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "scale-iconsize" );
-    simple_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),PANEL_HEIGHT_MIN,PANEL_HEIGHT_MAX);
-    simple_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->icon_size );
+    vala_panel_scale_button_set_range(GTK_SCALE_BUTTON(w),PANEL_HEIGHT_MIN,PANEL_HEIGHT_MAX);
+    vala_panel_scale_button_set_value_labeled( GTK_SCALE_BUTTON(w), p->icon_size );
     g_settings_bind(settings,PANEL_PROP_ICON_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
     g_signal_connect(panel, "notify::"PANEL_PROP_ICON_SIZE, G_CALLBACK(simple_panel_notify_scale_cb), w );
 
 
     w = (GtkWidget*)gtk_builder_get_object( builder, "scale-minimized" );
-    simple_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(w), p->height_when_hidden);
+    vala_panel_scale_button_set_value_labeled(GTK_SCALE_BUTTON(w), p->height_when_hidden);
     g_settings_bind(settings,PANEL_PROP_AUTOHIDE_SIZE,w,"value",G_SETTINGS_BIND_DEFAULT);
     g_signal_connect(panel, "notify::"PANEL_PROP_AUTOHIDE_SIZE, G_CALLBACK(simple_panel_notify_scale_cb), w );
     g_settings_bind(settings,PANEL_PROP_AUTOHIDE,w,"sensitive",G_SETTINGS_BIND_GET);
@@ -1019,7 +1019,7 @@ static GtkWidget *_lxpanel_generic_config_dlg(const char *title, Panel *p,
                                                   NULL );
     GtkBox *dlg_vbox = GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dlg)));
 
-    panel_apply_icon(GTK_WINDOW(dlg));
+    vala_panel_apply_window_icon(GTK_WINDOW(dlg));
 
     if( apply_func )
         g_object_set_data( G_OBJECT(dlg), "apply_func", apply_func );

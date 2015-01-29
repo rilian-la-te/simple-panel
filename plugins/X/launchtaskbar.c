@@ -1294,7 +1294,7 @@ static GtkWidget *launchtaskbar_configure(SimplePanel *panel, GtkWidget *p)
 
         gtk_builder_add_from_file(builder, PACKAGE_UI_DIR "/launchtaskbar.ui", NULL);
         dlg = (GtkWidget *)gtk_builder_get_object(builder, "dlg");
-        panel_apply_icon(GTK_WINDOW(dlg));
+        vala_panel_apply_window_icon(GTK_WINDOW(dlg));
 
         defined_view = (GtkWidget *)gtk_builder_get_object(builder, "defined_view");
         menu_view_window = (GtkWidget*)gtk_builder_get_object(builder, "menu_view_window");

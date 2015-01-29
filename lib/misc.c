@@ -31,9 +31,6 @@
 #include "private.h"
 #include "vala.h"
 
-static void on_theme_changed(GtkWidget* img, GObject* object);
-static void _gtk_image_set_panel(GtkWidget* img, GIcon *icon, SimplePanel* panel, gint size);
-
 static void
 calculate_width(int scrw, int wtype, int align, int margin,
       int *panw, int *x)
@@ -119,39 +116,10 @@ void calculate_position(SimplePanel *np)
     np->priv->ay = rect.y;
 }
 
-gchar *
-expand_tilda(const gchar *file)
-{
-    return ((file[0] == '~') ?
-        g_strdup_printf("%s%s", getenv("HOME"), file+1)
-        : g_strdup(file));
-}
-
-static void on_theme_changed(GtkWidget *img, GObject *object)
-{
-    int size = gtk_image_get_pixel_size(GTK_IMAGE(img));
-    GIcon* icon;
-    gtk_image_get_gicon(GTK_IMAGE(img),&icon,NULL);
-    _gtk_image_set_panel(img,icon,NULL,size);
-}
-
-static void _gtk_image_set_panel(GtkWidget* img, GIcon *icon, SimplePanel* panel, gint size)
-{
-    if(icon)
-        gtk_image_set_from_gicon(GTK_IMAGE(img),icon,GTK_ICON_SIZE_INVALID);
-    else
-        return;
-    if(panel)
-        g_object_bind_property(panel,PANEL_PROP_ICON_SIZE,img,"pixel-size",G_BINDING_SYNC_CREATE | G_BINDING_DEFAULT);
-    else
-        gtk_image_set_pixel_size(GTK_IMAGE(img),size);
-    g_signal_connect_swapped(gtk_icon_theme_get_default(),"changed",G_CALLBACK(on_theme_changed),img);
-}
-
 GtkWidget* simple_panel_image_new_for_gicon(SimplePanel *p, GIcon *icon, gint size)
 {
     GtkWidget* img = gtk_image_new();
-    _gtk_image_set_panel(img,icon,p,size);
+	vala_panel_setup_icon(GTK_IMAGE(img),icon,p,size);
     return img;
 }
 
@@ -163,71 +131,13 @@ GtkWidget* simple_panel_image_new_for_icon(SimplePanel * p,const gchar *name, gi
     return ret;
 }
 
-void simple_panel_image_change_gicon(GtkWidget *img, GIcon *icon, SimplePanel* p)
-{
-    _gtk_image_set_panel(img,icon,p,-1);
-}
-
-void simple_panel_image_change_icon(GtkWidget *img, const gchar *name,SimplePanel* p)
-{
-    GIcon* icon = g_icon_new_for_string(name,NULL);
-    simple_panel_image_change_gicon(img,icon,p);
-    g_object_unref(icon);
-    return;
-}
-
-static GtkWidget *_simple_panel_button_new_for_icon(SimplePanel* panel,GIcon *icon,
-                                               gint size, const GdkRGBA* color,
-                                               const gchar *label)
-{
-    const gchar* css = ".-panel-icon-button {\n"
-                       "  padding: 0px;\n"
-                       "  margin: 0px;\n"
-                       " -GtkWidget-focus-line-width: 0px;\n"
-                       " -GtkWidget-focus-padding: 0px;\n"
-                       "}\n"
-                       ".-panel-icon-button:hover,"
-                       ".-panel-icon-button:prelight,"
-                       ".-panel-icon-button.highlight,"
-                       ".-panel-icon-button:active:hover {\n"
-                       " -gtk-image-effect: highlight;"
-                       "}\n";
-    GtkWidget * event_box = gtk_button_new();
-    GtkWidget* image = NULL;
-    if (icon)
-        image = simple_panel_image_new_for_gicon(panel,icon, size);
-	vala_panel_setup_button(event_box,image,label);
-    panel_css_apply_with_class(event_box,NULL,GTK_STYLE_CLASS_BUTTON,FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(event_box), 0);
-    gtk_widget_set_can_focus(event_box, FALSE);
-    gtk_widget_set_has_window(event_box,FALSE);
-    panel_css_apply_with_class(event_box,css,"-panel-icon-button",TRUE);
-    return event_box;
-}
-
-/* consumes reference on icon */
-static void _simple_panel_button_set_icon(GtkWidget* btn, GIcon* icon,SimplePanel* p, gint size)
-{
-    /* Locate the image within the button. */
-    GtkWidget * img = gtk_button_get_image(GTK_BUTTON(btn));
-    _gtk_image_set_panel(img,icon,p,size);
-}
-
-void simple_panel_button_set_icon(GtkWidget* btn, const gchar *name, SimplePanel* p, gint size)
-{
-    GIcon* icon = g_icon_new_for_string(name,NULL);
-    _simple_panel_button_set_icon(btn, icon, p, size);
-    g_object_unref(icon);
-}
-
 GtkWidget *simple_panel_button_new_for_icon(SimplePanel *panel, const gchar *name, GdkRGBA *color, const gchar *label)
 {
-    GdkRGBA fallback = {1,1,1,0.15};
     GIcon* icon = g_icon_new_for_string(name,NULL);
-    GtkWidget* ret = _simple_panel_button_new_for_icon(panel,icon,
-                                        -1, (color != NULL) ? color : &fallback, label);
+	GtkWidget * event_box = gtk_button_new();
+	vala_panel_setup_icon_button(GTK_BUTTON(event_box),icon,label,panel);
     g_object_unref(icon);
-    return ret;
+	return event_box;
 }
 
 void activate_panel_preferences(GSimpleAction* simple, GVariant* param, gpointer data)
@@ -269,51 +179,6 @@ void activate_menu(GSimpleAction* simple, GVariant* param, gpointer data)
 		}
 		g_list_free(plugins);
 	}
-}
-
-void start_panels_from_dir(GtkApplication* app,const char *panel_dir)
-{
-    GDir* dir = g_dir_open( panel_dir, 0, NULL );
-    const gchar* name;
-
-    if( ! dir )
-    {
-        return;
-    }
-
-    while((name = g_dir_read_name(dir)) != NULL)
-    {
-        char* panel_config = g_build_filename( panel_dir, name, NULL );
-        if ((strchr(panel_config, '~') == NULL) && (name[0] != '.'))    /* Skip editor backup files in case user has hand edited in this directory */
-        {
-            SimplePanel* panel = panel_load(app,panel_config, name );
-            if( panel )
-                gtk_application_add_window(app,GTK_WINDOW(panel));
-        }
-        g_free( panel_config );
-    }
-    g_dir_close( dir );
-}
-
-void simple_panel_scale_button_set_range (GtkScaleButton* b, gint lower, gint upper)
-{
-    gtk_adjustment_set_lower(gtk_scale_button_get_adjustment(b),lower);
-    gtk_adjustment_set_upper(gtk_scale_button_get_adjustment(b),upper);
-    gtk_adjustment_set_step_increment(gtk_scale_button_get_adjustment(b),1);
-    gtk_adjustment_set_page_increment(gtk_scale_button_get_adjustment(b),1);
-}
-
-void simple_panel_scale_button_set_value_labeled (GtkScaleButton* b, gint value)
-{
-    gtk_scale_button_set_value(b,value);
-    gchar* str = g_strdup_printf("%d",value);
-    gtk_button_set_label(GTK_BUTTON(b),str);
-    g_free(str);
-}
-
-void simple_panel_bind_gsettings(GObject* obj, GSettings* settings, const gchar* prop)
-{
-    g_settings_bind(settings,prop,obj,prop,G_SETTINGS_BIND_GET | G_SETTINGS_BIND_SET | G_SETTINGS_BIND_DEFAULT);
 }
 
 /* vim: set sw=4 et sts=4 : */

@@ -72,28 +72,6 @@ struct _SimplePanelClass
     GtkApplicationWindowClass parent_class;
 };
 
-/**
- * panel_apply_icon
- * @w: a window to apply
- *
- * Sets appropriate icon as the window icon for @w.
- */
-extern void panel_apply_icon(GtkWindow *w);
-
-/**
- * simple_panel_draw_label_text
- * @p: a panel instance
- * @label: a label widget
- * @text: (allow-none): text for the label
- * @bold: %TRUE if text should be bold
- * @custom_size_factor: scale factor for font size
- *
- * Changes @label to contain @text with appropriate attributes using the
- * panel @p settings.
- */
-extern void simple_panel_draw_label_text(GtkWidget * label, const char * text,
-                                    gboolean bold, float custom_size_factor);
-
 #define PANEL_ORIENT_HORIZONTAL(orient) \
     ((orient == GTK_POS_TOP) || (orient == GTK_POS_BOTTOM))
 
@@ -104,12 +82,16 @@ extern void simple_panel_draw_label_text(GtkWidget * label, const char * text,
     ((edge == GTK_POS_LEFT) || (edge == GTK_POS_RIGHT)) \
     ? GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL
 
+#define panel_box_new(p,sp) \
+	gtk_box_new(panel_get_orientation(p),sp)
+
+#define panel_separator_new(p) \
+	gtk_separator_new(panel_get_orientation(p))
+
 /* Accessors APIs for Panel* */
 extern GtkOrientation panel_get_orientation(SimplePanel *panel);
 extern gint panel_get_height(SimplePanel *panel);
 extern gint panel_get_monitor(SimplePanel *panel);
-extern GtkWidget *panel_box_new(SimplePanel *panel, gint spacing);
-extern GtkWidget *panel_separator_new(SimplePanel *panel);
 G_END_DECLS
 
 #endif

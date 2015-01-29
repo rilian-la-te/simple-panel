@@ -289,7 +289,7 @@ static GtkWidget *dclock_constructor(SimplePanel *panel, GSettings *settings)
 
     /* Create a label and an image as children of the horizontal box.
      * Only one of these is visible at a time, controlled by user preference. */
-    vala_panel_setup_button(w,NULL,NULL);
+	vala_panel_setup_button(GTK_BUTTON(w),NULL,NULL);
 
     /* Initialize the clock display. */
     if (dc->clock_format == NULL)

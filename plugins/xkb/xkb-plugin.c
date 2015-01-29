@@ -178,7 +178,7 @@ void xkb_redraw(XkbPlugin *p_xkb)
         char *group_name = (char *)xkb_get_current_symbol_name(p_xkb);
         if (group_name != NULL)
         {
-            simple_panel_draw_label_text(p_xkb->p_label, group_name,
+            vala_panel_setup_label(p_xkb->p_label, group_name,
                     TRUE, size*4/(5*10.0));
             gtk_widget_hide(p_xkb->p_image);
             gtk_widget_show(p_xkb->p_label);
@@ -1210,7 +1210,7 @@ static GtkWidget *xkb_configure(SimplePanel *panel, GtkWidget *p)
         GTK_RESPONSE_OK,
         NULL);
     p_xkb->p_dialog_config = GTK_WINDOW(dlg);
-    panel_apply_icon(p_xkb->p_dialog_config);
+    vala_panel_apply_window_icon(p_xkb->p_dialog_config);
 
     // main vbox of the config dialog
     GtkWidget * p_hbox_main = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);

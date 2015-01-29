@@ -292,7 +292,7 @@ static GtkWidget* create_menubutton(MenuModelPlugin* m)
         img = simple_panel_image_new_for_icon(m->panel,m->icon_str,-1);
         gtk_widget_show(img);
     }
-    vala_panel_setup_button(m->button,img,m->caption ? m->caption : NULL);
+	vala_panel_setup_button(GTK_BUTTON(m->button),GTK_IMAGE(img),m->caption ? m->caption : NULL);
     gtk_container_add(GTK_CONTAINER(m->box),m->button);
     gtk_widget_show(m->button);
     g_signal_connect_swapped(gtk_icon_theme_get_default(),"changed",G_CALLBACK(on_theme_changed),m);

@@ -279,7 +279,7 @@ update_display(thermal *th)
 
     if(temp == -1)
     {
-        simple_panel_draw_label_text(th->namew, "NA", TRUE, 1);
+        vala_panel_setup_label(th->namew, "NA", TRUE, 1);
     }
     else
     {
