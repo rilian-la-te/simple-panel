@@ -26,7 +26,7 @@ namespace Compat
 		[NoAccessorMethod]
 		public int icon_size
 		{get; set;}
-		[CCode (cname="panel_load", cheader_filename = "../lib/private.h")]
-		public static unowned Toplevel? load(Gtk.Application app, string config_file, string config_name);
+		[CCode (cname="panel_load", cheader_filename = "../lib/private.h", returns_floating_reference=true)]
+		public static Toplevel? load(Gtk.Application app, string config_file, string config_name);
 	}
 }
