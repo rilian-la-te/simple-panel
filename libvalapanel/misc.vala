@@ -29,7 +29,7 @@ namespace ValaPanel
 		while ((name = dir.read_name()) != null)
 		{
 			string cfg = GLib.Path.build_filename(dirname,name);
-			if (!(cfg.contains("~") || cfg[0] =='.'))
+			if (!(cfg.contains("~") && cfg[0] !='.'))
 			{
 				var panel = Compat.Toplevel.load(app,cfg,name);
 				if (panel != null)
