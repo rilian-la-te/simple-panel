@@ -87,19 +87,18 @@ static gboolean _panel_set_monitor(SimplePanel* panel, int monitor);
 static void panel_add_actions( SimplePanel* p);
 ValaPanelToplevelSettings* simple_panel_create_gsettings( SimplePanel* panel );
 static void panel_widget_update_background(SimplePanel * panel);
-extern void panel_set_dock_type(SimplePanel *p);
 
 G_DEFINE_TYPE(PanelWindow, simple_panel, GTK_TYPE_APPLICATION_WINDOW)
 
+#define panel_set_dock_type(p) \
+	gtk_window_set_type_hint(GTK_WINDOW(p),\
+		((p)->priv->setdocktype) ? GDK_WINDOW_TYPE_HINT_DOCK : GDK_WINDOW_TYPE_HINT_NORMAL);
+
 #define _user_config_file_name(name1, cprofile, name2)\
-    g_build_filename(g_get_user_config_dir(), "simple-panel", cprofile, name1,\
-                            name2, NULL)
+	g_build_filename(g_get_user_config_dir(), "simple-panel", cprofile, name1, name2, NULL)
 
 #define get_all_panels(panel)\
-    gtk_application_get_windows(\
-                gtk_window_get_application(\
-                    GTK_WINDOW(panel)\
-                    ))
+	gtk_application_get_windows(gtk_window_get_application(GTK_WINDOW(panel)))
 
 static inline gchar* get_profile(SimplePanel* panel)
 {
@@ -1436,16 +1435,6 @@ make_round_corners(SimplePanel *p)
 {
     /* FIXME: This should be re-written with shape extension of X11 */
     /* gdk_window_shape_combine_mask() can be used */
-}
-
-void panel_set_dock_type(SimplePanel *p)
-{
-    if (p->priv->setdocktype) {
-        gtk_window_set_type_hint(GTK_WINDOW(p),GDK_WINDOW_TYPE_HINT_DOCK);
-    }
-    else {
-        gtk_window_set_type_hint(GTK_WINDOW(p),GDK_WINDOW_TYPE_HINT_NORMAL);
-    }
 }
 
 void _panel_establish_autohide(SimplePanel *p)

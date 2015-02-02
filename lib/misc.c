@@ -104,18 +104,6 @@ void _calculate_position(SimplePanel *panel, GdkRectangle* rect)
     return;
 }
 
-void calculate_position(SimplePanel *np)
-{
-    GdkRectangle rect;
-    rect.width = np->priv->aw;
-    rect.height = np->priv->ah;
-    _calculate_position(np, &rect);
-    np->priv->aw = rect.width;
-    np->priv->ah = rect.height;
-    np->priv->ax = rect.x;
-    np->priv->ay = rect.y;
-}
-
 GtkWidget* simple_panel_image_new_for_gicon(SimplePanel *p, GIcon *icon, gint size)
 {
     GtkWidget* img = gtk_image_new();
