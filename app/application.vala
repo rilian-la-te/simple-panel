@@ -82,7 +82,7 @@ namespace ValaPanel
 		};
 		public App()
 		{
-			Object(application_id: "org.valapanel.application",
+			Object(application_id: "org.simple.panel",
 					flags: GLib.ApplicationFlags.HANDLES_COMMAND_LINE,
 					profile: "default",
 					resource_base_path: "/org/vala-panel/app");
