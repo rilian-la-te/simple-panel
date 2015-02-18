@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <menu id="applications-menu">
-    <section id="categories">
         <submenu id="audiovideo">
           <attribute name="label" translatable="yes">Audio and Video</attribute>
           <attribute name="icon">applications-multimedia</attribute>
@@ -57,7 +56,6 @@
           <attribute name="icon">applications-other</attribute>
           <attribute name="x-cat">other</attribute>
         </submenu>
-    </section>
   </menu>
   <menu id="places-menu">
     <section id="folders-section">

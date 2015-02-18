@@ -39,7 +39,7 @@ namespace MenuMaker
 	public static GLib.MenuModel applications_model(string[] cats)
 	{
 		var builder = new Gtk.Builder.from_resource("/org/vala-panel/lib/system-menus.ui");
-		var menu = (GLib.Menu) builder.get_object("categories");
+		var menu = (GLib.Menu) builder.get_object("applications-menu");
 		foreach (var info in GLib.AppInfo.get_all ())
 			parse_app_info((GLib.DesktopAppInfo)info,builder);
 		for(int i = 0; i < menu.get_n_items(); i++)
@@ -53,13 +53,12 @@ namespace MenuMaker
 			}
 			var j = (i < 0) ? 0 : i;
 			j = (j >= menu.get_n_items()) ? menu.get_n_items() -1 : j;
-    		if ((string)menu.get_item_attribute_value(j,"x-cat",GLib.VariantType.STRING) in cats) 
+    			if ((string)menu.get_item_attribute_value(j,"x-cat",GLib.VariantType.STRING) in cats) 
 			{
-        		menu.remove(j);
-        		i--;
-    		}
+        			menu.remove(j);
+        			i--;
+			}
 		}
-		menu = (GLib.Menu) builder.get_object("applications-menu");
 		return (GLib.MenuModel) menu;
 	}
 
